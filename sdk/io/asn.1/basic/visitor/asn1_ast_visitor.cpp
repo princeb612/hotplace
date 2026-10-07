@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
@@ -72,7 +72,7 @@ asn1_ast_descriptor asn1_ast_visitor::describe(const asn1_object* object) const 
     basic_stream& syntax = desc.syntax;
     basic_stream& detail = desc.detail;
 
-    auto resource = asn1_resource::get_instance();
+    auto advisor = asn1_advisor::get_instance();
     auto component = get_entity(object, true);
     const auto& name = object->get_name();
 
@@ -106,9 +106,9 @@ asn1_ast_descriptor asn1_ast_visitor::describe(const asn1_object* object) const 
             if (classtype & asn1_class_mask) {
                 syntax << get_entity_name(object, true);
                 detail << "[";
-                if (false == asn1_is_context(classtype)) detail << resource->get_class_name(classtype).c_str() << " ";
+                if (false == asn1_is_context(classtype)) detail << advisor->get_class_name(classtype).c_str() << " ";
                 detail << cn << "]";
-                if (asn1_automatic != tagtype) detail << " " << resource->nameof_mode(tagtype);
+                if (asn1_automatic != tagtype) detail << " " << advisor->nameof_mode(tagtype);
             }
         } break;
         case asn1_entity_builtin_type:

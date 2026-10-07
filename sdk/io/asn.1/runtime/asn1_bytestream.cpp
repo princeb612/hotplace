@@ -15,7 +15,7 @@
 #include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>
 
@@ -110,9 +110,9 @@ return_t asn1_bytestream::read_node(const byte_t* stream, size_t size, size_t& p
                         break;
                 }
                 if (ident & asn1_tag_constructed) identifier_desc += "+CONSTRUCTED";
-                auto resource = asn1_resource::get_instance();
+                auto advisor = asn1_advisor::get_instance();
                 valist va;
-                va << item.node_id << ident << identifier_desc << tag << resource->get_entity_name(ident, (asn1_entity_t)tag) << len;
+                va << item.node_id << ident << identifier_desc << tag << advisor->get_entity_name(ident, (asn1_entity_t)tag) << len;
                 dbs.vaprintf("- node {1} I {2:02X} ({3}) T {4} ({5}) L {6}\n", va);
             });
         }

@@ -153,11 +153,11 @@ class asn1_publisher_context {
 
 /**
  * @comments
- *          auto publisher = asn1_resource::get_instance()->get_publisher();
+ *          auto publisher = asn1_advisor::get_instance()->get_publisher();
  *          publisher->parse(pt, result);
  */
 class asn1_publisher {
-    friend class asn1_resource;
+    friend class asn1_advisor;
 
    public:
     ~asn1_publisher();

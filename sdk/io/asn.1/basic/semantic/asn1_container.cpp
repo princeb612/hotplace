@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
@@ -144,7 +144,7 @@ void asn1_container::represent(stream_t* s, const asn1_value* value) const {
         if (false == get_name().empty()) {
             s->printf("%s ", get_name().c_str());
         }
-        s->printf("%s ", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+        s->printf("%s ", asn1_advisor::get_instance()->get_entity_name(get_ident(), entity).c_str());
 
         s->printf("{");
         for (auto iter = _list.begin(); iter != _list.end(); ++iter) {

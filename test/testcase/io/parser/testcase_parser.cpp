@@ -63,14 +63,16 @@ void test_load_parsingtable() {
 void test_asn1_notation() {
     // return_t ret = errorcode_t::success;
 
+    auto advisor = asn1_advisor::get_instance();
+
     _test_case.begin("LALR(1) and GLR parser");
-    auto& p1 = get_lalr1_parser_asn1_notation_by_build();
+    auto& p1 = advisor->get_notation_parser_by_build();
     _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Notation");
-    auto& p2 = get_lalr1_parser_asn1_notation_by_import();
+    auto& p2 = advisor->get_notation_parser_by_import();
     _test_case.assert(p2.ready(), __FUNCTION__, "LALR(1) parser import table for Notation");
-    auto& p3 = get_glr_parser_asn1_by_build();
+    auto& p3 = advisor->get_parser_by_build();
     _test_case.assert(p3.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
-    auto& p4 = get_glr_parser_asn1_by_import();
+    auto& p4 = advisor->get_parser_by_import();
     _test_case.assert(p4.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
 
     struct testvector {
@@ -248,12 +250,14 @@ void test_asn1_parameterized() {
             if (entry.flag & flag) test_asn1parser(parser, entry.notation, entry.notation);
         }
     };
+
     _test_case.begin("GLR parser - ASN.1 for parametersized");
     auto& p1 = get_glr_parser_asn1_paramerized_by_build();
     _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Parameterized");
     lambda_test(item_asn1param, p1);
+
     _test_case.begin("GLR parser - ASN.1 All-in-One");
-    auto& p2 = get_glr_parser_asn1_by_build();
+    auto& p2 = asn1_advisor::get_instance()->get_parser_by_build();
     _test_case.assert(p2.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
     lambda_test(item_asn1ioc, p2);
 }

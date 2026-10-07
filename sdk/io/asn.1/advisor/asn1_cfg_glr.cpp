@@ -10,7 +10,7 @@
  * see README.md
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/parser/binary_parsing_table.hpp>
 #include <hotplace/sdk/io/parser/glr_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -18,26 +18,18 @@
 namespace hotplace {
 namespace io {
 
-return_t prepare_glr_parser_asn1(parser_t& parser);
-return_t import_glr_parser_asn1(glr_parser& parser);
-
-parser_t& get_glr_parser_asn1_by_build() {
-    static glr_parser parser;
-    static const return_t ready = prepare_glr_parser_asn1(parser);
-    (void)ready;
-    return parser;
+parser_t& asn1_advisor::get_parser_by_build() {
+    if (false == _glr_parser_by_build.ready()) {
+        prepare_glr_parser(_glr_parser_by_build);
+    }
+    return _glr_parser_by_build;
 }
 
-parser_t& get_glr_parser_asn1_by_import() {
-    static glr_parser parser;
-    static const return_t ready = import_glr_parser_asn1(parser);
-    (void)ready;
-    return parser;
-}
-
-return_t import_glr_parser_asn1(glr_parser& parser) {
-    binary_parsing_table bpt;
-    return bpt.read("asn1.ptb", parser);
+parser_t& asn1_advisor::get_parser_by_import() {
+    if (false == _glr_parser_by_import.ready()) {
+        import_glr_parser(_glr_parser_by_import);
+    }
+    return _glr_parser_by_import;
 }
 
 /**
@@ -49,7 +41,7 @@ return_t import_glr_parser_asn1(glr_parser& parser) {
  * - ComponentTypeList and Enumerations are structured without an ExtensionMarker.
  * - Handling ExtensionMarker in SequenceTypeSpec, ChoiceTypeSpec, and EnumeratedType
  */
-return_t prepare_glr_parser_asn1(parser_t& parser) {
+return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
     auto resource = parser_resource::get_instance();
 
     auto symid = resource->nameof(token_identifier);                // "identifier"
@@ -497,6 +489,11 @@ return_t prepare_glr_parser_asn1(parser_t& parser) {
     return parser.learn();
     // _logger->writeln("GLR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
     // _test_case.test(ret, __FUNCTION__, "GLR parser - ASN.1 for All-in-One (build parsing table)");
+}
+
+return_t asn1_advisor::import_glr_parser(glr_parser& parser) {
+    binary_parsing_table bpt;
+    return bpt.read("asn1.ptb", parser);
 }
 
 }  // namespace io

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_resource.cpp
+ * @file   asn1_advisor.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -12,22 +12,22 @@
  */
 
 #include <hotplace/sdk/base/string/string.hpp>  // format
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_resource asn1_resource::_instance;
+asn1_advisor asn1_advisor::_instance;
 
-asn1_resource::asn1_resource() {}
+asn1_advisor::asn1_advisor() {}
 
-asn1_resource* asn1_resource::get_instance() {
+asn1_advisor* asn1_advisor::get_instance() {
     _instance.load_resource();
     return &_instance;
 }
 
-void asn1_resource::load_resource() {
+void asn1_advisor::load_resource() {
     if (_type_id.empty()) {
         critical_section_guard guard(_lock);
         if (_type_id.empty()) {
@@ -80,7 +80,7 @@ const struct asn1_entity_resource_t resource_asn1_entities[] = {
 };
 const size_t sizeof_resource_asn1_entities = RTL_NUMBER_OF(resource_asn1_entities);
 
-void asn1_resource::doload_resource() {
+void asn1_advisor::doload_resource() {
     if (_type_id.empty()) {
         for (const auto& item : resource_asn1_entities) {
             if (asn1_entity_syntax == item.type) continue;
@@ -114,7 +114,7 @@ void asn1_resource::doload_resource() {
     }
 }
 
-std::string asn1_resource::get_component_entity_name(asn1_entity_t entity) const {
+std::string asn1_advisor::get_component_entity_name(asn1_entity_t entity) const {
     std::string name;
     auto iter = _type_id.find(entity);
     if (_type_id.end() != iter) {
@@ -123,7 +123,7 @@ std::string asn1_resource::get_component_entity_name(asn1_entity_t entity) const
     return name;
 }
 
-std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) const {
+std::string asn1_advisor::get_entity_name(uint8 ident, asn1_entity_t entity) const {
     std::string name;
     auto c = (ident & asn1_class_mask);
     switch (c) {
@@ -148,7 +148,7 @@ std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) co
     return name;
 }
 
-asn1_entity_t asn1_resource::get_entity(const std::string& name) const {
+asn1_entity_t asn1_advisor::get_entity(const std::string& name) const {
     asn1_entity_t entity = asn1_entity_unknown;
     auto iter = _type_rid.find(name);
     if (_type_rid.end() != iter) {
@@ -157,12 +157,12 @@ asn1_entity_t asn1_resource::get_entity(const std::string& name) const {
     return entity;
 }
 
-asn1_perm_t asn1_resource::get_perm(asn1_entity_t entity) const {
+asn1_perm_t asn1_advisor::get_perm(asn1_entity_t entity) const {
     auto iter = _type_perm.find(entity);
     return (_type_perm.end() == iter) ? asn1_perm_none : iter->second;
 }
 
-std::string asn1_resource::get_class_name(int c) const {
+std::string asn1_advisor::get_class_name(int c) const {
     std::string name;
     auto iter = _class_id.find(c & asn1_class_mask);
     if (_class_id.end() != iter) {
@@ -171,7 +171,7 @@ std::string asn1_resource::get_class_name(int c) const {
     return name;
 }
 
-uint8 asn1_resource::get_class(const std::string& name) const {
+uint8 asn1_advisor::get_class(const std::string& name) const {
     uint8 type = 0;
     auto iter = _class_rid.find(name);
     if (_class_rid.end() != iter) {
@@ -180,7 +180,7 @@ uint8 asn1_resource::get_class(const std::string& name) const {
     return type;
 }
 
-std::string asn1_resource::nameof_mode(uint16 t, bool ismodule) const {
+std::string asn1_advisor::nameof_mode(uint16 t, bool ismodule) const {
     std::string name;
     if ((false == ismodule) && (asn1_automatic == t)) return name;
     auto iter = _mode_id.find(t);
@@ -190,7 +190,7 @@ std::string asn1_resource::nameof_mode(uint16 t, bool ismodule) const {
     return name;
 }
 
-uint8 asn1_resource::valueof_mode(const std::string& name) const {
+uint8 asn1_advisor::valueof_mode(const std::string& name) const {
     uint8 value = 0;
     auto iter = _mode_rid.find(name);
     if (_mode_rid.end() != iter) {
@@ -199,7 +199,7 @@ uint8 asn1_resource::valueof_mode(const std::string& name) const {
     return value;
 }
 
-asn1_publisher* asn1_resource::get_publisher() {
+asn1_publisher* asn1_advisor::get_publisher() {
     _publisher.prepare();
     return &_publisher;
 }

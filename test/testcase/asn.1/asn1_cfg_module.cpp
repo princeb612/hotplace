@@ -121,7 +121,7 @@ return_t prepare_lalr1_parser_asn1_module(parser_t& parser) {
 
     ret = parser.learn();
     _logger->writeln("%s parsing table generation %s", name.c_str(), (errorcode_t::success == ret) ? "success" : "failure");
-    _test_case.test(ret, __FUNCTION__, "%s parser - ASSN.1 for Module (build parsing table)", name.c_str());
+    _test_case.test(ret, __FUNCTION__, "%s parser - ASN.1 for Module (build parsing table)", name.c_str());
 
     return ret;
 }

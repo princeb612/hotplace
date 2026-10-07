@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
 
@@ -32,7 +32,7 @@ asn1_any* asn1_any::addref() {
 }
 
 void asn1_any::represent(stream_t* s, const asn1_value* value) const {
-    auto resource = asn1_resource::get_instance();
+    auto advisor = asn1_advisor::get_instance();
     auto entity = get_entity();
 
     if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
@@ -40,13 +40,13 @@ void asn1_any::represent(stream_t* s, const asn1_value* value) const {
         const auto& name = resolve_name();
         value->write(s, name);
     } else {
-        s->printf("%s", resource->get_entity_name(get_ident(), entity).c_str());
+        s->printf("%s", advisor->get_entity_name(get_ident(), entity).c_str());
     }
     auto type = get_component_type();
     switch (type) {
         case asn1_default:
         case asn1_optional: {
-            s->printf(" %s", resource->nameof_mode(type).c_str());
+            s->printf(" %s", advisor->nameof_mode(type).c_str());
         } break;
         default: {
         } break;

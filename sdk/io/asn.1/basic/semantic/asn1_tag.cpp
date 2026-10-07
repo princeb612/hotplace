@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
@@ -63,11 +63,11 @@ void asn1_tag::as_explicit() { _tag_mode = asn1_explicit; }
 void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         if (get_class() & asn1_class_mask) {
-            auto resource = asn1_resource::get_instance();
+            auto advisor = asn1_advisor::get_instance();
 
             s->printf("[");
             if (false == asn1_is_context(get_class())) {
-                s->printf("%s", resource->get_class_name(get_class()).c_str());
+                s->printf("%s", advisor->get_class_name(get_class()).c_str());
                 s->printf(" ");
             }
 
@@ -77,7 +77,7 @@ void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
 
             auto tagtype = get_tag_type();
             if (asn1_automatic != tagtype) {
-                s->printf(" %s", resource->nameof_mode(tagtype).c_str());
+                s->printf(" %s", advisor->nameof_mode(tagtype).c_str());
             }
         }
     }

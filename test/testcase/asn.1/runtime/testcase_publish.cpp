@@ -104,7 +104,7 @@ void test_publish_babystep() {
 
     basic_stream bs;
     asn1_build_resultset result;
-    auto publisher = asn1_resource::get_instance()->get_publisher();
+    auto publisher = asn1_advisor::get_instance()->get_publisher();
     publisher->build(&pt, result);
     if (result.object) {
         result.object->publish(&bs);

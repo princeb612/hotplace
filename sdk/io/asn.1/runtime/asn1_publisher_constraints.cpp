@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/atoi.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_all_except.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_container.hpp>

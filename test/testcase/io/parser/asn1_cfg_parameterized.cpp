@@ -318,6 +318,6 @@ return_t prepare_glr_parser_asn1_parameterized(parser_t& parser) {
 
     ret = parser.learn();
     _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    _test_case.test(ret, __FUNCTION__, "GLR parser - ASSN.1 for Parameterized (build parsing table)");
+    _test_case.test(ret, __FUNCTION__, "GLR parser - ASN.1 for Parameterized (build parsing table)");
     return ret;
 }

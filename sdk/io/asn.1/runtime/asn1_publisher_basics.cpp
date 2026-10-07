@@ -12,7 +12,7 @@
  *   - Whenever possible, use `add` and `get` operations that do not modify the current pointer.
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_choice.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namedlist.hpp>
@@ -777,7 +777,7 @@ void asn1_publisher::prepare_basics() {
             // production("OptionalitySpec", {"DEFAULT", "ValueElement"})
             // production("OptionalitySpec", {"DEFAULT", "{", "}"})
 
-            auto resource = asn1_resource::get_instance();
+            auto advisor = asn1_advisor::get_instance();
 
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);
@@ -790,7 +790,7 @@ void asn1_publisher::prepare_basics() {
 
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
-            asn.option.type = resource->valueof_mode(rhs_type.symbol);
+            asn.option.type = advisor->valueof_mode(rhs_type.symbol);
             if (2 == size) {
                 auto& rhs_valueelem = rhs[1];  // ValueElement
                 // variant v;
@@ -948,7 +948,7 @@ void asn1_publisher::prepare_basics() {
     // ExtensionMarker
     add_handler(
         "SimpleTypeSpec", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
-            auto resource = asn1_resource::get_instance();
+            auto advisor = asn1_advisor::get_instance();
 
             auto size = node->sizeof_rhs();  // 1, 4
             std::vector<asn1_semantic_node> rhs(size);
@@ -957,7 +957,7 @@ void asn1_publisher::prepare_basics() {
             }
 
             auto& rhs_simpletype = rhs[0];
-            auto entity = resource->get_entity(rhs_simpletype.symbol);  // BOOLEAN, ..., ANY
+            auto entity = advisor->get_entity(rhs_simpletype.symbol);  // BOOLEAN, ..., ANY
 
             auto obj = asn1_builder::build(entity);
             if (4 == size) {

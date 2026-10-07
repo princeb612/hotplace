@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
@@ -57,8 +57,8 @@ asn1_object* asn1_builder::build(uint8 ident, uint64 tag, uint32 flags) {
 asn1_object* asn1_builder::buildtag(uint8 ident, uint64 tag, uint8 mode) { return new asn1_tag(ident, tag, mode); }
 
 asn1_object* asn1_builder::buildtag(const std::string& type, uint64 tag, uint8 mode) {
-    auto resource = asn1_resource::get_instance();
-    return new asn1_tag(resource->get_class(type), tag, mode);
+    auto advisor = asn1_advisor::get_instance();
+    return new asn1_tag(advisor->get_class(type), tag, mode);
 }
 
 asn1_object* asn1_builder::build(asn1_entity_t entity, std::function<void(asn1_object*)> f) {

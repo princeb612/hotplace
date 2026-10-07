@@ -24,8 +24,7 @@ file_stream::file_stream()
       _create(0),
       _filemap_handle(nullptr),
       _file_data(nullptr),
-      _filesize_low(0),
-      _filesize_high(0),
+      _filesize(0),
       _flags(0) {}
 
 file_stream::file_stream(const char* filename, uint32 mode)
@@ -37,8 +36,7 @@ file_stream::file_stream(const char* filename, uint32 mode)
       _create(0),
       _filemap_handle(nullptr),
       _file_data(nullptr),
-      _filesize_low(0),
-      _filesize_high(0),
+      _filesize(0),
       _flags(0) {
     if (filename) {
         open(filename, mode);
@@ -105,7 +103,7 @@ return_t file_stream::open(const char* file_name, uint32 flag) {
 
         _mode = mode;
         _flags = flag;
-        _filesize_low = sb.st_size;
+        _filesize = sb.st_size;
     }
     __finally2 {}
     return ret;
@@ -131,8 +129,7 @@ return_t file_stream::close() {
         _create = 0;
         _filemap_handle = nullptr;
         _file_data = nullptr;
-        _filesize_low = 0;
-        _filesize_high = 0;
+        _filesize = 0;
     }
     return ret;
 }
@@ -150,7 +147,9 @@ return_t file_stream::begin_mmap() {
         if (true == is_mmapped()) {
             __leave2;
         }
-        if (0 == _filesize_low) {
+        // Use 64-bit file size
+        uint64 file_size = size();
+        if (0 == file_size) {
             __leave2;
         }
 
@@ -158,7 +157,7 @@ return_t file_stream::begin_mmap() {
         if (O_RDWR == (_mode & O_RDWR)) {
             nprot |= PROT_WRITE;
         }
-        _filemap_handle = mmap(0, _filesize_low, nprot, MAP_SHARED, _file_handle, 0);
+        _filemap_handle = mmap(0, static_cast<size_t>(file_size), nprot, MAP_SHARED, _file_handle, 0);
         if (MAP_FAILED == _filemap_handle) {
             ret = errno;
             __leave2;
@@ -177,7 +176,8 @@ return_t file_stream::end_mmap() {
     return_t ret = errorcode_t::success;
 
     if (nullptr != _filemap_handle) {
-        munmap(_filemap_handle, _filesize_low);
+        // Pass 64-bit size casted to size_t
+        munmap(_filemap_handle, static_cast<size_t>(size()));
         _filemap_handle = nullptr;
         _file_data = nullptr;
     }
@@ -189,8 +189,6 @@ stream_type_t file_stream::get_stream_type() { return _stream_type; }
 byte_t* file_stream::data() const { return _file_data; }
 
 uint64 file_stream::size() const {
-    // ~ 4GB
-    // return _filesize_low;
     uint64 ret_value = 0;
 
     if (-1 != _file_handle) {
@@ -207,8 +205,7 @@ void file_stream::truncate(size_t file_pos) {
         if (rc == 0) {
             LARGE_INTEGER li;
             li.QuadPart = file_pos;
-            _filesize_low = li.LowPart;
-            _filesize_high = li.HighPart;
+            _filesize = file_pos;
         }
     }
 }

@@ -4,15 +4,12 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1096
+Edition 1 · Revision 1100
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
 
-
-`asn1_runtime` is the runtime layer that turns ASN.1 notation and DER/BER byte streams into the project's ASN.1 object model, and can publish that model back to ASN.1 notation or DER.
-
-This layer sits between the ASN.1 syntax/parser side and the semantic ASN.1 types under `basic/`. It is also the point where weakly typed decoded data can be promoted into semantic objects and where strongly typed schema definitions are resolved and decoded.
+`asn1_runtime` is the runtime registry for semantic ASN.1 objects and module information. It stores named definitions, references, `EXPORTS`/`IMPORTS` information, and provides resolution, linkage, notation representation, and DER-related runtime operations.
 
 ## Role in hotplace
 
@@ -20,237 +17,217 @@ This layer sits between the ASN.1 syntax/parser side and the semantic ASN.1 type
 ASN.1 notation
       |
       v
-asn1_parser / parser
+ asn1_parser
       |
       v
-parse_tree
+  parse_tree
       |
       v
-asn1_builder / asn1_publisher
+ asn1_publisher
       |
       v
-asn1_object semantic model
+asn1_build_resultset
       |
-      +-----------------------------+
-      |                             |
-      v                             v
- weakly typed DER decode       strongly typed decode
- asn1_node tree                schema/reference lookup
-      |                             |
-      +-------------+---------------+
+      v
+ asn1_runtime_context
+      |
+      +-------------------------------+
+      |                               |
+      v                               v
+ asn1_runtime                    asn1_runtime
+ local module                    imported module
+      |                               ^
+      +---------- search() -----------+
                     |
                     v
-               asn1_runtime
+                resolve()
                     |
-          +---------+---------+
-          |                   |
-          v                   v
-       notation              DER
+                    v
+              is_resolvable()
 ```
 
-The important point is that `asn1_runtime` is not itself the ASN.1 grammar parser. `asn1_parser` handles the notation-to-parse-tree step; the runtime layer builds, stores, resolves, decodes, and publishes the resulting semantic objects.
+The important distinction is that `asn1_runtime` is not the ASN.1 grammar parser. `asn1_parser` handles notation → tokens → parse tree, `asn1_publisher` builds semantic/module information, and `asn1_runtime` stores and resolves that information.
 
 ## Runtime context
 
-`asn1_runtime` instances can also be selected through `asn1_runtime_context`. The context keeps named runtime instances and a current/default runtime, so code that operates on ASN.1 definitions can select which schema/object registry is active without making every caller carry the runtime instance directly.
+`asn1_runtime_context` keeps named runtime instances and a current/default runtime. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
 
 ```text
-             asn1_runtime_context
-                      |
-          +-----------+-----------+
-          |                       |
-     named runtimes          current/default
-          |                       |
-          +-----------+-----------+
-                      v
-                asn1_runtime
+asn1_runtime_context
+        |
+        +-- "CommonDefinitions" -> asn1_runtime
+        |
+        +-- "SecureMessageModule" -> asn1_runtime
+        |
+        +-- current/default runtime
 ```
 
-This is a runtime-management concern rather than part of ASN.1 parsing or DER encoding. The distinction matters when tracing source code: `asn1_runtime_context` selects the runtime, while `asn1_runtime` owns schemas, objects, references, and encode/decode operations.
+The context manages runtime instances; each `asn1_runtime` owns the definitions and module relationships inside one runtime.
 
-## Main components
+## Main runtime state
 
-### `asn1_runtime`
+A module-capable runtime contains:
 
-`asn1_runtime` owns a collection of named ASN.1 objects/types and provides the public runtime operations.
+- a named-object dictionary;
+- module state (`is_module()`);
+- module tag/extensibility defaults;
+- `asn1_exports` describing the exported symbol list or `ALL`;
+- `asn1_symbol_module` entries describing imported symbols and their outer module;
+- linkage/reference information used by semantic objects.
 
-Important operations include:
+The module state is created by `as_module()` and populated through the publisher's module handlers and the runtime import/export APIs.
 
-- `add_schema()` — parse and add an ASN.1 schema definition.
-- `add()` / `set()` / `get()` — manage runtime objects and their values.
-- `parse()` — parse ASN.1 notation through the runtime parser path.
-- `read()` — decode a named type from a byte stream.
-- `read_weakly_typed()` — decode without requiring a fully resolved semantic type first.
-- `notation()` — publish a runtime object as ASN.1 notation.
-- `publish()` — encode a runtime object as DER/binary data.
-- `resolve()` / `is_resolvable()` — inspect and resolve referenced-type dependencies.
-- `update_linkage()` — propagate linkage information through the object hierarchy, including constructed/tag relationships.
+## Reference lookup and resolution
 
-The runtime therefore acts as both a **schema/object registry** and the central entry point for encode/decode operations.
-
-### `asn1_builder`
-
-`asn1_builder` converts parser output into semantic `asn1_object` instances. It provides helpers for built-in entities, tags, named entities, and construction from a `parse_tree`.
-
-The builder is especially important for the reverse direction used by the tests:
+Revision 1099 makes imported symbols participate in runtime lookup through `search()`.
 
 ```text
-ASN.1 notation
-    -> parse_tree
-    -> asn1_builder
-    -> asn1_object
-```
-
-This is different from merely decoding a DER stream. It reconstructs the semantic type/object model represented by the notation.
-
-### `asn1_publisher`
-
-`asn1_publisher` performs semantic construction from a parse tree using handlers for ASN.1 grammar constructs. It has separate preparation for basic constructs and constraints.
-
-In practice, the publisher/builder pair forms the semantic-construction side of the runtime parser flow.
-
-### `asn1_weakly_typed`
-
-Weak decoding starts from the DER/BER structural representation rather than a completely resolved schema.
-
-```text
-DER stream
+search(name)
    |
-   v
-asn1_node tree
+   +-- local _dictionary
    |
-   |  structural information
-   |  identifier / P-C bit / length / raw value
-   v
-asn1_weakly_typed::transform()
+   `-- _imports
+         |
+         +-- imported symbol?
+         |
+         v
+   asn1_runtime_context::get(outer_module)
+         |
+         v
+       outer runtime
+```
+
+A local definition is preferred. If the name is not present locally, the runtime walks its imported symbol modules and asks the corresponding outer runtime for the symbol.
+
+`resolve()` uses this lookup when traversing referenced types. Therefore a referenced type can be satisfied by a definition in another imported module rather than requiring every definition to be copied into the current runtime.
+
+`is_resolvable()` is the boolean-facing check over the same dependency-resolution path.
+
+This creates a clear distinction:
+
+```text
+get() / local dictionary
+        |
+        v
+local object access
+
+search()
    |
-   v
-asn1_object semantic representation
+   +-- local object
+   `-- imported object
+        |
+        v
+resolve()
+        |
+        v
+reference dependency validation
 ```
 
-The implementation first reconstructs semantic objects from the structural nodes, binds them to parents/containers/tags, and then injects leaf values. This is useful when the stream must be interpreted before a complete strongly typed schema is available.
+## Linkage update
 
-`testcase_basic2.cpp` exercises this path extensively, including IMPLICIT/EXPLICIT tagging, nested containers, `SEQUENCE OF`, `SET OF`, high tag numbers, and DER round trips.
+`update_linkage()` propagates runtime linkage through semantic objects. It updates tagged-type linkage and follows referenced objects while also propagating constructed/explicit relationships through parent objects.
 
-### `asn1_strongly_typed`
-
-Strong decoding starts with a named schema/type already registered in `asn1_runtime`.
+The operation is separate from name resolution:
 
 ```text
-schema definitions
-      |
-      v
-asn1_runtime
-      |
- named type/reference resolution
-      |
-      v
-DER stream -> semantic object
+resolve()
+    -> find referenced definitions
+
+update_linkage()
+    -> connect semantic objects and propagate linkage
 ```
 
-`asn1_strongly_typed::read()` selects a named runtime object and decodes the stream according to its semantic structure.
+This separation is useful when tracing strongly typed/tagged object construction.
 
-The tests demonstrate both simple referenced types and nested/tagged types such as:
+## Module representation
+
+`represent()` can now regenerate module notation as well as individual object notation.
+
+For a module runtime it emits module-level information including:
 
 ```text
-Type1 ::= VisibleString
-Type2 ::= [APPLICATION 3] IMPLICIT Type1
-Type3 ::= [2] EXPLICIT Type2
+ModuleName DEFINITIONS ... ::= BEGIN
+EXPORTS ...
+IMPORTS ... FROM ...;
+...
+END
 ```
 
-and constructed values such as `SEQUENCE` with named members.
+The representation is derived from the runtime's stored module state, exported symbols, imported symbol modules, defaults, and registered definitions.
 
-## Reference and linkage model
-
-A major part of the runtime is resolving named ASN.1 definitions.
-
-The semantic layer distinguishes between a referenced type definition and a reference to another type. Typical construction is:
-
-```cpp
-asn1_referenced_type::define("Person", new asn1_sequence(...));
-asn1_referenced_type::refer("Person");
-```
-
-A definition owns the semantic object, while a reference identifies another definition. `asn1_runtime::resolve()` walks these dependencies and `is_resolvable()` reports whether the required definitions are available.
-
-`update_linkage()` then updates relationships in the constructed object hierarchy. This is important for tag and constructed-bit propagation when nested or explicitly/implicitly tagged types are involved.
-
-## Encode/decode round trip
-
-The runtime is designed around a useful verification cycle:
+This makes `represent()` a useful verification point for the parser/publisher/runtime path:
 
 ```text
-schema / notation
-       |
-       v
-semantic ASN.1 object
-       |
-       +---- publish() ----> DER
-       |                       |
-       |                       v
-       +<----- read() <---- decoded object
-       |
-       +---- notation() ----> ASN.1 notation
+ASN.1 source
+    |
+    v
+parser -> publisher -> runtime
+                         |
+                         v
+                    represent()
+                         |
+                         v
+                 regenerated ASN.1
 ```
 
-`testcase_basic3.cpp` verifies this by registering schemas, reading DER, publishing ASN.1 notation and DER again, and comparing the regenerated representation with the expected schema and original DER stream.
+## Strongly and weakly typed paths
+
+The runtime also remains the central point for the two decoding styles used by the tests.
+
+```text
+weakly typed
+DER -> asn1_node tree -> semantic object
+
+strongly typed
+runtime schema/reference lookup -> DER -> semantic object
+```
+
+The module resolution additions in rev1099 primarily affect the strongly typed/schema side, where a referenced definition may belong to another runtime module.
 
 ## Constraint path
 
-Constraint processing crosses the generic parser/runtime boundary rather than living entirely in `asn1_runtime`:
+Constraint processing crosses the generic parser/runtime boundary:
 
 ```text
 ASN.1 notation
-      │
-      ▼
+      |
+      v
 parser / parse_tree
-      │
-      ▼
-asn1_builder / publisher
-      │
-      ▼
+      |
+      v
+asn1_publisher
+      |
+      v
 asn1_object + constraint tree
-      │
-      ▼
+      |
+      v
 asn1_constraint_evaluator
-      │
-      ▼
+      |
+      v
 t_set_runtime<T>
-   ┌──┴──────┐
-   ▼         ▼
+   +---------+
+   |         |
+   v         v
 range_set  string_set
 ```
 
-This makes the ownership of each concern visible: syntax belongs to `sdk/io/parser`, semantic constraint nodes and their evaluation belong to `sdk/io/asn.1/basic`, and the reusable value-domain machinery belongs to `sdk/base/nostd`.
-
-## Constraints
-
-`asn1_builder` is also used by the constraints tests to construct semantic types with constraint information. `testcase_constraints.cpp` covers integer, real, string, sequence/set-of and related subtype constraints.
-
-This makes the runtime layer the bridge between the parser's constraint notation and the semantic type objects that enforce or carry those constraints.
+The runtime stores the semantic result; constraint evaluation and generic value-domain operations remain in their respective layers. The ASN.1 provider used by this path is `asn1_advisor`, which supplies the shared publisher and parser providers.
 
 ## Related source
 
-- `sdk/io/asn.1/runtime/asn1_runtime.*`
+- `sdk/io/asn.1/runtime/asn1_runtime.hpp`
+- `sdk/io/asn.1/runtime/asn1_runtime.cpp`
 - `sdk/io/asn.1/runtime/asn1_parser.*`
-- `sdk/io/asn.1/runtime/asn1_builder.*`
 - `sdk/io/asn.1/runtime/asn1_publisher.*`
-- `sdk/io/asn.1/runtime/asn1_weakly_typed.*`
-- `sdk/io/asn.1/runtime/asn1_strongly_typed.*`
+- `sdk/io/asn.1/asn1_advisor.hpp`
+- `sdk/io/asn.1/advisor/asn1_advisor.cpp`
 - `sdk/io/asn.1/basic/semantic/`
-- `sdk/io/asn.1/basic/structural/`
+- `sdk/base/nostd/`
 
 ## Related tests
 
-- `test/testcase/asn.1/testcase_basic2.cpp` — weakly typed transformation and semantic construction cases.
-- `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decode, reference resolution, and parser/runtime integration.
-- `test/testcase/asn.1/testcase_constraints.cpp` — semantic construction with ASN.1 constraints.
-- `test/testcase/asn.1/runtime/testcase_parser.cpp` — runtime parser path.
-- `test/testcase/asn.1/runtime/testcase_publish.cpp` — runtime publishing path.
-
-## Related areas
-
-- `sdk/io/asn.1/basic/` — ASN.1 semantic/structural type model.
-- `sdk/io/asn.1/loader/` — loading ASN.1 modules into the runtime flow.
-- `sdk/io/asn.1/compiler/` — future/source-generation direction.
-- `sdk/io/parser/` — grammar parsing infrastructure.
+- `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decoding and reference resolution.
+- `test/testcase/asn.1/loader/testcase_loader.cpp` — module loading, regenerated notation, `EXPORTS`, `IMPORTS`, and `is_resolvable()`.
+- `test/testcase/asn.1/testcase_constraints.cpp` — semantic construction with constraints.
+- `test/testcase/asn.1/runtime/testcase_parser.cpp` — parser/runtime path.
+- `test/testcase/asn.1/runtime/testcase_publish.cpp` — publishing path.

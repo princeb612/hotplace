@@ -8,6 +8,8 @@
  * Date         Name                Description
  * 2002.10.23   Soo Han, Kin        codename.hush2002
  * 2023.08.15   Soo Han, Kin        added : stopwatch
+ * 2026.10.05   Soo Han and Gemini  fixed operator +=, -= (hotplace revision 1098)
+ *
  */
 
 #include <hotplace/sdk/base/basic/valist.hpp>

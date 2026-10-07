@@ -2,23 +2,18 @@
 
 ## Role
 
-`asn1_loader` is the file/stream entry point intended to load an ASN.1 notation source into the hotplace ASN.1 processing flow.
-
-At revision 1097, the loader has taken its first implementation step: `load_file()` maps the source and `load()` passes the in-memory notation to `asn1_parser`, producing a `parse_tree`. Publishing that tree into runtime objects remains a separate second stage.
+`asn1_loader` is the file/stream entry point for loading ASN.1 notation source into the hotplace parser and semantic runtime flow.
 
 ## Publication
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1097
+Edition 1 · Revision 1100
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
 
-- `asn1_loader::load_file()` — opens an ASN.1 source file through `file_stream`, memory-maps it, and forwards the buffer to `load()`.
-- `asn1_loader::load()` — constructs an in-memory buffer and invokes `asn1_parser::parse()` to populate the supplied `parse_tree`.
-
-The current implementation is intentionally split into loading/parsing and publishing/runtime construction:
+The loader keeps source loading separate from parsing and semantic publication. Its current flow can be exercised in stages:
 
 ```text
 ASN.1 file / memory
@@ -29,72 +24,77 @@ ASN.1 file / memory
         v
    asn1_parser
         |
-        v
-    parse_tree
+        +-- to_tokens()
         |
-        v
-  asn1_publisher
-        |
-        v
-asn1_runtime_context
-        |
-        v
- runtime objects
+        +-- to_parsetree()
+        |       |
+        |       v
+        |   parse_tree
+        |       |
+        |       v
+        |   to_result()
+        |       |
+        |       v
+        +-- asn1_publisher
+                |
+                v
+        asn1_runtime_context
+                |
+                v
+          module runtimes
 ```
 
-## Relation to the parser and runtime
+The loader itself does not duplicate parser or publisher responsibilities.
 
-The loader is the file/memory entry point into the parser pipeline. It does not publish the parse tree itself; `asn1_publisher` performs the next semantic/runtime construction step.
+## File loading
+
+`load_file()` performs the filesystem-facing part of the operation:
+
+1. validates the supplied output parse-tree pointer;
+2. opens the ASN.1 source through `file_stream`;
+3. memory-maps the source;
+4. forwards the mapped buffer to the loading/parsing operation.
+
+The parser-facing helper path can also expose the source as tokens for tests that want to inspect the intermediate parser boundary.
+
+## Current implementation status
+
+Revision 1097 introduced the first file-loading/parsing implementation. By revision 1099, the loader testcase exercised the next stages explicitly. Revision 1100 consolidates the shared ASN.1 provider under `asn1_advisor`:
 
 ```text
-ASN.1 source
-    |
-    v
-asn1_loader
-    |
-    v
-parser / semantic construction
-    |
-    v
-asn1_runtime_context
-    |
-    v
-ASN.1 schema / runtime objects
+file
+  -> loader
+  -> tokens
+  -> parse tree
+  -> asn1_advisor
+       +-- publisher
+       `-- parser providers
+  -> runtime module
 ```
 
-The actual parser and semantic-construction machinery currently lives under `sdk/io/asn.1/runtime` and `sdk/io/parser`; the loader does not duplicate those responsibilities.
+The loader therefore remains a small entry point rather than becoming the owner of semantic construction.
 
-## File-loading details
+## Module-aware result
 
-`load_file()` performs:
+The published runtime now contains module-level information introduced by the ASN.1 publisher, including exported and imported symbols. The publisher and parser providers are obtained from `asn1_advisor`, which is the shared ASN.1 provider for the loader/runtime path. The loader testcase verifies this with modules such as `CommonDefinitions` and `SecureMessageModule` and checks `is_resolvable()` against the resulting runtime relationships.
 
-1. null-parameter validation
-2. `file_stream::open()`
-3. `file_stream::begin_mmap()`
-4. forwarding the mapped buffer and size to `load()`
+The testcase also regenerates ASN.1 notation from the runtime with `represent()`. This provides a useful end-to-end check that loading, parsing, publishing, module storage, and runtime representation are connected.
 
-This keeps filesystem handling separate from the actual ASN.1 processing operation.
+## Historical design note
 
-## Current status
-
-Revision 1097 is a **baby step**: file loading and parsing are implemented, while publishing is exercised as a separate stage by the loader testcase. The broader `loader-flow.md` remains an earlier design/study sketch and should not be read as a statement of the current implementation status.
+`loader-flow.md` remains an earlier design/study sketch and should not be treated as a replacement for the current implementation record. The source-tree implementation record follows the actual loader/parser/publisher flow present in the current revision.
 
 ## Related source
 
 - `sdk/io/asn.1/loader/asn1_loader.hpp`
 - `sdk/io/asn.1/loader/asn1_loader.cpp`
-- `sdk/io/asn.1/runtime/`
-- `sdk/io/parser/`
+- `sdk/io/asn.1/runtime/asn1_parser.*`
+- `sdk/io/asn.1/runtime/asn1_publisher.*`
+- `sdk/io/asn.1/runtime/asn1_runtime.*`
 
 ## Related tests
 
 - `test/testcase/asn.1/loader/testcase_loader.cpp`
 - `test/testcase/asn.1/loader/`
 
-The loader testcase exercises the two stages separately: `loader.load_file()` builds the parse tree, then `asn1_publisher::build()` publishes it and exposes module/runtime objects through `asn1_runtime_context`.
-
-## Related documents
-
-- `loader-flow.md` — earlier loader flow/design sketch
-- `../runtime/` — runtime representation and semantic construction
-- `../../parser/` — parser implementation
+The loader testcase intentionally separates tokenization, parse-tree construction, and semantic publication so that each boundary can be verified independently.

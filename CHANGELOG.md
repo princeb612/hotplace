@@ -37,6 +37,7 @@
     * CBOR
 
 * details
+  * Revision 1100
   * Revision 1099
     * ASN.1 EXPORTS, IMPORTS
     * asn1_runtime update_linkage, is_resolvable, resolve

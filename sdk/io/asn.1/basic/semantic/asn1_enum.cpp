@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
@@ -71,12 +71,12 @@ asn1_enum& asn1_enum::add(const asn1_namedlist& nml) {
 }
 
 void asn1_enum::represent(stream_t* s, const asn1_value* value) const {
-    auto resource = asn1_resource::get_instance();
+    auto advisor = asn1_advisor::get_instance();
     auto entity = get_entity();
 
     if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
 
-    s->printf("%s ", resource->get_entity_name(get_ident(), entity).c_str());
+    s->printf("%s ", advisor->get_entity_name(get_ident(), entity).c_str());
     s->printf("{");
     if (false == _reverse.empty()) {
         auto iter = _reverse.begin();

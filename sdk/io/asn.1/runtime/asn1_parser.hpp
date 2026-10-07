@@ -17,7 +17,7 @@
 
 #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 #include <hotplace/sdk/io/parser/lalr1_parser.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>

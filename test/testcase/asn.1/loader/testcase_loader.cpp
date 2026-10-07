@@ -34,7 +34,7 @@ void test_asn1loader_babystep() {
 
     // step.2
     asn1_build_resultset result;
-    auto publisher = asn1_resource::get_instance()->get_publisher();
+    auto publisher = asn1_advisor::get_instance()->get_publisher();
     ret = publisher->build(&pt, result);
     _test_case.test(ret, __FUNCTION__, "publish %s", testfile);
 

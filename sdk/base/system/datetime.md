@@ -1,5 +1,14 @@
 # Date and time
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1099
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
 `datetime` provides hotplace's common date/time abstraction around `struct timespec`, with conversion to the time representations used by POSIX and Windows code.
 
 The central design is to keep an absolute timestamp internally and provide explicit conversion to local time, UTC, and platform-oriented structures.
@@ -40,6 +49,8 @@ The auxiliary structures are:
 
 Both local-time and UTC conversion are supported. The static conversion functions make the conversion direction explicit, for example `timespec_to_datetime()`, `datetime_to_timespec()`, `filetime_to_timespec()`, and `systemtime_to_timespec()`.
 
+The Windows FILETIME conversion preserves the sub-second portion of the internal `timespec` rather than reducing the conversion to whole seconds.
+
 ## Arithmetic and comparison
 
 A `datetime` can be compared directly and adjusted by a `timespan_t`.
@@ -52,6 +63,8 @@ datetime -= timespan_t
 The implementation also provides `elapsed()` and `update_if_elapsed()` helpers for interval-oriented use.
 
 For raw `timespec` values, `time_diff()` calculates a normalized difference and `time_sum()` combines a list of time slices.
+
+Nanosecond arithmetic is normalized across the one-second boundary. Both positive carry and negative borrow are handled so the resulting `timespec` remains normalized.
 
 ## Realtime and monotonic clocks
 

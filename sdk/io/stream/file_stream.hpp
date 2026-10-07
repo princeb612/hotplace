@@ -26,6 +26,13 @@
 namespace hotplace {
 namespace io {
 
+#if defined __linux__
+// 64bit off_t, lseek, fstat
+#ifndef _FILE_OFFSET_BITS
+#define _FILE_OFFSET_BITS 64
+#endif
+#endif
+
 /**
  * @brief filestream
  * @example
@@ -258,8 +265,7 @@ class file_stream : public stream_t {
     uint32 _create;
     void* _filemap_handle;
     byte_t* _file_data;
-    uint32 _filesize_low;
-    uint32 _filesize_high;
+    uint64 _filesize;
 
 #if defined _WIN32 || defined _WIN64
     OVERLAPPED _win32_ov;

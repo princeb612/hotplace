@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
@@ -28,14 +28,14 @@ asn1_entity_t get_entity(const asn1_object* object, bool component) {
 }
 
 std::string get_entity_name(const asn1_object* object, bool component) {
-    auto resource = asn1_resource::get_instance();
+    auto advisor = asn1_advisor::get_instance();
     if (component) {
         auto entity = get_entity(object, true);
-        return resource->get_component_entity_name(entity);
+        return advisor->get_component_entity_name(entity);
     } else {
         auto ident = object->get_ident();
         auto entity = get_entity(object, false);
-        return resource->get_entity_name(ident, entity);
+        return advisor->get_entity_name(ident, entity);
     }
 }
 

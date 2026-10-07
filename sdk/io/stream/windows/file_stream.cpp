@@ -28,8 +28,7 @@ file_stream::file_stream()
       _create(0),
       _filemap_handle(nullptr),
       _file_data(nullptr),
-      _filesize_low(0),
-      _filesize_high(0),
+      _filesize(0),
       _flags(0) {}
 
 file_stream::file_stream(const char* filename, uint32 mode)
@@ -41,8 +40,7 @@ file_stream::file_stream(const char* filename, uint32 mode)
       _create(0),
       _filemap_handle(nullptr),
       _file_data(nullptr),
-      _filesize_low(0),
-      _filesize_high(0),
+      _filesize(0),
       _flags(0) {
     if (filename) {
         open(filename, mode);
@@ -120,6 +118,7 @@ return_t file_stream::open(const wchar_t* file_name, uint32 flag) {
 
         memset(&_win32_ov, 0, sizeof(_win32_ov));
         if (filestream_flag_t::flag_exclusive_flock == (flag & filestream_flag_t::flag_exclusive_flock)) {
+            // Lock full 64-bit range (0xFFFFFFFF, 0xFFFFFFFF)
             LockFileEx(_file_handle, LOCKFILE_EXCLUSIVE_LOCK, 0, 0xFFFFFFFF, 0xFFFFFFFF, &_win32_ov);
         } else if (filestream_flag_t::flag_share_flock == (flag & filestream_flag_t::flag_share_flock)) {
         }
@@ -131,8 +130,10 @@ return_t file_stream::open(const wchar_t* file_name, uint32 flag) {
         _access = access;
         _share = share;
         _flags = flag;
-        _filesize_low = fi.nFileSizeLow;
-        _filesize_high = fi.nFileSizeHigh;
+        LARGE_INTEGER li;
+        li.LowPart = fi.nFileSizeLow;
+        li.HighPart = fi.nFileSizeHigh;
+        _filesize = li.QuadPart;
     }
     __finally2 {}
     return ret;
@@ -147,6 +148,7 @@ return_t file_stream::close() {
         end_mmap();
 
         if (_flags & filestream_flag_t::flag_exclusive_flock) {
+            // Unlock full 64-bit range
             UnlockFileEx(_file_handle, 0, 0xFFFFFFFF, 0xFFFFFFFF, &_win32_ov);
         }
         CloseHandle(_file_handle);
@@ -158,8 +160,7 @@ return_t file_stream::close() {
         _create = 0;
         _filemap_handle = nullptr;
         _file_data = nullptr;
-        _filesize_low = 0;
-        _filesize_high = 0;
+        _filesize = 0;
         _flags = 0;
     }
     return ret;
@@ -245,13 +246,14 @@ void file_stream::truncate(size_t lfilepos) {
         LARGE_INTEGER li;
         li.QuadPart = lfilepos;
 
-        SetFilePointer(_file_handle, li.LowPart, (PLONG)&li.HighPart, SEEK_SET);
+        SetFilePointerEx(_file_handle, li, nullptr, FILE_BEGIN);
         SetEndOfFile(_file_handle);
 
         BY_HANDLE_FILE_INFORMATION fi;
         GetFileInformationByHandle(_file_handle, &fi);
-        _filesize_low = fi.nFileSizeLow;
-        _filesize_high = fi.nFileSizeHigh;
+        li.LowPart = fi.nFileSizeLow;
+        li.HighPart = fi.nFileSizeHigh;
+        _filesize = li.QuadPart;
     }
 }
 
@@ -260,7 +262,7 @@ void file_stream::seek(int64 lfilepos, uint32 method) {
         LARGE_INTEGER li = {};
         li.QuadPart = lfilepos;
 
-        SetFilePointer(_file_handle, li.LowPart, &li.HighPart, method);
+        SetFilePointerEx(_file_handle, li, nullptr, method);
     }
 }
 

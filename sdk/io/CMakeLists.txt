@@ -7,6 +7,7 @@
 file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/advisor/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/builtin/*.hpp
@@ -29,6 +30,7 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
 file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/advisor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/builtin/*.cpp
@@ -38,7 +40,6 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/runtime/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/compiler/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/loader/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/parser/*.cpp

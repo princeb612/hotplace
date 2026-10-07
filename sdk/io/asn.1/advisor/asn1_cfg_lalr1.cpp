@@ -10,7 +10,7 @@
  * see README.md
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/parser/binary_parsing_table.hpp>
 #include <hotplace/sdk/io/parser/lalr1_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -18,29 +18,21 @@
 namespace hotplace {
 namespace io {
 
-return_t prepare_lalr1_parser_asn1notation(parser_t& parser);
-return_t import_lalr1_parser_asn1notation(lalr1_parser& parser);
-
-parser_t& get_lalr1_parser_asn1_notation_by_build() {
-    static lalr1_parser parser;
-    static const return_t ready = prepare_lalr1_parser_asn1notation(parser);
-    (void)ready;
-    return parser;
+parser_t& asn1_advisor::get_notation_parser_by_build() {
+    if (false == _lalr1_parser_by_build.ready()) {
+        prepare_lalr1_notation_parser(_lalr1_parser_by_build);
+    }
+    return _lalr1_parser_by_build;
 }
 
-parser_t& get_lalr1_parser_asn1_notation_by_import() {
-    static lalr1_parser parser;
-    static const return_t ready = import_lalr1_parser_asn1notation(parser);
-    (void)ready;
-    return parser;
+parser_t& asn1_advisor::get_notation_parser_by_import() {
+    if (false == _lalr1_parser_by_import.ready()) {
+        import_lalr1_notation_parser(_lalr1_parser_by_import);
+    }
+    return _lalr1_parser_by_import;
 }
 
-return_t import_lalr1_parser_asn1notation(lalr1_parser& parser) {
-    binary_parsing_table bpt;
-    return bpt.read("asn1notation.ptb", parser);
-}
-
-return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
+return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
     auto resource = parser_resource::get_instance();
     auto symid = resource->nameof(token_identifier);     // "identifier"
     auto symnum = resource->nameof(token_number);        // symnum
@@ -312,6 +304,11 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
     return parser.learn();
     // _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
     // _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASN.1 for Notation (build parsing table)");
+}
+
+return_t asn1_advisor::import_lalr1_notation_parser(lalr1_parser& parser) {
+    binary_parsing_table bpt;
+    return bpt.read("asn1notation.ptb", parser);
 }
 
 }  // namespace io

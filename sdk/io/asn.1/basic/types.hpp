@@ -47,8 +47,8 @@ class asn1_integer;    // named number list
 class asn1_namedlist;
 class asn1_unknown_container;
 
+class asn1_advisor;
 class asn1_encode;
-class asn1_resource;
 
 class asn1_value;
 

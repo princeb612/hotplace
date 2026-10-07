@@ -12,7 +12,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -150,17 +150,18 @@ return_t asn1_parser::to_tokens(const char* notation, size_t size, std::vector<p
 return_t asn1_parser::to_parsetree(const std::vector<parser_token>& tokens, parse_tree* pt) { return get_parser().parse(tokens, pt); }
 
 return_t asn1_parser::to_result(parse_tree* pt, asn1_build_resultset& result) {
-    auto publisher = asn1_resource::get_instance()->get_publisher();
+    auto publisher = asn1_advisor::get_instance()->get_publisher();
     return publisher->build(pt, result);
 }
 
 lexical_analyzer& asn1_parser::get_lexer() { return _lex; }
 
 parser_t& asn1_parser::get_parser() {
-    // return get_lalr1_parser_asn1_notation_by_build();
-    // return get_lalr1_parser_asn1_notation_by_import();
-    // return get_glr_parser_asn1_by_build();
-    return get_glr_parser_asn1_by_import();
+    auto advisor = asn1_advisor::get_instance();
+    // return advisor->get_notation_parser_by_build();
+    // return advisor->get_notation_parser_by_import();
+    // return advisor->get_parser_by_build();
+    return advisor->get_parser_by_import();
 }
 
 void asn1_parser::load() {

@@ -294,7 +294,9 @@ void test_glr_asn1module() {
         {"example11.asn1"},
     };
 
-    auto& parser = get_glr_parser_asn1_by_import();
+    auto advisor = asn1_advisor::get_instance();
+
+    auto& parser = advisor->get_parser_by_import();
     _test_case.assert(parser.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
 
     for (const auto& entry : table) {

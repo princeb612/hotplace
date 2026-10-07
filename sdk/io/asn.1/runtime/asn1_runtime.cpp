@@ -13,7 +13,7 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/graph/graph.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
@@ -132,7 +132,7 @@ return_t asn1_runtime::add_schema(const std::string& schema) {
     // reconstruction
     basic_stream bs;
 
-    auto publisher = asn1_resource::get_instance()->get_publisher();
+    auto publisher = asn1_advisor::get_instance()->get_publisher();
     asn1_build_resultset result;
     ret = publisher->build(&pt, result);
     if (errorcode_t::success != ret) return ret;
@@ -450,13 +450,13 @@ void asn1_runtime::for_each(std::function<void(asn1_value*)> f) const {
 }
 
 void asn1_runtime::represent(stream_t* s) {
-    auto resource = asn1_resource::get_instance();
+    auto advisor = asn1_advisor::get_instance();
     asn1_notation_visitor notation(s);
     if (_is_module) {
         // ... DEFINITIONS ... ::= BEGIN
         // TODO OID
         s->printf("%s %s", _name.c_str(), "DEFINITIONS ");
-        if (asn1_tagdefault != _tagdefault) s->printf("%s TAGS ", resource->nameof_mode(_tagdefault, true).c_str());
+        if (asn1_tagdefault != _tagdefault) s->printf("%s TAGS ", advisor->nameof_mode(_tagdefault, true).c_str());
         if (_extensibility) {
             s->printf("EXTENSIBILITY IMPLIED ");
         }

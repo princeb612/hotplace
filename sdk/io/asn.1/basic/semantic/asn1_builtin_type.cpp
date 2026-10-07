@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
@@ -41,7 +41,7 @@ asn1_entity_t asn1_builtin_type::get_component_entity() const { return asn1_enti
 
 void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
-        auto resource = asn1_resource::get_instance();
+        auto advisor = asn1_advisor::get_instance();
         auto entity = get_entity();
 
         if (asn1_entity_referenced_type == entity)
@@ -52,7 +52,7 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
                 const auto& name = resolve_name();
                 value->write(s, name);
             } else {
-                s->printf("%s", resource->get_entity_name(get_ident(), entity).c_str());
+                s->printf("%s", advisor->get_entity_name(get_ident(), entity).c_str());
             }
 
             get_constraints().represent(s, this, value);
@@ -61,7 +61,7 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
             switch (type) {
                 case asn1_default:
                 case asn1_optional: {
-                    s->printf(" %s", resource->nameof_mode(type).c_str());
+                    s->printf(" %s", advisor->nameof_mode(type).c_str());
                 } break;
                 default: {
                 } break;

@@ -8,6 +8,7 @@
  * Date         Name                Description
  * 2017.07.13   Soo Han, Kim        prototype (codename.grape Revision 288)
  * 2023.08.15   Soo Han, Kim        reboot (codename.hotplace Revision 9)
+ * 2026.10.05   Soo Han and Gemini  time representation (hotplace revision 1098)
  *
  */
 

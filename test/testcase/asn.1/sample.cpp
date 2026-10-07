@@ -56,7 +56,7 @@ void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const c
     // reconstruction
     basic_stream bs;
     asn1_build_resultset result;
-    auto publisher = asn1_resource::get_instance()->get_publisher();
+    auto publisher = asn1_advisor::get_instance()->get_publisher();
     publisher->build(&pt, result);
     if (result.object) {
         result.object->publish(&bs);
@@ -173,17 +173,19 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
+    auto advisor = asn1_advisor::get_instance();
+
     _test_case.begin("LALR(1) parser - ASN.1 for Notation");
-    auto& p1 = get_lalr1_parser_asn1_notation_by_build();
+    auto& p1 = advisor->get_notation_parser_by_build();
     _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Notation");
     _test_case.begin("LALR(1) parser - ASN.1 for Notation (imported)");
-    auto& p2 = get_lalr1_parser_asn1_notation_by_import();
+    auto& p2 = advisor->get_notation_parser_by_import();
     _test_case.assert(p2.ready(), __FUNCTION__, "LALR(1) parser import table for Notation");
     _test_case.begin("GLR parser - ASN.1 for All-in-One");
-    auto& p3 = get_glr_parser_asn1_by_build();
+    auto& p3 = advisor->get_parser_by_build();
     _test_case.assert(p3.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
     _test_case.begin("GLR parser - ASN.1 for All-in-One (imported)");
-    auto& p4 = get_glr_parser_asn1_by_import();
+    auto& p4 = advisor->get_parser_by_import();
     _test_case.assert(p4.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
 
     testcase_basic1();
