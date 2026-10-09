@@ -273,7 +273,7 @@ bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value
     return true;
 }
 
-void asn1_object::update_linkage(asn1_runtime* runtime) {}
+void asn1_object::update_linkage(asn1_module* module) {}
 
 }  // namespace io
 }  // namespace hotplace

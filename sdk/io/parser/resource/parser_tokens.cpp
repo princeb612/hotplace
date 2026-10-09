@@ -45,8 +45,6 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_newline, "newline"},
     {token_notequal, "!="},
     {token_number, SYMBOL_NUM},  // number
-    {token_paramtype, SYMBOL_PARAMTYPE},
-    {token_paramvalue, SYMBOL_PARAMVALUE},
     {token_percent, "%"},
     {token_phrase, "phrase"},
     {token_pipe, "|"},
@@ -65,11 +63,12 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_tilde, "~"},
     {token_type, "type"},
     {token_underline, "_"},
-    {token_userparamtype, SYMBOL_USERPARAMTYPE},
     {token_usertype, SYMBOL_USERTYPE},
     {token_eof, "$"},
     {token_ellipsis, "ellipsis"},
     {token_range, "range"},
+    {token_squot_string, "squot_string"},
+    {token_hexstring, "hex_string"},
 };
 const size_t sizeof_parser_symbol_tokens = RTL_NUMBER_OF(parser_symbol_tokens);
 

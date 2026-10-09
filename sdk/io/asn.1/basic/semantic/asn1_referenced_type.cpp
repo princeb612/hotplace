@@ -76,7 +76,7 @@ bool asn1_referenced_type::represent(binary_t* b, const asn1_value* value, uint1
          * if (is_definition())
          *     get_object()->represent(...);
          * if (is_reference()) {
-         *     schema = runtime->get(get_reference());
+         *     schema = module->get(get_reference());
          *     if (schema) schema->represent(...);
          *     else error
          * }

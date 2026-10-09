@@ -85,7 +85,6 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container_of.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_information_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namedlist.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object_class.hpp>
@@ -117,6 +116,12 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_size.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_union.hpp>
 
+/* asn.1/basic/semantic/infobjclass */
+#include <hotplace/sdk/io/asn.1/basic/semantic/infobjclass/asn1_infobjclass.hpp>
+
+/* asn.1/basic/semantic/parameterized */
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_template.hpp>
+
 /* asn.1/basic/structural */
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_constructed_node.hpp>
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_node.hpp>
@@ -137,10 +142,10 @@
 /* asn.1/runtime */
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module_context.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
 

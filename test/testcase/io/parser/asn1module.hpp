@@ -43,10 +43,6 @@ return_t ac_search(const asn1module_reducer_t& ac, const char* input, size_t siz
 return_t ac_printall(const asn1module_reducer_t& ac, const std::vector<parser_token>& tokens, const std::multimap<range_t, size_t>& results);
 return_t ac_search_and_printall(const asn1module_reducer_t& ac, const char* input, size_t size);
 
-// GLR
-return_t prepare_asn1parameterized_grammar(parser_t& parser);
-parser_t& get_glr_parser_asn1parameterized();
-
 // flags
 #define FLAG_DUMMY_POC_TOKEN 1
 void test_asn1parser(parser_t& parser, const char* text, const char* input, uint16 flags = 0);

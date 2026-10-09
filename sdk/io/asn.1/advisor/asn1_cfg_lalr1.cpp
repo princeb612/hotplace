@@ -39,11 +39,14 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
     auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
     auto symqs = resource->nameof(token_quot_string);    // "quot_string"
     auto symuser = resource->nameof(token_usertype);     // "usertype"
-    auto symassign = resource->nameof(token_assign);     // symassign
+    auto symassign = resource->nameof(token_assign);     // "::="
+    auto symhexstr = resource->nameof(token_hexstring);  // "hex_string"
 
     cfg_grammar grammar;
-    // 1. Root & Entry Points (Supports Multiple Modules, Single Module, Standalone Statements)
     grammar
+        // rule revision (.ptb file revision)
+        .set_revision(2)
+        // 1. Root & Entry Points (Supports Multiple Modules, Single Module, Standalone Statements)
         // Top level & Assignments
         .add_production("S'", {"Statement"})
 
@@ -83,9 +86,9 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
         .add_production("NamedType", {symid, "Type"})
 
         .add_production("ComponentType", {"NamedType"})
-        .add_production("ComponentType", {"NamedType", "Constraint"})
+        .add_production("ComponentType", {"NamedType", "Constraints"})
         .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
-        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
+        .add_production("ComponentType", {"NamedType", "Constraints", "OptionalitySpec"})
 
         // ComponentTypeList rules for SEQUENCE / SET / CHOICE
         .add_production("ComponentTypeList", {"ComponentTypeList", ",", "ComponentType"})
@@ -175,12 +178,16 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
         .add_production("ValueElement", {symnum})
         .add_production("ValueElement", {symfp})
         .add_production("ValueElement", {symqs})
+        .add_production("ValueElement", {symhexstr})
         .add_production("ValueElement", {"MIN"})
         .add_production("ValueElement", {"MAX"})
         .add_production("ValueElement", {"TRUE"})
         .add_production("ValueElement", {"FALSE"})
 
         // 6. Constraints & Subtype Specifications (ITU-T X.682 - Ambiguity Fixed)
+        .add_production("Constraints", {"Constraints", "Constraint"})
+        .add_production("Constraints", {"Constraint"})
+
         .add_production("Constraint", {"(", "ConstraintSpec", ")"})
 
         .add_production("ConstraintSpec", {"SubtypeElementSetSpec"})
@@ -233,6 +240,7 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
         .add_terminal(symqs)
         .add_terminal("@")
         .add_terminal(symuser)
+        .add_terminal(symhexstr)
 
         .add_terminal("BOOLEAN")
         .add_terminal("INTEGER")

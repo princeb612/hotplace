@@ -11,7 +11,6 @@
 
 #include <hotplace/test/testcase/io/sample.hpp>
 
-#include "asn1_cfg_parameterized.hpp"
 #include "asn1module.hpp"
 
 void test_ac_reducer() {
@@ -25,8 +24,8 @@ void test_ac_reducer() {
     struct testvector {
         const char* file;
     } table[] = {
-        {"example1.asn1"}, {"example2.asn1"}, {"example3.asn1"}, {"example4.asn1"},  {"example5.asn1"},  {"example6.asn1"},
-        {"example7.asn1"}, {"example8.asn1"}, {"example9.asn1"}, {"example10.asn1"}, {"example11.asn1"},
+        {"example1.asn1"}, {"example2.asn1"}, {"example3.asn1"},  {"example4.asn1"},  {"example5.asn1"},  {"example6.asn1"},  {"example7.asn1"},
+        {"example8.asn1"}, {"example9.asn1"}, {"example10.asn1"}, {"example11.asn1"}, {"example12.asn1"}, {"example13.asn1"},
     };
 
     for (const auto& entry : table) {
@@ -251,15 +250,10 @@ void test_asn1_parameterized() {
         }
     };
 
-    _test_case.begin("GLR parser - ASN.1 for parametersized");
-    auto& p1 = get_glr_parser_asn1_paramerized_by_build();
-    _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Parameterized");
-    lambda_test(item_asn1param, p1);
-
     _test_case.begin("GLR parser - ASN.1 All-in-One");
-    auto& p2 = asn1_advisor::get_instance()->get_parser_by_build();
-    _test_case.assert(p2.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
-    lambda_test(item_asn1ioc, p2);
+    auto& p = asn1_advisor::get_instance()->get_parser_by_build();
+    _test_case.assert(p.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
+    lambda_test(item_asn1ioc, p);
 }
 
 void testcase_parser() {

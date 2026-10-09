@@ -50,12 +50,12 @@ asn1_tagged_type* asn1_tagged_type::addref() {
 
 asn1_tag* asn1_tagged_type::get_tag() const { return (asn1_tag*)asn1_object::get_tag(); }
 
-void asn1_tagged_type::update_linkage(asn1_runtime* runtime) {
+void asn1_tagged_type::update_linkage(asn1_module* module) {
     // _object may be nullptr (see asn1_weakly_typed)
     if (nullptr == _object) return;
 
     // inner TLV
-    if (_tag->is_implicit(runtime)) {
+    if (_tag->is_implicit(module)) {
         _object->suppress();  // IMPLICIT replace
     } else {
         _object->unsuppress();  // EXPLICIT wrap
@@ -66,7 +66,7 @@ void asn1_tagged_type::update_linkage(asn1_runtime* runtime) {
         asn1_object* node = this;
         while (node) {
             auto tag = node->get_tag();
-            if ((tag && tag->is_explicit(runtime)) || node->is_constructed()) {
+            if ((tag && tag->is_explicit(module)) || node->is_constructed()) {
                 _tag->as_constructed();
                 break;
             }

@@ -6,7 +6,7 @@ The documents here are not replacements for the source-tree `README.md` files an
 
 ## Source Baseline
 
-- Source revision: 1097
+- Source revision: 1102
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
@@ -70,7 +70,7 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1097                                │
+│ Revision 1102                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
@@ -93,7 +93,7 @@ The current documents cover several different cross-cutting relationships.
         │                     ┌──────┴──────┐                ┌─────┴─────┐
         │                     │             │                │           │
         ▼                     ▼             ▼                ▼           ▼
- parser evolution       semantic/runtime constraints     advisor   Authenticode
+ parser evolution       module semantics / constraints     advisor   Authenticode
         │                     │             │                │           │
         └─────────────────────┴─────────────┘                │           │
                                       │                      │           │
@@ -113,7 +113,7 @@ The current documents cover several different cross-cutting relationships.
 
 ## 3. Review Documents
 
-### `hotplace-parser-evolution.md`
+### `parser-evolution.md`
 
 **Primary relationship**
 
@@ -159,7 +159,7 @@ parse tree
   ↓
 semantic construction
   ↓
-asn1_runtime
+asn1_module
   ↓
 runtime object
 ```
@@ -183,7 +183,7 @@ semantically implemented
 fully supported feature
 ```
 
-This distinction is especially important for the loader work beginning around revision 1096.
+This distinction is especially important for the loader/module integration that began around revision 1097 and gained import/export and reference-resolution operations through revisions 1099–1102.
 
 ---
 
@@ -317,7 +317,7 @@ tls_advisor
 
 ---
 
-### `crypto-advisor-tls-advisor-review-rev1096.md`
+### `crypto-advisor-tls-advisor.md`
 
 **Primary relationship**
 
@@ -356,7 +356,7 @@ They intersect at the point where protocol identifiers refer to cryptographic me
 
 ---
 
-### `hotplace-authenticode-verification.md`
+### `authenticode-verification.md`
 
 **Primary relationship**
 
@@ -463,7 +463,7 @@ crypto_advisor
  suite
 ```
 
-This is the current 1096 view of the advisor layer.
+This is the advisor-layer relationship documented by the current review.
 
 ---
 
@@ -594,10 +594,10 @@ The source-tree documentation remains the authoritative local description of a m
 
 Each review document should identify the source revision it describes.
 
-For revision 1097:
+For the current review package:
 
 ```text
-Source Baseline: Revision 1097
+Source Baseline: Revision 1102
 ```
 
 When the implementation changes materially:
@@ -618,7 +618,7 @@ In particular, parser production names, ASN.1 loader capabilities, protocol reso
 
 ## 8. Current Review Status
 
-At revision 1097, the review layer has established these major axes:
+The review package currently uses revision 1102 as its overall source baseline. Individual documents retain their own review baselines where they have not been re-evaluated in this pass.
 
 ```text
 1. Parser evolution
@@ -631,7 +631,7 @@ At revision 1097, the review layer has established these major axes:
 8. Authenticode cross-cutting verification path
 ```
 
-These review axes form the current architecture-review map. The 1097 pass adds a more explicit protocol-state → wire-unit boundary observation without creating another subsystem-specific review file.
+These review axes form the current architecture-review map. The earlier pass added a more explicit protocol-state → wire-unit boundary observation without creating another subsystem-specific review file. This revision pass updates the ASN.1/parser/resource relationships without expanding the review set unnecessarily.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
@@ -640,7 +640,7 @@ The next review pass should therefore focus on **cross-referencing and correctio
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1097                                │
+│ Revision 1102                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

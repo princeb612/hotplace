@@ -207,9 +207,7 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
                 case token_floatingpoint:
                 case token_quot_string:
                 case token_usertype:
-                case token_userparamtype:
-                case token_paramtype:
-                case token_paramvalue:
+                case token_hexstring:
                     typestring = resource->nameof(current_token.type); /* context-sensitive */
                     break;
                 default:
@@ -404,8 +402,6 @@ return_t lalr1_parser::build(binary_parsing_table* table) {
 }
 
 parser_type_t lalr1_parser::get_type() const { return parser_type_t::lalr1; }
-
-uint16 lalr1_parser::get_version() const { return 1; }
 
 return_t lalr1_parser::buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) {
     return_t ret = errorcode_t::success;

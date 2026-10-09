@@ -18,7 +18,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 #include <stack>
@@ -142,12 +142,12 @@ class asn1_publisher_context {
     size_t size() const { return _stack.size(); }
     bool empty() const { return _stack.empty(); }
 
-    asn1_runtime& get_runtime() { return _runtime; };
+    asn1_module& get_runtime() { return _module; };
     std::vector<std::string>& get_symbols() { return _symbols; }
 
    private:
     std::stack<asn1_semantic_node> _stack;
-    asn1_runtime _runtime;              // ModuleDefinition, TypeAssignment
+    asn1_module _module;                // ModuleDefinition, TypeAssignment
     std::vector<std::string> _symbols;  // SymbolList
 };
 
@@ -170,12 +170,12 @@ class asn1_publisher {
      *          - Module definition:
      *              Result type set to `module_definition`.
      *              Module names populated in `result.module_names`.
-     *              Accessible via `asn1_runtime_context::get_instance()`.
+     *              Accessible via `asn1_module_context::get_instance()`.
      *
      *          - No module definition and assignment:
      *              Result type set to `assignments`.
-     *              Temporary runtime generated with Base16 timestamp key.
-     *              Stored in `result.runtime`.
+     *              Temporary module generated with Base16 timestamp key.
+     *              Stored in `result.module`.
      *
      *          - Non-assignment:
      *              Result type set to `non_assignment`.

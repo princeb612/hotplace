@@ -1,6 +1,6 @@
 # Hotplace Parser Evolution
 
-> **Review baseline:** Revision 1097
+> **Review baseline:** Revision 1102
 
 ## Review thesis
 
@@ -32,7 +32,7 @@ Early work explored lexer/CFG/LALR(1) parsing and context-aware switching ideas.
 
 The eventual move to GLR changed the architecture more substantially. GLR allowed the broader ASN.1 grammar to be represented without forcing every ambiguity or structural choice into a single deterministic LALR path.
 
-For ASN.1, revision 1097 also makes the distinction between parser paths concrete:
+For ASN.1, the distinction between parser paths remains concrete at revision 1102:
 
 ```text
 LALR(1)
@@ -73,7 +73,7 @@ This separation has a practical consequence: parser behavior depends on both the
 
 ## Production vocabulary becomes semantic vocabulary
 
-Revision 1097 is also a useful boundary because ASN.1 production/rule names are stable enough to discuss the grammar in semantic terms.
+The revisions through 1102 preserve the stable production/rule vocabulary while extending the parameterized grammar and module-level semantics.
 
 The notation-oriented hierarchy includes:
 
@@ -99,13 +99,21 @@ Constructed types continue through `ComponentTypeLists`, `ComponentTypeList`, `C
 
 These names matter architecturally because they are the vocabulary used to connect grammar reduction with semantic reconstruction. They are no longer merely parser-internal labels.
 
+## Parameterized grammar and lexer changes through revision 1102
+
+The parameterized ASN.1 path is still an area of active grammar work. Revision 1102 changes the CFG productions for `ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`. It also adds dedicated lexical handlers for single-quoted strings and hexadecimal strings, while removing `handle_asn1parameterized` because the current parameterized-value handling has known limits.
+
+The practical distinction is important: a grammar production or lexer handler records how input is recognized, but does not by itself establish full semantic construction or complete support for parameterized ASN.1. The same review discipline applies at each layer: grammar coverage, parse-tree shape, semantic reconstruction, module linkage, and loader behavior need separate evidence.
+
+The binary parsing-table format also advanced from revision 1 to revision 2. The generated `.ptb` files and the table reader/writer therefore need to be treated as a versioned resource pair; an updated grammar source alone is not the whole parser update.
+
 ## Resource roles
 
 For ASN.1, the generated resources have different purposes:
 
 ```text
-asn1notation.ptb → notation parsing / semantic construction
-asn1.ptb         → broader loader grammar
+asn1notation.ptb → notation parsing / semantic construction (table revision 2)
+asn1.ptb         → broader loader grammar (table revision 2)
 ```
 
 Keeping these roles distinct prevents a large parsing table from being treated as proof of complete ASN.1 language support.
@@ -145,7 +153,7 @@ The resulting system has more moving parts than a parser whose tables are genera
 
 ## Current state
 
-Revision 1097 provides a useful architectural boundary: ASN.1 production/rule names are stable enough to describe the semantic path, LALR(1)/GLR switching is part of the implementation strategy, and external `.ptb` resources are an established part of parser generation and build integration.
+Revision 1102 adds another layer to that architecture: the ASN.1 parameterized-assignment/type/value grammar has changed, lexer handling has been adjusted, and the binary parsing-table format is now at revision 2. LALR(1)/GLR still serve different grammar scopes, and external `.ptb` resources remain part of parser generation and build integration.
 
 ### Related source / documents
 
@@ -160,4 +168,4 @@ Revision 1097 provides a useful architectural boundary: ASN.1 production/rule na
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state around **revision 1097**.
+Reviewed against the hotplace source/documentation state around **revision 1102**.

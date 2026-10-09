@@ -83,7 +83,7 @@ struct asn1_option {
  * @brief   ASN.1
  */
 class asn1_object {
-    friend class asn1_runtime;
+    friend class asn1_module;
     friend class asn1_referenced_type;
     friend class asn1_tagged_type;
     friend class asn1_container;
@@ -152,7 +152,7 @@ class asn1_object {
     virtual bool have_constraints() const;
     bool validate(const asn1_value* value);
 
-    virtual void update_linkage(asn1_runtime* runtime);
+    virtual void update_linkage(asn1_module* module);
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);

@@ -14,7 +14,7 @@
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 
 namespace hotplace {
@@ -25,7 +25,7 @@ asn1_strongly_typed::asn1_strongly_typed() {}
 asn1_strongly_typed::~asn1_strongly_typed() {}
 
 // prototype
-return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
+return_t asn1_strongly_typed::read(asn1_module* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
     if (nullptr == target || nullptr == stream) return errorcode_t::invalid_parameter;
 
     // schema

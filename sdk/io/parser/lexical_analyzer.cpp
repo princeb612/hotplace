@@ -15,6 +15,7 @@
  */
 
 #include <deque>
+#include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -52,7 +53,7 @@ lexical_analyzer& lexical_analyzer::prepare() {
     if (0 == _load) {
         critical_section_guard guard(_lock);
         if (0 == _load) {
-            get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
+            get_config().set("handle_comments", 1).set("handle_squoted", 1).set("handle_quoted", 1).set("handle_token", 1);
 
             auto resource = parser_resource::get_instance();
             resource->for_each(resource_type_t::token_type_symbol, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
@@ -130,6 +131,7 @@ static bool is_delimiter(uint32 token) {
         case token_space:
         case token_lesser:
         case token_greater:
+        case token_squote:
             ret = true;
             break;
         default:
@@ -151,15 +153,20 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
 
         uint16 handle_comments = get_config().get("handle_comments");
         uint16 handle_quoted = get_config().get("handle_quoted");
+        uint16 handle_squoted = get_config().get("handle_squoted");
         uint16 handle_token = get_config().get("handle_token");
         uint16 handle_quot_as_unquoted = get_config().get("handle_quot_as_unquoted");
         uint16 handle_lvalue_usertype = get_config().get("handle_lvalue_usertype");
-        uint16 handle_asn1parameterized = get_config().get("handle_asn1parameterized");  // context-sensitive lexing
-        std::map<size_t, uint32> retypes;                                                // idx, natice_token_t
+        // uint16 handle_asn1parameterized = get_config().get("handle_asn1parameterized");  // context-sensitive lexing
+        uint16 handle_hexstring = get_config().get("handle_hexstring");  // context-sensitive lexing '01 02'H
+        std::map<size_t, uint32> retypes;                                // idx, natice_token_t
         std::multimap<std::string, lexical_token*> index;
         lexical_token* lvalue = nullptr;
         bool comments = false;
         bool quot = false;
+        bool squot = false;
+
+        if (handle_hexstring) handle_squoted = true;
 
         auto type_of = [&](char c) -> token_t { return ascii2token((byte_t)c); };
         auto hook = [&](int where, lexical_token* t) -> bool {
@@ -178,56 +185,56 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                                     retypes.emplace(lvalue->get_index(), token_usertype);
                                 }
                             }
-                            if (handle_asn1parameterized && (token_rbrace == lvalue->get_tokenid())) {
-                                std::deque<lexical_token*> tokenq;
-                                native_token_t last_tokenid = token_unknown;
-
-                                auto lambda = [&tokenq, &last_tokenid](lexical_token* token) -> bool {
-                                    auto tokenid = token->get_tokenid();
-                                    if ((token_identifier == tokenid) || (token_lbrace == tokenid) || (token_rbrace == tokenid) || (token_comma == tokenid) ||
-                                        (token_colon == tokenid) || is_asn1type(tokenid)) {
-                                        tokenq.push_front(token);
-
-                                        if ((token_identifier == tokenid) && (token_lbrace == last_tokenid)) {
-                                            return false;
-                                        }
-                                    } else {
-                                        while (false == tokenq.empty()) tokenq.pop_back();
-                                        return false;
-                                    }
-
-                                    last_tokenid = tokenid;
-                                    return true;
-                                };
-                                context.reverse_for_each(lambda);
-
-                                auto qsize = tokenq.size();
-                                if (4 <= qsize) {
-                                    last_tokenid = token_unknown;
-                                    while (false == tokenq.empty()) {
-                                        auto front = tokenq.front();
-                                        auto tokenid = front->get_tokenid();
-                                        switch (tokenid) {
-                                            case token_identifier:
-                                                if (token_unknown == last_tokenid) {
-                                                    front->set_type(token_userparamtype);
-                                                    retypes.emplace(front->get_index(), token_userparamtype);
-                                                } else if ((token_lbrace == last_tokenid) || (token_comma == last_tokenid)) {
-                                                    front->set_type(token_paramtype);
-                                                    retypes.emplace(front->get_index(), token_paramtype);
-                                                } else if (token_colon == last_tokenid) {
-                                                    front->set_type(token_paramvalue);
-                                                    retypes.emplace(front->get_index(), token_paramvalue);
-                                                }
-                                                break;
-                                            default:
-                                                break;
-                                        }
-                                        last_tokenid = tokenid;
-                                        tokenq.pop_front();
-                                    }
-                                }
-                            }
+                            // if (handle_asn1parameterized && (token_rbrace == lvalue->get_tokenid())) {
+                            //     std::deque<lexical_token*> tokenq;
+                            //     native_token_t last_tokenid = token_unknown;
+                            //
+                            //     auto lambda = [&tokenq, &last_tokenid](lexical_token* token) -> bool {
+                            //         auto tokenid = token->get_tokenid();
+                            //         if ((token_identifier == tokenid) || (token_lbrace == tokenid) || (token_rbrace == tokenid) || (token_comma == tokenid) ||
+                            //             (token_colon == tokenid) || is_asn1type(tokenid)) {
+                            //             tokenq.push_front(token);
+                            //
+                            //             if ((token_identifier == tokenid) && (token_lbrace == last_tokenid)) {
+                            //                 return false;
+                            //             }
+                            //         } else {
+                            //             while (false == tokenq.empty()) tokenq.pop_back();
+                            //             return false;
+                            //         }
+                            //
+                            //         last_tokenid = tokenid;
+                            //         return true;
+                            //     };
+                            //     context.reverse_for_each(lambda);
+                            //
+                            //     auto qsize = tokenq.size();
+                            //     if (4 <= qsize) {
+                            //         last_tokenid = token_unknown;
+                            //         while (false == tokenq.empty()) {
+                            //             auto front = tokenq.front();
+                            //             auto tokenid = front->get_tokenid();
+                            //             switch (tokenid) {
+                            //                 case token_identifier:
+                            //                     if (token_unknown == last_tokenid) {
+                            //                         front->set_type(token_userparamtype);
+                            //                         retypes.emplace(front->get_index(), token_userparamtype);
+                            //                     } else if ((token_lbrace == last_tokenid) || (token_comma == last_tokenid)) {
+                            //                         front->set_type(token_paramtype);
+                            //                         retypes.emplace(front->get_index(), token_paramtype);
+                            //                     } else if (token_colon == last_tokenid) {
+                            //                         front->set_type(token_paramvalue);
+                            //                         retypes.emplace(front->get_index(), token_paramvalue);
+                            //                     }
+                            //                     break;
+                            //                 default:
+                            //                     break;
+                            //             }
+                            //             last_tokenid = tokenid;
+                            //             tokenq.pop_front();
+                            //         }
+                            //     }
+                            // }
                         }
                         break;
                     default:
@@ -267,6 +274,7 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
             char c = p[pos];
             token_t type = type_of(c);
             size_t chunk_size = 0;  // lookahead
+            token_t chunk_type = type;
 
             if (false == comments && false == quot) {
                 if (token_alpha == type) {
@@ -277,9 +285,13 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                     const char* dash = nullptr;
                     while (cur < end) {
                         auto t = type_of(*cur);
-                        if (token_alpha == t || token_number == t) {
+                        if (token_alpha == t) {
                             ++cur;
                             dash = nullptr;
+                        } else if (token_number == t) {
+                            ++cur;
+                            dash = nullptr;
+                            chunk_type = token_word;
                         } else if (token_dash == t) {
                             if (dash) {
                                 // second dot not allowed
@@ -308,6 +320,8 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                                 break;
                             }
                             dot = cur;
+                        } else if (token_number != t) {
+                            chunk_type = token_word;
                         }
                         ++cur;
                     }
@@ -357,9 +371,38 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                     }
                     continue;
                 }
+                if (handle_squoted) {
+                    if (token_squote == type) {
+                        squot = !squot;
+                        if (squot) {
+                            context.add_context_lextoken(token, hook);
+                            token.set_type(token_squot_string).update_pos(pos).update_size(1);
+                        } else {
+                            token.increase();
+                            if (handle_hexstring) {
+                                if (pos + 1 < size) {
+                                    auto la = p[pos + 1];
+                                    if (('H' == la) || ('h' == la)) {
+                                        auto begin = token.get_pos() + 1;
+                                        auto len = token.get_size() - 2;
+                                        if (is_base16_rfc_encoded(p + begin, len)) {
+                                            token.set_type(token_hexstring);
+                                            // H or h
+                                            token.increase();
+                                            ++pos;
+                                        }
+                                    }
+                                }
+                            }
+                            context.add_context_lextoken(token, hook);
+                            token.update_pos(pos + 1).update_size(0);
+                        }
+                        continue;
+                    }
+                }
             }
 
-            if (quot) {
+            if (quot || squot) {
                 token.increase();
             } else {
                 if (token_space == type) {
@@ -423,7 +466,8 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                 }
 
                 // tokenize
-                switch (type) {
+                switch (chunk_type) {
+                    case token_word:
                     case token_alpha:
                         token.set_type(token_word).update_size(chunk_size);
                         context.add_context_lextoken(token, hook);

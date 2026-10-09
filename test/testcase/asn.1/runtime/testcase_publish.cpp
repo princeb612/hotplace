@@ -25,20 +25,20 @@
  *       │
  *       │ semantic construction
  *       ▼
- *   asn1_runtime
+ *   asn1_module
  *       │
  *       │ schema/type lookup
  *       ▼
- *   runtime ASN.1 object
+ *   module ASN.1 object
  *       │
  *       ├── encode
  *       ├── decode
  *       └── strongly typed object
  *
  * after the semantic construction experiment is completed, this will be integrated into asn1_strongly_typed/asn1_parser.
- * the resulting runtime object model can then serve as the basis for c++ source generation.
+ * the resulting module object model can then serve as the basis for c++ source generation.
  *
- *   runtime ASN.1 object
+ *   module ASN.1 object
  *       │
  *       ├── Loader
  *       └── C++ generator
@@ -181,10 +181,11 @@ void test_publish_basics() {
         {"SEQUENCE {name [0] IMPLICIT VisibleString}"},
     };
 
-    asn1_runtime runtime;  // automatic, share lexical_context
+    asn1_parser parser(parser_type_t::lalr1, true);
+    asn1_module module;  // automatic, share lexical_context
 
     for (const auto& entry : table) {
-        parse_reconst_notation(&runtime, entry.notation);
+        parse_reconst_notation(parser, &module, entry.notation);
     }
 }
 
@@ -245,11 +246,12 @@ void test_publish_constraints() {
         {R"(Name12 ::= IA5String (FROM ("A"<..<"Z" | "a".."z")))"},
     };
 
-    asn1_runtime runtime;     // automatic
+    asn1_parser parser(parser_type_t::lalr1, false);
+    asn1_module module;       // automatic
     lexical_context context;  // share usertype
 
     for (const auto& entry : table) {
-        parse_reconst_notation(&runtime, entry.notation, entry.expect);
+        parse_reconst_notation(parser, &module, entry.notation, entry.expect);
     }
 }
 

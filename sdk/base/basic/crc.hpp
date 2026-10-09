@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ *
+ * https://en.wikipedia.org/wiki/Cyclic_redundancy_check
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_CRC__

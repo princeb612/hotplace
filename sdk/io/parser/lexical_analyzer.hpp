@@ -177,11 +177,27 @@ class lexical_analyzer {
     return_t parse(lexical_context& context, const std::string& p, uint32 flags = 0);
     return_t parse(lexical_context& context, const basic_stream& p, uint32 flags = 0);
 
-    /*
+    /**
+     * @brief   context-aware lexing
      * @sample
+     *          // handle_token
      *          p.get_config().set("handle_token", 1);
+     *          // "..." as token_quot_string
      *          p.get_config().set("handle_quoted", 1);
+     *          // '...' as token_squot_string
+     *          p.get_config().set("handle_squoted", 1);
+     *          // --    as token_comments
      *          p.get_config().set("handle_comments", 1);
+     *          // "..." as token_emphasis
+     *          p.get_config().set("handle_quot_as_unquoted", 1);
+     *          // When `type ::= VisibleString`,
+     *          // a value of 0 is treated as `token_lvalue token_assign token_visiblestring`,
+     *          // whereas a value of 1 is treated as `token_usertype token_assign token_visiblestring`.
+     *          p.get_config().set("handle_lvalue_usertype", 1);
+     *          // when `'01 02'H` is provided:
+     *          // if the value is 0, it is processed as `'num space num' id`;
+     *          // if the value is 1, it is merged and processed as a hex string.
+     *          p.get_config().set("handle_hexstring", 1);
      *
      *          constexpr char input[] = R"a(product ::= SET "[" name cstring, price number "]" -- sample)a";
      *          p.add_token("::=", token_assign);

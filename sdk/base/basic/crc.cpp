@@ -13,19 +13,23 @@
 namespace hotplace {
 
 // CRC32 calculation helper (IEEE 802.3 standard polynomial 0xEDB88320)
+
+#define CRC32_INIT 0xFFFFFFFF
+#define CRC32_POLY 0xEDB88320
+
 uint32 crc32(const unsigned char* octets, size_t len) {
-    uint32 crc = 0xFFFFFFFF;
+    uint32 crc = CRC32_INIT;
     for (size_t i = 0; i < len; ++i) {
         crc ^= octets[i];
         for (int j = 0; j < 8; ++j) {
-            crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+            crc = (crc >> 1) ^ (CRC32_POLY & -(crc & 1));
         }
     }
     return ~crc;
 }
 
-#define CRC24_INIT 0xB704CEL
-#define CRC24_POLY 0x1864CFBL
+#define CRC24_INIT 0x00B704CEL
+#define CRC24_POLY 0x01864CFBL
 
 uint32 crc24(const unsigned char* octets, size_t len) {
     uint32 crc = CRC24_INIT;

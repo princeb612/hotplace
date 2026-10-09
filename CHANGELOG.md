@@ -37,20 +37,34 @@
     * CBOR
 
 * details
-  * Revision 1101
+  * Revision 1102
+    * renamed
+      * asn1_runtime, asn1_runtime_context to asn1_module, asn1_module_context
+    * added
+      * lexical_analyzer - handle_squoted, handle_hexstring
+    * changed
+      * ASN.1 CFG - ParameterizedAssignment, ParameterizedType, ParameterizedValue
+        * binary parsing table revision 2
+    * dropped
+      * lexical_analyzer - handle_asn1parameterized (due to the limitations of parameterized value handling)
+    * variant as<T>()
+  * Revision 1100
+    * rename asn1_resource to asn1_advisor
   * Revision 1099
     * ASN.1 EXPORTS, IMPORTS
-    * asn1_runtime update_linkage, is_resolvable, resolve
+    * asn1_module update_linkage, is_resolvable, resolve
   * Revision 1098
     * [fixed] datetime, time_diff, system_gettime and test_case time representation
   * Revision 1097
     * ASN.1 Loader - baby step
+      * binary parsing table revision 1
   * Revision 1096
     * graph-structured stack
     * [fixed] parse tree of GLR parser
   * Revision 1094
     * [parsing table binary file layout](sdk/io/parser/README.md)
       * read, write, and import dedicated table files containing Productions, ACTION, GOTO, and terminal data.
+      * binary parsing table revision 0
   * Revision 1093
     * CFG for ASN.1 extension marker version 1 and 2
   * Revision 1091
@@ -58,6 +72,7 @@
   * Revision 1090
     * GLR parser
     * CFG for ASN.1 parameterized
+    * lexical_analyzer - handle_asn1parameterized
   * Revision 1089
     * context-aware parser switching pattern
       * travel_ranges - enum class trigger_t {level, edge}
@@ -73,7 +88,7 @@
       * string range ("a"..<"z", "a"<.."z", "a"<..<"z")
     * string_set - erase_range, intersect
     * graph - topological sort
-    * asn1_runtime - resolve, is_resolvable
+    * asn1_module - resolve, is_resolvable
   * Revision 1082
     * generates a semantic asn1_object\* using the parse tree (asn1_publisher)
       * exclusive boundary (1..<256, 1<..256, 1<..<256)

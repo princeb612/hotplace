@@ -126,9 +126,10 @@ void test_asn1parser() {
         {R"(Numbers ::= SET OF INTEGER)"},
     };
 
+    asn1_parser parser(parser_type_t::lalr1, true);
     for (const auto& item : table) {
-        asn1_runtime runtime;
-        parse_notation(&runtime, item.notation);
+        asn1_module module;
+        parse_notation(parser, &module, item.notation);
     }
 }
 

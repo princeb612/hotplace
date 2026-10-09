@@ -42,9 +42,11 @@ class cfg_grammar {
     cfg_grammar& operator=(const cfg_grammar& other) = default;
     cfg_grammar& operator=(cfg_grammar&& other) = default;
 
+    cfg_grammar& set_revision(uint16 revision);
     cfg_grammar& add_production(const std::string& lhs, const std::vector<std::string>& rhs);
     cfg_grammar& add_terminal(const std::string& term);
 
+    uint16 get_revision();
     const parser_productions_t& get_productions() const;
     const parser_production& get_production(uint32 id) const;
     uint32 get_production_id(const std::string& rule) const;
@@ -57,6 +59,7 @@ class cfg_grammar {
     void clear();
 
    private:
+    uint16 _revision{0};
     parser_productions_t _productions;
     parser_production_lookup_t _production_lookup;
     parser_terminals_t _terminals;

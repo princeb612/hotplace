@@ -184,7 +184,7 @@ return_t binary_parsing_table::read(const std::string& filename, parser_t& parse
             return errorcode_t::bad_format;
         }
         auto version = pl.t_value_of<uint16>("version");
-        if (version < parser.get_version()) {
+        if (version < parser.get_cfg_grammar().get_revision()) {
             return errorcode_t::low_version;
         }
         auto endian = pl.t_value_of<uint16>("endian");
@@ -471,7 +471,12 @@ return_t binary_parsing_table::write(const std::string& filename, parser_t& pars
         auto crc = crc32(bin.data(), bin.size());
         auto size = bin.size();
         binary_stream bs;
-        bs.set_endian(true).append(uint32(0x48505400)).append(uint16(parser.get_version())).append(uint16(0x1234)).append(uint32(crc)).append(uint64(size));
+        bs.set_endian(true)
+            .append(uint32(0x48505400))
+            .append(uint16(parser.get_cfg_grammar().get_revision()))
+            .append(uint16(0x1234))
+            .append(uint32(crc))
+            .append(uint64(size));
 
         const auto& temp = bs.get();
         bin.insert(bin.begin(), temp.begin(), temp.end());

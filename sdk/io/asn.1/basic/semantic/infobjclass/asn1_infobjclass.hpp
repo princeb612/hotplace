@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_information_object.hpp
+ * @file   asn1_infobjclass.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1INFORMATIONOBJECT__
-#define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1INFORMATIONOBJECT__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1INFOBJCLASS__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1INFOBJCLASS__
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
@@ -21,17 +21,17 @@ namespace io {
 
 // status TODO
 
-class asn1_information_object {
+class asn1_infobjclass {
    public:
-    asn1_information_object();
-    ~asn1_information_object();
+    asn1_infobjclass();
+    ~asn1_infobjclass();
 
     void addref();
     void release();
 
    protected:
    private:
-    t_shared_reference<asn1_information_object> _shared;
+    t_shared_reference<asn1_infobjclass> _shared;
 };
 
 }  // namespace io

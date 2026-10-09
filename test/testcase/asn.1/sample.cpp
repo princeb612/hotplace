@@ -28,7 +28,7 @@ void dump_parse_tree(const parse_tree* pt) {
     }
 }
 
-void parse_notation(asn1_runtime* runtime, const char* notation) {
+void parse_notation(asn1_parser& parser, asn1_module* module, const char* notation) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == notation) {
@@ -36,7 +36,6 @@ void parse_notation(asn1_runtime* runtime, const char* notation) {
             __leave2;
         }
 
-        asn1_parser parser;
         parse_tree pt;
         ret = parser.parse(notation, &pt);
         dump_parse_tree(&pt);
@@ -44,12 +43,11 @@ void parse_notation(asn1_runtime* runtime, const char* notation) {
     __finally2 { _test_case.test(ret, __FUNCTION__, "parse : %s", notation); }
 }
 
-void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const char* expect) {
+void parse_reconst_notation(asn1_parser& parser, asn1_module* module, const char* notation, const char* expect) {
     if (nullptr == notation) return;
 
     // parse
     parse_tree pt;
-    asn1_parser parser;
     parser.parse(notation, &pt);
     dump_parse_tree(&pt);
 
@@ -72,13 +70,13 @@ return_t prepare_lexer_asn1(lexical_analyzer& lexer) {
     lexer.clear().prepare();
     auto resource = parser_resource::get_instance();
     resource->for_each(resource_type_t::token_type_asn1, [&lexer](uint32 token, const std::string& name) -> void { lexer.add_token(name, token); });
-    lexer.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
+    lexer.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_hexstring", 1);
     return errorcode_t::success;
 }
 
 return_t prepare_lexer_asn1_usertype(lexical_analyzer& lexer) {
     prepare_lexer_asn1(lexer);
-    lexer.get_config().set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
+    lexer.get_config().set("handle_lvalue_usertype", 1);
     return errorcode_t::success;
 }
 
@@ -198,6 +196,10 @@ int main(int argc, char** argv) {
     testcase_publish();
     testcase_basic3();
     testcase_loader();
+    testcase_parameterized();
+    // TODO
+    // testcase_informationobjectclass()
+    // testcase_extensionmarker()
 
     _logger->flush();
 

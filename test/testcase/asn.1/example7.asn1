@@ -1,17 +1,77 @@
-ComplexTypeModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+TemplateModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+    -- Parameterized Type (Template)
+    FRAME{TypeParam, INTEGER:maxSize} ::= SEQUENCE {
+        header  INTEGER,
+        payload TypeParam,
+        length  INTEGER (0..maxSize)
+    }
+    -- Parameterized Type (Instantiation)
+    MyPacket ::= FRAME{ OCTET STRING, 1024 }
 
--- 1. SEQUENCE OF & SET OF
-IntList ::= SEQUENCE OF INTEGER
+    HEADER{INTEGER:defaultPriority} ::= SEQUENCE {
+        version   INTEGER,
+        priority  INTEGER DEFAULT defaultPriority
+    }
+    ControlHeader ::= HEADER{ 5 }
 
-UserSet ::= SET OF SEQUENCE {
-    userId   INTEGER,
-    userName IA5String
-}
+    TLV-BUFFER{TypeParam, INTEGER:maxLen} ::= SEQUENCE {
+        allocatedLength INTEGER (0..65535),
+        maxCapacity     INTEGER (maxLen),
+        payload         TypeParam
+    }
+    MyBuffer ::= TLV-BUFFER{ OCTET STRING, 2048 }
 
--- 2. SET Structure
-ConfigRecord ::= SET {
-    timeout [0] INTEGER OPTIONAL,
-    enabled [1] BOOLEAN
-}
+    COMMAND-ENVELOPE{TypeParam, INTEGER:msgId} ::= SEQUENCE {
+        commandId INTEGER (msgId),
+        timestamp GeneralizedTime,
+        data      TypeParam
+    }
+    ReadUserCmd ::= COMMAND-ENVELOPE{ UserReadRequest, 101 }
 
+    -- A template that receives an OID as a value parameter (algorithmOid)
+    ALGORITHM-CONTAINER{OBJECT IDENTIFIER:algorithmOid, TypeParam} ::= SEQUENCE {
+        algorithmId  OBJECT IDENTIFIER (algorithmOid), -- Limit by the received OID value
+        parameters   TypeParam
+    }
+    -- Instantiation example (passing SHA-256 OID)
+    Sha256Container ::= ALGORITHM-CONTAINER{
+        { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) hashalgs(2) 1 },
+        OCTET STRING
+    }
+
+    -- Template that accepts an encryption flag (isEncrypted) as a parameter
+    SECURE-MESSAGE{BOOLEAN:isEncrypted, TypeParam} ::= SEQUENCE {
+        flagEncrypted BOOLEAN DEFAULT isEncrypted,
+        payload       TypeParam
+    }
+    EncryptedMessage ::= SECURE-MESSAGE{ TRUE, OCTET STRING }
+    PlainMessage     ::= SECURE-MESSAGE{ FALSE, VisibleString }
+
+    -- Definition of the ProtocolVersion enumeration type
+    ProtocolVersion ::= ENUMERATED { v1(1), v2(2), v3(3) }
+    -- Template accepting an ENUMERATED type as a Governance type
+    HEADER-ENVELOPE{ProtocolVersion:ver, TypeParam} ::= SEQUENCE {
+        version  ProtocolVersion DEFAULT ver,
+        data     TypeParam
+    }
+    -- Instantiation example (setting v2 as the default version)
+    V2Envelope ::= HEADER-ENVELOPE{ v2, PrintableString }
+
+    -- Template accepting a magic byte signature (OCTET STRING) as an argument
+    PACKET-HEADER{OCTET STRING:signature, TypeParam} ::= SEQUENCE {
+        magic    OCTET STRING (SIZE(4)) (signature), -- Verify/specify fixed signature value
+        sequence INTEGER,
+        payload  TypeParam
+    }
+    -- Instantiation example (specifying '40 4B 54 31' = 'PKT1' signature)
+    Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String }
+
+    -- Sensor template that takes a threshold (REAL:threshold) as an argument
+    SENSOR-DATA{REAL:threshold} ::= SEQUENCE {
+        sensorId  INTEGER,
+        limitVal  REAL (threshold),
+        readings  SEQUENCE OF REAL
+    }
+    -- Instantiation example (specifying a threshold of 98.6)
+    TemperatureSensor ::= SENSOR-DATA{ 98.6 }
 END

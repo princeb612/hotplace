@@ -20,13 +20,13 @@ namespace hotplace {
 namespace io {
 
 class asn1_strongly_typed {
-    friend class asn1_runtime;
+    friend class asn1_module;
 
    public:
     asn1_strongly_typed();
     ~asn1_strongly_typed();
 
-    return_t read(asn1_runtime* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos);
+    return_t read(asn1_module* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos);
 
    protected:
    private:

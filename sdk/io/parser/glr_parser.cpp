@@ -22,6 +22,7 @@
 #include <hotplace/sdk/io/parser/parser_sdk.hpp>
 #include <iomanip>
 #include <iostream>
+#include <list>
 #include <queue>
 
 namespace hotplace {
@@ -131,13 +132,53 @@ return_t glr_parser::learn() {
     return ret;
 }
 
+#if defined DEBUG
+// Generate a state stack string by backtracking from the GSS node to the root (parent)
+static std::string build_gss_stack_string(parse_gss_node_ptr node) {
+    if (nullptr == node) return "";
+
+    std::vector<uint32> states;
+    parse_gss_node_ptr curr = node;
+
+    // Traverse up the first parent path to the root (when there are no parents)
+    while (curr) {
+        states.push_back(curr->state);
+        if (!curr->parents.empty()) {
+            curr = curr->parents[0];
+        } else {
+            break;
+        }
+    }
+
+    std::string result;
+    for (auto it = states.rbegin(); it != states.rend(); ++it) {
+        result += std::to_string(*it) + " ";
+    }
+    return result;
+}
+#endif
+
 return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* pt) {
     return_t ret = errorcode_t::success;
     size_t shifted = 0;
     size_t token_idx = 0;
+#if defined DEBUG
+    struct trace_info {
+        basic_stream state_stack;
+        basic_stream current_token;
+        basic_stream action;
+    };
+    std::list<trace_info> trace_stack;
+#endif
 
     __try2 {
         if (false == _is_table_built) {
+#if defined DEBUG
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal,
+                                  [&](basic_stream& dbs) -> void { dbs.println("parsing table is not built yet."); });
+            }
+#endif
             ret = errorcode_t::not_ready;
             __leave2;
         }
@@ -165,9 +206,7 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                     case token_floatingpoint:
                     case token_quot_string:
                     case token_usertype:
-                    case token_userparamtype:
-                    case token_paramtype:
-                    case token_paramvalue:
+                    case token_hexstring:
                         typestring = resource->nameof(current_token.type);
                         break;
                     default:
@@ -188,16 +227,43 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                 auto key = std::make_pair(head->state, typestring);
                 auto range = _action_table.equal_range(key);
 
+#if defined DEBUG
+                if (range.first == range.second) {
+                    trace_info trace;
+                    trace.action << "no ACTION[" << head->state << ":" << typestring << "] ";
+                    trace_stack.push_back(trace);
+                }
+#endif
                 for (auto it = range.first; it != range.second; ++it) {
                     const auto& act = it->second;
+
+#if defined DEBUG
+                    trace_info trace;
+                    // State stack representation (head node state)
+                    trace.state_stack << "[ " << build_gss_stack_string(head) << " ]";
+
+                    trace.current_token << (token_idx < num_tokens ? current_token.value : "$");
+                    if (token_idx < num_tokens && typestring != current_token.value) {
+                        trace.current_token << " (" << typestring << ")";
+                    }
+                    trace.action << "ACTION[" << head->state << ":" << typestring << "] ";
+#endif
 
                     if (parser_action_t::accept == act.type) {
                         if (token_idx >= num_tokens || "$" == typestring) {
                             accepted = true;
+#if defined DEBUG
+                            trace.action << "accept";
+                            trace_stack.push_back(trace);
+#endif
                         }
                     } else if (parser_action_t::reduce == act.type) {
                         const auto& rule = _grammar.get_production(act.target);
                         size_t rhs_len = rule.rhs.size();
+
+#if defined DEBUG
+                        trace.action << "reduce -> Rule " << rule.id << " (" << rule.lhs << ") RHS[" << rhs_len << "]";
+#endif
 
                         // Utilize t_gss::pop (retrace_paths) to safely collect all paths
                         stack.pop(head, rhs_len, [&](const std::vector<parse_gss_node_ptr>& path) {
@@ -218,6 +284,12 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                                     if (nullptr != pt) {
                                         pt->on_reduce(act.target, rule.lhs, rhs_len);
                                     }
+
+#if defined DEBUG
+                                    trace_info trace_goto = trace;
+                                    trace_goto.action << " -> GOTO[" << ancestor->state << ":" << rule.lhs << "] -> state " << goto_state;
+                                    trace_stack.push_back(trace_goto);
+#endif
 
                                     // Push new reduced stack node connected to ancestor
                                     auto new_head = stack.push(ancestor, goto_state, nullptr);
@@ -249,6 +321,17 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                     if (parser_action_t::shift == act.type) {
                         if (0 == next_states.count(act.target)) {
                             next_states.insert(act.target);
+
+#if defined DEBUG
+                            trace_info trace;
+                            trace.state_stack << "[ " << build_gss_stack_string(head) << " ]";
+                            trace.current_token << (token_idx < num_tokens ? current_token.value : "$");
+                            if (token_idx < num_tokens && typestring != current_token.value) {
+                                trace.current_token << " (" << typestring << ")";
+                            }
+                            trace.action << "ACTION[" << head->state << ":" << typestring << "] shift -> State " << act.target;
+                            trace_stack.push_back(trace);
+#endif
 
                             // Shift new node connected to current head
                             auto new_shift_head = stack.create_node(act.target, nullptr);
@@ -298,6 +381,47 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                size_t len_state = 20;   // longest state_stack
+                size_t len_token = 10;   // longest current_token
+                size_t len_action = 10;  // longest action
+                const size_t pad = 2;
+
+                for (auto it = trace_stack.begin(); it != trace_stack.end(); ++it) {
+                    const auto& trace = *it;
+                    if (trace.state_stack.size() > len_state) len_state = trace.state_stack.size();
+                    if (trace.current_token.size() > len_token) len_token = trace.current_token.size();
+                    if (trace.action.size() > len_action) len_action = trace.action.size();
+                }
+
+                // Header
+                {
+                    basic_stream tbs;
+                    tbs.printf("%%-%zis%%-%zis%%s", len_state + pad, len_token + pad);
+
+                    console_color concolor;
+                    t_stream_binder<basic_stream, console_color> colorstream(dbs);
+                    colorstream << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << "GLR Dynamic Parsing Execution Trace"
+                                << concolor.turnoff() << "\n";
+                    dbs.println(tbs.c_str(), "state stack", "token", "action");
+                    dbs.fill(len_state + pad + len_token + pad + len_action, '-');
+                    dbs.println("");
+                }
+
+                for (auto it = trace_stack.begin(); it != trace_stack.end(); ++it) {
+                    const auto& trace = *it;
+                    valist va;
+                    va << trace.state_stack << trace.current_token << trace.action;
+                    basic_stream tbs;
+                    tbs.printf("{1:-%zis}{2:-%zis}{3}", len_state + pad, len_token + pad);
+                    dbs.vaprintln(tbs.c_str(), va);
+                }
+
+                // Footer
+                {
+                    dbs.fill(len_state + pad + len_token + pad + len_action, '-');
+                    dbs.println("");
+                }
+
                 valist va;
                 va << tokens.size() << token_idx << shifted;
                 dbs.vaprintln("tokens {1} token index {2} shifted {3}", va);
@@ -328,8 +452,6 @@ return_t glr_parser::build(binary_parsing_table* table) {
 }
 
 parser_type_t glr_parser::get_type() const { return parser_type_t::glr; }
-
-uint16 glr_parser::get_version() const { return 1; }
 
 return_t glr_parser::buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) {
     return_t ret = errorcode_t::success;

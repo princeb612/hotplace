@@ -15,8 +15,8 @@
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module_context.hpp>
 
 namespace hotplace {
 namespace io {
@@ -40,18 +40,18 @@ uint64 asn1_tag::get_class_number() const { return _class_number; }
 
 uint8 asn1_tag::get_tag_type() const { return _tag_mode; }
 
-bool asn1_tag::is_implicit(asn1_runtime* runtime) const {
+bool asn1_tag::is_implicit(asn1_module* module) const {
     auto mode = _tag_mode;
     if (mode == asn1_automatic) {
-        mode = runtime ? runtime->get_tagdefault() : asn1_explicit;
+        mode = module ? module->get_tagdefault() : asn1_explicit;
     }
     return (asn1_implicit == mode);
 }
 
-bool asn1_tag::is_explicit(asn1_runtime* runtime) const {
+bool asn1_tag::is_explicit(asn1_module* module) const {
     auto mode = _tag_mode;
     if (mode == asn1_automatic) {
-        mode = runtime ? runtime->get_tagdefault() : asn1_explicit;
+        mode = module ? module->get_tagdefault() : asn1_explicit;
     }
     return (asn1_explicit == mode);
 }

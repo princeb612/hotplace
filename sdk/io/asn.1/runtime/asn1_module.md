@@ -1,15 +1,15 @@
-# ASN.1 Runtime
+# ASN.1 Module
 
 ## Publication
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1100
+Edition 1 · Revision 1102
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
 
-`asn1_runtime` is the runtime registry for semantic ASN.1 objects and module information. It stores named definitions, references, `EXPORTS`/`IMPORTS` information, and provides resolution, linkage, notation representation, and DER-related runtime operations.
+`asn1_module` is the module representation and registry for semantic ASN.1 objects and module information. It stores named definitions, references, `EXPORTS`/`IMPORTS` information, and provides resolution, linkage, notation representation, and DER-related runtime operations.
 
 ## Role in hotplace
 
@@ -29,12 +29,12 @@ ASN.1 notation
 asn1_build_resultset
       |
       v
- asn1_runtime_context
+ asn1_module_context
       |
       +-------------------------------+
       |                               |
       v                               v
- asn1_runtime                    asn1_runtime
+ asn1_module                    asn1_module
  local module                    imported module
       |                               ^
       +---------- search() -----------+
@@ -46,23 +46,23 @@ asn1_build_resultset
               is_resolvable()
 ```
 
-The important distinction is that `asn1_runtime` is not the ASN.1 grammar parser. `asn1_parser` handles notation → tokens → parse tree, `asn1_publisher` builds semantic/module information, and `asn1_runtime` stores and resolves that information.
+The important distinction is that `asn1_module` is not the ASN.1 grammar parser. `asn1_parser` handles notation → tokens → parse tree, `asn1_publisher` builds semantic/module information, and `asn1_module` stores and resolves that information.
 
 ## Runtime context
 
-`asn1_runtime_context` keeps named runtime instances and a current/default runtime. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
+`asn1_module_context` keeps named module instances and a current/default module. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
 
 ```text
-asn1_runtime_context
+asn1_module_context
         |
-        +-- "CommonDefinitions" -> asn1_runtime
+        +-- "CommonDefinitions" -> asn1_module
         |
-        +-- "SecureMessageModule" -> asn1_runtime
+        +-- "SecureMessageModule" -> asn1_module
         |
         +-- current/default runtime
 ```
 
-The context manages runtime instances; each `asn1_runtime` owns the definitions and module relationships inside one runtime.
+The context manages module instances; each `asn1_module` owns the definitions and module relationships inside one module.
 
 ## Main runtime state
 
@@ -79,7 +79,7 @@ The module state is created by `as_module()` and populated through the publisher
 
 ## Reference lookup and resolution
 
-Revision 1099 makes imported symbols participate in runtime lookup through `search()`.
+The module-aware lookup introduced in revision 1099 lets imported symbols participate in lookup through `search()`.
 
 ```text
 search(name)
@@ -91,7 +91,7 @@ search(name)
          +-- imported symbol?
          |
          v
-   asn1_runtime_context::get(outer_module)
+   asn1_module_context::get(outer_module)
          |
          v
        outer runtime
@@ -182,7 +182,7 @@ strongly typed
 runtime schema/reference lookup -> DER -> semantic object
 ```
 
-The module resolution additions in rev1099 primarily affect the strongly typed/schema side, where a referenced definition may belong to another runtime module.
+The module resolution additions primarily affect the strongly typed/schema side, where a referenced definition may belong to another module.
 
 ## Constraint path
 
@@ -215,8 +215,8 @@ The runtime stores the semantic result; constraint evaluation and generic value-
 
 ## Related source
 
-- `sdk/io/asn.1/runtime/asn1_runtime.hpp`
-- `sdk/io/asn.1/runtime/asn1_runtime.cpp`
+- `sdk/io/asn.1/runtime/asn1_module.hpp`
+- `sdk/io/asn.1/runtime/asn1_module.cpp`
 - `sdk/io/asn.1/runtime/asn1_parser.*`
 - `sdk/io/asn.1/runtime/asn1_publisher.*`
 - `sdk/io/asn.1/asn1_advisor.hpp`

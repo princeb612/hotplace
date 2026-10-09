@@ -20,8 +20,8 @@ namespace io {
  * @brief   ASN.1 Tags
  * @sa
  *          X.680 8.4 Table 1 – Universal class tag assignments
- *          https://www.oss.com/asn1_runtime/resources/asn1_runtime-made-simple/asn1_runtime-quick-reference.html
- *          https://www.oss.com/asn1_runtime/resources/asn1_runtime-made-simple/asn1_runtime-quick-reference/asn1_runtime-tags.html
+ *          https://www.oss.com/asn1_module/resources/asn1_module-made-simple/asn1_module-quick-reference.html
+ *          https://www.oss.com/asn1_module/resources/asn1_module-made-simple/asn1_module-quick-reference/asn1_module-tags.html
  */
 enum asn1_tag_t : uint16 {
     asn1_tag_boolean = 1,           // BOOLEAN

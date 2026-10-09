@@ -44,21 +44,20 @@ parser_t& asn1_advisor::get_parser_by_import() {
 return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
     auto resource = parser_resource::get_instance();
 
-    auto symid = resource->nameof(token_identifier);                // "identifier"
-    auto symnum = resource->nameof(token_number);                   // "number"
-    auto symfp = resource->nameof(token_floatingpoint);             // "floatingpoint"
-    auto symqs = resource->nameof(token_quot_string);               // "quot_string"
-    auto symuser = resource->nameof(token_usertype);                // "usertype"
-    auto symuserparamtype = resource->nameof(token_userparamtype);  // "userparamtype"
-    auto symparamtype = resource->nameof(token_paramtype);          // "paramtype"
-    auto symparamvalue = resource->nameof(token_paramvalue);        // "paramvalue"
-    auto symassign = resource->nameof(token_assign);                // "::="
+    auto symid = resource->nameof(token_identifier);     // "identifier"
+    auto symnum = resource->nameof(token_number);        // "number"
+    auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
+    auto symqs = resource->nameof(token_quot_string);    // "quot_string"
+    auto symuser = resource->nameof(token_usertype);     // "usertype"
+    auto symassign = resource->nameof(token_assign);     // "::="
+    auto symhexstr = resource->nameof(token_hexstring);  // "hex_string"
 
     cfg_grammar grammar;
-    // 1. Root & Entry Points (Supports Multiple Modules, Single Module, Standalone Statements)
     grammar
+        // rule revision (.ptb file revision)
+        .set_revision(2)
+        // 1. Entry Points
         .add_production("S'", {"Start"})
-
         .add_production("Start", {"ModuleStatementList"})
         .add_production("Start", {"StatementList"})
         .add_production("Start", {"ComponentType"})
@@ -67,18 +66,16 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
 
         .add_production("ModuleStatementList", {"ModuleStatementList", "ModuleStatement"})
         .add_production("ModuleStatementList", {"ModuleStatement"})
-
         .add_production("ModuleStatement", {"ModuleDefinition"})
         .add_production("ModuleStatement", {"Statement"})
 
-        // 2. Module Definition & Exports/Imports (ITU-T X.680)
+        // 2. Module Definition
         .add_production("ModuleDefinition", {"ModuleIdentifier", "DEFINITIONS", "TagDefault", "ExtensionDefault", symassign, "BEGIN", "ModuleBody", "END"})
         .add_production("ModuleDefinition", {"ModuleIdentifier", "DEFINITIONS", "TagDefault", symassign, "BEGIN", "ModuleBody", "END"})
         .add_production("ModuleDefinition", {"ModuleIdentifier", "DEFINITIONS", symassign, "BEGIN", "ModuleBody", "END"})
 
         .add_production("ModuleIdentifier", {symid})
         .add_production("ModuleIdentifier", {symid, "{", "DefinitiveOidComponentList", "}"})
-
         .add_production("DefinitiveOidComponentList", {"DefinitiveOidComponentList", "DefinitiveObjIdComponent"})
         .add_production("DefinitiveOidComponentList", {"DefinitiveObjIdComponent"})
         .add_production("DefinitiveObjIdComponent", {symid, "(", symnum, ")"})
@@ -97,7 +94,6 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
 
         .add_production("Exports", {"EXPORTS", "SymbolList", ";"})
         .add_production("Exports", {"EXPORTS", "ALL", ";"})
-
         .add_production("Imports", {"IMPORTS", "SymbolsFromModuleList", ";"})
         .add_production("SymbolsFromModuleList", {"SymbolsFromModuleList", "SymbolsFromModule"})
         .add_production("SymbolsFromModuleList", {"SymbolsFromModule"})
@@ -105,16 +101,12 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
 
         .add_production("SymbolList", {"SymbolList", ",", "Symbol"})
         .add_production("SymbolList", {"Symbol"})
-        .add_production("Symbol", {symuserparamtype})
-        .add_production("Symbol", {symuserparamtype, "{", "}"})
-        .add_production("Symbol", {symuser})
-        .add_production("Symbol", {symuser, "{", "}"})
-        .add_production("Symbol", {symid})
+        .add_production("Symbol", {"TypeIdentifier"})
+        .add_production("Symbol", {"TypeIdentifier", "{", "}"})
 
-        // 3. Statements & Assignments (Standard & Parameterized)
+        // 3. Statements & Assignments
         .add_production("StatementList", {"StatementList", "Statement"})
         .add_production("StatementList", {"Statement"})
-
         .add_production("Statement", {"Assignment"})
 
         .add_production("AssignmentList", {"AssignmentList", "Assignment"})
@@ -124,15 +116,24 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("Assignment", {"ValueAssignment"})
         .add_production("Assignment", {"ObjectClassAssignment"})
         .add_production("Assignment", {"InformationObjectAssignment"})
-        // .add_production("Assignment", {"ParameterizedAssignment"})
+        .add_production("Assignment", {"ParameterizedAssignment"})
 
-        // Standard Type TypeAssignment
+        .add_production("ParameterizedAssignment", {"ParameterizedTypeAssignment"})
+        .add_production("ParameterizedAssignment", {"ParameterizedValueAssignment"})
+
+        // Parameterized Type & Value Assignment (ITU-T X.683)
+        .add_production("ParameterizedTypeAssignment", {symid, "{", "ParameterList", "}", symassign, "Type"})
+        .add_production("ParameterizedTypeAssignment", {symid, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
+        .add_production("ParameterizedTypeAssignment", {symuser, "{", "ParameterList", "}", symassign, "Type"})
+        .add_production("ParameterizedTypeAssignment", {symuser, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
+
+        .add_production("ParameterizedValueAssignment", {symid, "{", "ParameterList", "}", "Type", symassign, "ValueElement"})
+        .add_production("ParameterizedValueAssignment", {symid, "{", "ParameterList", "}", "Type", symassign, "{", "ValueElementList", "}"})
+        .add_production("ParameterizedValueAssignment", {symuser, "{", "ParameterList", "}", "Type", symassign, "ValueElement"})
+        .add_production("ParameterizedValueAssignment", {symuser, "{", "ParameterList", "}", "Type", symassign, "{", "ValueElementList", "}"})
+
         .add_production("TypeAssignment", {"DefinedType", symassign, "Type"})
         .add_production("TypeAssignment", {"DefinedType", symassign, "Type", "Constraint"})
-
-        // Parameterized TypeAssignment (ITU-T X.683)
-        .add_production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type"})
-        .add_production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
 
         .add_production("ValueAssignment", {symid, "Type", symassign, "ValueElement"})
         .add_production("ValueAssignment", {symid, "Type", symassign, "{", "ValueElementList", "}"})
@@ -141,19 +142,20 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("ValueElementList", {"ValueElementList", "ValueElement"})
         .add_production("ValueElementList", {"ValueElement"})
 
-        // myValue INTEGER ::= 10
-        // myOid OBJECT IDENTIFIER ::= { iso(1) ... }
         .add_production("DefinedType", {symuser})
-        .add_production("DefinedType", {symuserparamtype})
+        .add_production("DefinedType", {symid})
 
+        // Parameter List
         .add_production("ParameterList", {"ParameterList", ",", "Parameter"})
         .add_production("ParameterList", {"Parameter"})
-        .add_production("Parameter", {symparamtype, ":", symparamvalue})
-        .add_production("Parameter", {symparamtype, ":", symuser})
-        .add_production("Parameter", {symparamtype})
-        .add_production("Parameter", {"Type", ":", symparamvalue})
+        .add_production("Parameter", {"TypeIdentifier"})
+        .add_production("Parameter", {"Type"})
+        .add_production("Parameter", {symid, ":", symid})
+        .add_production("Parameter", {symuser, ":", "TypeIdentifier"})
+        .add_production("Parameter", {"Type", ":", "TypeIdentifier"})
+        .add_production("Parameter", {"Type", ":", symid})
 
-        // 4. Type Specifications & Extension Markers (Version 1 & 2)
+        // 4. Type Specifications
         .add_production("Type", {"SimpleTypeSpec"})
         .add_production("Type", {"TaggedTypeSpec"})
         .add_production("Type", {"ReferencedTypeSpec"})
@@ -164,31 +166,25 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("Type", {"SetTypeSpec"})
         .add_production("Type", {"SetOfTypeSpec"})
         .add_production("Type", {"ChoiceTypeSpec"})
+        .add_production("Type", {"ParameterizedType"})
 
-        // Referenced Types
         .add_production("TypeIdentifier", {symuser})
         .add_production("TypeIdentifier", {symid})
 
         .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
-        .add_production("ReferencedTypeSpec", {symparamtype})
-        .add_production("ReferencedTypeSpec", {symuserparamtype})
-        .add_production("ReferencedTypeSpec", {symuserparamtype, "{", "ActualParameterList", "}"})
-        .add_production("ReferencedTypeSpec", {symparamtype, "{", "ActualParameterList", "}"})
-        .add_production("ReferencedTypeSpec", {symid, "{", "ActualParameterList", "}"})
 
-        // id + Type
+        .add_production("ParameterizedType", {symid, "{", "ActualParameterList", "}"})
+        .add_production("ParameterizedType", {"TypeIdentifier", "{", "ActualParameterList", "}"})
+
         .add_production("NamedType", {symid, "Type"})
-
         .add_production("ComponentType", {"NamedType"})
-        .add_production("ComponentType", {"NamedType", "Constraint"})
+        .add_production("ComponentType", {"NamedType", "Constraints"})
         .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
-        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
+        .add_production("ComponentType", {"NamedType", "Constraints", "OptionalitySpec"})
 
-        // ComponentTypeList rules for SEQUENCE / SET / CHOICE
         .add_production("ComponentTypeList", {"ComponentTypeList", ",", "ComponentType"})
         .add_production("ComponentTypeList", {"ComponentType"})
 
-        // Extension Marker Support (Version 1: "...", Version 2: "...", ..., ComponentTypeList)
         .add_production("ExtensionAdditions", {",", "ExtensionMarker"})
         .add_production("ExtensionAdditions", {",", "ExtensionMarker", ",", "ComponentTypeList"})
         .add_production("ExtensionAdditions", {",", "ExtensionMarker", ",", "ExtensionMarker", ",", "ComponentTypeList"})
@@ -200,17 +196,14 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("ComponentTypeLists", {"Constraint", "{", "}"})
         .add_production("ComponentTypeLists", {"{", "}"})
 
-        // Constructed Types (SEQUENCE, SET, CHOICE)
         .add_production("SequenceTypeSpec", {"SEQUENCE", "ComponentTypeLists"})
         .add_production("SetTypeSpec", {"SET", "ComponentTypeLists"})
         .add_production("ChoiceTypeSpec", {"CHOICE", "ComponentTypeLists"})
 
-        // SEQUENCE OF
         .add_production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "Type"})
         .add_production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "Type"})
         .add_production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "Type"})
 
-        // SET OF
         .add_production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "Type"})
         .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "Type"})
         .add_production("SetOfTypeSpec", {"SET", "OF", "Type"})
@@ -219,46 +212,33 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("OptionalitySpec", {"DEFAULT", "ValueElement"})
         .add_production("OptionalitySpec", {"DEFAULT", "{", "}"})
 
-        // Actual Parameter Arguments
         .add_production("ActualParameterList", {"ActualParameterList", ",", "ActualParameter"})
         .add_production("ActualParameterList", {"ActualParameter"})
         .add_production("ActualParameter", {"Type"})
-        .add_production("ActualParameter", {symparamvalue})
-        .add_production("ActualParameter", {symparamtype})
-        .add_production("ActualParameter", {symnum})
-        .add_production("ActualParameter", {symfp})
-        .add_production("ActualParameter", {symqs})
-        .add_production("ActualParameter", {"TRUE"})
-        .add_production("ActualParameter", {"FALSE"})
+        .add_production("ActualParameter", {"ValueElement"})
+        .add_production("ActualParameter", {"{", "DefinitiveOidComponentList", "}"})
+        .add_production("ActualParameter", {"{", "ValueElementList", "}"})
+        .add_production("ActualParameter", {"{", "}"})
+        .add_production("ActualParameter", {"TypeIdentifier"})
 
-        // Tagged Type Specifications
-        // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
         .add_production("TaggedTypeSpec", {"TagSpec", "IMPLICIT", "Type"})
         .add_production("TaggedTypeSpec", {"TagSpec", "EXPLICIT", "Type"})
         .add_production("TaggedTypeSpec", {"TagSpec", "Type"})
 
-        // Tag ::= "[" Class ClassNumber "]"
         .add_production("TagSpec", {"[", "UNIVERSAL", symnum, "]"})
         .add_production("TagSpec", {"[", "APPLICATION", symnum, "]"})
         .add_production("TagSpec", {"[", "PRIVATE", symnum, "]"})
         .add_production("TagSpec", {"[", symnum, "]"})
 
-        // Enum Specifications
         .add_production("EnumeratedType", {"ENUMERATED", "{", "Enumerations", "ExtensionAdditionEnumeration", "}"})
         .add_production("EnumeratedType", {"ENUMERATED", "{", "Enumerations", "}"})
-
-        // Extensions
         .add_production("ExtensionAdditionEnumeration", {",", "ExtensionMarker"})
         .add_production("ExtensionAdditionEnumeration", {",", "ExtensionMarker", ",", "Enumerations"})
 
-        // ENUMERATED
         .add_production("Enumerations", {"Enumerations", ",", "Enumeration"})
         .add_production("Enumerations", {"Enumeration"})
-        // INTEGER { a(1), b(2) }
         .add_production("Enumeration", {symid, "(", symnum, ")"})
-        // ENUMERATED { red, green, blue }
         .add_production("Enumeration", {symid})
-
         .add_production("ExtensionMarker", {"..."})
 
         // Simple Built-in Types
@@ -295,56 +275,59 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("SimpleTypeSpec", {"ANY"})
 
         // 5. Information Object Class & Field Reference (ITU-T X.681)
-        .add_production("ObjectClassAssignment", {symparamtype, symassign, "CLASS", "{", "FieldList", "}"})
-        .add_production("ObjectClassAssignment", {symparamtype, symassign, "CLASS", "{", "FieldList", "}", "WITH", "SYNTAX", "{", "SyntaxList", "}"})
-        .add_production("ObjectClassAssignment", {symuser, symassign, "CLASS", "{", "FieldList", "}"})
-        .add_production("ObjectClassAssignment", {symuser, symassign, "CLASS", "{", "FieldList", "}", "WITH", "SYNTAX", "{", "SyntaxList", "}"})
+        .add_production("ObjectClassAssignment", {"TypeIdentifier", symassign, "CLASS", "{", "FieldList", "}"})
+        .add_production("ObjectClassAssignment", {"TypeIdentifier", symassign, "CLASS", "{", "FieldList", "}", "WITH", "SYNTAX", "{", "SyntaxList", "}"})
 
         .add_production("FieldList", {"FieldList", ",", "Field"})
         .add_production("FieldList", {"Field"})
         .add_production("Field", {"&", "ComponentType"})
         .add_production("Field", {"&", "ComponentType", "UNIQUE"})
-        .add_production("Field", {"&", symparamtype})
+        .add_production("Field", {"&", symid})
         .add_production("Field", {"&", "TypeIdentifier"})
 
         .add_production("SyntaxList", {"SyntaxList", "SyntaxItem"})
         .add_production("SyntaxList", {"SyntaxItem"})
         .add_production("SyntaxItem", {"&", "TypeIdentifier"})
-        .add_production("SyntaxItem", {"&", symparamtype})
         .add_production("SyntaxItem", {"TypeIdentifier"})
-        .add_production("SyntaxItem", {symparamtype})
 
-        .add_production("ObjectClassFieldType", {symparamtype, "ClassFieldReference"})
-        .add_production("ObjectClassFieldType", {symuser, "ClassFieldReference"})
+        .add_production("ObjectClassFieldType", {"TypeIdentifier", "ClassFieldReference"})
         .add_production("ClassFieldReference", {".", "&", "TypeIdentifier"})
-        .add_production("ClassFieldReference", {".", "&", symparamtype})
+        .add_production("ClassFieldReference", {".", "&", symid})
 
-        .add_production("InformationObjectAssignment", {symid, symuser, symassign, "{", "SettingList", "}"})
-        .add_production("InformationObjectAssignment", {symid, symparamtype, symassign, "{", "SettingList", "}"})
+        .add_production("InformationObjectAssignment", {symid, "TypeIdentifier", symassign, "{", "SettingList", "}"})
+        .add_production("InformationObjectAssignment", {symid, symid, symassign, "{", "SettingList", "}"})
         .add_production("SettingList", {"SettingList", "SettingItem"})
         .add_production("SettingList", {"SettingItem"})
 
         .add_production("SettingItem", {"TypeIdentifier", "ValueElement"})
         .add_production("SettingItem", {"TypeIdentifier", "Type"})
 
-        .add_production("ValueElement", {symparamvalue})  // lexer promote id to paramvalue. see userparamtype { paramtype, paramtype : paramvalue }
+        // Parameterized Value / Reference
+        .add_production("ParameterizedValue", {symid, "{", "ActualParameterList", "}"})
+        .add_production("ParameterizedValue", {"TypeIdentifier", "{", "ActualParameterList", "}"})
+
+        .add_production("ValueElement", {"TypeIdentifier"})
+        .add_production("ValueElement", {"ParameterizedValue"})
         .add_production("ValueElement", {symnum})
         .add_production("ValueElement", {symfp})
         .add_production("ValueElement", {symqs})
+        .add_production("ValueElement", {symhexstr})
         .add_production("ValueElement", {"MIN"})
         .add_production("ValueElement", {"MAX"})
         .add_production("ValueElement", {"TRUE"})
         .add_production("ValueElement", {"FALSE"})
 
-        // 6. Constraints & Subtype Specifications (ITU-T X.682 - Ambiguity Fixed)
-        .add_production("Constraint", {"(", "ConstraintSpec", ")"})
+        // 6. Constraints & Subtype Specifications (ITU-T X.682)
+        .add_production("Constraints", {"Constraints", "Constraint"})
+        .add_production("Constraints", {"Constraint"})
 
+        .add_production("Constraint", {"(", "ConstraintSpec", ")"})
         .add_production("ConstraintSpec", {"SubtypeElementSetSpec"})
         .add_production("ConstraintSpec", {"ALL EXCEPT", "SubtypeElementSetSpec"})
 
         .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "UnionOperation", "SubtypeElement"})
         .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "EXCEPT", "SubtypeElement"})
-        .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "IntersectOperation", "SubtypeElement"})  // ambuiguity in LALR(1)
+        .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "IntersectOperation", "SubtypeElement"})
         .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "SubtypeElement"})
         .add_production("SubtypeElementSetSpec", {"SubtypeElement"})
 
@@ -359,10 +342,10 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("IntersectOperation", {"INTERSECT"})
 
         .add_production("PrimaryElement", {"ValueElement"})
-        .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})            // [from, to]
-        .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})       // [from, to)
-        .add_production("PrimaryElement", {"ValueElement", "<", "..", "ValueElement"})       // (from, to]
-        .add_production("PrimaryElement", {"ValueElement", "<", "..", "<", "ValueElement"})  // (from, to)
+        .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
+        .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})
+        .add_production("PrimaryElement", {"ValueElement", "<", "..", "ValueElement"})
+        .add_production("PrimaryElement", {"ValueElement", "<", "..", "<", "ValueElement"})
         .add_production("PrimaryElement", {"SIZE", "Constraint"})
         .add_production("PrimaryElement", {"FROM", "Constraint"})
         .add_production("PrimaryElement", {"PATTERN", symqs})
@@ -370,12 +353,8 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("PrimaryElement", {"ObjectSetSpec"})
         .add_production("PrimaryElement", {"ObjectSetSpec", "RelationalConstraint"})
 
-        .add_production("ObjectSetSpec", {"{", symuser, "}"})
-        .add_production("ObjectSetSpec", {"{", symparamtype, "}"})
-        .add_production("ObjectSetSpec", {"{", symparamvalue, "}"})
-
+        .add_production("ObjectSetSpec", {"{", "TypeIdentifier", "}"})
         .add_production("RelationalConstraint", {"{", "@", symid, "}"})
-
         .add_production("SizeConstraint", {"SIZE", "Constraint"});
 
     // 7. Terminals Registration
@@ -398,6 +377,7 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_terminal(symqs)
         .add_terminal("@")
         .add_terminal(symuser)
+        .add_terminal(symhexstr)
 
         .add_terminal("BOOLEAN")
         .add_terminal("INTEGER")
@@ -472,9 +452,9 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_terminal("EXTENSIBILITY")
         .add_terminal("IMPLIED")
 
-        .add_terminal(symuserparamtype)
-        .add_terminal(symparamtype)
-        .add_terminal(symparamvalue)
+        .add_terminal(symid)
+        .add_terminal(symid)
+        .add_terminal(symid)
 
         .add_terminal("CLASS")
         .add_terminal("WITH")

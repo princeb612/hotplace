@@ -23,6 +23,11 @@ namespace io {
 
 cfg_grammar::cfg_grammar() {}
 
+cfg_grammar& cfg_grammar::set_revision(uint16 revision) {
+    _revision = revision;
+    return *this;
+}
+
 cfg_grammar& cfg_grammar::add_production(const std::string& lhs, const std::vector<std::string>& rhs) {
     uint32 id = _productions.size();  // uint32 production_id
     _productions.emplace(id, parser_production{id, lhs, rhs});
@@ -49,6 +54,8 @@ cfg_grammar& cfg_grammar::add_terminal(const std::string& term) {
     _terminals.insert(term);
     return *this;
 }
+
+uint16 cfg_grammar::get_revision() { return _revision; }
 
 const parser_productions_t& cfg_grammar::get_productions() const { return _productions; }
 

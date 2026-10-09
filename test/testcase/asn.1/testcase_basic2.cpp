@@ -568,8 +568,9 @@ void test_testvector_gpt_gemini() {
                     (void)breakpoint;  // spoof
                 }
 #endif
-                asn1_runtime runtime;
-                parse_notation(&runtime, item.notation);
+                asn1_parser parser(parser_type_t::lalr1, true);
+                asn1_module module;
+                parse_notation(parser, &module, item.notation);
 
                 if (item.weakflag == flag_schema_dependent) {
                     // do nothing
@@ -577,14 +578,14 @@ void test_testvector_gpt_gemini() {
                     size_t pos = 0;
                     const byte_t* stream = bin.data();
                     size_t size = bin.size();
-                    runtime.read_weakly_typed(stream, size, pos);
+                    module.read_weakly_typed(stream, size, pos);
 
                     basic_stream bs_type;
                     basic_stream bs_value;
                     binary_t bin_recode;
-                    runtime.represent(&bs_type);
-                    runtime.publish(&bs_value);
-                    runtime.publish(&bin_recode);
+                    module.represent(&bs_type);
+                    module.publish(&bs_value);
+                    module.publish(&bin_recode);
                     if (item.weakflag == flag_type_only) {
                         if (false == bin_recode.empty()) bin_recode.pop_back();
                     }

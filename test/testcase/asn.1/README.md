@@ -1,3 +1,9 @@
+# Current implementation note (working revision 1102)
+
+The ASN.1 runtime representation is being renamed from `asn1_runtime` / `asn1_runtime_context` to `asn1_module` / `asn1_module_context`. This is reflected in the runtime implementation documentation.
+
+Parameterized syntax is under active grammar work. The current working tree strengthens the ASN.1 GLR grammar, but this should not be read as completed parameter binding or instantiation. `parameterized/testcase_parameterized.cpp` contains a `FRAME` type-parameter and `maxSize` example, but the testcase entry point currently calls only the empty first probe; the parse/publish probe is commented out. Treat this directory as a work-in-progress fixture, not as evidence of completed parameterized ASN.1 support.
+
 #### TODO
 
 - [ ] ASN.1 Runtime

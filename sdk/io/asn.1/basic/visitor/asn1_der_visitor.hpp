@@ -21,7 +21,7 @@ namespace io {
 
 class asn1_der_visitor {
    public:
-    asn1_der_visitor(binary_t* b, asn1_runtime* runtime, const asn1_value* value = nullptr);
+    asn1_der_visitor(binary_t* b, asn1_module* module, const asn1_value* value = nullptr);
     virtual ~asn1_der_visitor();
 
     virtual void visit(asn1_object* object);
@@ -31,7 +31,7 @@ class asn1_der_visitor {
 
    private:
     binary_t* _b;
-    asn1_runtime* _runtime;
+    asn1_module* _module;
     const asn1_value* _value;
 };
 

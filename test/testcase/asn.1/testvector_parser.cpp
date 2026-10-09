@@ -51,27 +51,27 @@ void test_yaml_testvector_parser() {
 
         return_t test = errorcode_t::success;
         lexical_context context;
-        asn1_runtime runtime;  // automatic
+        asn1_parser parser(parser_type_t::lalr1, true);
         for (const auto& item : items) {
             std::string text_item = item["item"].as<std::string>("");
             std::string text_der = item["der"].as<std::string>("");
             binary_t bin = base16_decode_rfc(text_der);
 
+            asn1_module module;
             {
-                asn1_runtime runtime;
                 size_t pos = 0;
                 auto stream = bin.data();
                 auto size = bin.size();
-                test = runtime.read_weakly_typed(stream, size, pos);
+                test = module.read_weakly_typed(stream, size, pos);
                 _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
                 _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
 
                 basic_stream bs_type;
                 basic_stream bs_value;
                 binary_t bin_encoded;
-                runtime.represent(&bs_type);
-                runtime.publish(&bs_value);
-                runtime.publish(&bin_encoded);
+                module.represent(&bs_type);
+                module.publish(&bs_value);
+                module.publish(&bin_encoded);
 
                 _logger->write([&](basic_stream& dbs) -> void {
                     valist va;
@@ -84,7 +84,7 @@ void test_yaml_testvector_parser() {
                 _logger->dump(bin_encoded);
             }
 
-            parse_reconst_notation(&runtime, text_item.c_str());
+            parse_reconst_notation(parser, &module, text_item.c_str());
         }
     };
 

@@ -725,10 +725,33 @@ class variant {
         return t_vtoi<T>(_vt);
     }
 
+    template <typename T>
+    typename std::enable_if<custom::is_integral<T>::value, T>::type as() const {
+        return t_vtoi<T>(_vt);
+    }
+
+    template <typename T>
+    typename std::enable_if<std::is_floating_point<T>::value, T>::type as() const {
+        return value<T>();
+    }
+
+    template <typename T>
+    typename std::enable_if<!custom::is_integral<T>::value && !std::is_floating_point<T>::value, T>::type as() const;
+
    protected:
    private:
     variant_t _vt;
 };
+
+template <>
+inline std::string variant::as<std::string>() const {
+    return to_str();
+}
+
+template <>
+inline binary_t variant::as<binary_t>() const {
+    return to_bin();
+}
 
 }  // namespace hotplace
 

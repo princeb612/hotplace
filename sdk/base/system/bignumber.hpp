@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_BIGNUMBER__
 
 #include <functional>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
@@ -512,6 +513,14 @@ class bignumber {
     std::vector<uint32> _v;
     int _sign;
 };
+
+template <>
+inline bignumber variant::as<bignumber>() const {
+    if ((_vt.type == vartype_t::TYPE_BIGNUMBER) && _vt.data.bstr) {
+        return bignumber(_vt.data.bstr, _vt.size);
+    }
+    return bignumber();
+}
 
 }  // namespace hotplace
 

@@ -1,18 +1,39 @@
-InfoObjectModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+ParameterizedValueModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+    -- 1 Parameterized Type
+    -- MyType { TypeParam } ::= SEQUENCE { ... }
 
--- 1. CLASS Definition
-ERROR-CLASS ::= CLASS {
-    &errorCode   INTEGER UNIQUE,
-    &Type        
-} WITH SYNTAX {
-    CODE &errorCode
-    TYPE &Type
-}
+    -- 2 Parameterized Value
+    -- myVal { TypeParam } TypeParam ::= defaultValue
+    -- Parameterized Value definition
+    myDefaultValue { TypeParam, TypeParam: defaultValue } TypeParam ::= defaultValue
+    myIntVal INTEGER ::= myDefaultValue { INTEGER, 10 }
 
--- 2. Object Definition using Class
-SystemError ERROR-CLASS ::= {
-    CODE 101
-    TYPE IA5String
-}
+    -- 2.1 Pattern of applying operations/combinations to input values ​​(creating struct/array values)
+    makeRangeHeader { TypeParam, INTEGER: minVal, INTEGER: maxVal } SEQUENCE { low INTEGER, high INTEGER } ::= {
+        low minVal,
+        high maxVal
+    }
+    defaultHeader SEQUENCE { low INTEGER, high INTEGER } ::= makeRangeHeader { INTEGER, 1, 100 }
 
+    -- 2.2 OID (Object Identifier) ​​Generation and Combination Patterns
+    makeSubOid { OBJECT IDENTIFIER: parentOid, INTEGER: subId } OBJECT IDENTIFIER ::= {
+        parentOid subId
+    }
+    myCryptoAlgOid OBJECT IDENTIFIER ::= makeSubOid { { 1 2 840 113549 }, 1 }
+
+    -- 2.3 A pattern that accepts only a 'value' or 'constant' as an argument, without a type argument.
+    offsetPort { INTEGER: basePort, INTEGER: offset } INTEGER ::= basePort
+    myServicePort INTEGER ::= offsetPort { 8000, 80 }
+
+    -- 2.4 Pattern of recursive use as a default value within another parameterized type
+    defaultMagic { OCTET STRING: prefix } OCTET STRING ::= prefix
+    GENERIC-PACKET { OCTET STRING: pfx } ::= SEQUENCE {
+        magic OCTET STRING DEFAULT defaultMagic { pfx },
+        payload OCTET STRING
+    }
+
+    -- 3 Parameterized Value Set
+    -- MyValueSet { TypeParam } TypeParam ::= { ... }
+    -- 4 Parameterized Information Object / Class
+    -- MY-CLASS { TypeParam } ::= CLASS { ... }
 END

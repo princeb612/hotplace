@@ -29,7 +29,7 @@ class asn1_loader {
      * @param   parse_tree* pt [out]
      * @examples
      *          // sketch
-     *          auto rtcontext = asn1_runtime_context::get_instance();
+     *          auto rtcontext = asn1_module_context::get_instance();
      *          loader.load_file("userprofile.asn1");
      */
     return_t load_file(const char* asn1file, parse_tree* pt);
@@ -39,7 +39,7 @@ class asn1_loader {
      * @param   parse_tree* pt [out]
      * @examples
      *          // sketch
-     *          auto rtcontext = asn1_runtime_context::get_instance();
+     *          auto rtcontext = asn1_module_context::get_instance();
      *          loader.load_file(asn1stream, asn1size);
      */
     return_t load(const char* asn1, size_t size, parse_tree* pt);

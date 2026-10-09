@@ -12,6 +12,8 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/builtin/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/constraints/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/infobjclass/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/parameterized/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/structural/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/visitor/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/runtime/*.hpp
@@ -35,6 +37,8 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/builtin/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/constraints/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/infobjclass/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/parameterized/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/structural/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/visitor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/runtime/*.cpp

@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_parser::asn1_parser() : _ready(0) {}
+asn1_parser::asn1_parser(parser_type_t type, bool imported) : _ready(0), _type(type), _imported(imported) {}
 
 return_t asn1_parser::parse(const char* notation, asn1_build_resultset& result) {
     return_t ret = errorcode_t::success;
@@ -161,14 +161,15 @@ parser_t& asn1_parser::get_parser() {
     // return advisor->get_notation_parser_by_build();
     // return advisor->get_notation_parser_by_import();
     // return advisor->get_parser_by_build();
-    return advisor->get_parser_by_import();
+    // return advisor->get_parser_by_import();
+    return advisor->get_parser(_type, _imported);
 }
 
 void asn1_parser::load() {
     if (0 == _ready) {
         auto& lex = get_lexer();
         // handle_quoted to 1
-        lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
+        lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1).set("handle_hexstring", 1);
         lex.prepare();
 
         // ASN.1 tokens

@@ -26,7 +26,7 @@ void test_yaml_testvector_parser() {
 
         return_t test = errorcode_t::success;
         // lexical_context context;
-        asn1_runtime runtime;  // automatic
+        asn1_module runtime;  // automatic
 
         /**
          * expect:

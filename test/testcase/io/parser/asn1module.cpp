@@ -21,7 +21,7 @@ return_t prepare_lexer_asn1(lexical_analyzer& lexer) {
 
 return_t prepare_lexer_asn1_usertype(lexical_analyzer& lexer) {
     prepare_lexer_asn1(lexer);
-    lexer.get_config().set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
+    lexer.get_config().set("handle_lvalue_usertype", 1);
     return errorcode_t::success;
 }
 

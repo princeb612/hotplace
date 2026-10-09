@@ -25,8 +25,8 @@ class asn1_weakly_typed;
 class asn1_strongly_typed;
 class asn1_parser;
 class asn1_publisher;
-class asn1_runtime;
-class asn1_runtime_context;
+class asn1_module;
+class asn1_module_context;
 
 enum class asn1_build_t {
     unknown,
@@ -44,14 +44,14 @@ struct asn1_build_resultset {
     asn1_build_resultset(const asn1_build_resultset&) = delete;
     asn1_build_resultset& operator=(const asn1_build_resultset&) = delete;
     ~asn1_build_resultset() { clear(); }
-    // remove all asn1_runtime from asn1_runtime_context
+    // remove all asn1_module from asn1_module_context
     void clear();
-    // do not remove asn1_runtime
+    // do not remove asn1_module
     void release_name(const std::string& name);
 };
 
 return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
-return_t print_ast(const asn1_runtime* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
+return_t print_ast(const asn1_module* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 
 }  // namespace io
 }  // namespace hotplace

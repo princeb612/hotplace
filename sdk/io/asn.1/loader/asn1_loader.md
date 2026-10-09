@@ -8,7 +8,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1100
+Edition 1 · Revision 1102
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -38,7 +38,7 @@ ASN.1 file / memory
         +-- asn1_publisher
                 |
                 v
-        asn1_runtime_context
+        asn1_module_context
                 |
                 v
           module runtimes
@@ -59,7 +59,7 @@ The parser-facing helper path can also expose the source as tokens for tests tha
 
 ## Current implementation status
 
-Revision 1097 introduced the first file-loading/parsing implementation. By revision 1099, the loader testcase exercised the next stages explicitly. Revision 1100 consolidates the shared ASN.1 provider under `asn1_advisor`:
+Revision 1097 introduced the first file-loading/parsing implementation. Revision 1099 made module imports/exports and reference resolution part of the exercised path. Revision 1100 consolidated shared ASN.1 providers under `asn1_advisor`. The current working revision renames `asn1_runtime` and `asn1_runtime_context` to `asn1_module` and `asn1_module_context`:
 
 ```text
 file
@@ -69,7 +69,7 @@ file
   -> asn1_advisor
        +-- publisher
        `-- parser providers
-  -> runtime module
+  -> module
 ```
 
 The loader therefore remains a small entry point rather than becoming the owner of semantic construction.
@@ -90,7 +90,7 @@ The testcase also regenerates ASN.1 notation from the runtime with `represent()`
 - `sdk/io/asn.1/loader/asn1_loader.cpp`
 - `sdk/io/asn.1/runtime/asn1_parser.*`
 - `sdk/io/asn.1/runtime/asn1_publisher.*`
-- `sdk/io/asn.1/runtime/asn1_runtime.*`
+- `sdk/io/asn.1/runtime/asn1_module.*`
 
 ## Related tests
 

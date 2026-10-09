@@ -1,4 +1,4 @@
-EdgeCaseModuleMixed DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+EdgeCaseModuleV1 DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
 EXPORTS ALL;
 
@@ -18,20 +18,18 @@ ChoiceType ::= CHOICE {
 -- 2. Complex Constraints (SIZE, FROM, Subtype)
 RestrictedString ::= UTF8String (SIZE (1..32) INTERSECT FROM ("a".."z" | "A".."Z"))
 
--- 3. ENUMERATED (Version 2)
+-- 3. ENUMERATED (Version 1)
 Status ::= ENUMERATED {
     ok(0),
     fail(1),
-    ...,
-    unknown(2)
+    ...
 }
 
--- 4. SEQUENCE (Version 2)
+-- 4. SEQUENCE (Version 1)
 MyTest ::= SEQUENCE {
     a INTEGER,
     b INTEGER,
-    ...,
-    c INTEGER OPTIONAL
+    ...
 }
 
 END

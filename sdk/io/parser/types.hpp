@@ -31,15 +31,13 @@ namespace io {
  *   SYMBOL_NUM      | token_number        | "num"
  *   SYMBOL_QSTR     | token_quot_string   | "quot_string"
  *   SYMBOL_USERTYPE | token_usertype      | "usertype"
+ *   SYMBOL_HEXSTR   | token_hexstring     | "hex_string"
  */
 #define SYMBOL_FP "fp"
 #define SYMBOL_ID "id"
 #define SYMBOL_NUM "num"
 #define SYMBOL_QSTR "quot_string"
 #define SYMBOL_USERTYPE "usertype"
-#define SYMBOL_USERPARAMTYPE "userparamtype"
-#define SYMBOL_PARAMTYPE "paramtype"
-#define SYMBOL_PARAMVALUE "paramvalue"
 
 enum token_t : uint32 {
     token_unknown = 0,
@@ -106,6 +104,8 @@ enum token_t : uint32 {
     token_sentence,
     token_ellipsis,
     token_extension_marker = token_ellipsis,  // ...
+    token_squot_string,
+    token_hexstring,  // '01020304'H
 
     // ASN.1
     token_asn1 = 0x1000,
@@ -184,10 +184,6 @@ enum token_t : uint32 {
     token_all,
     token_extensibility,
     token_implied,
-    // parameterized
-    token_userparamtype,
-    token_paramtype,
-    token_paramvalue,
     // information object class
     token_class,
     token_with,
@@ -322,7 +318,6 @@ class parser_t {
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr) = 0;
     virtual return_t build(binary_parsing_table* table) = 0;
     virtual parser_type_t get_type() const = 0;
-    virtual uint16 get_version() const = 0;
 
     // import
     virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) = 0;

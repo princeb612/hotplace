@@ -54,7 +54,7 @@ class asn1_tagged_type : public asn1_type {
 
     asn1_tag* get_tag() const;
 
-    virtual void update_linkage(asn1_runtime* runtime);
+    virtual void update_linkage(asn1_module* module);
 
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;

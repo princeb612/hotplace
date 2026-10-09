@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1097
+Edition 1 · Revision 1102
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -16,8 +16,8 @@ ASN.1 support in hotplace covers notation, parsing, basic type/constraint repres
 - `basic/` — ASN.1 notation, types, tagging, constraints, and structural representation
 - `compiler/` — compiler-oriented ASN.1 processing and generation flow
 - `loader/` — loading and interpretation flow
-- `runtime/` — runtime object/type representation and examples
-- `resource/` — parser configuration/resource sources used by the ASN.1 parser setup
+- `runtime/` — module representation, parser/publisher flow, and examples
+- `advisor/` — ASN.1 entity/class/mode dictionaries and shared parser/publisher providers
 
 The loader currently represents the first implemented step of the ASN.1 file-to-parse-tree path; publishing the resulting tree into runtime objects is exercised separately.
 
@@ -37,7 +37,9 @@ The loader currently represents the first implemented step of the ASN.1 file-to-
 - [ASN.1 structural node model](basic/asn1-node.md)
 - [ASN.1 visitor architecture](basic/asn1-visitor.md)
 - [ASN.1 constraints](basic/semantic/constraints/asn1_constraints.md)
-- [ASN.1 runtime](runtime/asn1_runtime.md)
+- [ASN.1 module](runtime/asn1_module.md)
+- [ASN.1 parser](runtime/asn1_parser.md)
+- [ASN.1 publisher](runtime/asn1_publisher.md)
 - [ASN.1 loader](loader/asn1_loader.md)
 - [ASN.1 compiler direction](compiler/asn1-compiler.md)
 
@@ -45,7 +47,7 @@ The loader currently represents the first implemented step of the ASN.1 file-to-
 
 - `sdk/io/parser/` — grammar parsing and parse-tree construction
 - `sdk/io/asn.1/basic/` — ASN.1 semantic and structural model
-- `sdk/io/asn.1/runtime/` — runtime schema/type/object representation
+- `sdk/io/asn.1/runtime/` — module schema/type/object representation
 - `sdk/crypto/` — ASN.1-derived cryptographic formats used by the project
 
 ## Related tests

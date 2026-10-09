@@ -37,7 +37,7 @@ Plaintext
 
 - 1. Schema Build Phase
   - asn1_parser: Parses the .asn1 schema text to generate a Semantic Object AST.
-  - asn1_runtime_context: Performs symbol binding and reference resolution for parsed Type, Value, OID, and Constraint information.
+  - asn1_module_context: Performs symbol binding and reference resolution for parsed Type, Value, OID, and Constraint information.
 - 2. Evaluation & Decoding Phase
   - asn1_builder: Interprets the DER byte stream (asn1_bytestream) based on the target type schema information to generate a node tree.
   - asn1_constraint_evaluator: Verifies whether the generated nodes satisfy the schema specification constraints.
@@ -48,7 +48,7 @@ Plaintext
 | Category | Key Files / Classes | Role and Mechanism |
 | -- | -- | -- |
 | Parser | asn1_parser, asn1_parser_grammar | Parses Notation text to generate AST nodes (asn1_object) |
-| Runtime Context | asn1_runtime_context, asn1_publisher | Manages symbol table; performs Type Reference lookup and resolution |
+| Runtime Context | asn1_module_context, asn1_publisher | Manages symbol table; performs Type Reference lookup and resolution |
 | Data Builder | asn1_builder, asn1_bytestream | Reads DER stream based on target schema types and binds data to nodes |
 | Constraint | asn1_constraint_evaluator | Validates constraints (e.g., Range, Size, Union) at runtime |
 | Visitor Pipeline | asn1_notation_visitor, asn1_der_visitor | Performs text dumping and DER serialization of the parsed tree |
@@ -66,7 +66,7 @@ Plaintext
                                                           ▼
                                        ┌─────────────────────────────────────┐
                                        │ 2. Build Symbol Repository          │
-                                       │    (asn1_runtime_context)           │
+                                       │    (asn1_module_context)           │
                                        └─────────────────────────────────────┘
                                                           │
                                                           ▼
@@ -122,7 +122,7 @@ TBSCertificate ::= SEQUENCE {
   - RFC 5912: Schema loading and reference resolution verification based on PKIX modules updated to 1998/2008 ASN.1 notation.
   - OpenSSL Interoperability: Cross-verification between OpenSSL-issued X.509 binaries and parsing dump results.
 - 2. Compiler Engine Linkage (Phase 2)
-  - Integration with the asn1_compiler layer, which accepts the asn1_runtime_context AST tree (constructed by asn1_loader) and generates static C++11 structs and TLV codec source code.
+  - Integration with the asn1_compiler layer, which accepts the asn1_module_context AST tree (constructed by asn1_loader) and generates static C++11 structs and TLV codec source code.
 
 ### 6. TODO
 
@@ -138,7 +138,7 @@ TBSCertificate ::= SEQUENCE {
   - [x] Parser & Schema AST Build
     - Parsing .asn1 schema notation and generating semantic ASTs using Flex/Bison
   - [x] Runtime Context & Symbol Resolution
-    - Building symbol tables for Types/Values/OIDs and resolving references using asn1_runtime_context
+    - Building symbol tables for Types/Values/OIDs and resolving references using asn1_module_context
   - [x] Schema-Guided DER Builder
     - Implementation of asn1_builder to bind DER TLV streams to dynamic nodes based on target_type schema information
   - [ ] Schema-Guided Dynamic Test Vector Construction
@@ -154,7 +154,7 @@ TBSCertificate ::= SEQUENCE {
     - [ ] KeyUsage, SAN, Validation of OPTIONAL/CHOICE/CRITICAL fields within Extensions (e.g., BasicConstraints)
 - Phase 4. Compiler (C++11 Code Generator) Extension
   - [ ] Code Generator Architecture Setup
-    - Define a Code Generator Visitor interface that accepts an `asn1_runtime_context` AST tree as input
+    - Define a Code Generator Visitor interface that accepts an `asn1_module_context` AST tree as input
   - [ ] Dynamic AST to C++11 Struct Rendering
     - Automatically generate C++11 struct code for each ASN.1 type (including `has_field` flags for OPTIONAL fields)
   - [ ] Static DER En/Decoder Routine Generation

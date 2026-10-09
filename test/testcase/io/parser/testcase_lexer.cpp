@@ -108,7 +108,37 @@ void test_lexer() {
     _test_case.assert(93 == cnt, __FUNCTION__, "tokenize");
 }
 
+void test_lexer_hexstring() {
+    _test_case.begin("lexical analyzer");
+
+    lexical_analyzer lexer;
+    lexical_context context;
+
+    lexer.prepare();
+    lexer.get_config().set("handle_hexstring", 1);
+    lexer.add_token("::=", token_assign).add_token("IA5String", token_ia5string);
+
+    // '404B5431'H as token_hexstring
+    const char* example = "Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String }";
+    lexer.parse(context, example, strlen(example));
+
+    uint32 cnt = 0;
+    std::vector<uint32> tokens;
+    auto dump_handler = [&lexer, &cnt, &tokens](const token_description* desc) -> bool {
+        _logger->writeln("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type, lexer.nameof_token(desc->type).c_str(),
+                         desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        tokens.push_back(desc->type);
+        return true;
+    };
+
+    context.for_each(dump_handler);
+
+    std::vector<uint32> expect = {token_lvalue, token_assign, token_id, token_lbrace, token_hexstring, token_comma, token_ia5string, token_rbrace};
+    _test_case.assert(expect == tokens, __FUNCTION__, "hexstring");
+}
+
 void testcase_lexer() {
     test_lexer_options();
     test_lexer();
+    test_lexer_hexstring();
 }

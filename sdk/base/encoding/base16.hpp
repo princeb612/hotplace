@@ -132,6 +132,9 @@ binary_t base16_decode_rfc(const char* source);
 bool base16_compare(const std::string& lhs, const std::string& rhs);
 bool base16_compare(const char* lhs, const char* rhs);
 
+// when a string like '01 02'H is provided, check the encoding of the string enclosed within the single quotes.
+bool is_base16_rfc_encoded(const char* p, size_t size);
+
 }  // namespace hotplace
 
 #endif

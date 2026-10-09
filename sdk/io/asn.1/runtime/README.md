@@ -4,7 +4,7 @@ Runtime ASN.1 representation used after parsing/loading, including weakly typed 
 
 ## Documents
 
-- [Runtime implementation record](asn1_runtime.md)
+- [Module implementation record](asn1_module.md)
 - [ASN.1 parser](asn1_parser.md)
 - [ASN.1 publisher](asn1_publisher.md)
 - [Runtime examples](runtime-examples.md)

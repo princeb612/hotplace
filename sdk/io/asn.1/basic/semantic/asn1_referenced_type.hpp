@@ -38,7 +38,7 @@ namespace io {
  *
  *          // reference
  *          // Type1
- *          auto type = new asn1_referenced_type("Type1");  // using context pool (asn1_runtime class)
+ *          auto type = new asn1_referenced_type("Type1");  // using context pool (asn1_module class)
  */
 class asn1_referenced_type : public asn1_type {
    public:

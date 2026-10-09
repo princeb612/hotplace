@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_runtime.cpp
+ * @file   asn1_module.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -23,10 +23,10 @@
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module_context.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -34,17 +34,17 @@
 namespace hotplace {
 namespace io {
 
-asn1_runtime::asn1_runtime() { _shared.make_share(this); }
+asn1_module::asn1_module() { _shared.make_share(this); }
 
-asn1_runtime::asn1_runtime(const std::string& name) : asn1_runtime() { _name = name; }
+asn1_module::asn1_module(const std::string& name) : asn1_module() { _name = name; }
 
-asn1_runtime::asn1_runtime(const asn1_runtime& other) : asn1_runtime() { *this = other; }
+asn1_module::asn1_module(const asn1_module& other) : asn1_module() { *this = other; }
 
-asn1_runtime::asn1_runtime(asn1_runtime&& other) : asn1_runtime() { *this = std::move(other); }
+asn1_module::asn1_module(asn1_module&& other) : asn1_module() { *this = std::move(other); }
 
-asn1_runtime::~asn1_runtime() { clear(); }
+asn1_module::~asn1_module() { clear(); }
 
-asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
+asn1_module& asn1_module::operator=(const asn1_module& other) {
     critical_section_guard outer_guard(other._lock);
     critical_section_guard inner_guard(_lock);
 
@@ -65,7 +65,7 @@ asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
     return *this;
 }
 
-asn1_runtime& asn1_runtime::operator=(asn1_runtime&& other) {
+asn1_module& asn1_module::operator=(asn1_module&& other) {
     critical_section_guard outer_guard(other._lock);
     critical_section_guard inner_guard(_lock);
 
@@ -84,9 +84,9 @@ asn1_runtime& asn1_runtime::operator=(asn1_runtime&& other) {
     return *this;
 }
 
-asn1_runtime* asn1_runtime::clone() { return new asn1_runtime(*this); }
+asn1_module* asn1_module::clone() { return new asn1_module(*this); }
 
-return_t asn1_runtime::add_schema(const std::string& schema) {
+return_t asn1_module::add_schema(const std::string& schema) {
     return_t ret = errorcode_t::success;
 
     // parse
@@ -147,7 +147,7 @@ return_t asn1_runtime::add_schema(const std::string& schema) {
     return add(object);
 }
 
-return_t asn1_runtime::add(asn1_object* item) {
+return_t asn1_module::add(asn1_object* item) {
     if (nullptr == item) return errorcode_t::invalid_parameter;
 
     critical_section_guard guard(_lock);
@@ -162,17 +162,17 @@ return_t asn1_runtime::add(asn1_object* item) {
     return errorcode_t::success;
 }
 
-asn1_runtime& asn1_runtime::operator<<(const std::string& schema) {
+asn1_module& asn1_module::operator<<(const std::string& schema) {
     add_schema(schema);
     return *this;
 }
 
-asn1_runtime& asn1_runtime::operator<<(asn1_object* item) {
+asn1_module& asn1_module::operator<<(asn1_object* item) {
     add(item);
     return *this;
 }
 
-return_t asn1_runtime::set(asn1_object* item, asn1_value* value) {
+return_t asn1_module::set(asn1_object* item, asn1_value* value) {
     return_t ret = errorcode_t::success;
     if (item && value) {
         critical_section_guard guard(_lock);
@@ -185,7 +185,7 @@ return_t asn1_runtime::set(asn1_object* item, asn1_value* value) {
     return ret;
 }
 
-asn1_object* asn1_runtime::get(const std::string& name) const {
+asn1_object* asn1_module::get(const std::string& name) const {
     asn1_object* ret_value = nullptr;
     critical_section_guard guard(_lock);
     if (name.empty() && (1 == _types.size())) {
@@ -193,7 +193,7 @@ asn1_object* asn1_runtime::get(const std::string& name) const {
     } else {
         auto iter = _dictionary.find(name);
         if (_dictionary.end() == iter) {
-            auto rtcontext = asn1_runtime_context::get_instance();
+            auto rtcontext = asn1_module_context::get_instance();
             for (const auto& module : _imports) {
                 for (const auto& symbol : module.symbols) {
                     if (symbol == name) {
@@ -212,7 +212,7 @@ asn1_object* asn1_runtime::get(const std::string& name) const {
     return ret_value;
 }
 
-asn1_value* asn1_runtime::get(asn1_object* item) const {
+asn1_value* asn1_module::get(asn1_object* item) const {
     asn1_value* ret_value = nullptr;
     if (item) {
         critical_section_guard guard(_lock);
@@ -224,39 +224,72 @@ asn1_value* asn1_runtime::get(asn1_object* item) const {
     return ret_value;
 }
 
-return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
+return_t asn1_module::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
     asn1_weakly_typed weaktype;
     return weaktype.read(this, stream, size, pos);
 }
 
-return_t asn1_runtime::read(const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
+return_t asn1_module::read(const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
     asn1_strongly_typed strongtype;
     return strongtype.read(this, name, stream, size, pos);
 }
 
-asn1_object* asn1_runtime::search(const std::string& name) const {
+asn1_object* asn1_module::search(const std::string& name) const {
+    critical_section_guard guard(_lock);
+
     auto iter = _dictionary.find(name);
     if (_dictionary.end() != iter) {
         return iter->second;
-    } else {
-        if (false == _imports.empty()) {
-            auto rtcontext = asn1_runtime_context::get_instance();
-            for (const auto& module : _imports) {
-                for (const auto& symbol : module.symbols) {
-                    if (symbol == name) {
-                        auto outer = rtcontext->get(module.outer_module);
-                        if (outer) {
-                            return outer->get(symbol);
+    }
+
+    if (false == _imports.empty()) {
+        auto rtcontext = asn1_module_context::get_instance();
+        for (const auto& module : _imports) {
+            for (const auto& symbol : module.symbols) {
+                if (symbol == name) {
+                    auto outer = rtcontext->get(module.outer_module);
+                    if (outer) {
+                        auto obj = outer->search_by_symbol(name);
+                        if (obj) {
+                            return obj;
                         }
                     }
+                    break;
                 }
             }
         }
     }
+
     return nullptr;
 }
 
-bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& names) const {
+asn1_object* asn1_module::search_by_symbol(const std::string& name) const {
+    critical_section_guard guard(_lock);
+
+    auto iter = _dictionary.find(name);
+    if (_dictionary.end() == iter) {
+        return nullptr;
+    }
+
+    auto type = _exports.type;
+
+    if (asn1_exports_t::all == type) {
+        // EXPORTS clause is omitted
+        // EXPORTS ALL
+        return iter->second;
+    } else if (asn1_exports_t::list == type) {
+        // explicit EXPORTS clause
+        for (const auto& symbol : _exports.symbols) {
+            if (symbol == name) {
+                return iter->second;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+bool asn1_module::resolve(const std::string& name, std::list<std::string>& names) const {
     names.clear();
 
     if (nullptr == search(name)) return false;
@@ -339,7 +372,7 @@ bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& name
     return sub_graph.topological_sort(names);
 }
 
-bool asn1_runtime::resolve(std::list<std::string>& names) const {
+bool asn1_module::resolve(std::list<std::string>& names) const {
     names.clear();
 
     if (true == _dictionary.empty()) {
@@ -391,22 +424,22 @@ bool asn1_runtime::resolve(std::list<std::string>& names) const {
     return graph.topological_sort(names);
 }
 
-bool asn1_runtime::is_resolvable(const std::string& name) const {
+bool asn1_module::is_resolvable(const std::string& name) const {
     std::list<std::string> resolved_names;
     return resolve(name, resolved_names);
 }
 
-bool asn1_runtime::is_resolvable(asn1_object* object) const {
+bool asn1_module::is_resolvable(asn1_object* object) const {
     if (nullptr == object) return false;
     return is_resolvable(object->get_name());
 }
 
-bool asn1_runtime::is_resolvable() const {
+bool asn1_module::is_resolvable() const {
     std::list<std::string> names;
     return resolve(names);
 }
 
-return_t asn1_runtime::update_linkage(asn1_object* object) {
+return_t asn1_module::update_linkage(asn1_object* object) {
     if (nullptr == object) return errorcode_t::invalid_parameter;
 
     auto entity = object->get_entity();
@@ -437,19 +470,19 @@ return_t asn1_runtime::update_linkage(asn1_object* object) {
     return errorcode_t::success;
 }
 
-void asn1_runtime::for_each(std::function<void(asn1_object*)> f) const {
+void asn1_module::for_each(std::function<void(asn1_object*)> f) const {
     for (const auto& item : _types) {
         f(item);
     }
 }
 
-void asn1_runtime::for_each(std::function<void(asn1_value*)> f) const {
+void asn1_module::for_each(std::function<void(asn1_value*)> f) const {
     for (const auto& pair : _values) {
         f(pair.second);
     }
 }
 
-void asn1_runtime::represent(stream_t* s) {
+void asn1_module::represent(stream_t* s) {
     auto advisor = asn1_advisor::get_instance();
     asn1_notation_visitor notation(s);
     if (_is_module) {
@@ -502,7 +535,7 @@ void asn1_runtime::represent(stream_t* s) {
     }
 }
 
-void asn1_runtime::publish(stream_t* s) {
+void asn1_module::publish(stream_t* s) {
     auto nl = _types.size() > 1;
     for (const auto& pair : _values) {
         auto value = pair.second;
@@ -512,7 +545,7 @@ void asn1_runtime::publish(stream_t* s) {
     }
 }
 
-void asn1_runtime::publish(binary_t* b) {
+void asn1_module::publish(binary_t* b) {
     for (const auto& pair : _values) {
         auto value = pair.second;
         asn1_der_visitor encoder(b, this, value);
@@ -520,7 +553,7 @@ void asn1_runtime::publish(binary_t* b) {
     }
 }
 
-void asn1_runtime::represent(const std::string& name, stream_t* s) {
+void asn1_module::represent(const std::string& name, stream_t* s) {
     auto schema = get(name);
     if (nullptr == schema) return;
 
@@ -528,7 +561,7 @@ void asn1_runtime::represent(const std::string& name, stream_t* s) {
     notation.visit(schema);
 }
 
-void asn1_runtime::publish(const std::string& name, stream_t* s) {
+void asn1_module::publish(const std::string& name, stream_t* s) {
     auto schema = get(name);
     if (nullptr == schema) return;
 
@@ -539,7 +572,7 @@ void asn1_runtime::publish(const std::string& name, stream_t* s) {
     notation.visit(value->get_schema());
 }
 
-void asn1_runtime::publish(const std::string& name, binary_t* b) {
+void asn1_module::publish(const std::string& name, binary_t* b) {
     auto schema = get(name);
     if (nullptr == schema) return;
 
@@ -550,50 +583,50 @@ void asn1_runtime::publish(const std::string& name, binary_t* b) {
     encoder.visit(schema);
 }
 
-void asn1_runtime::set_name(const std::string& name) { _name = name; }
+void asn1_module::set_name(const std::string& name) { _name = name; }
 
-std::string asn1_runtime::get_name() { return _name; }
+std::string asn1_module::get_name() { return _name; }
 
-void asn1_runtime::set_tagdefault(uint8 value) { _tagdefault = value; }
+void asn1_module::set_tagdefault(uint8 value) { _tagdefault = value; }
 
-uint8 asn1_runtime::get_tagdefault() { return _tagdefault; }
+uint8 asn1_module::get_tagdefault() { return _tagdefault; }
 
-void asn1_runtime::set_extensibility(uint8 value) { _extensibility = value; }
+void asn1_module::set_extensibility(uint8 value) { _extensibility = value; }
 
-uint8 asn1_runtime::get_extensibility() { return _extensibility; }
+uint8 asn1_module::get_extensibility() { return _extensibility; }
 
-asn1_runtime& asn1_runtime::as_module() {
+asn1_module& asn1_module::as_module() {
     _is_module = true;
     return *this;
 }
 
-bool asn1_runtime::is_module() const { return _is_module; }
+bool asn1_module::is_module() const { return _is_module; }
 
-asn1_runtime& asn1_runtime::export_symbol(const asn1_exports& exports) {
+asn1_module& asn1_module::export_symbol(const asn1_exports& exports) {
     _exports = exports;
     return *this;
 }
 
-asn1_runtime& asn1_runtime::export_symbol(asn1_exports&& exports) {
+asn1_module& asn1_module::export_symbol(asn1_exports&& exports) {
     _exports = std::move(exports);
     return *this;
 }
 
-asn1_runtime& asn1_runtime::import_symbol(const asn1_symbol_module& symbol_module) {
+asn1_module& asn1_module::import_symbol(const asn1_symbol_module& symbol_module) {
     _imports.push_back(symbol_module);
     return *this;
 }
 
-asn1_runtime& asn1_runtime::import_symbol(asn1_symbol_module&& symbol_module) {
+asn1_module& asn1_module::import_symbol(asn1_symbol_module&& symbol_module) {
     _imports.push_back(std::move(symbol_module));
     return *this;
 }
 
-const asn1_exports& asn1_runtime::get_exports() const { return _exports; }
+const asn1_exports& asn1_module::get_exports() const { return _exports; }
 
-const std::list<asn1_symbol_module>& asn1_runtime::get_imports() const { return _imports; }
+const std::list<asn1_symbol_module>& asn1_module::get_imports() const { return _imports; }
 
-void asn1_runtime::clear() {
+void asn1_module::clear() {
     for (auto& item : _types) item->release();
     for (auto& pair : _values) pair.second->release();
     _types.clear();
@@ -603,9 +636,9 @@ void asn1_runtime::clear() {
     _imports.clear();
 }
 
-void asn1_runtime::addref() { _shared.addref(); }
+void asn1_module::addref() { _shared.addref(); }
 
-void asn1_runtime::release() { _shared.delref(); }
+void asn1_module::release() { _shared.delref(); }
 
 }  // namespace io
 }  // namespace hotplace

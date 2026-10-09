@@ -9,7 +9,7 @@
  *
  * Loading symbols for the lexical analyzer and building the LALR ACTION and GOTO tables were heavy tasks.
  * Although the initial design was a simple singleton, it was modified to pre-build and load the ACTION and GOTO tables.
- * As the lexical analyzer and context were shifted to runtime, this adopted a lightweight proxy interface structure.
+ * As the lexical analyzer and context were shifted to module, this adopted a lightweight proxy interface structure.
  */
 
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1PARSER__
@@ -33,7 +33,7 @@ namespace io {
  */
 class asn1_parser {
    public:
-    asn1_parser();
+    asn1_parser(parser_type_t type = parser_type_t::glr, bool imported = true);
 
     /**
      * @brief   parse
@@ -82,6 +82,8 @@ class asn1_parser {
     lexical_context _lexcontext;
     lexical_analyzer _lex;
     int _ready;
+    parser_type_t _type;
+    bool _imported;
 };
 
 }  // namespace io

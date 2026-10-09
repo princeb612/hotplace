@@ -20,7 +20,7 @@
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_node.hpp>
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_primitive_node.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
 
 namespace hotplace {
@@ -30,7 +30,7 @@ asn1_weakly_typed::asn1_weakly_typed() {}
 
 asn1_weakly_typed::~asn1_weakly_typed() { clear(); }
 
-return_t asn1_weakly_typed::read(asn1_runtime* target, const byte_t* stream, size_t size, size_t& pos) {
+return_t asn1_weakly_typed::read(asn1_module* target, const byte_t* stream, size_t size, size_t& pos) {
     if (nullptr == target || nullptr == stream) return errorcode_t::invalid_parameter;
 
     // make a tree
@@ -68,7 +68,7 @@ return_t asn1_weakly_typed::read(asn1_runtime* target, const byte_t* stream, siz
     return errorcode_t::success;
 }
 
-return_t asn1_weakly_typed::transform(asn1_runtime* target) {
+return_t asn1_weakly_typed::transform(asn1_module* target) {
     if (nullptr == target) return errorcode_t::invalid_parameter;
 
     target->clear();
@@ -95,7 +95,7 @@ return_t asn1_weakly_typed::transform(asn1_runtime* target) {
     return errorcode_t::success;
 }
 
-asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node* node, asn1_object* parent) {
+asn1_object* asn1_weakly_typed::transform(asn1_module* target, const asn1_node* node, asn1_object* parent) {
     if (nullptr == node) return nullptr;
 
     uint32 flags = 0;

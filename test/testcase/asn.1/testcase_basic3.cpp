@@ -20,7 +20,7 @@ struct testvector {
     const char* stream;
 };
 
-static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& entry) {
+static void testcode_strongly_typed(asn1_module& module, const testvector& entry) {
     auto name = entry.obj->get_name();
     binary_t bin_stream = base16_decode_rfc(entry.stream);
 
@@ -28,13 +28,13 @@ static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& ent
     auto stream = bin_stream.data();
     auto size = bin_stream.size();
     size_t pos = 0;
-    runtime.read(name, stream, size, pos);
+    module.read(name, stream, size, pos);
 
-    // runtime publish ASN.1 notation and DER
+    // module publish ASN.1 notation and DER
     basic_stream bs_notation;
-    runtime.represent(name, &bs_notation);
+    module.represent(name, &bs_notation);
     binary_t bin_der;
-    runtime.publish(name, &bin_der);
+    module.publish(name, &bin_der);
 
     // dump
     _logger->write([&](basic_stream& bs) -> void {
@@ -71,15 +71,15 @@ void test_decode_strongly_typed1() {
     auto type8 = asn1_referenced_type::define("Type8", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, asn1_referenced_type::refer("Type7")));
 
     // reconstruct sematic asn1_object* from ASN.1 notation
-    asn1_runtime runtime;
-    runtime.add_schema(schema1);
-    runtime.add_schema(schema2);
-    runtime.add_schema(schema3);
-    runtime.add_schema(schema4);
-    runtime.add_schema(schema5);
-    runtime.add_schema(schema6);
-    runtime.add_schema(schema7);
-    runtime.add_schema(schema8);
+    asn1_module module;
+    module.add_schema(schema1);
+    module.add_schema(schema2);
+    module.add_schema(schema3);
+    module.add_schema(schema4);
+    module.add_schema(schema5);
+    module.add_schema(schema6);
+    module.add_schema(schema7);
+    module.add_schema(schema8);
 
     // clang-format off
     struct testvector table[] = {
@@ -95,7 +95,7 @@ void test_decode_strongly_typed1() {
     // clang-format on
 
     for (const auto& entry : table) {
-        testcode_strongly_typed(runtime, entry);
+        testcode_strongly_typed(module, entry);
         entry.obj->release();
     }
 }
@@ -115,12 +115,12 @@ void test_decode_strongly_typed2() {
     };
     // clang-format on
 
-    asn1_runtime runtime;
-    runtime.add_schema(schema1);
-    runtime.add_schema(schema2);
+    asn1_module module;
+    module.add_schema(schema1);
+    module.add_schema(schema2);
 
     for (const auto& entry : table) {
-        testcode_strongly_typed(runtime, entry);
+        testcode_strongly_typed(module, entry);
         entry.obj->release();
     }
 }
@@ -147,19 +147,19 @@ void test_resolve_dependencies() {
     const char* item4 = R"(EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER)";
     const char* item5 = R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)";
 
-    asn1_runtime runtime;
-    runtime << item1 << item2 << item3 << item4 << item5;
+    asn1_module module;
+    module << item1 << item2 << item3 << item4 << item5;
 
     basic_stream bs;
-    runtime.represent(&bs);
+    module.represent(&bs);
     _logger->writeln(bs);
 
     bs.clear();
-    runtime.represent("PersonnelRecord", &bs);
+    module.represent("PersonnelRecord", &bs);
     _test_case.assert(bs == item1, __FUNCTION__, "notation PersonnelRecord");
 
     std::list<std::string> names;
-    runtime.resolve(names);
+    module.resolve(names);
 
     auto lambda_print_stringlist = [](const std::list<std::string>& names) -> void {
         auto lambda = [](typename std::list<std::string>::const_iterator it, basic_stream& dbs) -> void { dbs << *it; };
@@ -175,33 +175,33 @@ void test_resolve_dependencies() {
     std::list<std::string> expect = {"Date", "EmployeeNumber", "Name", "ChildInformation", "PersonnelRecord"};
     _test_case.assert(names == expect, __FUNCTION__, "resolve");
 
-    runtime.resolve("ChildInformation", names);
+    module.resolve("ChildInformation", names);
     lambda_print_stringlist(names);
     std::list<std::string> expect_childinfo = {"Date", "Name", "ChildInformation"};
     _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 
-    runtime.resolve("PersonnelRecord", names);
+    module.resolve("PersonnelRecord", names);
     lambda_print_stringlist(names);
     _test_case.assert(names == expect, __FUNCTION__, "resolve PersonnelRecord");
 
     bool test = false;
-    test = runtime.is_resolvable();
+    test = module.is_resolvable();
     _test_case.assert(test, __FUNCTION__, "is_resolvable");
-    test = runtime.is_resolvable("ChildInformation");
+    test = module.is_resolvable("ChildInformation");
     _test_case.assert(test, __FUNCTION__, "is_resolvable(ChildInformation)");
-    test = runtime.is_resolvable("PersonnelRecord");
+    test = module.is_resolvable("PersonnelRecord");
     _test_case.assert(test, __FUNCTION__, "is_resolvable(PersonnelRecord)");
 
     const char* item6 = R"(ChildInformation2 ::= SET {name Name2, dateOfBirth [0] Date2})";
-    runtime << item6;
-    test = runtime.is_resolvable();
+    module << item6;
+    test = module.is_resolvable();
     _test_case.nassert(test, __FUNCTION__, "unresolved references exist");
-    test = runtime.is_resolvable("ChildInformation2");
+    test = module.is_resolvable("ChildInformation2");
     _test_case.nassert(test, __FUNCTION__, "unresolved references exist");
-    test = runtime.is_resolvable("ChildInformation");
+    test = module.is_resolvable("ChildInformation");
     _test_case.assert(test, __FUNCTION__, "resolved references");
 
-    runtime.resolve("ChildInformation", names);
+    module.resolve("ChildInformation", names);
     lambda_print_stringlist(names);
     _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 }
@@ -280,24 +280,28 @@ void test_glr_asn1module() {
     struct testvector {
         const char* file;
     } table[] = {
+        /* module */
         {"example1.asn1"},
         {"example2.asn1"},
         {"example3.asn1"},
         {"example4.asn1"},
         {"example5.asn1"},
+        /* parameterized type */
         {"example6.asn1"},
         {"example7.asn1"},
         {"example8.asn1"},
-        // extension markser version 1 and 2
         {"example9.asn1"},
+        /* information object class */
         {"example10.asn1"},
+        // extension markser version 1 and 2
         {"example11.asn1"},
+        {"example12.asn1"},
+        {"example13.asn1"},
     };
 
-    auto advisor = asn1_advisor::get_instance();
-
-    auto& parser = advisor->get_parser_by_import();
-    _test_case.assert(parser.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
+    asn1_parser parser(parser_type_t::glr, false);
+    auto& p = parser.get_parser();
+    _test_case.assert(p.ready(), __FUNCTION__, "GLR parser for Notation, Module, Parameterized, Information Object Class");
 
     for (const auto& entry : table) {
         file_stream fs;
@@ -307,7 +311,7 @@ void test_glr_asn1module() {
         basic_stream bs;
         bs.write(fs.data(), fs.size());
 
-        test_asn1parser(parser, entry.file, bs.c_str());
+        test_asn1parser(p, entry.file, bs.c_str());
     }
 }
 

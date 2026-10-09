@@ -15,20 +15,20 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_der_visitor::asn1_der_visitor(binary_t* b, asn1_runtime* runtime, const asn1_value* value) : _b(b), _runtime(runtime), _value(value) {}
+asn1_der_visitor::asn1_der_visitor(binary_t* b, asn1_module* module, const asn1_value* value) : _b(b), _module(module), _value(value) {}
 
 asn1_der_visitor::~asn1_der_visitor() {}
 
 void asn1_der_visitor::visit(asn1_object* object) {
     if (nullptr == object) return;
 
-    auto lambda = [this](asn1_object* item) -> void { _runtime->update_linkage(item); };
-    asn1_visitor visitor(_runtime, lambda);
+    auto lambda = [this](asn1_object* item) -> void { _module->update_linkage(item); };
+    asn1_visitor visitor(_module, lambda);
     visitor.visit(object);
 
     // chain encoding

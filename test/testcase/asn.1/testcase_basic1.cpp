@@ -466,7 +466,7 @@ void test_x690_encoding_value() {
         // test decode
         // without notation, weakly-typed raw TLV tree
         {
-            asn1_runtime reader;
+            asn1_module reader;
             size_t pos = 0;
             auto stream = bin_expect.data();
             auto size = bin_expect.size();
@@ -508,7 +508,7 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
         });
 
         {
-            asn1_runtime reader;
+            asn1_module reader;
             size_t pos = 0;
             reader.read_weakly_typed(bin.data(), bin.size(), pos);
 
@@ -744,7 +744,7 @@ void test_asn1_object() {
     typemap.emplace(token_visiblestring, asn1_entity_visiblestring);
 
     basic_stream bs;
-    asn1_runtime* inst = new asn1_runtime;
+    asn1_module* inst = new asn1_module;
     for (auto item : table2) {
         bs.clear();
 

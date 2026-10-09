@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_runtime.hpp
+ * @file   asn1_module.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1RUNTIME__
-#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1RUNTIME__
+#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1MODULE__
+#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1MODULE__
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
@@ -25,12 +25,12 @@ namespace hotplace {
 namespace io {
 
 enum class asn1_exports_t {
-    list = 0,
-    all,
+    all = 0,
+    list,
 };
 
 struct asn1_exports {
-    asn1_exports_t type{asn1_exports_t::list};
+    asn1_exports_t type{asn1_exports_t::all};
     std::vector<std::string> symbols;
 
     asn1_exports() = default;
@@ -55,7 +55,7 @@ struct asn1_exports {
         return *this;
     }
     void clear() {
-        type = asn1_exports_t::list;
+        type = asn1_exports_t::all;
         symbols.clear();
     }
     bool operator==(const asn1_exports& other) const { return (type == other.type) && (symbols == other.symbols); }
@@ -84,33 +84,33 @@ struct asn1_symbol_module {
     bool operator==(const asn1_symbol_module& other) const { return (outer_module == other.outer_module) && (symbols == other.symbols); }
 };
 
-class asn1_runtime {
+class asn1_module {
     friend class asn1_weakly_typed;
 
    public:
-    asn1_runtime();
-    asn1_runtime(const std::string& name);
-    asn1_runtime(const asn1_runtime& other);
-    asn1_runtime(asn1_runtime&& other);
-    virtual ~asn1_runtime();
+    asn1_module();
+    asn1_module(const std::string& name);
+    asn1_module(const asn1_module& other);
+    asn1_module(asn1_module&& other);
+    virtual ~asn1_module();
 
-    asn1_runtime& operator=(const asn1_runtime& other);
-    asn1_runtime& operator=(asn1_runtime&& other);
+    asn1_module& operator=(const asn1_module& other);
+    asn1_module& operator=(asn1_module&& other);
 
-    asn1_runtime* clone();
+    asn1_module* clone();
 
     return_t add_schema(const std::string& schema);
     return_t add(asn1_object* item);
     template <typename F>  // void(asn1_object*)
-    asn1_runtime& add(asn1_object* item, F&& f = nullptr) {
+    asn1_module& add(asn1_object* item, F&& f = nullptr) {
         if (item) {
             if (f) std::forward<F>(f)(item);
             add(item);
         }
         return *this;
     }
-    asn1_runtime& operator<<(const std::string& schema);
-    asn1_runtime& operator<<(asn1_object* item);
+    asn1_module& operator<<(const std::string& schema);
+    asn1_module& operator<<(asn1_object* item);
 
     return_t set(asn1_object* item, asn1_value* value);
     asn1_object* get(const std::string& name) const;
@@ -119,10 +119,10 @@ class asn1_runtime {
     /**
      * @brief   weakly-typed (schema-less)
      * @sample
-     *          asn1_runtime runtime;
+     *          asn1_module module;
      *          asn1_weakly_typed weaktype;
      *          size_t pos = 0;
-     *          weaktype.read_weakly_typed(&runtime, stream, size, pos);
+     *          weaktype.read_weakly_typed(&module, stream, size, pos);
      */
     return_t read_weakly_typed(const byte_t* stream, size_t size, size_t& pos);
 
@@ -136,17 +136,17 @@ class asn1_runtime {
      * asn1_referenced_type::refer("type1"))); const char* schema3 = "Type3 ::= [2] EXPLICIT Type2"; asn1_object* type3 = asn1_referenced_type::define("type3", new
      * asn1_tagged_type(asn1_class_context, 2, asn1_explicit, asn1_referenced_type::refer("type2")));
      *
-     *          asn1_runtime runtime;
-     *          runtime.add_schema(schema1);
-     *          runtime.add_schema(schema2);
-     *          runtime.add_schema(schema3);
+     *          asn1_module module;
+     *          module.add_schema(schema1);
+     *          module.add_schema(schema2);
+     *          module.add_schema(schema3);
      *
      *          const char* bytestream = "A2 07 43 05 4A 6F 6E 65 73";
      *          binary_t bin_stream = base16_decode_rfc(bytestream);
      *          auto stream = bin_stream.data();
      *          auto size = bin_stream.size();
      *          size_t pos = 0;
-     *          runtime.read("type3", stream, size, pos);
+     *          module.read("type3", stream, size, pos);
      */
     return_t read(const std::string& name, const byte_t* stream, size_t size, size_t& pos);
 
@@ -163,6 +163,7 @@ class asn1_runtime {
      * search dictionary or imports table
      */
     asn1_object* search(const std::string& name) const;
+    asn1_object* search_by_symbol(const std::string& name) const;
     /**
      * @brief   resolves dependencies starting from a specific root type name.
      */
@@ -207,13 +208,13 @@ class asn1_runtime {
     void set_extensibility(uint8 value);
     uint8 get_extensibility();
 
-    asn1_runtime& as_module();
+    asn1_module& as_module();
     bool is_module() const;
 
-    asn1_runtime& export_symbol(const asn1_exports& exports);
-    asn1_runtime& export_symbol(asn1_exports&& exports);
-    asn1_runtime& import_symbol(const asn1_symbol_module& symbol_module);
-    asn1_runtime& import_symbol(asn1_symbol_module&& symbol_module);
+    asn1_module& export_symbol(const asn1_exports& exports);
+    asn1_module& export_symbol(asn1_exports&& exports);
+    asn1_module& import_symbol(const asn1_symbol_module& symbol_module);
+    asn1_module& import_symbol(asn1_symbol_module&& symbol_module);
     const asn1_exports& get_exports() const;
     const std::list<asn1_symbol_module>& get_imports() const;
 
@@ -226,7 +227,7 @@ class asn1_runtime {
     return_t postread(const byte_t* stream, size_t size);
 
    private:
-    t_shared_reference<asn1_runtime> _shared;
+    t_shared_reference<asn1_module> _shared;
 
     mutable critical_section _lock;
     std::unordered_map<std::string, asn1_object*> _dictionary;

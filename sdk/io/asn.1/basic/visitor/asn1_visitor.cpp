@@ -16,12 +16,12 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_visitor::asn1_visitor(const asn1_runtime* runtime, std::function<void(asn1_object*)> func) : _runtime(runtime), _func(func) {}
+asn1_visitor::asn1_visitor(const asn1_module* module, std::function<void(asn1_object*)> func) : _module(module), _func(func) {}
 
 void asn1_visitor::visit(asn1_object* object) {
     if (nullptr == object) return;
@@ -38,8 +38,8 @@ void asn1_visitor::visit(asn1_object* object) {
             if (ref->is_definition())
                 visit(object->get_object());
             else {
-                if (_runtime) {
-                    auto refobj = _runtime->get(ref->get_reference());
+                if (_module) {
+                    auto refobj = _module->get(ref->get_reference());
                     if (refobj) visit(refobj);
                 }
             }

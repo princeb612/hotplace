@@ -57,6 +57,18 @@ class asn1_advisor {
      */
     asn1_publisher* get_publisher();
     /**
+     * @brief   parser
+     * @remarks
+     *          if LALR(1)
+     *              if imported then return get_notation_parser_by_import
+     *              else return get_notation_parser_by_build
+     *          elif GLR
+     *              if imported then return get_parser_by_import
+     *              else return get_parser_by_build
+     *          else return return get_parser_by_build
+     */
+    parser_t& get_parser(parser_type_t type, bool imported);
+    /**
      * LALR(1) vs GLR grammar
      *  LALR(1) CFG for ASN.1 Notation
      *  GLR     CFG for ASN.1 Notation, Module, Parameterized, Information Object Class

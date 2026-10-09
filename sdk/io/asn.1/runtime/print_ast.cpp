@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 
 namespace hotplace {
 namespace io {
@@ -78,13 +78,13 @@ return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags) {
     return print_ast(tree, bs, flags);
 }
 
-return_t print_ast(const asn1_runtime* runtime, basic_stream& bs, uint32 flags) {
-    if (nullptr == runtime) return errorcode_t::invalid_parameter;
+return_t print_ast(const asn1_module* module, basic_stream& bs, uint32 flags) {
+    if (nullptr == module) return errorcode_t::invalid_parameter;
 
     auto tree = new t_tree<asn1_ast_descriptor>();
 
     asn1_ast_visitor visitor;
-    runtime->for_each([&](asn1_object* item) -> void { visitor.visit(item, tree->root()); });
+    module->for_each([&](asn1_object* item) -> void { visitor.visit(item, tree->root()); });
 
     return print_ast(tree, bs, flags);
 }

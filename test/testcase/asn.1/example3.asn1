@@ -1,45 +1,36 @@
--- ==========================================
--- 1. Base Module Definition
--- ==========================================
-CommonDefinitions DEFINITIONS AUTOMATIC TAGS ::=
-BEGIN
+-- https://www.oss.com/asn1/resources/asn1-made-simple/example.html
+MyShopPurchaseOrders DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
-    -- Export all symbols or specify explicitly
-    EXPORTS
-        AlgorithmIdentifier,
-        ProtocolVersion;
+PurchaseOrder ::= SEQUENCE {
+    dateOfOrder DATE,
+    customer    CustomerInfo,
+    items       ListOfItems
+}
 
-    -- Type Definitions
-    ProtocolVersion ::= INTEGER {
-        v1(1),
-        v2(2),
-        v3(3)
-    }
+CustomerInfo ::= SEQUENCE {
+    companyName    VisibleString (SIZE (3..50)),
+    billingAddress Address,
+    contactPhone   NumericString (SIZE (7..12))
+}
 
-    AlgorithmIdentifier ::= SEQUENCE {
-        algorithm   OBJECT IDENTIFIER,
-        parameters  ANY OPTIONAL
-    }
 
-END
+Address ::= SEQUENCE {
+    street  VisibleString (SIZE (5..50)) OPTIONAL,
+    city    VisibleString (SIZE (2..30)),
+    state   VisibleString (SIZE(2) ^ FROM ("A".."Z")),
+    zipCode NumericString (SIZE(5 | 9))
+}
 
--- ==========================================
--- 2. Consumer Module Definition
--- ==========================================
-SecureMessageModule DEFINITIONS AUTOMATIC TAGS ::=
-BEGIN
+ListOfItems ::= SEQUENCE (SIZE(1..100)) OF Item
 
-    -- Import symbols from the base module
-    IMPORTS
-        AlgorithmIdentifier,
-        ProtocolVersion
-    FROM CommonDefinitions;
-
-    -- Usage of Imported Types
-    SecurePayload ::= SEQUENCE {
-        version     ProtocolVersion,
-        algo        AlgorithmIdentifier,
-        encrypted   OCTET STRING
-    }
+Item ::= SEQUENCE {
+    itemCode        INTEGER (1..99999),
+    color           VisibleString ("Black" | "Blue" | "Brown"),
+    power           INTEGER (110 | 220),
+    deliveryTime    INTEGER (8..12 | 14..19),
+    quantity        INTEGER (1..1000),
+    unitPrice       REAL (1.00 .. 9999.00),
+    isTaxable       BOOLEAN
+}
 
 END

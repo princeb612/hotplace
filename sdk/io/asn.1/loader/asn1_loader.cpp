@@ -11,8 +11,7 @@
 
 #include <hotplace/sdk/io/asn.1/loader/asn1_loader.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
-// #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>

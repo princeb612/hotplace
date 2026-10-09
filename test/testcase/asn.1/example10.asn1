@@ -1,38 +1,18 @@
-EdgeCaseModuleV2 DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+InfoObjectModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
-EXPORTS ALL;
-
--- 1. Explicit/Implicit Tagging & CHOICE (Version 2)
-TaggedType ::= SEQUENCE {
-    explicitField [0] EXPLICIT INTEGER,
-    implicitField [1] IMPLICIT OCTET STRING OPTIONAL,
-    choiceField   [2] ChoiceType
+-- 1. CLASS Definition
+ERROR-CLASS ::= CLASS {
+    &errorCode   INTEGER UNIQUE,
+    &Type        
+} WITH SYNTAX {
+    CODE &errorCode
+    TYPE &Type
 }
 
-ChoiceType ::= CHOICE {
-    aName [0] IA5String,
-    bName [1] INTEGER,
-    ...,
-    cName [2] BOOLEAN
-}
-
--- 2. Complex Constraints (SIZE, FROM, Subtype)
-RestrictedString ::= UTF8String (SIZE (1..32) INTERSECT FROM ("a".."z" | "A".."Z"))
-
--- 3. ENUMERATED (Version 2)
-Status ::= ENUMERATED {
-    ok(0),
-    fail(1),
-    ...,
-    unknown(2)
-}
-
--- 4. SEQUENCE (Version 2)
-MyTest ::= SEQUENCE {
-    a INTEGER,
-    b INTEGER,
-    ...,
-    c INTEGER OPTIONAL
+-- 2. Object Definition using Class
+SystemError ERROR-CLASS ::= {
+    CODE 101
+    TYPE IA5String
 }
 
 END

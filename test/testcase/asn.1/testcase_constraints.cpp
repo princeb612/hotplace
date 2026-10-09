@@ -420,6 +420,8 @@ void test_testvector_constraints() {
         {"exclusive boundary", cons_exclusive_boundary->clone(), "Exclusive1 ::= INTEGER (0..<100)", true, flag_value_int0},
     };
 
+    asn1_parser parser(parser_type_t::lalr1, true);
+
     for (const auto& item : table) {
         auto type = item.object;
         auto expect = item.notation;
@@ -564,8 +566,8 @@ void test_testvector_constraints() {
                 break;
         }
 
-        asn1_runtime runtime;
-        parse_notation(&runtime, item.notation);
+        asn1_module module;
+        parse_notation(parser, &module, item.notation);
 
         bool test = type->validate(value);
         if (item.expect)

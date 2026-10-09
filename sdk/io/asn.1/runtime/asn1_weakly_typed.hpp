@@ -34,7 +34,7 @@ namespace io {
  * Type7 ::= [2] EXPLICIT Type6,            "A2 09 A1 07 1A 05 4A 6F 6E 65 73" (PC=1 CONTEXT 2, PC=1 CONTEXT 1, PC=0 UNIVERSAL)
  */
 class asn1_weakly_typed {
-    friend class asn1_runtime;
+    friend class asn1_module;
 
    public:
     using asn1_tlv_t = asn1_bytestream::asn1_tlv_t;
@@ -47,16 +47,16 @@ class asn1_weakly_typed {
     /**
      * DER parser
      */
-    return_t read(asn1_runtime* target, const byte_t* stream, size_t size, size_t& pos);
+    return_t read(asn1_module* target, const byte_t* stream, size_t size, size_t& pos);
 
     void clear();
 
    protected:
-    static asn1_object* transform(asn1_runtime* target, const asn1_node* node, asn1_object* parent = nullptr);
+    static asn1_object* transform(asn1_module* target, const asn1_node* node, asn1_object* parent = nullptr);
     /**
      * schema-less transform
      */
-    return_t transform(asn1_runtime* target);
+    return_t transform(asn1_module* target);
 
    private:
     asn1_bytestream _stream;

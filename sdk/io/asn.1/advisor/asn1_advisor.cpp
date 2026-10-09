@@ -204,5 +204,22 @@ asn1_publisher* asn1_advisor::get_publisher() {
     return &_publisher;
 }
 
+parser_t& asn1_advisor::get_parser(parser_type_t type, bool imported) {
+    if (parser_type_t::lalr1 == type) {
+        if (imported) {
+            return get_notation_parser_by_import();
+        } else {
+            return get_notation_parser_by_build();
+        }
+    } else if (parser_type_t::glr == type) {
+        if (imported) {
+            return get_parser_by_import();
+        } else {
+            return get_parser_by_build();
+        }
+    }
+    return get_parser_by_build();
+}
+
 }  // namespace io
 }  // namespace hotplace

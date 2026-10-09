@@ -12,8 +12,8 @@
  */
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_module_context.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 
 namespace hotplace {
@@ -21,7 +21,7 @@ namespace io {
 
 void asn1_build_resultset::clear() {
     type = asn1_build_t::unknown;
-    auto rtcontext = asn1_runtime_context::get_instance();
+    auto rtcontext = asn1_module_context::get_instance();
     for (const auto& name : module_names) {
         rtcontext->remove(name);
     }

@@ -1,6 +1,6 @@
-# ASN.1 Parser → Semantic Construction → Runtime
+# ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1097
+> **Review baseline:** Revision 1102
 
 ## Review thesis
 
@@ -21,7 +21,7 @@ semantic reconstruction
       ↓
 asn1_object / referenced type
       ↓
-asn1_runtime schema/type lookup
+asn1_module schema/type lookup
       ↓
 runtime ASN.1 object
 ```
@@ -30,7 +30,7 @@ This makes the parser more than a syntax recognizer. The grammar now provides th
 
 ## From grammar vocabulary to semantic objects
 
-The revision 1097 notation path can be followed through a concrete production hierarchy:
+The notation path can be followed through a concrete production hierarchy, with revision 1102 as the current review baseline:
 
 ```text
 Statement
@@ -85,12 +85,34 @@ Person ::= SEQUENCE {
         ↓
 semantic ASN.1 objects
         ↓
-asn1_runtime
+asn1_module
 ```
 
-Within that construction model, `define()` establishes a referenced type together with its object, while `refer()` represents a reference by name. `asn1_runtime::add_schema()` provides the separate schema registration step.
+Within that construction model, `define()` establishes a referenced type together with its object, while `refer()` represents a reference by name. `asn1_module::add_schema()` provides the separate schema registration step.
 
 This distinction matters because parsing does not directly create an undifferentiated “runtime object.” The semantic layer first establishes definitions, references, constructed objects, and their relationships; the runtime then provides lookup and schema-level use.
+
+## From runtime registry to ASN.1 module model
+
+The revision 1102 name `asn1_module` better expresses the current responsibility than the former `asn1_runtime` name. The module still stores definitions, schema text, and values, but it also carries module-level metadata and cross-module symbol relationships.
+
+```text
+asn1_module
+  ├── local type dictionary / schema registrations
+  ├── EXPORTS metadata
+  ├── IMPORTS metadata
+  ├── symbol lookup across registered modules
+  └── reference linkage / resolvability
+          ├── is_resolvable(...)
+          ├── resolve(...)
+          └── update_linkage(...)
+```
+
+`asn1_module_context` provides the registry for named modules, including the default module. This creates an integration seam between a module's local symbol table and symbols imported from another registered module. `resolve` and `is_resolvable` make dependency status explicit; `update_linkage` handles reference-linkage updates and constructed-bit propagation.
+
+These are module-model capabilities, not proof that arbitrary ASN.1 module sets can already be loaded and resolved end to end. The parser, semantic publisher, module context, import/export rules, and loader must still agree on the supported language subset.
+
+Revision 1102 also changes the parameterized grammar vocabulary (`ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`) and the lexical handling around it. The dedicated `handle_asn1parameterized` lexer path was removed because parameterized-value handling remains limited; single-quoted and hexadecimal-string handling now have explicit lexer handlers. These changes should be read as grammar/lexer evolution, not as a claim of complete parameterized ASN.1 support.
 
 ## LALR(1) and GLR are different parts of the architecture
 
@@ -147,13 +169,13 @@ semantic reconstruction
 runtime schema/type objects
 ```
 
-Revision 1097 should be described as the beginning of this integration, not as a completed module loader. The loader has moved beyond a purely isolated skeleton, but module-level ASN.1 support still has a distinction between grammar coverage, semantic implementation, and complete loading behavior.
+Revisions 1097–1102 should be described as the beginning of this integration, not as a completed module loader. The loader has moved beyond a purely isolated skeleton, but module-level ASN.1 support still has a distinction between grammar coverage, semantic implementation, and complete loading behavior.
 
 The parsing resources also have different roles:
 
 ```text
-asn1notation.ptb → notation parsing / semantic construction
-asn1.ptb         → broader loader grammar
+asn1notation.ptb → notation parsing / semantic construction (binary parsing-table revision 2)
+asn1.ptb         → broader loader grammar (binary parsing-table revision 2)
 ```
 
 That distinction prevents the existence of a parse table from being mistaken for complete language support.
@@ -198,11 +220,11 @@ semantic implementation
 complete loader support
 ```
 
-Revision 1097 establishes the connection between these layers; it does not claim that every ASN.1 language feature has crossed all of them.
+The revisions through 1102 establish stronger connections between these layers; they do not claim that every ASN.1 language feature has crossed all of them.
 
 ## Current state
 
-Revision 1097 is a meaningful architectural boundary for ASN.1 because the production/rule vocabulary is stable enough to describe the semantic reconstruction path, LALR(1)/GLR production switching is part of that path, and the loader has begun moving toward source-to-runtime integration.
+Revision 1102 is a meaningful incremental boundary for ASN.1: the production/rule vocabulary supports semantic reconstruction; the module model now exposes import/export metadata and reference-resolution operations; and the loader direction is becoming more concrete. This still does not imply complete ASN.1 language or loader support.
 
 ### Related source / documents
 
@@ -219,4 +241,4 @@ Revision 1097 is a meaningful architectural boundary for ASN.1 because the produ
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state around **revision 1097**.
+Reviewed against the hotplace source/documentation state around **revision 1102**.

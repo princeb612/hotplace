@@ -112,4 +112,13 @@ bool base16_compare(const char* lhs, const char* rhs) {
     return ret;
 }
 
+bool is_base16_rfc_encoded(const char* p, size_t size) {
+    if (p && size) {
+        std::string buf(p, size);
+        auto bin = base16_decode_rfc(buf);
+        return false == bin.empty();
+    }
+    return false;
+}
+
 }  // namespace hotplace

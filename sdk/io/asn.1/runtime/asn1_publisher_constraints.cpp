@@ -35,6 +35,30 @@ namespace io {
 
 void asn1_publisher::prepare_constraints() {
     add_handler(
+        "Constraints", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
+            // production("Constraints", {"Constraints", "Constraint"})
+            // production("Constraints", {"Constraint"})
+
+            auto size = node->sizeof_rhs();
+
+            if (1 == size) {
+                auto& top = context.top();
+                top.symbol = node->symbol;
+            } else {
+                auto cons = context.pop();
+                context.pop();
+
+                asn1_semantic_node asn;
+                asn.symbol = node->symbol;
+                asn.cons.u = cons.cons.u;
+                cons.release();  // asn own cons
+
+                context.push(std::move(asn));
+            }
+
+            return errorcode_t::success;
+        });
+    add_handler(
         "Constraint", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
             // production("Constraint", {"(", "ConstraintSpec", ")"})
 
