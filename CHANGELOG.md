@@ -37,6 +37,8 @@
     * CBOR
 
 * details
+  * Revision 1103
+    * [fixed] asn1_publisher - TypeAssignment
   * Revision 1102
     * renamed
       * asn1_runtime, asn1_runtime_context to asn1_module, asn1_module_context

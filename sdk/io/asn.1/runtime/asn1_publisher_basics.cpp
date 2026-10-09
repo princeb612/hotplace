@@ -362,62 +362,41 @@ void asn1_publisher::prepare_basics() {
         "TypeAssignment", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
             // production("TypeAssignment", {"DefinedType", symassign, "Type"})
             // production("TypeAssignment", {"DefinedType", symassign, "Type", "Constraint"})
-            // production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type"})
-            // production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
 
             // auto rtcontext = asn1_module_context::get_instance();
 
+            // rhs[0].symbol "TypeIdentifier"
+            // The RHS symbol of a production may differ from the symbol on the stack; therefore, processing based on indices may be more accurate.
+
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);
-            std::unordered_map<std::string, size_t> index;
             for (size_t i = 0; i < size; ++i) {
                 size_t idx = size - 1 - i;
                 rhs[idx] = context.pop();
-                auto& it = rhs[idx];
-                index.emplace(it.symbol, idx);
             }
 
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
 
-            auto iter = index.find("DefinedType");
-            if (index.end() != iter) {
-                auto& rhs_deftype = rhs[iter->second];
+            auto& rhs_deftype = rhs[0];
+            auto& rhs_typespec = rhs[2];  // "Type"
 
-                auto& rhs_typespec = rhs[2];  // "Type"
+            asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
 
-                asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
-
-                iter = index.find("Constraint");
-                if (index.end() != iter) {
-                    auto& rhs_cons = rhs[iter->second];
-                    auto cons = rhs_cons.cons.u;
-                    rhs_typespec.object->get_constraints().add(cons);
-                    if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
-                }
-
-                {
-                    result.type = asn1_build_t::assignments;
-                    context.get_runtime().add(asn.object);
-                    asn.object->addref();
-                }
-
-                rhs_typespec.release();  // asn own rhs_typespec.object
-            } else {
-                // parameterized
-                auto& rhs_deftype = rhs[0];   // symuserparamtype
-                auto& rhs_typespec = rhs[5];  // "Type"
-
-                asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
-
-                iter = index.find("Constraint");
-                if (index.end() != iter) {
-                    auto& rhs_cons = rhs[iter->second];
-                    auto cons = rhs_cons.cons.u;
-                    rhs_typespec.object->get_constraints().add(cons);
-                    if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
-                }
+            if (size > 3) {
+                auto& rhs_cons = rhs[3];
+                auto cons = rhs_cons.cons.u;
+                rhs_typespec.object->get_constraints().add(cons);
+                if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
             }
+
+            {
+                result.type = asn1_build_t::assignments;
+                context.get_runtime().add(asn.object);
+                asn.object->addref();
+            }
+
+            rhs_typespec.release();  // asn own rhs_typespec.object
 
             context.push(std::move(asn));
             return errorcode_t::success;
@@ -474,11 +453,6 @@ void asn1_publisher::prepare_basics() {
     add_handler(
         "ReferencedTypeSpec", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
             // production("ReferencedTypeSpec", {"TypeIdentifier"})
-            // production("ReferencedTypeSpec", {symparamtype})
-            // production("ReferencedTypeSpec", {symuserparamtype})
-            // production("ReferencedTypeSpec", {symuserparamtype, "{", "ActualParameterList", "}"})
-            // production("ReferencedTypeSpec", {symparamtype, "{", "ActualParameterList", "}"})
-            // production("ReferencedTypeSpec", {symid, "{", "ActualParameterList", "}"})
 
             auto size = node->sizeof_rhs();
             if (1 == size) {

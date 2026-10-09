@@ -48,14 +48,15 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
         .set_revision(2)
         // 1. Root & Entry Points (Supports Multiple Modules, Single Module, Standalone Statements)
         // Top level & Assignments
-        .add_production("S'", {"Statement"})
+        .add_production("S'", {"Start"})
+        .add_production("Start", {"Statement"})
+        .add_production("Start", {"ComponentType"})
+        .add_production("Start", {"Type"})
+        .add_production("Start", {"TagSpec"})
 
         // 2. Module Definition & Exports/Imports (ITU-T X.680)
         // 3. Statements & Assignments (Standard & Parameterized)
         .add_production("Statement", {"Assignment"})
-        .add_production("Statement", {"Type"})
-        .add_production("Statement", {"ComponentType"})
-        .add_production("Statement", {"TagSpec"})
 
         .add_production("Assignment", {"TypeAssignment"})
 
@@ -82,7 +83,6 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
 
         .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
 
-        // id + Type
         .add_production("NamedType", {symid, "Type"})
 
         .add_production("ComponentType", {"NamedType"})
@@ -307,11 +307,7 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
 
     parser.set_grammar(std::move(grammar));
 
-    // _logger->writeln("building LALR(1) parsing table dynamically...");
-
     return parser.learn();
-    // _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    // _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASN.1 for Notation (build parsing table)");
 }
 
 return_t asn1_advisor::import_lalr1_notation_parser(lalr1_parser& parser) {

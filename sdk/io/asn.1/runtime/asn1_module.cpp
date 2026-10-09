@@ -90,7 +90,7 @@ return_t asn1_module::add_schema(const std::string& schema) {
     return_t ret = errorcode_t::success;
 
     // parse
-    asn1_parser parser;
+    asn1_parser parser(parser_type_t::glr, false);
     parse_tree pt;
     parser.parse(schema.c_str(), &pt);
 

@@ -465,10 +465,7 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
 
     parser.set_grammar(std::move(grammar));
 
-    // _logger->writeln("building GLR parsing table for integrated ASN.1 grammar...");
     return parser.learn();
-    // _logger->writeln("GLR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    // _test_case.test(ret, __FUNCTION__, "GLR parser - ASN.1 for All-in-One (build parsing table)");
 }
 
 return_t asn1_advisor::import_glr_parser(glr_parser& parser) {
