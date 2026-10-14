@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1096
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -12,7 +12,7 @@ Documented with GPT-5.6 Luna
 
 The binary parsing table is the serialized execution artifact produced from the parser grammar-generation stage. It stores the string/terminal/production tables plus ACTION and GOTO entries needed by the parser engines.
 
-The format documented here is the **Revision 1094 format**, still the source-tree baseline at Revision 1096. When the binary format changes, the format revision should be updated independently of the documentation publication revision.
+The binary parsing table's grammar/table revision is **3** in Revision 1104. Both ASN.1 LALR and GLR grammar providers call `cfg_grammar::set_revision(3)`, and the serialized header carries that revision. This is distinct from the source-tree documentation publication revision. The documented block layout remains the reference layout unless a separate serialization-layout change is recorded.
 
 ## Generation and consumption
 
@@ -36,13 +36,13 @@ binary_parsing_table
 
 ## File layout
 
-> applied revision 1094
+> table revision 3 (Revision 1104)
 
 ```
 +-------------------------------------------------------+
 | File Header (20 bytes)                                |
 | - magic      :char[4] "HPT\0"                         |
-| - version    :uint16  0                               |
+| - version    :uint16  3 (grammar/table revision)                               |
 | - endian     :uint16  0x1234                          |
 | - crc32      :uint32                                  |
 |  - crc32(BLOCK1 + BLOCK2 + .. + BLOCK5)               |

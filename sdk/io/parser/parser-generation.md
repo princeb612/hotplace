@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1096
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -12,7 +12,7 @@ Documented with GPT-5.6 Luna
 
 ## Role
 
-The generation layer turns a context-free grammar into parser states and ACTION/GOTO tables.
+The generation layer turns a context-free grammar into parser states and ACTION/GOTO tables. A grammar's declared revision is serialized into the binary parsing-table header and is checked during import; the ASN.1 LALR and GLR providers declare revision 3 in Revision 1104.
 
 ```text
 cfg_grammar

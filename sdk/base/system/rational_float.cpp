@@ -85,11 +85,11 @@ rational_float& rational_float::operator=(const std::string& expr) {
         }
     }
 
-    auto is_digit_range = [&](size_t begin, size_t end) {
+    auto is_digit_range = [&](size_t begin, size_t end) -> bool {
         for (size_t i = begin; i < end; ++i) {
             unsigned char c = static_cast<unsigned char>(expr[i]);
 
-            if (!std::isdigit(c)) {
+            if (false == std::isdigit(c)) {
                 return false;
             }
         }
@@ -97,7 +97,7 @@ rational_float& rational_float::operator=(const std::string& expr) {
         return true;
     };
 
-    if (!is_digit_range(lhs_begin, lhs_end) || !is_digit_range(slash + 1, expr.size())) {
+    if ((false == is_digit_range(lhs_begin, lhs_end)) || !is_digit_range(slash + 1, expr.size())) {
         throw exception(errorcode_t::bad_format);
     }
 
@@ -219,7 +219,7 @@ std::string rational_float::fstr(size_t precision) const {
             res += "e" + (true_exp >= 0 ? std::string("+") : "") + std::to_string(true_exp);
         } else {
             res += integer_part;
-            if (!fraction_part.empty()) {
+            if (false == fraction_part.empty()) {
                 res += "." + fraction_part;
                 while (res.back() == '0') {
                     res.pop_back();

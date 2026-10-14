@@ -1,6 +1,8 @@
 # ASN.1 Runtime
 
-Runtime ASN.1 representation used after parsing/loading, including weakly typed and strongly typed object flows.
+Runtime ASN.1 representation used after parsing/loading, including module definitions, the module registry, and weakly typed/strongly typed object flows.
+
+For Revision 1104, `asn1_module` represents one ASN.1 module and `asn1_modules` is the singleton registry for named module instances. `asn1_module_context` is no longer the current name.
 
 ## Documents
 

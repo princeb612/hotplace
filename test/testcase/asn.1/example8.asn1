@@ -7,6 +7,21 @@ ParameterizedValueModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
     -- Parameterized Value definition
     myDefaultValue { TypeParam, TypeParam: defaultValue } TypeParam ::= defaultValue
     myIntVal INTEGER ::= myDefaultValue { INTEGER, 10 }
+    -- 2.a Directly used as the DEFAULT value for the SEQUENCE field.
+    ServerConfig ::= SEQUENCE {
+        port        INTEGER DEFAULT myDefaultValue { INTEGER, 8080 },
+        hostName    VisibleString DEFAULT myDefaultValue { VisibleString, "localhost" },
+        useSsl      BOOLEAN DEFAULT myDefaultValue { BOOLEAN, TRUE }
+    }
+    -- 2.b Nested and utilized within other parameterized types
+    CONFIGURABLE-FIELD { TypeParam, TypeParam: fallbackVal } ::= SEQUENCE {
+        currentValue TypeParam,
+        defaultVal   TypeParam DEFAULT myDefaultValue { TypeParam, fallbackVal }
+    }
+    IntConfig ::= CONFIGURABLE-FIELD { INTEGER, 100 }
+    -- 2.c Value chaining (a parameterized value calling another parameterized value)
+    netDefaultValue { INTEGER: netDefault } INTEGER ::= myDefaultValue { INTEGER, netDefault }
+    ConnectionTimeout INTEGER ::= netDefaultValue { 30 }
 
     -- 2.1 Pattern of applying operations/combinations to input values ​​(creating struct/array values)
     makeRangeHeader { TypeParam, INTEGER: minVal, INTEGER: maxVal } SEQUENCE { low INTEGER, high INTEGER } ::= {

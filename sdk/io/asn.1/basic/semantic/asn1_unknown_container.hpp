@@ -19,8 +19,12 @@
 namespace hotplace {
 namespace io {
 
-// sketch - simple and intermediate role
-//   asn1_sequence << asn1_unknown_container
+/**
+ * @remarks
+ *          // sketch - simple and intermediate role
+ *          asn1_sequence << asn1_unknown_container
+ * @sa      production - ComponentTypeList, SequenceTypeSpec, SetTypeSpec, ChoiceTypeSpec
+ */
 class asn1_unknown_container : public asn1_type {
     friend class asn1_container;
 

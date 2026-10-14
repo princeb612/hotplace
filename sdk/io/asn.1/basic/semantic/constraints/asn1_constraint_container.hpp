@@ -20,7 +20,7 @@ namespace hotplace {
 namespace io {
 
 /**
- * dedicated container cf. ("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
+ * dedicated container cf. ("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "SubtypeElement"})
  */
 class asn1_constraint_container : public asn1_constraint_t {
     friend class asn1_constraints;
@@ -35,7 +35,7 @@ class asn1_constraint_container : public asn1_constraint_t {
         return *this;
     }
 
-    asn1_constraint_container* clone() { return new asn1_constraint_container(*this); }
+    virtual asn1_constraint_container* clone() { return new asn1_constraint_container(*this); }
 
     virtual asn1_entity_t get_entity() const { return asn1_entity_constraint_container; }
     virtual bool is_operation() const { return true; }

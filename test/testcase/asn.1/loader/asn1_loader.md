@@ -8,7 +8,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -38,7 +38,7 @@ ASN.1 file / memory
         +-- asn1_publisher
                 |
                 v
-        asn1_module_context
+        asn1_modules
                 |
                 v
           module runtimes
@@ -59,7 +59,7 @@ The parser-facing helper path can also expose the source as tokens for tests tha
 
 ## Current implementation status
 
-Revision 1097 introduced the first file-loading/parsing implementation. Revision 1099 made module imports/exports and reference resolution part of the exercised path. Revision 1100 consolidated shared ASN.1 providers under `asn1_advisor`. The current working revision renames `asn1_runtime` / `asn1_runtime_context` to `asn1_module` / `asn1_module_context`:
+Revision 1097 introduced the first file-loading/parsing implementation. Revision 1099 made module imports/exports and reference resolution part of the exercised path. Revision 1100 consolidated shared ASN.1 providers under `asn1_advisor`. The current working revision renames `asn1_runtime` / `asn1_modules` to `asn1_module` / `asn1_modules`:
 
 ```text
 file

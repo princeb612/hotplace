@@ -36,6 +36,7 @@ class glr_parser : public parser_t {
     glr_parser();
     explicit glr_parser(const cfg_grammar& g);
     explicit glr_parser(cfg_grammar&& g);
+    virtual ~glr_parser();
 
     virtual void set_grammar(const cfg_grammar& g);
     virtual void set_grammar(cfg_grammar&& g);

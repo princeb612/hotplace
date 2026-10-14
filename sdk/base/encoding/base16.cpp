@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/encoding/base16.hpp>
-#include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {
 

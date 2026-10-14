@@ -170,7 +170,7 @@ class asn1_publisher {
      *          - Module definition:
      *              Result type set to `module_definition`.
      *              Module names populated in `result.module_names`.
-     *              Accessible via `asn1_module_context::get_instance()`.
+     *              Accessible via `asn1_modules::get_instance()`.
      *
      *          - No module definition and assignment:
      *              Result type set to `assignments`.
@@ -214,6 +214,16 @@ class asn1_publisher {
      * @sa      add_hander
      */
     void prepare_constraints();
+    /**
+     * @brief   module
+     * @sa      add_hander
+     */
+    void prepare_module();
+    /**
+     * @brief   parameterized
+     * @sa      add_hander
+     */
+    void prepare_parameterized();
 };
 
 }  // namespace io

@@ -18,6 +18,9 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * @brief   SEQUENCE OF, SET OF
+ */
 class asn1_container_of : public asn1_type {
    public:
     virtual ~asn1_container_of();

@@ -252,9 +252,9 @@ GPT-5.6 Luna
 
 * platform support - mingw, linux
   * ubuntu
-    * source env.ubuntu && install_packages
+    * source etc/script/env.ubuntu && install_packages
   * MINGW64
-    * source env.mingw64 && install_packages
+    * source etc/script/env.mingw64 && install_packages
   * packages to install
     * gcc, g++, binutils, cmake, gdb
     * openssl-devel jansson-devel zlib-devel unixodbc (MINGW)

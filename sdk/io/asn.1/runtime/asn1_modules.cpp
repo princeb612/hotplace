@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_module_context.cpp
+ * @file   asn1_modules.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -14,18 +14,18 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_module_context.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_modules.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_module_context asn1_module_context::_instance;
+asn1_modules asn1_modules::_instance;
 
-asn1_module_context* asn1_module_context::get_instance() { return &_instance; }
+asn1_modules* asn1_modules::get_instance() { return &_instance; }
 
-asn1_module_context::asn1_module_context() : _default(nullptr) {}
+asn1_modules::asn1_modules() : _default(nullptr) {}
 
-asn1_module_context::~asn1_module_context() {
+asn1_modules::~asn1_modules() {
     critical_section_guard guard(_lock);
 
     for (auto& pair : _contexts) {
@@ -36,7 +36,7 @@ asn1_module_context::~asn1_module_context() {
     if (_default) _default->release();
 }
 
-return_t asn1_module_context::add(asn1_module* module) {
+return_t asn1_modules::add(asn1_module* module) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == module) {
@@ -56,7 +56,7 @@ return_t asn1_module_context::add(asn1_module* module) {
     return ret;
 }
 
-asn1_module* asn1_module_context::add(const std::string& name) {
+asn1_module* asn1_modules::add(const std::string& name) {
     critical_section_guard guard(_lock);
 
     auto iter = _contexts.find(name);
@@ -69,7 +69,7 @@ asn1_module* asn1_module_context::add(const std::string& name) {
     }
 }
 
-asn1_module* asn1_module_context::get(const std::string& name) const {
+asn1_module* asn1_modules::get(const std::string& name) const {
     critical_section_guard guard(_lock);
     auto iter = _contexts.find(name);
     if (_contexts.end() == iter) {
@@ -79,7 +79,7 @@ asn1_module* asn1_module_context::get(const std::string& name) const {
     }
 }
 
-bool asn1_module_context::exist(const std::string& name) const {
+bool asn1_modules::exist(const std::string& name) const {
     critical_section_guard guard(_lock);
     auto iter = _contexts.find(name);
     if (_contexts.end() == iter) {
@@ -89,7 +89,7 @@ bool asn1_module_context::exist(const std::string& name) const {
     }
 }
 
-bool asn1_module_context::remove(const std::string& name) {
+bool asn1_modules::remove(const std::string& name) {
     critical_section_guard guard(_lock);
 
     auto iter = _contexts.find(name);
@@ -104,7 +104,7 @@ bool asn1_module_context::remove(const std::string& name) {
     }
 }
 
-asn1_module* asn1_module_context::get_default() {
+asn1_module* asn1_modules::get_default() {
     const auto name = "<DEFAULT>";
 
     if (nullptr == _default) {
@@ -118,7 +118,7 @@ asn1_module* asn1_module_context::get_default() {
 
 static std::string temp_prefix = "_TEMP_";
 
-std::string asn1_module_context::temp_name() const {
+std::string asn1_modules::temp_name() const {
     std::string name;
     struct timespec ts;
     datetime now;
@@ -134,7 +134,7 @@ std::string asn1_module_context::temp_name() const {
     return name;
 }
 
-void asn1_module_context::sweep_temp() {
+void asn1_modules::sweep_temp() {
     const std::string prefix = temp_prefix;
 
     critical_section_guard guard(_lock);

@@ -15,7 +15,6 @@
 #include <hotplace/sdk/base/encoding/base64.hpp>
 #include <hotplace/sdk/base/encoding/encoder_stream.hpp>
 #include <hotplace/sdk/base/encoding/http_huffman_coding.hpp>
-#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {

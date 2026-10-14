@@ -32,6 +32,8 @@ lalr1_parser::lalr1_parser(const cfg_grammar& g) : lalr1_parser() { _grammar = g
 
 lalr1_parser::lalr1_parser(cfg_grammar&& g) : lalr1_parser() { _grammar = std::move(g); }
 
+lalr1_parser::~lalr1_parser() {}
+
 void lalr1_parser::set_grammar(const cfg_grammar& g) {
     _grammar = g;
     _is_table_built = false;

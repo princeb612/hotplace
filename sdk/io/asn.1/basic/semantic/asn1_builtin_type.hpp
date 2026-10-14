@@ -58,6 +58,7 @@ class asn1_builtin_type : public asn1_type {
     // name UTF8String
     asn1_builtin_type(const std::string& name, asn1_entity_t entity);
     asn1_builtin_type(const std::string& name, asn1_entity_t entity, const variant& value);
+    asn1_builtin_type(const std::string& name, asn1_entity_t entity, const t_value<variant>& value);
     virtual ~asn1_builtin_type();
 
     virtual asn1_builtin_type* clone();

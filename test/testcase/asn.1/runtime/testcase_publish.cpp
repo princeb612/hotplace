@@ -217,7 +217,7 @@ void test_publish_constraints() {
         {R"(Name2 ::= IA5String (SIZE(1 | 2 | 5)))"},
         {R"(Name3 ::= IA5String (SIZE(1..20)))"},
         {R"(Name4 ::= IA5String (FROM ("ABC")))"},
-        {R"(Name5 ::= IA5String (FROM ("ABCDEF") SIZE(4)))"},  // FROM + SIZE
+        {R"(Name5 ::= IA5String (FROM ("ABCDEF") INTERSECTION SIZE(4)))"},  // FROM + SIZE
         {R"(Name6 ::= IA5String (SIZE(1..10 | 20..30)))"},
         {R"(Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER)"},
         {R"(Tags ::= SET SIZE(2..4) OF IA5String)"},
@@ -227,7 +227,7 @@ void test_publish_constraints() {
         {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))"},
 
         /* struct field constraints */
-        {R"(ComplexSeq ::= SEQUENCE {id INTEGER (1..MAX), code OCTET STRING (SIZE(4 | 8)), description UTF8String (SIZE(1..255) PATTERN "[a-zA-Z0-9]+") OPTIONAL})"},
+        {R"(ComplexSeq ::= SEQUENCE {id INTEGER (1..MAX), code OCTET STRING (SIZE(4 | 8)), description UTF8String (SIZE(1..255) INTERSECTION PATTERN "[a-zA-Z0-9]+") OPTIONAL})"},
         /* deep nesting */
         {R"(Nested1 ::= INTEGER (((1..10))))", R"(Nested1 ::= INTEGER (1..10))"},
         {R"(Nested2 ::= IA5String ((SIZE(1..10) INTERSECTION FROM("ABC"))))", R"(Nested2 ::= IA5String (SIZE(1..10) INTERSECTION FROM ("ABC")))"},

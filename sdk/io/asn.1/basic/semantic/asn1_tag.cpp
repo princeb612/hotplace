@@ -16,7 +16,7 @@
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_module_context.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_modules.hpp>
 
 namespace hotplace {
 namespace io {

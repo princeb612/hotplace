@@ -79,7 +79,7 @@ class asn1_constraint_union : public asn1_constraint<T> {
 
     virtual ~asn1_constraint_union() = default;
 
-    asn1_constraint_union* clone() { return new asn1_constraint_union<T>(*this); }
+    virtual asn1_constraint_union* clone() { return new asn1_constraint_union<T>(*this); }
 
     virtual void accept(asn1_constraint_evaluator<T>* v) {
         asn1_constraint_evaluator<T> visitor;

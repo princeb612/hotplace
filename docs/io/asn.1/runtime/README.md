@@ -1,8 +1,10 @@
-# ASN.1 Runtime
+# ASN.1 Module and Runtime Value Processing
 
 ## Context
 
-`asn1_runtime` is the runtime environment in which ASN.1 semantic definitions, references, schemas, and values are registered and used.
+In Revision 1102, `asn1_runtime` and `asn1_runtime_context` were renamed to `asn1_module` and `asn1_module_context`. The source directory remains `runtime` because it also contains parser, publisher, and typed-value processing components.
+
+`asn1_module` is the runtime environment in which ASN.1 semantic definitions, references, schemas, and values are registered and used.
 
 It is not merely a container for parser output.
 
@@ -26,7 +28,7 @@ runtime linkage
 typed value processing
 ```
 
-The runtime therefore forms the bridge between the semantic ASN.1 model and actual encode/decode use.
+The module therefore forms the named schema environment and bridge between the semantic ASN.1 model and actual encode/decode use.
 
 ## Why a runtime environment is needed
 
@@ -39,7 +41,7 @@ publisher
    ↓
 semantic objects
    ↓
-asn1_runtime
+asn1_module
    ├── names / definitions
    ├── references / dependencies
    ├── module policy
@@ -50,7 +52,7 @@ This is why `define()`, `refer()`, `add()`, `resolve()`, and `add_schema()` shou
 
 ## Conceptual
 
-### `asn1_object` and `asn1_runtime` are different levels
+### `asn1_object` and `asn1_module` are different levels
 
 An `asn1_object` represents one semantic object.
 
@@ -65,10 +67,10 @@ SEQUENCE
   └── age  : INTEGER DEFAULT 20
 ```
 
-`asn1_runtime` provides the environment in which named definitions and their relationships are registered:
+`asn1_module` provides the environment in which named definitions and their relationships are registered:
 
 ```text
-asn1_runtime
+asn1_module
   │
   ├── Person
   ├── Address
@@ -94,7 +96,7 @@ Runtime registration is a separate operation:
 ```text
 define / refer
        ↓
-asn1_runtime::add()
+asn1_module::add()
        ↓
 dictionary
 ```
@@ -102,7 +104,7 @@ dictionary
 Likewise:
 
 ```text
-asn1_runtime::add_schema()
+asn1_module::add_schema()
 ```
 
 is a higher-level path that parses schema text and invokes semantic construction before registration.
@@ -116,7 +118,7 @@ Revision 1090 already contains a working schema-to-runtime path through `add_sch
 ```text
 schema text
     ↓
-asn1_runtime::parse()
+asn1_module::parse()
     ↓
 parse_tree
     ↓
@@ -124,7 +126,7 @@ asn1_publisher::build()
     ↓
 asn1_object
     ↓
-asn1_runtime::add()
+asn1_module::add()
     ↓
 dictionary / type registry
 ```
@@ -167,7 +169,7 @@ Employee ::= Person
 The runtime environment can be viewed as:
 
 ```text
-asn1_runtime
+asn1_module
 │
 ├── Address
 │
@@ -198,7 +200,7 @@ resolved environment
 
 ## Module-level tagging
 
-`asn1_runtime` already has a runtime setting for the Module-level automatic-tagging policy.
+`asn1_module` already has a runtime setting for the Module-level automatic-tagging policy.
 
 The conceptual distinction is:
 
@@ -239,7 +241,7 @@ runtime value
 DER encode/decode
 ```
 
-This is why `asn1_runtime` should be understood as the environment shared by schema interpretation and runtime value processing.
+This is why `asn1_module` should be understood as the environment shared by schema interpretation and runtime value processing.
 
 ## Runtime usage
 
@@ -259,7 +261,7 @@ asn1_value associated with the schema
 ASN.1 value tree / fields
 ```
 
-`asn1_runtime::read(name, ...)` is therefore a runtime operation over an already registered semantic schema. It resolves the named schema, obtains or creates its associated `asn1_value`, parses the input byte stream, and walks the schema while decoding the matching fields.
+`asn1_module::read(name, ...)` is therefore a runtime operation over an already registered semantic schema. It resolves the named schema, obtains or creates its associated `asn1_value`, parses the input byte stream, and walks the schema while decoding the matching fields.
 
 The corresponding test pattern in `testcase_basic3.cpp` is:
 
@@ -403,7 +405,7 @@ Module metadata
               ↓
        runtime registration
               ↓
-         asn1_runtime
+         asn1_module
               ↓
        namespace / environment
               ↓
@@ -462,7 +464,7 @@ asn1_publisher
   ↓
 semantic object
   ↓
-asn1_runtime
+asn1_module
   ├── schema registry
   ├── namespace
   ├── dependency resolution

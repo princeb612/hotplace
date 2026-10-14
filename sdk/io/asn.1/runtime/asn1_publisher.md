@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -37,7 +37,7 @@ ASN.1 notation
 asn1_build_resultset
       |
       v
-asn1_module_context / asn1_module
+asn1_modules / asn1_module
 ```
 
 The publisher does not perform lexical analysis or grammar parsing. Its input is already a parse tree, and its responsibility is to reconstruct semantic objects and module/runtime information from that tree.
@@ -99,7 +99,7 @@ This means `EXPORTS` and `IMPORTS` are not retained only as parse-tree syntax. T
 
 ## Parameterized assignments: current boundary
 
-The grammar now exposes parameterized assignment and actual-parameter forms, but the publisher path should not yet be described as a completed template-instantiation engine. The current test fixture is a work-in-progress probe; its parse/publish function is not enabled by the testcase entry point. Until parameter binding, substitution, and instantiated semantic-object behavior are implemented and tested, this document records grammar-handler responsibilities only and does not claim full parameterized ASN.1 support.
+Revision 1104 adds `prepare_parameterized()` handlers for parameter/actual-parameter grammar nodes. The handlers currently reconstruct semantic stack nodes for forms such as `ParameterList`, `Parameter`, and `ActualParameterList`; this is not yet a complete template-instantiation engine. The parser → publisher probe remains disabled in the testcase entry point. Direct semantic prototypes using `asn1_parameterized_type::define()` and `specialize()` are exercised separately, but end-to-end parameter binding/substitution from ASN.1 notation remains incomplete.
 
 ## Constraint construction
 

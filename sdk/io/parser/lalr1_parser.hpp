@@ -66,6 +66,7 @@ class lalr1_parser : public parser_t {
     lalr1_parser();
     explicit lalr1_parser(const cfg_grammar& g);
     explicit lalr1_parser(cfg_grammar&& g);
+    virtual ~lalr1_parser();
 
     virtual void set_grammar(const cfg_grammar& g);
     virtual void set_grammar(cfg_grammar&& g);

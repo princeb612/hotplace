@@ -63,7 +63,7 @@ void asn1_constraints::represent(stream_t* s, const asn1_object* object, const a
         }
         size_t i = 0;
         for (auto& item : _constraints) {
-            if (0 != i++) s->printf(" ");
+            if (0 != i++) s->printf(", ");  // and (, INTERSECT INTERSECTION)
             asn1_constraint_notation_visitor visitor(s, object);
             item->accept(&visitor);
         }

@@ -35,6 +35,7 @@
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/cast.hpp>
+#include <hotplace/sdk/base/nostd/value.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 
@@ -406,6 +407,13 @@ class variant {
     variant(const datetime_t& value);
     variant(const stream_t* value);
     variant(const bignumber& value);
+
+    // any type T that has a .value() method (like t_value<T>) can be passed directly to variant constructor
+    template <typename T, typename = decltype(std::declval<T>().value())>
+    variant(const T& val) {
+        set(val.value());
+    }
+
     ~variant();
 
     const variant_t& get() const;

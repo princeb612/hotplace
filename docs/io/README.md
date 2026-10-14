@@ -56,7 +56,7 @@ The current IO layer reflects several major development lines that accumulated o
 
 The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
 
-Revisions 1091 and 1093 extend the integrated ASN.1 CFG with information object class and extension marker versions 1 and 2. Revisions 1094–1096 continue the parser infrastructure work with external parsing-table import, graph-structured-stack support for GLR, and parse-tree construction fixes. `asn1_runtime` remains based on the LALR parser and loader integration is later work.
+Revisions 1091–1096 extend ASN.1 grammar coverage and parser infrastructure, including information object classes, extension markers, external parsing-table import, GSS-based GLR parsing, and parse-tree fixes. Revision 1097 connects loader input to parsing; 1099 adds exercised IMPORTS/EXPORTS and reference resolution; 1100 consolidates shared parser/publisher providers under `asn1_advisor`; 1102 renames `asn1_module`/`asn1_module_context` to `asn1_module`/`asn1_module_context` and extends parameterized-assignment grammar; 1103 fixes `TypeAssignment` semantic publication. The current `asn1_module::add_schema()` path selects GLR, while parameterized semantic instantiation remains incomplete.
 
 Therefore the IO history should be read as several converging processing paths rather than as one subsystem designed at once.
 
@@ -313,7 +313,7 @@ parse structure
       ↓
 semantic construction
       ↓
-asn1_runtime
+asn1_module
       ↓
 encode / decode / typed access
 ```
@@ -342,7 +342,7 @@ AST / structural node
 semantic ASN.1 object/type
 ```
 
-At Revision 1097 the loader has taken its first working step: `asn1_loader::load_file()` and `load()` now feed ASN.1 input into the existing parser and produce a `parse_tree`. The loader still does not own Module construction or parser-to-runtime orchestration; semantic construction remains a separate publisher step and `asn1_runtime` remains on the LALR path.
+At Revision 1097 the loader has taken its first working step: `asn1_loader::load_file()` and `load()` now feed ASN.1 input into the existing parser and produce a `parse_tree`. The loader still does not own Module construction or parser-to-runtime orchestration; semantic construction remains a separate publisher step and `asn1_module` remains on the LALR path.
 
 ### CBOR
 
@@ -504,7 +504,7 @@ protocol state
 application
 ```
 
-### ASN.1 path at Revision 1097
+### ASN.1 path at Revision 1103
 
 ```text
 ASN.1 notation
@@ -519,7 +519,7 @@ parse_tree
       ↓
 ASN.1 publisher / semantic construction
       ↓
-asn1_runtime
+asn1_module
 ```
 
 This is deliberately different from saying that GLR has replaced LALR or that the broader grammar has already been integrated into the production loader/runtime path.
@@ -602,7 +602,7 @@ This is why IO changes can affect apparently unrelated TLS/QUIC/network tests.
 
 ## Status
 
-At Revision 1097:
+At Revision 1103:
 
 - `sdk/io` is established as the common structured-data and representation layer below crypto/network.
 - Stream and platform abstractions provide reusable input/output mechanisms.

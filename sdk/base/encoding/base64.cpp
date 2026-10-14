@@ -15,7 +15,7 @@
 #include <hotplace/sdk/base/encoding/base64.hpp>
 #include <hotplace/sdk/base/encoding/decoder_stream.hpp>
 #include <hotplace/sdk/base/encoding/encoder_stream.hpp>
-#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/string.hpp>  // scan
 
 namespace hotplace {
 

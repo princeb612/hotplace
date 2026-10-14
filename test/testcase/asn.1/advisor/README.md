@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102 (working tree)
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```

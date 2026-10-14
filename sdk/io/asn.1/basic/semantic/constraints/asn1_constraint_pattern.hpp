@@ -19,6 +19,15 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * @example
+ *          auto const_pattern = asn1_referenced_type::define("PhoneNumber",
+ *                  asn1_builder::build(asn1_entity_utf8string,
+ *                              [&](asn1_object* builtin) -> void {
+ *                                  builtin->get_constraints().add(
+ *                                      new asn1_constraint_pattern_s("[0-9]{3}-[0-9]{4}-[0-9]{4}"));
+ *                              }));
+ */
 template <typename T>
 class asn1_constraint_pattern : public asn1_constraint<T> {
    public:
@@ -35,7 +44,7 @@ class asn1_constraint_pattern : public asn1_constraint<T> {
 
     virtual ~asn1_constraint_pattern() = default;
 
-    asn1_constraint_pattern* clone() { return new asn1_constraint_pattern(*this); }
+    virtual asn1_constraint_pattern* clone() { return new asn1_constraint_pattern(*this); }
 
     virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert(_pattern); }
 

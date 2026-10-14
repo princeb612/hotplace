@@ -87,9 +87,89 @@ class asn1_constraint_range : public asn1_constraint<T> {
         _high_flag = high_flag;
     }
 
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(const t_value<U>& low, const t_value<U>& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low.value = low;
+        _high.value = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(const t_value<U>& low, const U& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low.value = low;
+        _high = t_range_value<U>(high);
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(const U& low, const t_value<U>& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = t_range_value<U>(low);
+        _high.value = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(range_type_t low_type, const t_value<U>& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = t_range_value<U>(low_type);
+        _high.value = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(const t_value<U>& low, range_type_t high_type, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low.value = low;
+        _high = t_range_value<U>(high_type);
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
+    asn1_constraint_range(const t_value<U>& low, const t_value<U>& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low.value = low;
+        _high.value = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
+    asn1_constraint_range(const t_value<U>& low, const U& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low.value = low;
+        _high = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
+    asn1_constraint_range(const U& low, const t_value<U>& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = low;
+        _high.value = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
     virtual ~asn1_constraint_range() = default;
 
-    asn1_constraint_range* clone() { return new asn1_constraint_range<T>(*this); }
+    virtual asn1_constraint_range* clone() { return new asn1_constraint_range<T>(*this); }
 
     virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {
@@ -134,7 +214,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
     template <typename U = decayed_t,  //
               typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
     void do_accept(asn1_constraint_evaluator<T>* v) {
-        v->get_result_set().insert_range(_low.value, _high.value, _low_flag, _high_flag);
+        v->get_result_set().insert_range(_low.value.value(), _high.value.value(), _low_flag, _high_flag);
     }
 
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
@@ -143,15 +223,19 @@ class asn1_constraint_range : public asn1_constraint<T> {
                 s->printf("MIN");
                 break;
             case range_type_t::value: {
-                variant vt(_low.value);
-                vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
+                if (_low.value.deferred()) {
+                    s->printf("%s", _low.value.get_name().c_str());
+                } else {
+                    variant vt(_low.value);
+                    vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
+                }
             } break;
             case range_type_t::maxvalue:
                 s->printf("MAX");
                 break;
         }
         if (range_flag_t::open == _low_flag) s->printf("<");
-        if (_low != _high) {
+        if ((_low != _high) || _high.value.deferred()) {
             s->printf("..");
             if (range_flag_t::open == _high_flag) s->printf("<");
             switch (_high.type) {
@@ -159,8 +243,12 @@ class asn1_constraint_range : public asn1_constraint<T> {
                     s->printf("MIN");
                     break;
                 case range_type_t::value: {
-                    variant vt(_high.value);
-                    vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
+                    if (_high.value.deferred()) {
+                        s->printf("%s", _high.value.get_name().c_str());
+                    } else {
+                        variant vt(_high.value);
+                        vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
+                    }
                 } break;
                 case range_type_t::maxvalue:
                     s->printf("MAX");

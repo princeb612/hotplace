@@ -12,6 +12,7 @@ The semantic layer is distinct from `structural/`: semantic objects describe ASN
 - `asn1_sequence_of`, `asn1_set_of`, `asn1_container_of` — collection forms
 - `asn1_tag`, `asn1_tagged_type` — tagging
 - `asn1_referenced_type` — references and definitions
+- `parameterized/` — parameter/type/value descriptors and direct semantic prototypes for parameterized ASN.1
 - `constraints/` — subtype/value constraints
 - `builtin/` — concrete built-in value/type implementations
 
@@ -19,4 +20,5 @@ The semantic layer is distinct from `structural/`: semantic objects describe ASN
 
 - `../asn1-object-model.md` — semantic object model overview
 - `constraints/README.md` — constraint subsystem
+- `parameterized/README.md` — parameterized semantic model and current implementation boundary
 - `constraints/subtype-notation.md` — ASN.1 subtype notation study

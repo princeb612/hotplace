@@ -86,6 +86,7 @@ int main(int argc, char** argv) {
     testcase_tree();
     testcase_vector();
     testcase_bitset();
+    testcase_value();
 
     testcase_kmp();
     testcase_testvector_kmp();

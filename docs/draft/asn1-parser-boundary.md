@@ -51,7 +51,7 @@ Only after grammar/table scale is usable does the next semantic step become usef
         ↓
 [semantic object can be built?]
         ↓
-asn1_runtime
+asn1_module
         ↓
 loader
         ↓
@@ -71,3 +71,8 @@ The loader remains incomplete/stub-level in the current source context. The comp
 - Parser README: grammar/table infrastructure boundary.
 - ASN.1 README: semantic construction and runtime boundary.
 - ASN.1 loader README: loader's intended position once implementation is mature.
+
+
+## Revision 1103 note
+
+The boundary has moved since this draft was written: `asn1_module::add_schema()` currently selects GLR, and the loader/parser/publisher flow now exercises module-level IMPORTS/EXPORTS and reference resolution. Revision 1102 renamed the former `asn1_runtime`/`asn1_runtime_context` classes to `asn1_module`/`asn1_module_context`; Revision 1103 fixed `TypeAssignment` semantic publication. Parameterized grammar recognition is broader than its currently implemented semantic instantiation. Treat the older diagram above as a historical boundary sketch, not a current claim that GLR is unintegrated.

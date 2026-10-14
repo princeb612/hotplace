@@ -2,7 +2,7 @@
 
 ## Context
 
-`asn1_loader` is the entry point for bringing an `.asn1` source file or memory buffer into the ASN.1 processing flow. At Revision 1097 it performs the first concrete step: parsing the input into a `parse_tree`. Module-level `asn1_runtime` construction remains future work.
+`asn1_loader` is the entry point for bringing an `.asn1` source file or memory buffer into the ASN.1 processing flow. By Revision 1103 it participates in the parser/publisher/module path: input is parsed and published into module-level ASN.1 information, including IMPORTS/EXPORTS and reference-resolution state.
 
 The loader is not intended to replace the parser or publisher.
 
@@ -17,7 +17,7 @@ Module
   ↓
 semantic construction
   ↓
-asn1_runtime
+asn1_module
 ```
 
 The parser and semantic construction layers remain separate so that the loader composes them rather than reimplementing them.
@@ -37,14 +37,14 @@ Module
 ├── references
 └── other Module semantic information
         ↓
-asn1_runtime
+asn1_module
 ```
 
 The resulting runtime is an environment in which the Module's schemas can be looked up, resolved, and used for runtime value processing.
 
 ## Current state
 
-At Revision 1097 the loader has reached its first working step. `asn1_loader::load_file()` opens and memory-maps the source, then `load()` invokes the existing `asn1_parser` and returns a `parse_tree`. Module construction and runtime registration are still not implemented by the loader.
+The Revision 1097 parser-entry step has since been extended by the module workflow. In the current path, `asn1_loader` feeds input through `asn1_parser` and `asn1_publisher`; `asn1_module` stores module definitions and imports/exports, and supports `resolve()` / `is_resolvable()` checks. The loader remains orchestration, not a second parser or publisher.
 
 The current flow is therefore:
 
@@ -59,12 +59,12 @@ parse_tree
     ↓
 asn1_publisher   (separate current test step)
     ↓
-asn1_runtime
+asn1_module
 
 Module extraction, Module metadata, and loader-owned runtime registration remain future stages.
 ```
 
-The existing working lower-level path is currently provided by `asn1_runtime::add_schema()`:
+The module-level schema path is provided by `asn1_module::add_schema()`:
 
 ```text
 schema text
@@ -139,7 +139,7 @@ The intended construction is:
               │            │
               └─────┬──────┘
                     ▼
-              asn1_runtime
+              asn1_module
                     │
           ┌─────────┼─────────┐
           │         │         │
@@ -164,7 +164,7 @@ IMPLICIT TAGS
 AUTOMATIC TAGS
 ```
 
-The loader should interpret this as Module environment state and configure the resulting `asn1_runtime` accordingly.
+The loader should interpret this as Module environment state and configure the resulting `asn1_module` accordingly.
 
 This should remain distinct from explicit tagged-type construction:
 
@@ -187,7 +187,7 @@ definition
     ↓
 asn1_object
     ↓
-asn1_runtime::add()
+asn1_module::add()
     ↓
 dictionary
 ```
@@ -242,7 +242,7 @@ The intended end-to-end flow is:
           └────────┴────────┘
                    │
                    ▼
-             asn1_runtime
+             asn1_module
                    │
                    ├── definitions
                    ├── references
@@ -263,7 +263,7 @@ The useful milestones are:
 2. Identify the Module.
 3. Extract Module-level tagging policy.
 4. Construct semantic definitions through the existing parser/publisher path.
-5. Register definitions in an `asn1_runtime`.
+5. Register definitions in an `asn1_module`.
 6. Verify named lookup.
 7. Verify reference resolution.
 8. Verify linkage for tagged/reference combinations.
@@ -284,7 +284,7 @@ The current parser experiments are therefore not separate from the loader work. 
 [~] Module semantic model
 [ ] Module extraction in loader
 [ ] Module-level tagging configuration in loader
-[ ] Module → asn1_runtime construction
+[ ] Module → asn1_module construction
 [ ] loader-level reference/linkage orchestration
 [ ] end-to-end .asn1 loader tests
 ```
@@ -293,7 +293,7 @@ The important current state is:
 
 > **The loader has begun, but the parser/semantic front end is being prepared first.**
 
-Once that front end is sufficiently stable, the loader becomes the layer that turns an `.asn1` Module into a configured `asn1_runtime` namespace/environment.
+Once that front end is sufficiently stable, the loader becomes the layer that turns an `.asn1` Module into a configured `asn1_module` namespace/environment.
 
 ## Related topics
 
@@ -306,7 +306,7 @@ asn1_publisher
   ↓
 semantic object
   ↓
-asn1_runtime
+asn1_module
   ↑
 loader
   ↑
@@ -318,14 +318,14 @@ The loader is therefore the beginning of the Module-level runtime phase, not ano
 
 ## Runtime usage after loading
 
-The loader's useful result is not merely a collection of parsed assignments. Its result is an `asn1_runtime` environment that can be resolved and used for value processing:
+The loader's useful result is not merely a collection of parsed assignments. Its result is an `asn1_module` environment that can be resolved and used for value processing:
 
 ```text
 .asn1 Module
      ↓
    loader
      ↓
-asn1_runtime
+asn1_module
      ↓
 resolve / linkage
      ↓

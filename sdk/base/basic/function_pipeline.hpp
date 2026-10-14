@@ -22,8 +22,9 @@ namespace hotplace {
 
 /**
  * @refer   Gemini
- * @sample
- *          // sketch
+ * @example
+ *          // example #1
+ *
  *          function_pipeline<return_t> pipeline;
  *          myclass my;
  *
@@ -44,6 +45,30 @@ namespace hotplace {
  *                  .run([&]() -> int { return my.a(); })
  *                  .run([&]() -> return_t { return errorcode_t::internal_error; });  // also support
  *          return pipeline.result_to_return_t();  // return errorcode_t::internal_error
+ *
+ *          // example #2 - openssl
+ *
+ *          function_pipeline<int, osslerror_category> pipeline;
+ *          pipeline  //
+ *              .set_tracer(pipeline_trace_dbg_openssl_print)
+ *              .test_parameter([&]() -> bool { return (nullptr != cryptokey); })
+ *              .run_pipe([&]() -> int {
+ *                  openssl_prng r;
+ *                  r.random(temp, size);
+ *
+ *                  pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, temp.data(), t_narrow_cast(size))));
+ *                  return pkey.get() ? 1 : 0;
+ *              })
+ *              .run_pipe([&]() -> return_t {
+ *                  crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
+ *                  auto ret = cryptokey->add(std::move(key));
+ *                  if (errorcode_t::success == ret) {
+ *                      pkey.release();  // cryptokey own pkey
+ *                  }
+ *                  return ret;
+ *              });
+ *
+ *          return pipeline.result_to_return_t();
  */
 template <typename T = return_t, typename category = void>
 class function_pipeline {

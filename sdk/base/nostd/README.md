@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1096
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -22,6 +22,7 @@ The directory is intentionally a collection rather than a single abstraction, so
 - [string_set](string_set.md) — string values, ranges, FROM and regex operations
 - [traits-and-utility](traits-and-utility.md) — casts, traits, utility helpers and printf/encoding traits
 - [keyvalue-and-exception](keyvalue-and-exception.md) — key/value and exception helpers
+- [value](value.md) — deferred values backed by C++ futures/promises
 
 ## Related tests
 - `test/testcase/base/nostd/`

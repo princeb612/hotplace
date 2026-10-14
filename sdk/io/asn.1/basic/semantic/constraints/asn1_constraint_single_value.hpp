@@ -13,6 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_CONSTRAINTS_ASN1CONSTRAINTSINGLEVALUE__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_CONSTRAINTS_ASN1CONSTRAINTSINGLEVALUE__
 
+#include <hotplace/sdk/base/nostd/value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
@@ -35,9 +36,13 @@ class asn1_constraint_single_value : public asn1_constraint<T> {
    public:
     asn1_constraint_single_value(const T& value) : asn1_constraint_single_value() { _value = value; }
     asn1_constraint_single_value(T&& value) : asn1_constraint_single_value() { _value = std::move(value); }
+
+    asn1_constraint_single_value(const t_value<T>& value) : asn1_constraint_single_value() { _value = value; }
+    asn1_constraint_single_value(t_value<T>&& value) : asn1_constraint_single_value() { _value = std::move(value); }
+
     virtual ~asn1_constraint_single_value() = default;
 
-    asn1_constraint_single_value* clone() { return new asn1_constraint_single_value(*this); }
+    virtual asn1_constraint_single_value* clone() { return new asn1_constraint_single_value(*this); }
 
     virtual bool is_applicable(asn1_entity_t entity) const { return true; }
 
@@ -57,13 +62,17 @@ class asn1_constraint_single_value : public asn1_constraint<T> {
     virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert(_value); }
 
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
-        variant vt(_value);
-        vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
+        if (_value.deferred()) {
+            s->printf("%s", _value.get_name().c_str());
+        } else {
+            variant vt(_value);
+            vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
+        }
     }
 
    protected:
    private:
-    T _value;
+    t_value<T> _value;
 };
 
 }  // namespace io

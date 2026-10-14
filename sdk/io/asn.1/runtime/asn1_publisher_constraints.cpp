@@ -13,7 +13,6 @@
 
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_all_except.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_except.hpp>
@@ -24,11 +23,8 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_single_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_size.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_union.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
-#include <hotplace/sdk/io/parser/parser_resource.hpp>
-#include <string>
 
 namespace hotplace {
 namespace io {
@@ -83,7 +79,6 @@ void asn1_publisher::prepare_constraints() {
         "ConstraintSpec", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
             // production("ConstraintSpec", {"SubtypeElementSetSpec"})
             // production("ConstraintSpec", {"ALL EXCEPT", "SubtypeElementSetSpec"})
-            // production("ConstraintSpec", {"ALL", "EXCEPT", "SubtypeElementSetSpec"})
 
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);
@@ -121,10 +116,9 @@ void asn1_publisher::prepare_constraints() {
         });
     add_handler(
         "SubtypeElementSetSpec", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
-            // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "|", "SubtypeElement"})
-            // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", ",", "SubtypeElement"})
-            // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "UNION", "SubtypeElement"})
+            // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "UnionOperation", "SubtypeElement"})
             // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "EXCEPT", "SubtypeElement"})
+            // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "IntersectOperation", "SubtypeElement"})
             // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "SubtypeElement"})
             // production("SubtypeElementSetSpec", {"SubtypeElement"})
 
@@ -178,6 +172,22 @@ void asn1_publisher::prepare_constraints() {
                     asn.cons.u = cons;
                     rhs[0].release();
                     rhs[2].release();
+                } else if (rhs[1].symbol == "IntersectOperation") {
+                    auto type = rhs[2].cons.u->type();
+                    asn1_constraint_t* cons = nullptr;
+
+                    if (type_category_t::integral == type) {
+                        cons = new asn1_constraint_intersection_i(rhs[0].cons.i, rhs[2].cons.i);
+                    } else if (type_category_t::real == type) {
+                        cons = new asn1_constraint_intersection_f(rhs[0].cons.f, rhs[2].cons.f);
+                    } else if (type_category_t::literal == type) {
+                        cons = new asn1_constraint_intersection_s(rhs[0].cons.s, rhs[2].cons.s);
+                    } else {
+                        cons = new asn1_constraint_intersection_f(rhs[0].cons.f, rhs[2].cons.f);
+                    }
+                    asn.cons.u = cons;
+                    rhs[0].release();
+                    rhs[2].release();
                 }
             }
 
@@ -187,8 +197,7 @@ void asn1_publisher::prepare_constraints() {
         });
     add_handler(
         "SubtypeElement", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
-            // production("SubtypeElement", {"SubtypeElement", "^", "PrimaryElement"})
-            // production("SubtypeElement", {"SubtypeElement", "INTERSECTION", "PrimaryElement"})
+            // production("SubtypeElement", {"SubtypeElement", "IntersectOperation", "PrimaryElement"})
             // production("SubtypeElement", {"PrimaryElement"})
 
             auto size = node->sizeof_rhs();
@@ -240,6 +249,8 @@ void asn1_publisher::prepare_constraints() {
             // production("PrimaryElement", {"FROM", "Constraint"})
             // production("PrimaryElement", {"PATTERN", symqs})
             // production("PrimaryElement", {"(", "ConstraintSpec", ")"})  // parenthesis recursive structure
+            // production("PrimaryElement", {"ObjectSetSpec"})
+            // production("PrimaryElement", {"ObjectSetSpec", "RelationalConstraint"})
 
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);

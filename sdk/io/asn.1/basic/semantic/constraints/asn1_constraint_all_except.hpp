@@ -41,7 +41,7 @@ class asn1_constraint_all_except : public asn1_constraint<T> {
     }
     virtual ~asn1_constraint_all_except() = default;
 
-    asn1_constraint_all_except* clone() { return new asn1_constraint_all_except<T>(*this); }
+    virtual asn1_constraint_all_except* clone() { return new asn1_constraint_all_except<T>(*this); }
 
     virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {

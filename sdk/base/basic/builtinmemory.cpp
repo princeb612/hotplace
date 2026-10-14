@@ -15,8 +15,7 @@
  *
  */
 
-#include <cassert>
-#include <cstring>
+#include <cstring>  // memcpy
 #include <hotplace/sdk/base/basic/builtinmemory.hpp>
 
 namespace hotplace {

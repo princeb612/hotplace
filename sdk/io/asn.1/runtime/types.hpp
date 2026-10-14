@@ -26,7 +26,7 @@ class asn1_strongly_typed;
 class asn1_parser;
 class asn1_publisher;
 class asn1_module;
-class asn1_module_context;
+class asn1_modules;
 
 enum class asn1_build_t {
     unknown,
@@ -44,7 +44,7 @@ struct asn1_build_resultset {
     asn1_build_resultset(const asn1_build_resultset&) = delete;
     asn1_build_resultset& operator=(const asn1_build_resultset&) = delete;
     ~asn1_build_resultset() { clear(); }
-    // remove all asn1_module from asn1_module_context
+    // remove all asn1_module from asn1_modules
     void clear();
     // do not remove asn1_module
     void release_name(const std::string& name);

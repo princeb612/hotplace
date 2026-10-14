@@ -23,22 +23,19 @@ namespace hotplace {
 namespace io {
 
 struct asn1_default_t {
-    variant_t vt;
+    t_value<variant> value;
 
     asn1_default_t() {}
 
-    asn1_default_t(const variant_t& v) { vt = v; }
-    asn1_default_t(variant_t&& v) { vt = std::move(v); }
-
-    asn1_default_t(const asn1_default_t& other) { vt = other.vt; }
-    asn1_default_t(asn1_default_t&& other) { vt = std::move(other.vt); }
+    asn1_default_t(const asn1_default_t& other) { value = other.value; }
+    asn1_default_t(asn1_default_t&& other) { value = std::move(other.value); }
 
     asn1_default_t& operator=(const asn1_default_t& other) {
-        vt = other.vt;
+        value = other.value;
         return *this;
     }
     asn1_default_t& operator=(asn1_default_t&& other) {
-        vt = std::move(other.vt);
+        value = std::move(other.value);
         return *this;
     }
 };
@@ -92,6 +89,7 @@ class asn1_object {
     friend class asn1_notation_visitor;
     friend class asn1_weakly_typed;
     friend class asn1_strongly_typed;
+    friend class asn1_parameterized_type;
 
    public:
     virtual ~asn1_object();
@@ -117,9 +115,13 @@ class asn1_object {
     virtual asn1_entity_t get_component_entity() const;  // redefine entity as syntax entity
     uint16 get_component_type() const;
     asn1_tag* get_tag() const;
-    variant_t get_default_value() const;
-    std::string resolve_name() const;
+    variant get_default_value() const;
+    asn1_object& set_default_value(const variant& value);
+    asn1_object& set_default_value(variant&& value);
+    asn1_object& set_default_value(const t_value<variant>& value);
+    asn1_object& set_default_value(t_value<variant>&& value);
     asn1_object& set_option(asn1_option& option);
+    std::string resolve_name() const;
 
     // NamedType ::= identifier Type
     bool is_named_type() const;
@@ -146,7 +148,18 @@ class asn1_object {
     // is IMPLICIT
     bool is_suppressed() const;
 
-    // constraints
+    /**
+     * @brief   constraints
+     * @example
+     *          auto cons_sequence_of_range =
+     *              asn1_referenced_type::define("Numbers",
+     *                  asn1_builder::build(new asn1_sequence_of(asn1_entity_integer),
+     *                              [&](asn1_object* builtin) -> void {
+     *                                  builtin->get_constraints().add(
+     *                                      new asn1_constraint_size_i(
+     *                                          new asn1_constraint_range_i(1, 4)));
+     *                              }));
+     */
     asn1_constraints& get_constraints();
     const asn1_constraints& get_constraints() const;
     virtual bool have_constraints() const;
@@ -159,8 +172,6 @@ class asn1_object {
     asn1_object(const asn1_object& other);
 
     asn1_object& set_entity(asn1_entity_t entity);
-    asn1_object& set_default_value(const variant_t& value);
-    asn1_object& set_default_value(variant_t&& value);
     void set_tag(asn1_tag* tag);
     void set_object(asn1_object* object);
     asn1_default_t* get_default() const;

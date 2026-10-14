@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -104,9 +104,9 @@ This makes `asn1_parser` the visible boundary between syntax parsing and semanti
 
 The current ASN.1 GLR grammar includes productions for parameterized assignments and invocations. The grammar describes these forms through `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterizedValueAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Actual parameters include type/value forms and brace-delimited forms.
 
-This is a grammar-capability statement, not a claim that parameterized ASN.1 is fully implemented end to end. In the current working tree, the parameterized testcase contains a `FRAME{TypeParam, INTEGER:maxSize}` example and a `MyPacket ::= FRAME{ OCTET STRING, 1024 }` instantiation, but the test entry point does not currently execute the parse/publish test path. Semantic binding, parameter substitution, and reliable instantiated-type construction should therefore remain documented as work in progress until the corresponding implementation and tests are enabled.
+This is a grammar-capability statement, not a claim that parameterized ASN.1 is fully implemented end to end. The testcase includes grammar examples and direct semantic prototypes, but the loader → parse tree → publisher probe remains disabled from the testcase entry point. Semantic binding, parameter substitution, and reliable instantiated-type construction should therefore remain documented as work in progress until the corresponding implementation and tests are enabled.
 
-The current focus is to strengthen parsing of complex template/parameter syntax before proceeding with the semantic prototype.
+The current focus combines grammar revision 3 with direct semantic prototyping; end-to-end parser/publisher support remains incomplete.
 
 ## Preparation and parser resources
 

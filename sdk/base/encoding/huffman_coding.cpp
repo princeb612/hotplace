@@ -11,7 +11,6 @@
  */
 
 #include <hotplace/sdk/base/encoding/huffman_coding.hpp>
-#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 
 namespace hotplace {

@@ -24,8 +24,10 @@ asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(entity, "
 
 asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(entity, name, nullptr) {}
 
-asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity, const variant& value) : asn1_type(entity, name, nullptr) {
-    set_default_value(value.get());
+asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity, const variant& value) : asn1_type(entity, name, nullptr) { set_default_value(value); }
+
+asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity, const t_value<variant>& value) : asn1_type(entity, name, nullptr) {
+    set_default_value(value);
 }
 
 asn1_builtin_type::~asn1_builtin_type() {}
@@ -68,8 +70,13 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
             }
             if (asn1_default == type) {
                 s->printf(" ");
-                if (get_default()) {
-                    vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
+                auto defvalue = get_default();
+                if (defvalue) {
+                    if (defvalue->value.deferred()) {
+                        s->printf("%s", defvalue->value.get_name().c_str());
+                    } else {
+                        vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
+                    }
                 } else {
                     s->printf("{}");
                 }

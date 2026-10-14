@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_module_context.hpp
+ * @file   asn1_modules.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1MODULECONTEXT__
-#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1MODULECONTEXT__
+#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1MODULES__
+#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1MODULES__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
@@ -20,17 +20,17 @@
 namespace hotplace {
 namespace io {
 
-class asn1_module_context {
+class asn1_modules {
    public:
-    static asn1_module_context* get_instance();
+    static asn1_modules* get_instance();
 
-    ~asn1_module_context();
+    ~asn1_modules();
 
-    asn1_module_context(const asn1_module_context& other) = delete;
-    asn1_module_context(asn1_module_context&& other) = delete;
+    asn1_modules(const asn1_modules& other) = delete;
+    asn1_modules(asn1_modules&& other) = delete;
 
-    asn1_module_context& operator=(const asn1_module_context& other) = delete;
-    asn1_module_context& operator=(asn1_module_context&& other) = delete;
+    asn1_modules& operator=(const asn1_modules& other) = delete;
+    asn1_modules& operator=(asn1_modules&& other) = delete;
 
     // name "<DEFAULT>" reserved
     /*
@@ -66,10 +66,10 @@ class asn1_module_context {
     void sweep_temp();
 
    protected:
-    asn1_module_context();
+    asn1_modules();
 
    private:
-    static asn1_module_context _instance;
+    static asn1_modules _instance;
 
     mutable critical_section _lock;
     std::map<std::string, asn1_module*> _contexts;

@@ -135,7 +135,7 @@ class t_gss {
     void pop(node_ptr target_head, size_t depth, std::function<void(const std::vector<node_ptr>& path)> reducer) { retrace_paths(target_head, depth, reducer); }
 
     void traverse_from(node_ptr start_node, std::function<void(const node_ptr&)> visitor) {
-        if (!start_node) return;
+        if (nullptr == start_node) return;
 
         std::unordered_set<node_type*> visited;
         start_node->traverse(visitor, visited);
@@ -154,12 +154,12 @@ class t_gss {
         node_ptr target_node = nullptr;
 
         for (auto& head : heads) {
-            if (!head) continue;
+            if (nullptr == head) continue;
 
             std::unordered_set<node_type*> visited;
             head->traverse(
                 [&](const node_ptr& node) {
-                    if (!target_node && predicate(node)) {
+                    if ((nullptr == target_node) && predicate(node)) {
                         target_node = node;
                     }
                 },
@@ -181,7 +181,7 @@ class t_gss {
     }
 
     void retrace_paths(node_ptr start_node, size_t depth, std::function<void(const std::vector<node_ptr>&)> path_handler) {
-        if (!start_node) return;
+        if (nullptr == start_node) return;
 
         std::vector<node_ptr> current_path;
         std::unordered_set<node_type*> visited;

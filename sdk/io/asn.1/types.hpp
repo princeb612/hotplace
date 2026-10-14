@@ -162,6 +162,10 @@ enum asn1_entity_t : uint16 {
     asn1_entity_constraint_including,
     asn1_entity_constraint_containing,
     asn1_entity_constraint_container,  // dedicated container cf. ("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
+
+    asn1_entity_parameterized_type,
+    asn1_entity_parameterized_value,
+    asn1_entity_parameter,
 };
 
 enum asn1_taggingmode_t : uint8 {
@@ -188,6 +192,10 @@ enum asn1_perm_t : uint8 {
     asn1_perm_constructed = 1 << 1,
     asn1_perm_both = (asn1_perm_primitive | asn1_perm_constructed),
 };
+
+// parameterization
+class asn1_parameter;
+class asn1_parameterized_type;
 
 }  // namespace io
 }  // namespace hotplace

@@ -67,10 +67,10 @@ void as_asn1_real(T value, stream_t* s) {
 
     std::string buf(format("%.6f", value));
 
-    while (!buf.empty() && buf.back() == '0') {
+    while ((false == buf.empty()) && buf.back() == '0') {
         buf.pop_back();
     }
-    if (!buf.empty() && buf.back() == '.') {
+    if ((false == buf.empty()) && buf.back() == '.') {
         buf.push_back('0');
     }
     s->printf("%s", buf.c_str());

@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
 
@@ -48,6 +49,12 @@ asn1_referenced_type* asn1_referenced_type::refer(const std::string& name, const
 
 asn1_referenced_type* asn1_referenced_type::refer(const std::string& reference) { return new asn1_referenced_type("", reference); }
 
+asn1_referenced_type* asn1_referenced_type::refer(const std::string& name, const std::string& reference, const t_value<variant>& value) {
+    auto p = new asn1_referenced_type(name, reference);
+    p->set_default_value(value);
+    return p;
+}
+
 bool asn1_referenced_type::is_reference() const { return get_object() ? false : true; }
 
 bool asn1_referenced_type::is_definition() const { return get_object() ? true : false; }
@@ -64,8 +71,32 @@ void asn1_referenced_type::represent(stream_t* s, const asn1_value* value) const
             obj->represent(s, value);
         }
     } else if (false == _reference.empty()) {
+        auto advisor = asn1_advisor::get_instance();
         if (false == get_name().empty()) s->printf(" ");
         s->printf("%s", _reference.c_str());
+
+        auto type = get_component_type();
+        switch (type) {
+            case asn1_default:
+            case asn1_optional: {
+                s->printf(" %s", advisor->nameof_mode(type).c_str());
+            } break;
+            default: {
+            } break;
+        }
+        if (asn1_default == type) {
+            s->printf(" ");
+            auto defvalue = get_default();
+            if (defvalue) {
+                if (defvalue->value.deferred()) {
+                    s->printf("%s", defvalue->value.get_name().c_str());
+                } else {
+                    vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
+                }
+            } else {
+                s->printf("{}");
+            }
+        }
     }
 }
 

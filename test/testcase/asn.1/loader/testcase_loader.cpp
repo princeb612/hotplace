@@ -41,7 +41,7 @@ void test_asn1loader_babystep() {
     std::vector<std::string> expect = {"MyShopPurchaseOrders"};
     _test_case.assert(expect == result.module_names, __FUNCTION__, "module names");
 
-    auto rtcontext = asn1_module_context::get_instance();
+    auto rtcontext = asn1_modules::get_instance();
     for (const auto& item : result.module_names) {
         basic_stream bs;
         auto module = rtcontext->get(item);
@@ -88,7 +88,7 @@ void test_loader() {
          }},
     };
 
-    auto rtcontext = asn1_module_context::get_instance();
+    auto rtcontext = asn1_modules::get_instance();
 
     for (const auto& item : table) {
         asn1_parser parser;

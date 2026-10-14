@@ -151,7 +151,21 @@ class builtinpool {
     buitinmemory_context _context{};
 };
 
-// C++ standard allocator adaptor
+/**
+ * @brief   C++ standard allocator adaptor
+ * @example
+ *          constexpr std::size_t BUFFER_SIZE = 1 << 20;
+ *          std::vector<char> raw_buffer(BUFFER_SIZE);
+ *          builtinpool pool(raw_buffer.data(), BUFFER_SIZE);
+ *          std::vector<int, builtinpool_allocator<int>> custom_vec{builtinpool_allocator<int>(&pool)};
+ *
+ *          for (int i = 0; 100 > i; ++i) {
+ *              custom_vec.push_back(i);
+ *          }
+ *
+ *          _test_case.assert (100 != custom_vec.size(), __FUNCTION, "test");
+ *          _test_case.assert (99 != custom_vec[99], __FUNCTION, "test");
+ */
 template <typename T>
 class builtinpool_allocator {
    public:

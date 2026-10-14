@@ -42,7 +42,7 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
     _parent = other._parent;
     set_object(other._object ? other._object->clone() : nullptr);
     set_tag(other._tag ? other._tag->clone() : nullptr);
-    if (other._default) set_default_value(other._default->vt);
+    if (other._default) set_default_value(other._default->value);
     _constraints = other._constraints;
     return *this;
 }
@@ -96,16 +96,38 @@ asn1_object& asn1_object::set_entity(asn1_entity_t entity) {
     return *this;
 }
 
-asn1_object& asn1_object::set_default_value(const variant_t& value) {
-    if (_default) delete _default;
-    _default = new asn1_default_t(value);
+asn1_object& asn1_object::set_default_value(const variant& value) {
+    if (nullptr == _default) {
+        _default = new asn1_default_t;
+    }
+    _default->value = value;
     _component_type = asn1_default;
     return *this;
 }
 
-asn1_object& asn1_object::set_default_value(variant_t&& value) {
-    if (_default) delete _default;
-    _default = new asn1_default_t(std::move(value));
+asn1_object& asn1_object::set_default_value(variant&& value) {
+    if (nullptr == _default) {
+        _default = new asn1_default_t;
+    }
+    _default->value = std::move(value);
+    _component_type = asn1_default;
+    return *this;
+}
+
+asn1_object& asn1_object::set_default_value(const t_value<variant>& value) {
+    if (nullptr == _default) {
+        _default = new asn1_default_t;
+    }
+    _default->value = value;
+    _component_type = asn1_default;
+    return *this;
+}
+
+asn1_object& asn1_object::set_default_value(t_value<variant>&& value) {
+    if (nullptr == _default) {
+        _default = new asn1_default_t;
+    }
+    _default->value = std::move(value);
     _component_type = asn1_default;
     return *this;
 }
@@ -140,9 +162,9 @@ uint16 asn1_object::get_component_type() const { return _component_type; }
 
 asn1_tag* asn1_object::get_tag() const { return _tag; }
 
-variant_t asn1_object::get_default_value() const {
-    variant_t vt;
-    if (_default) vt = _default->vt;
+variant asn1_object::get_default_value() const {
+    variant vt;
+    if (_default) vt = _default->value;
     return vt;
 }
 

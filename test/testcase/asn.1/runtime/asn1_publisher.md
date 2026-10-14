@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -37,7 +37,7 @@ ASN.1 notation
 asn1_build_resultset
       |
       v
-asn1_module_context / asn1_module
+asn1_modules / asn1_module
 ```
 
 The publisher does not perform lexical analysis or grammar parsing. Its input is already a parse tree, and its responsibility is to reconstruct semantic objects and module/runtime information from that tree.

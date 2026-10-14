@@ -20,11 +20,8 @@ namespace hotplace {
 namespace io {
 
 /**
- * @brief   SequenceType, SequenceOfType, SetType, SetOfType
+ * @brief   SequenceType, SetType, ChoiceType
  * @remarks
- *          // sketch
- *          asn1_named_type is removed
- *          instead asn1_object::is_named_type must be true
  */
 class asn1_container : public asn1_type {
    public:

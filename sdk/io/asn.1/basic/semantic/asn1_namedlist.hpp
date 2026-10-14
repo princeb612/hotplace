@@ -19,10 +19,15 @@
 namespace hotplace {
 namespace io {
 
-// sketch - simple and intermediate role
-//   asn1_integer << asn1_namedlist
-//   asn1_bitstring << asn1_namedlist
-//   asn1_enum << asn1_namedlist
+/**
+ *
+ * @remarks
+ *          // sketch - simple and intermediate role
+ *          asn1_integer << asn1_namedlist
+ *          asn1_bitstring << asn1_namedlist
+ *          asn1_enum << asn1_namedlist
+ * @sa      production - EnumeratedType, Enumerations, Enumeration
+ */
 class asn1_namedlist : public asn1_type {
     friend class asn1_integer;
     friend class asn1_bitstring;

@@ -38,6 +38,8 @@ glr_parser::glr_parser(const cfg_grammar& g) : glr_parser() { _grammar = g; }
 
 glr_parser::glr_parser(cfg_grammar&& g) : glr_parser() { _grammar = std::move(g); }
 
+glr_parser::~glr_parser() {}
+
 void glr_parser::set_grammar(const cfg_grammar& g) {
     critical_section_guard guard(_lock);
     _grammar = g;
@@ -143,7 +145,7 @@ static std::string build_gss_stack_string(parse_gss_node_ptr node) {
     // Traverse up the first parent path to the root (when there are no parents)
     while (curr) {
         states.push_back(curr->state);
-        if (!curr->parents.empty()) {
+        if (false == curr->parents.empty()) {
             curr = curr->parents[0];
         } else {
             break;

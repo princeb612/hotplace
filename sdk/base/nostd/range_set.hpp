@@ -20,6 +20,7 @@
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/types.hpp>
+#include <hotplace/sdk/base/nostd/value.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
@@ -120,7 +121,7 @@ struct range_traits<t_range_value<T>> {
 template <typename T>
 struct t_range_value {
     range_type_t type;
-    T value;
+    t_value<T> value;
 
     t_range_value() : type(range_type_t::value), value(T()) {}
     t_range_value(T v) : type(range_type_t::value), value(std::move(v)) {}
@@ -128,6 +129,7 @@ struct t_range_value {
     t_range_value(const U& v) : type(range_type_t::value), value(v) {}
     t_range_value(range_type_t t) : type(t), value(T()) {}
     t_range_value(const t_range_value& other) : type(other.type), value(other.value) {}
+    t_range_value(t_range_value&& other) : type(other.type), value(std::move(other.value)) {}
     template <typename U>
     t_range_value(const t_range_value<U>& other) : type(other.type), value(other.value) {}
 
@@ -135,6 +137,13 @@ struct t_range_value {
         if (this != &other) {
             type = other.type;
             value = other.value;
+        }
+        return *this;
+    }
+    t_range_value& operator=(t_range_value&& other) {
+        if (this != &other) {
+            type = other.type;
+            value = std::move(other.value);
         }
         return *this;
     }

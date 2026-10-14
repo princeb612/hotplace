@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -29,7 +29,7 @@ ASN.1 notation
 asn1_build_resultset
       |
       v
- asn1_module_context
+ asn1_modules
       |
       +-------------------------------+
       |                               |
@@ -50,10 +50,10 @@ The important distinction is that `asn1_module` is not the ASN.1 grammar parser.
 
 ## Module context
 
-`asn1_module_context` keeps named module instances and a current/default module. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
+`asn1_modules` keeps named module instances and a current/default module. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
 
 ```text
-asn1_module_context
+asn1_modules
         |
         +-- "CommonDefinitions" -> asn1_module
         |
@@ -62,7 +62,7 @@ asn1_module_context
         +-- current/default module
 ```
 
-The context manages module instances; each `asn1_module` owns the definitions and module relationships inside one module.
+The registry manages registered module instances; each `asn1_module` owns one module's definitions and relationships.
 
 ## Main module state
 
@@ -91,7 +91,7 @@ search(name)
          +-- imported symbol?
          |
          v
-   asn1_module_context::get(outer_module)
+   asn1_modules::get(outer_module)
          |
          v
        outer module

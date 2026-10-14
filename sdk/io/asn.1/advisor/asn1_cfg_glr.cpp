@@ -55,7 +55,7 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
     cfg_grammar grammar;
     grammar
         // rule revision (.ptb file revision)
-        .set_revision(2)
+        .set_revision(3)
         // 1. Entry Points
         .add_production("S'", {"Start"})
         .add_production("Start", {"ModuleStatementList"})
@@ -334,9 +334,9 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("SubtypeElement", {"SubtypeElement", "IntersectOperation", "PrimaryElement"})
         .add_production("SubtypeElement", {"PrimaryElement"})
 
-        .add_production("UnionOperation", {","})
         .add_production("UnionOperation", {"|"})
         .add_production("UnionOperation", {"UNION"})
+        .add_production("IntersectOperation", {","})
         .add_production("IntersectOperation", {"^"})
         .add_production("IntersectOperation", {"INTERSECTION"})
         .add_production("IntersectOperation", {"INTERSECT"})

@@ -4,7 +4,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1102
+Edition 1 · Revision 1104
 Documented with GPT-5.6 Luna
 — source identity, implementation detail & relationships
 ```
@@ -29,7 +29,7 @@ ASN.1 notation
 asn1_build_resultset
       |
       v
- asn1_module_context
+ asn1_modules
       |
       +-------------------------------+
       |                               |
@@ -48,21 +48,20 @@ asn1_build_resultset
 
 The important distinction is that `asn1_module` is not the ASN.1 grammar parser. `asn1_parser` handles notation → tokens → parse tree, `asn1_publisher` builds semantic/module information, and `asn1_module` stores and resolves that information.
 
-## Runtime context
+## Module registry: `asn1_modules`
 
-`asn1_module_context` keeps named module instances and a current/default module. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
+`asn1_modules` is the process-wide singleton registry for named `asn1_module` instances. It provides `add()`, `get()`, `exist()`, and `remove()` operations, plus a default module and temporary-name/sweep helpers. It replaces the earlier `asn1_module_context` naming; it is not a per-module semantic object.
 
 ```text
-asn1_module_context
+asn1_modules (singleton registry)
         |
-        +-- "CommonDefinitions" -> asn1_module
-        |
-        +-- "SecureMessageModule" -> asn1_module
-        |
-        +-- current/default runtime
+        +-- "CommonDefinitions" ----> asn1_module
+        +-- "SecureMessageModule" --> asn1_module
+        +-- "<DEFAULT>" -----------> default asn1_module
+        `-- "_TEMP_..." -----------> temporary modules
 ```
 
-The context manages module instances; each `asn1_module` owns the definitions and module relationships inside one module.
+The registry manages registration and lifetime bookkeeping. Each `asn1_module` owns one module's definitions, imports/exports, and semantic relationships.
 
 ## Main runtime state
 
@@ -91,7 +90,7 @@ search(name)
          +-- imported symbol?
          |
          v
-   asn1_module_context::get(outer_module)
+   asn1_modules::get(outer_module)
          |
          v
        outer runtime

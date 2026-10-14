@@ -43,7 +43,7 @@ class asn1_constraint_size : public asn1_constraint<T> {
     }
     virtual ~asn1_constraint_size() = default;
 
-    asn1_constraint_size* clone() { return new asn1_constraint_size<T>(*this); }
+    virtual asn1_constraint_size* clone() { return new asn1_constraint_size<T>(*this); }
 
     virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {

@@ -28,6 +28,8 @@ bool asn1_publisher::prepare() {
         if (false == _ready) {
             prepare_basics();
             prepare_constraints();
+            prepare_module();
+            prepare_parameterized();
             _ready = true;
         }
     }

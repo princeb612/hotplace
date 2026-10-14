@@ -1,6 +1,6 @@
 # Parser — Grammar to Parse Structure
 
-**Edition 1 · Revision 1097**
+**Edition 1 · Revision 1103**
 
 ## Context
 
@@ -10,7 +10,7 @@ This document owns the parser question:
 
 > How does a grammar become an executable parser, and how does the parser expose enough structure for semantic construction?
 
-The current ASN.1 runtime path remains LALR-based. The GLR implementation is being studied as the next parser mechanism for the broader ASN.1 grammar; it is not yet the parser used by `asn1_runtime`.
+The ASN.1 parser supports selectable LALR(1) and GLR paths. In the current source, `asn1_module::add_schema()` selects GLR, while advisor-provided parser instances retain the distinct build/import and notation/general-parser roles. Do not describe GLR as merely an unused experiment or claim every parser entry point uses the same path.
 
 ## History
 
@@ -29,9 +29,13 @@ The CHANGELOG gives the following parser-oriented sequence:
 - **Revision 1094** — parser-table binary layout and external table import.
 - **Revision 1095** — build infrastructure changes supporting the parser-table workflow.
 - **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes.
-- **Revision 1097** — first ASN.1 loader step: file/memory input is parsed into a `parse_tree`; Module/runtime orchestration remains separate.
+- **Revision 1097** — loader begins parsing file/memory input to a `parse_tree` (first step).
+- **Revision 1099** — `IMPORTS`, `EXPORTS`, module linkage, `resolve()` and `is_resolvable()` are exercised in the module path.
+- **Revision 1100** — shared ASN.1 knowledge and parser/publisher providers move under `asn1_advisor` (renamed from `asn1_resource`).
+- **Revision 1102** — `asn1_runtime`/`asn1_runtime_context` are renamed to `asn1_module`/`asn1_module_context`; parameterized assignment/type/value grammar is extended and parser tables move to revision 2.
+- **Revision 1103** — `asn1_publisher` fixes `TypeAssignment` semantic publication.
 
-The important direction is still not a replacement of LALR by GLR. By Revision 1096, the broader CFG/GLR grammar experiment has progressed from the grammar checkpoint into graph-structured-stack support and corrected parse-tree construction; the production runtime parser remains a separate integration concern.
+The important direction is parser selection at a stable semantic boundary, not a simple LALR-to-GLR replacement story. The GSS and parse-tree fixes from 1096 support the GLR path; by 1099–1103, the module path exercises GLR parsing through semantic publication and module resolution. The two parser mechanisms and their provider/configuration paths should remain explicit in the explanation.
 
 ## Why the parser has become a separate study topic
 
@@ -91,7 +95,7 @@ ASN.1 notation
  asn1_object*
 ```
 
-`asn1_runtime` contains a `lalr1_parser`, imports the ASN.1 production/action/goto tables, and uses that parser when `add_schema()` parses notation.
+`asn1_module::add_schema()` currently creates an `asn1_parser` configured for GLR and passes the resulting parse tree through the shared `asn1_publisher`. Parser instances are supplied through `asn1_advisor`; LALR(1) and GLR remain selectable paths rather than one universal parser object.
 
 ### GLR path
 
@@ -113,7 +117,7 @@ The purpose of the experiment is to make the grammar itself more expressive wher
 
 ### Graph-structured stack
 
-Revision 1096 introduces a graph-structured stack (GSS) for the GLR path. Instead of treating every parser branch as an independent linear stack, the GSS allows stack paths to share nodes while preserving multiple parent paths. This provides the structure needed for GLR reductions and path reconstruction without changing the production `asn1_runtime` parser from LALR.
+Revision 1096 introduces a graph-structured stack (GSS) for the GLR path. Instead of treating every parser branch as an independent linear stack, the GSS allows stack paths to share nodes while preserving multiple parent paths. This provides the structure needed for GLR reductions and path reconstruction without changing the production `asn1_module` parser from LALR.
 
 Conceptually:
 
@@ -128,7 +132,7 @@ GSS node graph
         parse structure
 ```
 
-The Revision 1096 work also corrects parse-tree construction for the GLR path. These changes improve the experimental GLR mechanism; they do not mean that GLR semantic construction has been integrated into `asn1_runtime`.
+Revision 1096 corrected GLR parse-tree construction. Subsequent module work uses the GLR-selected path for schema parsing and semantic publication; the module is now named `asn1_module`, and it records imports/exports and supports reference-resolution checks.
 
 A GLR parse does not by itself create an ASN.1 runtime object. The resulting semantic alternatives still need a construction policy.
 
@@ -157,7 +161,7 @@ ASN.1 language
     runtime         path
 ```
 
-At Revision 1096, the unified CFG remains the study object. Its grammar coverage is broader than the current production runtime parser, which remains LALR-based.
+At Revision 1103, the unified CFG and its parser providers feed a module path that selects GLR for `add_schema()`. Grammar coverage and semantic coverage are not identical: parameterized productions exist, but full parameter binding/substitution/instantiation is not yet complete.
 
 ### Parser result and semantic construction
 
@@ -177,7 +181,7 @@ asn1_object*
 
 This preserves the existing design direction from the ASN.1 semantic-construction study: parser reductions expose structure; publisher handlers interpret that structure.
 
-As grammar coverage grows, publisher coverage must grow with it. This is why future semantic handlers are expected for module, parameterized, information-object-class, and related productions. Those handlers are a consequence of broader semantic coverage, not a function of GLR itself.
+Publisher coverage must track grammar coverage, but recognition and semantic instantiation are distinct. Module and TypeAssignment publication are exercised; parameterized productions have grammar/handler work, while complete parameter binding, substitution, and instantiated-object behavior remain unfinished.
 
 ### Context-aware parser switching
 
@@ -218,7 +222,7 @@ The current and experimental paths should be kept visually separate:
 For the existing runtime:
 
 ```text
-asn1_runtime::add_schema()
+asn1_module::add_schema()
         ↓
 parse()
         ↓
@@ -247,7 +251,7 @@ publisher expansion
 loader integration later
 ```
 
-Revision 1097 now gives `asn1_loader` a working parser-entry role: file or memory input is passed to the ASN.1 parser and returned as a `parse_tree`. This is still not full loader integration: Module construction, semantic publication, and runtime registration remain separate stages.
+The loader path has advanced since Revision 1097: input can flow through parser and publisher into module-level information, including IMPORTS/EXPORTS and resolvability checks. Parameterized semantic instantiation remains a separate incomplete area.
 
 ## Study & Verification
 
@@ -274,16 +278,16 @@ runtime schema/object
 
 ## Status
 
-At Revision 1097:
+At Revision 1103:
 
-- `asn1_runtime` still uses `lalr1_parser` for its ASN.1 parsing path.
+- `asn1_module::add_schema()` currently selects GLR through `asn1_parser`; LALR(1) remains available through the parser-provider architecture.
 - The parser layer contains both LALR and GLR implementations.
 - The integrated CFG now covers ASN.1 notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2.
-- The GLR grammar/CFG experiment has progressed to GSS-based parsing, with parse-tree construction fixes; this does not yet replace the LALR-based production runtime path.
+- GLR uses the GSS-based parsing path and corrected parse-tree construction, and is used by the current module `add_schema()` flow.
 - Context-aware parser switching has been explored as a way to keep parser selection dependent on grammar/context.
-- GLR remains the experimental parsing mechanism for the broader grammar; production `asn1_runtime` integration is a separate later step.
+- `asn1_module` stores module definitions, imports/exports, values, and reference/linkage state; `resolve()` and `is_resolvable()` support dependency checks.
 - `asn1_publisher` remains the semantic-construction boundary. Broader grammar coverage is expected to require additional handlers.
-- Revision 1097 adds the first working loader step from ASN.1 input to `parse_tree`; Module/runtime orchestration remains later work.
+- Revisions 1102–1103 add parameterized grammar productions and fix `TypeAssignment` semantic publication; full parameterized instantiation remains future work.
 
 ## Related topics
 
@@ -292,6 +296,6 @@ At Revision 1097:
 - `sdk/io/parser/lalr1_parser.*`
 - `sdk/io/parser/glr_parser.*`
 - `sdk/io/parser/parse_tree.*`
-- `sdk/io/asn.1/runtime/asn1_runtime.*`
+- `sdk/io/asn.1/runtime/asn1_module.*`
 - `sdk/io/asn.1/runtime/asn1_publisher.*`
 - `sdk/io/asn.1/loader/asn1_loader.*`

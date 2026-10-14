@@ -46,7 +46,7 @@ class asn1_constraint_from : public asn1_constraint<T> {
     }
     virtual ~asn1_constraint_from() = default;
 
-    asn1_constraint_from* clone() { return new asn1_constraint_from(*this); }
+    virtual asn1_constraint_from* clone() { return new asn1_constraint_from(*this); }
 
     virtual bool is_applicable(asn1_entity_t entity) const { return is_kind_of_cstring(entity); }
 

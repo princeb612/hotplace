@@ -37,6 +37,11 @@
     * CBOR
 
 * details
+  * Revision 1104
+    * asn1_parameterized_type::define, asn1_parameter::value (prototyping)
+    * t_value<T> - not exception-sensitive future-promise pattern
+    * rename asn1_runtime_context to asn1_modules
+    * binary parsing table revision 3
   * Revision 1103
     * [fixed] asn1_publisher - TypeAssignment
   * Revision 1102
