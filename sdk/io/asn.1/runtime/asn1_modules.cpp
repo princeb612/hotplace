@@ -69,6 +69,8 @@ asn1_module* asn1_modules::add(const std::string& name) {
     }
 }
 
+asn1_module* asn1_modules::set(const std::string& name) { return add(name); }
+
 asn1_module* asn1_modules::get(const std::string& name) const {
     critical_section_guard guard(_lock);
     auto iter = _contexts.find(name);

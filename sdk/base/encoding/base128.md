@@ -1,10 +1,27 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Base128
+
+## 1. Role
+
+### Introduction
 
 `base128` provides a variable-length base-128 representation used by protocol-oriented binary formats.
 
 The implementation is particularly relevant to ASN.1 OID encoding, where an OID component is represented using base-128 continuation bytes.
 
-## Main operations
+## 2. Model
+
+### Main operations
 
 The API supports three practical forms:
 
@@ -24,7 +41,9 @@ base128
 
 The decode operation receives a byte stream, its size, and a mutable position. This allows a base-128 value to be decoded as part of a larger binary structure rather than requiring the value to occupy the entire input buffer.
 
-## bignumber support
+## 3. Important behavior and lifetime
+
+### bignumber support
 
 The `bignumber` overloads allow values larger than the normal fixed-width integer types to use the same representation.
 
@@ -42,7 +61,7 @@ bignumber
  protocol binary representation
 ```
 
-## Tests
+### Tests
 
 `test/testcase/encode/testcase_base128.cpp`
 
@@ -56,7 +75,17 @@ The testcase covers:
 
 The fixed vectors are useful as compact examples of the encoded representation.
 
-## Related source
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/encoding/base128.hpp`
 - `sdk/base/encoding/base128.cpp`

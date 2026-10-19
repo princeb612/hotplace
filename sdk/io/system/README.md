@@ -1,17 +1,35 @@
-### System I/O, multiplexing and platform integration
+## Publication
 
-This directory contains system I/O facilities used by the SDK.
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# Readme
 
-The main components include the multiplexer abstraction and controller, Linux epoll integration, Windows IOCP integration, netlink support, MLFQ scheduling support and Windows/PE-related system structures.
+## 1. Role
 
-It forms the bridge between platform I/O mechanisms and higher-level network/session code.
+The module identity is described by the implementation notes retained below.
 
-## Module records
+## 2. Model
 
-- [multiplexer](multiplexer.md) — event notification abstraction and epoll/IOCP backends
-- [socket](socket.md) — low-level platform socket wrapper
-- [mlfq](mlfq.md) — multi-level feedback queue scheduling structure
-- [netlink](netlink.md) — Linux netlink integration
-- [windows_registry](windows_registry.md) — Windows Registry access
-- [winpe](winpe.md) — Windows PE structures and parsing support
-- [platform](platform.md) — common boundary between SDK I/O and OS-specific support
+The existing implementation notes are retained below; see the references for the concrete source files.
+
+## 3. Important behavior and lifetime
+
+No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+
+## 4. Example from the source tests
+
+No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
+
+## 5. Relationships
+
+Related modules and boundaries are recorded below where identified in the existing notes.
+
+## 6. References
+
+Source references and related documents are retained below where available.

@@ -1,17 +1,27 @@
-# ASN.1 Parser
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
+hotplace source tree
 Edition 1 · Revision 1104
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+Documented with GPT-6
+— source structure, implementation & tests
 ```
+
+# ASN.1 parser testcase notes
+
+## 1. Role
+
+This document describes parser-facing testcase coverage for ASN.1 notation, parse operations, parser resources, and parameterized grammar work.
+
+## 2. Test model
+
+The original parser description is retained below, including `parse()`, `to_tokens()`, `to_parsetree()`, `to_result()`, grammar work, preparation, and parser resources.
+
+### Preserved source material
 
 `asn1_parser` is the hotplace ASN.1 notation entry point that bridges the lexical analyzer, the parser tables, the parse tree, and semantic publication. It is a lightweight runtime-facing wrapper around the existing lexer/parser infrastructure.
 
-## Role in hotplace
+### Role in hotplace
 
 ```text
 ASN.1 notation
@@ -44,9 +54,9 @@ The class deliberately keeps three stages visible:
 
 This separation is useful to the loader and tests because each boundary can be exercised independently.
 
-## Main operations
+### Main operations
 
-### `parse()`
+#### `parse()`
 
 The convenience overloads perform the complete pipeline.
 
@@ -64,13 +74,13 @@ parse(notation, parse_tree)
     -> to_parsetree()
 ```
 
-### `to_tokens()`
+#### `to_tokens()`
 
 `to_tokens()` invokes the hotplace `lexical_analyzer`, converts lexical descriptions into the parser's `parser_token` representation, skips comments, maps lexical l-values to the ASN.1 identifier token, and appends the parser EOF token.
 
 The lexer is configured for the ASN.1 grammar, including quoted values, comments, l-value/usertype handling, and ASN.1 parameterized syntax.
 
-### `to_parsetree()`
+#### `to_parsetree()`
 
 `to_parsetree()` passes the prepared token vector to the selected parser implementation. The current source obtains the parser provider from `asn1_advisor`. The selected runtime path uses the imported GLR parser:
 
@@ -81,7 +91,7 @@ get_parser()
 
 The parser itself remains part of `sdk/io/parser`; `asn1_parser` only provides the ASN.1-specific runtime-facing adapter.
 
-### `to_result()`
+#### `to_result()`
 
 `to_result()` obtains the prepared shared publisher from `asn1_advisor` and asks it to build semantic results from the parse tree.
 
@@ -100,7 +110,7 @@ asn1_build_resultset
 
 This makes `asn1_parser` the visible boundary between syntax parsing and semantic construction without embedding the publisher's grammar handlers in the parser itself.
 
-## Grammar work: parameterized notation
+### Grammar work: parameterized notation
 
 The current ASN.1 GLR grammar includes productions for parameterized assignments and invocations. The grammar describes these forms through `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterizedValueAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Actual parameters include type/value forms and brace-delimited forms.
 
@@ -108,7 +118,7 @@ This is a grammar-capability statement, not a claim that parameterized ASN.1 is 
 
 The current focus combines grammar revision 3 with direct semantic prototyping; end-to-end parser/publisher support remains incomplete.
 
-## Preparation and parser resources
+### Preparation and parser resources
 
 The parser lazily prepares its lexical analyzer through `load()`.
 
@@ -120,7 +130,7 @@ The preparation step:
 
 The parser therefore uses repository-provided parser resources rather than constructing a complete grammar table dynamically for every parse operation.
 
-## Related source
+### Related source
 
 - `sdk/io/asn.1/runtime/asn1_parser.hpp`
 - `sdk/io/asn.1/runtime/asn1_parser.cpp`
@@ -130,10 +140,42 @@ The parser therefore uses repository-provided parser resources rather than const
 - `sdk/io/parser/lalr1_parser.*`
 - `sdk/io/parser/parse_tree.*`
 
-## Related tests
+### Related tests
 
 - `test/testcase/asn.1/testcase_basic3.cpp`
 - `test/testcase/asn.1/loader/testcase_loader.cpp`
 - `test/testcase/asn.1/runtime/testcase_parser.cpp`
 
 The loader testcase is particularly useful because it explicitly exercises `to_tokens()`, `to_parsetree()`, and `to_result()` as separate stages.
+
+## 3. Example: source-specific testcase path
+
+`test_asn1parser()` in `testcase_parser.cpp` submits a table of type assignments, tags, constructed types, constraints, and non-assignment fragments to an LALR(1) parser. `test_lalr_asn1module()` and `test_glr_asn1module()` exercise parser variants from the main testcase source.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+- **O** — parser testcase source includes broad positive notation inputs and non-assignment fragments.
+- **△** — the shown loop calls `parse_notation()`; this source excerpt does not itself assert a detailed expected AST for every table item.
+- **△** — grammar support for parameterized notation must be distinguished from end-to-end semantic processing.
+
+### 4.2 Documentation and verification status
+
+The report has aggregate ASN.1 counts only. It does not establish the outcome of each notation case or identify environment/revision.
+
+## 5. Relationships
+
+- [`asn1_module.md`](asn1_module.md) — parser result’s module representation
+- [`asn1_publisher.md`](asn1_publisher.md) — semantic construction
+- [`../../../../sdk/io/asn.1/runtime/asn1_parser.md`](../../../../sdk/io/asn.1/runtime/asn1_parser.md) — implementation-side parser
+
+## 6. References
+
+- `test/testcase/asn.1/runtime/testcase_parser.cpp`
+- `test/testcase/asn.1/testcase_basic3.cpp`
+- `sdk/io/asn.1/runtime/asn1_parser.cpp`
+
+## 7. Development Notes (for maintainer review)
+
+The preserved source material below contains an explicitly marked historical, TODO, implementation-status, grammar-work, or GPT-review note. It is retained for maintainer review and should not automatically be interpreted as a current implementation guarantee.

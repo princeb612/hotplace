@@ -1,3 +1,24 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
+# JSON Object Signing and Encryption (JOSE) implementation status
+
+## 1. Role
+
+This page preserves the module's pre-existing algorithm-status reference. Unlike the other JOSE records, it is a status-table/history document; the check marks are retained as written and have not been independently re-audited during this documentation pass.
+
+## 2. Model
+
+The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE key management, JWE content encryption, and JWK key types. Use the focused records for the architectural model: [object model](jose-object-model.md), [JWS/JWE flow](jose-signing-encryption.md), and [JWK/algorithm mapping](jose-key-and-algorithms.md).
+
 # JSON Object Signing and Encryption (JOSE) implementation status
 
 ## Cryptographic Algorithms for Digital Signatures and MACs
@@ -61,10 +82,27 @@
 | O | EC    | JWK/PEM                | crv "P-256","P-384","P-521" |
 | O | OKP   | JWK/PEM                | crv "Ed25519","Ed448","X25519","X448" |
 
-## JSON parser performance comparison
+## 3. Important behavior and lifetime
 
-* https://github.com/miloyip/nativejson-benchmark
-* https://github.com/fabienrenaud/java-json-benchmark
+These tables are a snapshot from the existing document, not a normative declaration of current backend support. Actual behavior also depends on provider/build configuration and key availability. The presence of source tests is useful evidence but does not by itself establish support in every build environment.
+
+## 4. Example from the source tests
+
+The direct source-level examples are mapped in [`testcase_jose.md`](../../../test/testcase/jose/testcase_jose.md). In particular, RFC 7515 tests exercise signature/MAC operations, RFC 7516 and RFC 7520 tests exercise encryption and key management, and RFC 7638/8037/AKP sources cover thumbprints and additional key/algorithm families.
+
+## 5. Relationships
+
+- [JWS signing and JWE encryption](jose-signing-encryption.md)
+- [JWK and algorithm mapping](jose-key-and-algorithms.md)
+- [JOSE object model and context](jose-object-model.md)
+
+## 6. References
+
+- RFC 7515, RFC 7516, RFC 7517, RFC 7518, RFC 7520, RFC 7638, RFC 8037
+- Existing JSON parser benchmark links retained from the source note.
+## Development Notes (for maintainer review)
+
+The source document's explicit TODO checklist and the older status matrix are preserved below. They are historical maintainer notes, not a verified statement that each item is still outstanding. For example, RFC 7638 test coverage and AKP/ML-DSA test vectors are present in this source tree even though the older checklist still mentions JWK thumbprints and post-quantum work.
 
 ## TODO
 

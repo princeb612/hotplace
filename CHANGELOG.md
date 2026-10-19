@@ -37,6 +37,11 @@
     * CBOR
 
 * details
+  * Revision 1105
+    * fixed
+      * authenticode_verifier - restored the 'revocation check'
+      * COSE partial iv
+    * added process, oid_dictionary
   * Revision 1104
     * asn1_parameterized_type::define, asn1_parameter::value (prototyping)
     * t_value<T> - not exception-sensitive future-promise pattern

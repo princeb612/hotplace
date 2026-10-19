@@ -1,12 +1,28 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # DTLS record publisher
 
-## Identity
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
+
+### Identity
 
 `dtls_record_publisher` is the session-level DTLS 1.2 record construction component. It converts TLS handshake records into DTLS records while applying DTLS-specific handshake fragmentation and record segmentation.
 
 It is exposed through `tls_session::get_dtls_record_publisher()`.
 
-## Construction model
+### Construction model
 
 ```text
 TLS handshake records
@@ -33,7 +49,7 @@ callback / output container
 
 The publisher operates on `tls_record` / `tls_records` and uses the session's DTLS message sequence state when constructing fragmented handshake records.
 
-## Fragmentation and segmentation
+### Fragmentation and segmentation
 
 Two size controls are intentionally separate:
 
@@ -44,7 +60,7 @@ The default values in the implementation are a 1024-byte fragment size and a 120
 
 The `dtls_record_publisher_multi_handshakes` flag controls whether multiple handshake messages may be carried together when publishing.
 
-## Interface
+### Interface
 
 - `publish(tls_record*, dir, container)` builds output records into a list.
 - `publish(tls_record*, dir, callback)` sends generated records through a callback.
@@ -53,7 +69,17 @@ The `dtls_record_publisher_multi_handshakes` flag controls whether multiple hand
 - `set_segment_size()` / `get_max_size()` configure the output segment boundary.
 - `set_flags()` / `get_flags()` control publisher behavior.
 
-## Session relationship
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+### Session relationship
 
 ```text
 tls_session
@@ -72,19 +98,12 @@ tls_session
 
 The publisher is the **send-side construction** counterpart to `dtls_record_arrange`, which performs receive-side ordering.
 
-## Related source and tests
+## 6. References
+
+### Related source and tests
 
 - `dtls_record_publisher.hpp`
 - `session/dtls_record_publisher.cpp`
 - `test/testcase/tls/testcase_construct_dtls12_1.cpp`
 - `test/testcase/tls/testcase_construct_dtls12_2.cpp`
 - `test/testcase/tls/sample.cpp`
-
-## Publication
-
-```text
-hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
-```

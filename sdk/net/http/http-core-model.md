@@ -1,6 +1,18 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # HTTP core model
 
-## Role
+## 1. Role
+
+### Role
 
 `sdk/net/http` contains the common HTTP model used by the HTTP/1.x and HTTP/2 implementations, together with the server/client, routing, URI, header, and authentication layers.
 
@@ -23,19 +35,21 @@ http_request / http_response
 
 `http_request` and `http_response` are deliberately shared by HTTP/1.x and HTTP/2. HTTP/2 additionally carries a stream id and HPACK dynamic-table state.
 
-## Request and response
+## 2. Model
+
+### Request and response
 
 `http_request` can parse an incoming HTTP/1.x request, compose a request, expose its method/URI/header/content, and carry HTTP version and stream information. It has separate HTTP/1 and HTTP/2 parsing paths.
 
 `http_response` represents the server response and can compose either an HTTP/1.x byte stream or an HTTP/2 response representation. `respond(network_session*)` is the boundary where the response is sent through the active network session.
 
-## Header and URI
+### Header and URI
 
 `http_header` is the common header container. It also provides conversion of structured authentication header values into `skey_value`, which is used by the authentication layer.
 
 `http_uri` separates the original URI, path, and query string and can expose query parameters through `skey_value`.
 
-## Routing
+### Routing
 
 `http_router` maps URI paths and status codes to handlers. The routing path is approximately:
 
@@ -55,11 +69,17 @@ http_response
 
 Authentication is therefore part of request dispatch rather than a separate transport layer.
 
-## Compression and content encoding
+### Compression and content encoding
 
 HTTP content encoding (`identity`, `deflate`, `gzip`, etc.) is handled while composing responses. This is different from HTTP/2 HPACK and HTTP/3 QPACK, which compress header fields rather than response bodies.
 
-## Source / tests
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+### Source / tests
 
 Primary source:
 
@@ -79,3 +99,11 @@ Related records:
 - [HTTP protocol stack](http-protocol-stack.md)
 - [Authentication](auth/README.md)
 - [Compression infrastructure](compression/README.md)
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

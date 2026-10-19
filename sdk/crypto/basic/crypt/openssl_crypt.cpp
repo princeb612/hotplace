@@ -24,62 +24,40 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
 }
 
 return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, const unsigned char* key, size_t size_key, const unsigned char* iv, size_t size_iv) const {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == cipher) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        ret = open(handle, std::string(cipher), key, size_key, iv, size_iv);
+    if (nullptr == cipher) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    return open(handle, std::string(cipher), key, size_key, iv, size_iv);
 }
 
 return_t openssl_crypt::open(crypt_context_t** handle, const std::string& cipher, const unsigned char* key, size_t size_key, const unsigned char* iv,
                              size_t size_iv) const {
-    return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    __try2 {
-        const hint_cipher_t* hint = advisor->hintof_cipher(cipher);
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-        } else {
-            ret = open(handle, typeof_alg(hint), typeof_mode(hint), key, size_key, iv, size_iv);
-        }
+    const hint_cipher_t* hint = advisor->hintof_cipher(cipher);
+    if (nullptr == hint) {
+        return errorcode_t::not_supported;
+    } else {
+        return open(handle, typeof_alg(hint), typeof_mode(hint), key, size_key, iv, size_iv);
     }
-    __finally2 {}
-    return ret;
 }
 
 return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, const binary_t& key, const binary_t& iv) const {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == cipher) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        ret = open(handle, std::string(cipher), key, iv);
+    if (nullptr == cipher) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    return open(handle, std::string(cipher), key, iv);
 }
 
 return_t openssl_crypt::open(crypt_context_t** handle, const std::string& cipher, const binary_t& key, const binary_t& iv) const {
-    return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    __try2 {
-        const hint_cipher_t* hint = advisor->hintof_cipher(cipher);
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-        } else {
-            ret = open(handle, typeof_alg(hint), typeof_mode(hint), key, iv);
-        }
+    const hint_cipher_t* hint = advisor->hintof_cipher(cipher);
+    if (nullptr == hint) {
+        return errorcode_t::not_supported;
+    } else {
+        return open(handle, typeof_alg(hint), typeof_mode(hint), key, iv);
     }
-    __finally2 {}
-    return ret;
 }
 
 return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char** ciphertext, size_t* ciphersize) const {
@@ -251,17 +229,11 @@ return_t openssl_crypt::decrypt(crypt_context_t* handle, const binary_t& ciphert
 }
 
 return_t openssl_crypt::free_data(unsigned char* data) const {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == data) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        delete[] (data);
+    if (nullptr == data) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    delete[] (data);
+    return errorcode_t::success;
 }
 
 crypt_poweredby_t openssl_crypt::get_type() const { return crypt_poweredby_t::openssl; }

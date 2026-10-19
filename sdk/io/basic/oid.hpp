@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_OID__
 #define __HOTPLACE_SDK_IO_BASIC_OID__
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
@@ -20,10 +21,11 @@ namespace io {
 // ITU-T X.660 ISO/IEC 9834-1, ISO/IEC 6523 Structure for the identification of organizations and organization parts
 // object identifier - node1 0..2, node2 0..39, nodeN positive
 // relative object identifier - nodeN positive
-typedef std::vector<uint64> oid_t;
+typedef std::vector<uint32> oid_t;
 
 void str_to_oid(const std::string& value, oid_t& oid);
 void str_to_oid(const char* value, size_t size, oid_t& oid);
+void asn1str_to_oid(const char* value, size_t size, oid_t& oid);
 void oid_to_str(const oid_t& value, basic_stream& oid);
 
 }  // namespace io

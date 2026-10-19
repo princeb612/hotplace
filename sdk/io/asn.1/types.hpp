@@ -193,10 +193,6 @@ enum asn1_perm_t : uint8 {
     asn1_perm_both = (asn1_perm_primitive | asn1_perm_constructed),
 };
 
-// parameterization
-class asn1_parameter;
-class asn1_parameterized_type;
-
 }  // namespace io
 }  // namespace hotplace
 

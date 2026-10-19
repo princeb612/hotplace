@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_module.cpp
+ * @file   asn1_module_symbol.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -40,11 +40,11 @@ asn1_object* asn1_module::search(const std::string& name) const {
     }
 
     if (false == _imports.empty()) {
-        auto rtcontext = asn1_modules::get_instance();
+        auto modules = asn1_modules::get_instance();
         for (const auto& module : _imports) {
             for (const auto& symbol : module.symbols) {
                 if (symbol == name) {
-                    auto outer = rtcontext->get(module.outer_module);
+                    auto outer = modules->get(module.outer_module);
                     if (outer) {
                         auto obj = outer->search_by_symbol(name);
                         if (obj) {

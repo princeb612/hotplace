@@ -1,17 +1,18 @@
-# ASN.1 Parser
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1104
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
+# ASN.1 Parser
 
-`asn1_parser` is the hotplace ASN.1 notation entry point that bridges the lexical analyzer, the parser tables, the parse tree, and semantic publication. It is a lightweight runtime-facing wrapper around the existing lexer/parser infrastructure.
+## 1. Role
 
-## Role in hotplace
+### Role in hotplace
 
 ```text
 ASN.1 notation
@@ -44,7 +45,19 @@ The class deliberately keeps three stages visible:
 
 This separation is useful to the loader and tests because each boundary can be exercised independently.
 
-## Main operations
+## 2. Model
+
+### Grammar work: parameterized notation
+
+The current ASN.1 GLR grammar includes productions for parameterized assignments and invocations. The grammar describes these forms through `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterizedValueAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Actual parameters include type/value forms and brace-delimited forms.
+
+This is a grammar-capability statement, not a claim that parameterized ASN.1 is fully implemented end to end. In the Revision 1104 source, the parameterized testcase contains `FRAME{TypeParam, INTEGER:maxSize}` and `MyPacket ::= FRAME{ OCTET STRING, 1024 }` examples. It also contains direct semantic construction/specialization probes, but `test_parameterized2()`—the loader → parse tree → publisher path—remains disabled in `testcase_parameterized()`. Semantic binding, parameter substitution, and reliable instantiated-type construction should therefore remain documented as work in progress until the corresponding implementation and tests are enabled.
+
+The current focus combines grammar revision 3 with direct semantic prototyping. Do not infer complete parser-to-runtime parameterized support from grammar productions or direct object-model tests.
+
+## 3. Important behavior and lifetime
+
+### Main operations
 
 ### `parse()`
 
@@ -100,15 +113,23 @@ asn1_build_resultset
 
 This makes `asn1_parser` the visible boundary between syntax parsing and semantic construction without embedding the publisher's grammar handlers in the parser itself.
 
-## Grammar work: parameterized notation
+## 4. Example from the source tests
 
-The current ASN.1 GLR grammar includes productions for parameterized assignments and invocations. The grammar describes these forms through `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterizedValueAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Actual parameters include type/value forms and brace-delimited forms.
+### Related tests
 
-This is a grammar-capability statement, not a claim that parameterized ASN.1 is fully implemented end to end. In the Revision 1104 source, the parameterized testcase contains `FRAME{TypeParam, INTEGER:maxSize}` and `MyPacket ::= FRAME{ OCTET STRING, 1024 }` examples. It also contains direct semantic construction/specialization probes, but `test_parameterized2()`—the loader → parse tree → publisher path—remains disabled in `testcase_parameterized()`. Semantic binding, parameter substitution, and reliable instantiated-type construction should therefore remain documented as work in progress until the corresponding implementation and tests are enabled.
+- `test/testcase/asn.1/testcase_basic3.cpp`
+- `test/testcase/asn.1/loader/testcase_loader.cpp`
+- `test/testcase/asn.1/runtime/testcase_parser.cpp`
 
-The current focus combines grammar revision 3 with direct semantic prototyping. Do not infer complete parser-to-runtime parameterized support from grammar productions or direct object-model tests.
+The loader testcase is particularly useful because it explicitly exercises `to_tokens()`, `to_parsetree()`, and `to_result()` as separate stages.
 
-## Preparation and parser resources
+## 5. Relationships
+
+Related modules and boundaries are recorded below where identified in the existing notes.
+
+## 6. References
+
+### Preparation and parser resources
 
 The parser lazily prepares its lexical analyzer through `load()`.
 
@@ -120,7 +141,7 @@ The preparation step:
 
 The parser therefore uses repository-provided parser resources rather than constructing a complete grammar table dynamically for every parse operation.
 
-## Related source
+### Related source
 
 - `sdk/io/asn.1/runtime/asn1_parser.hpp`
 - `sdk/io/asn.1/runtime/asn1_parser.cpp`
@@ -129,11 +150,3 @@ The parser therefore uses repository-provided parser resources rather than const
 - `sdk/io/parser/lexical_analyzer.*`
 - `sdk/io/parser/lalr1_parser.*`
 - `sdk/io/parser/parse_tree.*`
-
-## Related tests
-
-- `test/testcase/asn.1/testcase_basic3.cpp`
-- `test/testcase/asn.1/loader/testcase_loader.cpp`
-- `test/testcase/asn.1/runtime/testcase_parser.cpp`
-
-The loader testcase is particularly useful because it explicitly exercises `to_tokens()`, `to_parsetree()`, and `to_result()` as separate stages.

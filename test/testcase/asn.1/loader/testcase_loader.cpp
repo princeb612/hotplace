@@ -41,15 +41,15 @@ void test_asn1loader_babystep() {
     std::vector<std::string> expect = {"MyShopPurchaseOrders"};
     _test_case.assert(expect == result.module_names, __FUNCTION__, "module names");
 
-    auto rtcontext = asn1_modules::get_instance();
+    auto modules = asn1_modules::get_instance();
     for (const auto& item : result.module_names) {
         basic_stream bs;
-        auto module = rtcontext->get(item);
+        auto module = modules->get(item);
         module->represent(&bs);
         _logger->write(bs);
     }
 
-    auto module = rtcontext->get("MyShopPurchaseOrders");
+    auto module = modules->get("MyShopPurchaseOrders");
     _test_case.assert(nullptr != module, __FUNCTION__, "MyShopPurchaseOrders");
     if (module) {
         _test_case.assert(module->get("PurchaseOrder"), __FUNCTION__, "PurchaseOrder");
@@ -88,7 +88,7 @@ void test_loader() {
          }},
     };
 
-    auto rtcontext = asn1_modules::get_instance();
+    auto modules = asn1_modules::get_instance();
 
     for (const auto& item : table) {
         asn1_parser parser;
@@ -120,7 +120,7 @@ void test_loader() {
         {
             basic_stream asn1_regenerated;
             for (const auto& name : result.module_names) {
-                auto module = rtcontext->get(name);
+                auto module = modules->get(name);
                 module->represent(&asn1_regenerated);
             }
             _logger->write(asn1_regenerated);
@@ -131,7 +131,7 @@ void test_loader() {
         for (const auto& pair : item.module) {
             const auto& name = pair.first;
             const auto& summary = pair.second;
-            auto module = rtcontext->get(name);
+            auto module = modules->get(name);
 
             _test_case.assert(nullptr != module, __FUNCTION__, R"(module("%s"))", name.c_str());
 

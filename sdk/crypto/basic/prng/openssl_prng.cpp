@@ -33,29 +33,23 @@ int64 openssl_prng::rand64() {
 }
 
 return_t openssl_prng::random(unsigned char* buf, size_t size) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == buf || 0 == size) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        RAND_bytes(buf, t_narrow_cast(size));
+    if (nullptr == buf || 0 == size) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    RAND_bytes(buf, t_narrow_cast(size));
+
+    return errorcode_t::success;
 }
 
 return_t openssl_prng::random(binary_t& buffer, size_t size) {
-    return_t ret = errorcode_t::success;
     if (0 == size) {
-        ret = errorcode_t::do_nothing;
+        return errorcode_t::do_nothing;
     } else {
         buffer.resize(size);
         RAND_bytes(buffer.data(), t_narrow_cast(buffer.size()));
     }
-    return ret;
+    return errorcode_t::success;
 }
 
 return_t openssl_prng::random(uint32& i, uint32 mask) {

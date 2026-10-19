@@ -1,6 +1,16 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # I/O Payload
 
-## Role
+## 1. Role
 
 `sdk/io/basic/payload.*` provides a small declarative binary-payload description layer.
 
@@ -22,28 +32,9 @@ payload
 
 This is intended for protocol fields whose binary layout is known from the surrounding message structure, without introducing a separate schema language.
 
-## Encoding and decoding
+## 2. Model
 
-A payload is built in field order:
-
-```cpp
-payload pl;
-pl << new payload_member(..., "length")
-   << new payload_member(..., "data")
-   << new payload_member(..., "value");
-
-pl.write(binary);
-```
-
-The same description can be populated from an input buffer:
-
-```cpp
-pl.read(binary);
-```
-
-The important design point is that the field description is reused for both directions.
-
-## payload_member
+### payload_member
 
 `payload_member` stores one field's value and metadata.
 
@@ -67,7 +58,7 @@ A member can also carry:
 
 The value itself is held through `variant`, so the payload layer does not need a separate field class for every scalar type.
 
-## Variable-length fields
+### Variable-length fields
 
 A central feature is a field whose size is determined by another field.
 
@@ -89,7 +80,7 @@ During decoding the known `padlen` value allows the otherwise variable-size `pad
 
 A `multiple` parameter is also available for references when the encoded length is expressed in units larger than one byte.
 
-## Groups and conditions
+### Groups and conditions
 
 Members may belong to named groups.
 
@@ -117,7 +108,7 @@ condition hook
 
 This is used by the tests for conditional protocol layouts.
 
-## payload_encoded
+### payload_encoded
 
 `payload_encoded` is the extension point for a field whose encoding is not represented by a simple fixed `variant` value.
 
@@ -125,7 +116,32 @@ Its purpose is to let a specialized encoder calculate and write the field repres
 
 This is particularly relevant to protocol-specific variable-length encodings. QUIC uses this mechanism through its own encoded payload implementation.
 
-## Protocol examples
+## 3. Important behavior and lifetime
+
+### Encoding and decoding
+
+A payload is built in field order:
+
+```cpp
+payload pl;
+pl << new payload_member(..., "length")
+   << new payload_member(..., "data")
+   << new payload_member(..., "value");
+
+pl.write(binary);
+```
+
+The same description can be populated from an input buffer:
+
+```cpp
+pl.read(binary);
+```
+
+The important design point is that the field description is reused for both directions.
+
+## 4. Example from the source tests
+
+### Protocol examples
 
 The direct tests exercise the generic mechanism with layouts such as:
 
@@ -142,7 +158,21 @@ and with 24-bit / 48-bit integers.
 
 The payload layer is therefore generic, while protocol-specific encodings remain outside `sdk/io/basic`.
 
-## Relationship with higher layers
+### Tests
+
+- `test/testcase/io/basic/testcase_payload.cpp`
+  - write/read round trips
+  - groups and conditional groups
+  - reference-sized fields
+  - uint24 / uint48 handling
+  - bignumber fields
+- `test/testcase/io/basic/testcase_payload_quic.cpp`
+  - QUIC integer encoding
+  - `payload_encoded` integration
+
+## 5. Relationships
+
+### Relationship with higher layers
 
 ```text
 protocol implementation
@@ -158,19 +188,9 @@ protocol implementation
 
 It is used by higher-level protocol implementations such as HTTP/2, TLS-related structures, DTLS-related structures and QUIC code.
 
-## Tests
+## 6. References
 
-- `test/testcase/io/basic/testcase_payload.cpp`
-  - write/read round trips
-  - groups and conditional groups
-  - reference-sized fields
-  - uint24 / uint48 handling
-  - bignumber fields
-- `test/testcase/io/basic/testcase_payload_quic.cpp`
-  - QUIC integer encoding
-  - `payload_encoded` integration
-
-## Related source
+### Related source
 
 - `sdk/io/basic/payload.hpp`
 - `sdk/io/basic/payload.cpp`

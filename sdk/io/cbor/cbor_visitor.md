@@ -1,6 +1,23 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # CBOR Visitors
 
-## Role
+## 1. Role
+
+Describes visitor-based representations of CBOR objects, including diagnostic and concise output.
+
+## 2. Model
+
+### Role
 
 The visitor layer provides alternate representations of an already parsed `cbor_object` tree.
 
@@ -19,25 +36,25 @@ The visitor layer provides alternate representations of an already parsed `cbor_
 
 This avoids coupling the object model to one output representation.
 
-## Base visitor
+### Base visitor
 
 `cbor_visitor` defines the traversal interface.
 
 Concrete visitors receive `cbor_object` instances and produce their respective output.
 
-## Concise representation
+### Concise representation
 
 `cbor_concise_visitor` produces the compact CBOR binary representation.
 
 It is useful when an object tree already exists and the caller wants the encoded data without directly managing `cbor_encode`.
 
-## Diagnostic representation
+### Diagnostic representation
 
 `cbor_diagnostic_visitor` produces a human-readable diagnostic representation through `stream_t`.
 
 This is useful for debugging and for comparing the object tree with the notation used by RFC CBOR examples.
 
-## Why this is separate from encoding
+### Why this is separate from encoding
 
 The project keeps three concerns distinct:
 
@@ -75,19 +92,31 @@ encoder / concise visitor
 encoded CBOR
 ```
 
-## Related source
+## 3. Important behavior and lifetime
+
+The logical CBOR object model is distinct from its encoded byte layout. Readers construct object values, while encoders and publishers produce output representations.
+
+## 4. Example from the source tests
+
+The relevant test sources are listed below; this document does not invent a standalone example.
+
+## 5. Relationships
+
+### Related source
 
 - `cbor_visitor.*`
 - `cbor_object.*`
 - `cbor_encode.*`
 - `cbor_publisher.*`
 
-## Related tests
+### Related tests
 
 - `test/testcase/cbor/testcase_rfc7049.cpp`
 - `test/testcase/cbor/testvector_cbor.cpp`
 - `test/testcase/cbor/sample.cpp`
 
-## Related reference
+## 6. References
+
+### Related reference
 
 - `rfc8949-examples.md` — retained RFC 8949 Appendix A encoded examples

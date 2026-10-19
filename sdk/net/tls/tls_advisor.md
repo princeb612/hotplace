@@ -1,6 +1,18 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # TLS advisor
 
-## Role
+## 1. Role
+
+### Role
 
 `sdk/net/tls/advisor` is the identifier and parameter lookup layer for TLS, DTLS and QUIC. It does not implement the cryptographic primitives themselves.
 
@@ -21,7 +33,9 @@ suite   params   values     parameters
       sdk/crypto
 ```
 
-## Resource groups
+## 2. Model
+
+### Resource groups
 
 The source maintains resource tables for:
 
@@ -33,7 +47,19 @@ The source maintains resource tables for:
 
 The `resource_*.cpp` files contain the static mapping data, while the advisor classes provide lookup/query behavior.
 
-## Relationship with crypto advisor
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+### Related test
+
+- `test/testcase/tls/testcase_resource.cpp`
+
+## 5. Relationships
+
+### Relationship with crypto advisor
 
 TLS advisor and crypto advisor have different responsibilities:
 
@@ -55,7 +81,9 @@ crypto operation / key type
 
 The two advisor areas therefore form a vocabulary bridge between protocol-level identifiers and the reusable cryptographic implementation.
 
-## Related source
+## 6. References
+
+### Related source
 
 - `sdk/net/tls/advisor/tls_advisor.cpp`
 - `sdk/net/tls/advisor/resource.cpp`
@@ -65,7 +93,3 @@ The two advisor areas therefore form a vocabulary bridge between protocol-level 
 - `sdk/net/tls/advisor/resource_tls_extensiontype_values.cpp`
 - `sdk/net/tls/advisor/resource_quic.cpp`
 - `sdk/crypto/advisor/`
-
-## Related test
-
-- `test/testcase/tls/testcase_resource.cpp`

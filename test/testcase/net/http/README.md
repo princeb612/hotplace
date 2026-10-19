@@ -1,4 +1,22 @@
-### HTTP testcases
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# HTTP testcases
+
+## 1. Role
+
+This directory contains HTTP request/response and HTTP/2 frame testcase sources, along with YAML-driven test-vector support.
+
+## 2. Test model
+
+Test source files in this directory: `testcase_http.cpp`, `testcase_http2_frame.cpp`, `testvector_http2.cpp`
 
 This directory contains the tests/samples for the corresponding hotplace module.
 
@@ -13,3 +31,34 @@ This directory contains the tests/samples for the corresponding hotplace module.
 * `testvector_http2.yml`
 
 The directory is organized around the concrete testcase sources present here; detailed protocol or implementation notes belong to the corresponding `sdk` documentation.
+
+## 3. Example: testcase entry points
+
+The concrete test entry points and test-vector schema are retained below. Source-level assertions, rather than the existence of a source file, determine what is actually checked.
+
+Source files:
+- `testcase_http.cpp`
+- `testcase_http2_frame.cpp`
+- `testvector_http2.cpp`
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+Coverage must be inferred from the actual testcase functions and assertions. The directory README and the presence of test sources do not prove that every protocol path is meaningfully checked.
+
+### 4.2 Documentation and verification status
+
+This README documents the directory and source inventory. It does not itself prove a successful runtime execution. The available report archive does not identify the exact OS, compiler configuration, or source revision for its results.
+
+## 5. Relationships
+
+- Corresponding implementation documentation is under `sdk/net/`.
+- HTTP compression testcases are maintained in the sibling `hpack/` and `qpack/` directories.
+- Shared test registration is defined by the surrounding testcase CMake configuration.
+
+## 6. References
+
+- `test/testcase/net/http/testcase_http.cpp`
+- `test/testcase/net/http/testcase_http2_frame.cpp`
+- `test/testcase/net/http/testvector_http2.cpp`

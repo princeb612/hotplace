@@ -203,7 +203,7 @@ return_t asn1_advisor::prepare_lalr1_notation_parser(parser_t& parser) {
 
         .add_production("UnionOperation", {"|"})
         .add_production("UnionOperation", {"UNION"})
-        .add_production("IntersectOperation", {","})  // MultiSize ::= OCTET STRING (SIZE (1..10, 20..30))
+        .add_production("IntersectOperation", {","})
         .add_production("IntersectOperation", {"^"})
         .add_production("IntersectOperation", {"INTERSECTION"})
         .add_production("IntersectOperation", {"INTERSECT"})

@@ -21,19 +21,15 @@ network_protocol_group::~network_protocol_group() { clear(); }
 return_t network_protocol_group::add(network_protocol* protocol) {
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        if (nullptr == protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        auto pib = _protocols.emplace(protocol->protocol_id(), protocol);
-        if (true == pib.second) {
-            protocol->addref();
-        }
+    if (nullptr == protocol) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    critical_section_guard guard(_lock);
+    auto pib = _protocols.emplace(protocol->protocol_id(), protocol);
+    if (true == pib.second) {
+        protocol->addref();
+    }
 
     return ret;
 }
@@ -44,27 +40,21 @@ network_protocol_group& network_protocol_group::operator<<(network_protocol* pro
 }
 
 return_t network_protocol_group::find(const std::string& protocol_id, network_protocol** ptr_protocol) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == ptr_protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        auto iter = _protocols.find(protocol_id);
-        if (_protocols.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            network_protocol* protocol = iter->second;
-            protocol->addref();
-            *ptr_protocol = protocol;
-        }
+    if (nullptr == ptr_protocol) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
 
-    return ret;
+    critical_section_guard guard(_lock);
+    auto iter = _protocols.find(protocol_id);
+    if (_protocols.end() == iter) {
+        return errorcode_t::not_found;
+    } else {
+        network_protocol* protocol = iter->second;
+        protocol->addref();
+        *ptr_protocol = protocol;
+    }
+
+    return errorcode_t::success;
 }
 
 network_protocol* network_protocol_group::operator[](const std::string& protocol_id) {
@@ -75,82 +65,63 @@ network_protocol* network_protocol_group::operator[](const std::string& protocol
 }
 
 return_t network_protocol_group::remove(network_protocol* protocol) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        auto iter = _protocols.find(protocol->protocol_id());
-        if (_protocols.end() != iter) {
-            network_protocol* protocol_ref = iter->second;
-            protocol_ref->release();
-        }
+    if (nullptr == protocol) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
 
-    return ret;
+    critical_section_guard guard(_lock);
+    auto iter = _protocols.find(protocol->protocol_id());
+    if (_protocols.end() != iter) {
+        network_protocol* protocol_ref = iter->second;
+        protocol_ref->release();
+    }
+
+    return errorcode_t::success;
 }
 
 return_t network_protocol_group::clear() {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        critical_section_guard guard(_lock);
-        for (auto& pair : _protocols) {
-            network_protocol* protocol = pair.second;
-            protocol->release();
-        }
-        _protocols.clear();
+    critical_section_guard guard(_lock);
+    for (auto& pair : _protocols) {
+        network_protocol* protocol = pair.second;
+        protocol->release();
     }
-    __finally2 {}
+    _protocols.clear();
 
-    return ret;
+    return errorcode_t::success;
 }
 
-bool network_protocol_group::empty() {
-    bool ret = _protocols.empty();
-
-    return ret;
-}
+bool network_protocol_group::empty() { return _protocols.empty(); }
 
 return_t network_protocol_group::is_kind_of(void* stream, size_t stream_size, network_protocol** ptr_protocol) {
     return_t ret = errorcode_t::success;
     network_protocol* protocol_match = nullptr;
 
-    __try2 {
-        if (nullptr == ptr_protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (nullptr == ptr_protocol) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        critical_section_guard guard(_lock);
+    critical_section_guard guard(_lock);
 
-        for (auto& pair : _protocols) {
-            network_protocol* protocol = pair.second;
-            return_t test = protocol->is_kind_of(stream, stream_size);
+    for (auto& pair : _protocols) {
+        network_protocol* protocol = pair.second;
+        return_t test = protocol->is_kind_of(stream, stream_size);
 
-            if (errorcode_t::success == test) {
-                protocol_match = protocol;
-                protocol_match->addref();
-                break;
-            } else if (errorcode_t::more_data == test) {
-                ret = test;
-                protocol_match = protocol;
-            }
-        }
-
-        if (nullptr == protocol_match) {
-            ret = errorcode_t::not_supported;
-        }
-        if (errorcode_t::success == ret) {
-            *ptr_protocol = protocol_match;
+        if (errorcode_t::success == test) {
+            protocol_match = protocol;
+            protocol_match->addref();
+            break;
+        } else if (errorcode_t::more_data == test) {
+            ret = test;
+            protocol_match = protocol;
         }
     }
-    __finally2 {}
+
+    if (nullptr == protocol_match) {
+        ret = errorcode_t::not_supported;
+    }
+    if (errorcode_t::success == ret) {
+        *ptr_protocol = protocol_match;
+    }
 
     return ret;
 }

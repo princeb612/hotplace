@@ -1,4 +1,19 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Encoder Stream
+
+## 1. Role
+
+### Introduction
 
 `encoder_stream` is the stateful streaming layer over the encoding implementations in this directory.
 
@@ -12,7 +27,19 @@ Supported encodings include:
 - RFC-style Base16
 - HTTP/2 Huffman
 
-## Stateful processing
+## 2. Model
+
+### Input types
+
+The stream supports raw byte buffers as well as common hotplace values through `operator<<()` / `add()`.
+
+Integral values can optionally be written in big-endian form. The default is big-endian, and `set_endian()` changes that behavior.
+
+The maximum internal output buffer is 32 KiB by default and can be changed with `set_maxsize()`.
+
+## 3. Important behavior and lifetime
+
+### Stateful processing
 
 ```text
 write(chunk 1)
@@ -35,15 +62,23 @@ For Base64, for example, input is processed in 3-byte units. If a `write()` ends
 
 The same idea is used for bit-oriented Huffman encoding through an internal bit buffer.
 
-## Input types
+### Tests
 
-The stream supports raw byte buffers as well as common hotplace values through `operator<<()` / `add()`.
+The streaming behavior is exercised by:
 
-Integral values can optionally be written in big-endian form. The default is big-endian, and `set_endian()` changes that behavior.
+- `test/testcase/encode/testcase_base16.cpp`
+- `test/testcase/encode/testcase_base64.cpp`
+- `test/testcase/encode/testcase_huffman.cpp`
 
-The maximum internal output buffer is 32 KiB by default and can be changed with `set_maxsize()`.
+These tests deliberately change chunk boundaries and compare the streaming result with the ordinary encoder result.
 
-## Relationship with encoders
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+### Relationship with encoders
 
 `encoder_stream` does not replace `base16_encode()`, `base64_encode()`, or `huffman_coding::encode()`.
 
@@ -59,17 +94,9 @@ encoder_stream
 
 This keeps the encoding rules in one place while adding chunked processing.
 
-## Tests
+## 6. References
 
-The streaming behavior is exercised by:
-
-- `test/testcase/encode/testcase_base16.cpp`
-- `test/testcase/encode/testcase_base64.cpp`
-- `test/testcase/encode/testcase_huffman.cpp`
-
-These tests deliberately change chunk boundaries and compare the streaming result with the ordinary encoder result.
-
-## Related source
+### Related source
 
 - `sdk/base/encoding/encoder_stream.hpp`
 - `sdk/base/encoding/encoder_stream.cpp`

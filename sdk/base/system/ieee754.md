@@ -1,10 +1,25 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # IEEE 754 representation and conversion
+
+## 1. Role
+
+### Introduction
 
 `ieee754` handles the representation-level side of floating-point values: classification, bit-field extraction, and conversion between IEEE 754 binary formats.
 
 This is deliberately separate from `floating_point`. `floating_point` is about exact decimal/rational arithmetic; `ieee754` is about the representation of native binary floating-point values.
 
-## Scope
+### Scope
 
 The implementation deals with the following representation widths:
 
@@ -14,7 +29,9 @@ The implementation deals with the following representation widths:
 
 It can classify values and expose the sign, exponent, and mantissa information used by IEEE 754 representations.
 
-## Value classification
+## 2. Model
+
+### Value classification
 
 The implementation distinguishes cases such as:
 
@@ -29,7 +46,7 @@ The implementation distinguishes cases such as:
 
 The classification is useful when code needs to inspect a floating-point value according to its binary representation instead of relying only on ordinary arithmetic comparisons.
 
-## Representation fields
+### Representation fields
 
 IEEE 754 values are interpreted through their fundamental fields:
 
@@ -41,7 +58,7 @@ IEEE 754 values are interpreted through their fundamental fields:
 
 The exact field widths depend on the selected format. The implementation exposes exponent/significand-related information through its IEEE 754 helper functions.
 
-## Format conversion
+### Format conversion
 
 The implementation provides conversions including:
 
@@ -55,7 +72,7 @@ The source also provides helpers for converting values when a smaller representa
 
 `ieee754_as_small_as_possible()` examines a native floating-point value and selects the smallest supported representation that can represent the value according to the implementation's conversion rules.
 
-## Implementation
+### Implementation
 
 Main files:
 
@@ -64,7 +81,9 @@ Main files:
 
 The implementation is concerned with binary representation and conversion, not arbitrary-precision arithmetic.
 
-## Tests
+## 3. Important behavior and lifetime
+
+### Tests
 
 Primary test:
 
@@ -72,7 +91,17 @@ Primary test:
 
 The testcase covers fp16/fp32/fp64 conversion as well as representation classification and special values.
 
-## Relationship to `floating_point`
+### Status
+
+This is a low-level system utility supporting representation inspection and floating-point format conversion. It is not intended to replace the exact arithmetic types documented in `floating_point.md`.
+
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+### Relationship to `floating_point`
 
 The two facilities solve different problems:
 
@@ -90,6 +119,6 @@ The two facilities solve different problems:
 
 Use `floating_point` when exact decimal/rational arithmetic is the concern. Use `ieee754` when the binary representation or IEEE 754 classification of a native floating-point value is the concern.
 
-## Status
+## 6. References
 
-This is a low-level system utility supporting representation inspection and floating-point format conversion. It is not intended to replace the exact arithmetic types documented in `floating_point.md`.
+Implementation and test paths are retained in the sections above or the source tree.

@@ -1,17 +1,27 @@
-# ASN.1 Module
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
+hotplace source tree
 Edition 1 · Revision 1104
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+Documented with GPT-6
+— source structure, implementation & tests
 ```
+
+# ASN.1 module testcase notes
+
+## 1. Role
+
+This document describes the runtime module representation and the testcase concerns around module state, named assignments, reference resolution, linkage, and typed paths.
+
+## 2. Test model
+
+The original module explanation is retained below, including module context, main state, reference lookup/resolution, linkage update, module representation, strongly/weakly typed paths, and constraints.
+
+### Preserved source material
 
 `asn1_module` is the module representation and registry for semantic ASN.1 objects and module information. It stores named definitions, references, `EXPORTS`/`IMPORTS` information, and provides resolution, linkage, notation representation, and DER-related runtime operations.
 
-## Role in hotplace
+### Role in hotplace
 
 ```text
 ASN.1 notation
@@ -48,7 +58,7 @@ asn1_build_resultset
 
 The important distinction is that `asn1_module` is not the ASN.1 grammar parser. `asn1_parser` handles notation → tokens → parse tree, `asn1_publisher` builds semantic/module information, and `asn1_module` stores and resolves that information.
 
-## Module context
+### Module context
 
 `asn1_modules` keeps named module instances and a current/default module. A module produced by the publisher can therefore be registered under its module name and later retrieved when resolving references from another module.
 
@@ -64,7 +74,7 @@ asn1_modules
 
 The registry manages registered module instances; each `asn1_module` owns one module's definitions and relationships.
 
-## Main module state
+### Main module state
 
 A module-capable runtime contains:
 
@@ -77,7 +87,7 @@ A module-capable runtime contains:
 
 The module state is created by `as_module()` and populated through the publisher's module handlers and the runtime import/export APIs.
 
-## Reference lookup and resolution
+### Reference lookup and resolution
 
 The module-aware lookup introduced in revision 1099 lets imported symbols participate in lookup through `search()`.
 
@@ -123,7 +133,7 @@ resolve()
 reference dependency validation
 ```
 
-## Linkage update
+### Linkage update
 
 `update_linkage()` propagates runtime linkage through semantic objects. It updates tagged-type linkage and follows referenced objects while also propagating constructed/explicit relationships through parent objects.
 
@@ -139,7 +149,7 @@ update_linkage()
 
 This separation is useful when tracing strongly typed/tagged object construction.
 
-## Module representation
+### Module representation
 
 `represent()` can now regenerate module notation as well as individual object notation.
 
@@ -170,7 +180,7 @@ parser -> publisher -> runtime
                  regenerated ASN.1
 ```
 
-## Strongly and weakly typed paths
+### Strongly and weakly typed paths
 
 The runtime also remains the central point for the two decoding styles used by the tests.
 
@@ -184,7 +194,7 @@ runtime schema/reference lookup -> DER -> semantic object
 
 The module resolution additions primarily affect the strongly typed/schema side, where a referenced definition may belong to another module.
 
-## Constraint path
+### Constraint path
 
 Constraint processing crosses the generic parser/runtime boundary:
 
@@ -213,7 +223,7 @@ range_set  string_set
 
 The runtime stores the semantic result; constraint evaluation and generic value-domain operations remain in their respective layers. The ASN.1 provider used by this path is `asn1_advisor`, which supplies the shared publisher and parser providers.
 
-## Related source
+### Related source
 
 - `sdk/io/asn.1/runtime/asn1_module.hpp`
 - `sdk/io/asn.1/runtime/asn1_module.cpp`
@@ -224,10 +234,38 @@ The runtime stores the semantic result; constraint evaluation and generic value-
 - `sdk/io/asn.1/basic/semantic/`
 - `sdk/base/nostd/`
 
-## Related tests
+### Related tests
 
 - `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decoding and reference resolution.
 - `test/testcase/asn.1/loader/testcase_loader.cpp` — module loading, regenerated notation, `EXPORTS`, `IMPORTS`, and `is_resolvable()`.
 - `test/testcase/asn.1/testcase_constraints.cpp` — semantic construction with constraints.
 - `test/testcase/asn.1/runtime/testcase_parser.cpp` — parser/runtime path.
 - `test/testcase/asn.1/runtime/testcase_publish.cpp` — publishing path.
+
+## 3. Example: source-specific testcase path
+
+`testcase_basic2.cpp` defines a `Person` sequence with a defaulted `age`, illustrating a definition object and reference strings. `testcase_publish.cpp` exercises staged construction of semantic module objects. The source should be consulted for the exact assertions in each path.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+- **O** — dedicated module/object-model and publisher sources exist.
+- **△** — the documents cover more relationships than any single example demonstrates; do not infer complete coverage of every reference-resolution failure mode.
+
+### 4.2 Documentation and verification status
+
+The ASN.1 report is aggregate; it does not identify per-module assertions or provide run environment/source revision metadata.
+
+## 5. Relationships
+
+- [`../asn1_parser.md`](asn1_parser.md) — parser output path
+- [`asn1_publisher.md`](asn1_publisher.md) — semantic module construction
+- [`../basic/asn1-object-model.md`](../basic/asn1-object-model.md) — object model
+- [`../../../../sdk/io/asn.1/runtime/asn1_module.md`](../../../../sdk/io/asn.1/runtime/asn1_module.md) — implementation-side module
+
+## 6. References
+
+- `test/testcase/asn.1/testcase_basic2.cpp`
+- `test/testcase/asn.1/runtime/testcase_publish.cpp`
+- `sdk/io/asn.1/runtime/asn1_module.cpp`

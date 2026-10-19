@@ -1,6 +1,22 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # HTTP protocol stack
 
-## Protocol interpretation
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
+
+### Protocol interpretation
 
 HTTP protocol classes derive from `network_protocol` and are used by the generic `network_protocol_group` / `network_stream` machinery from `sdk/net/server`.
 
@@ -16,7 +32,7 @@ network_protocol_group
 
 The protocol interpreter is responsible for recognizing the protocol and determining whether the buffered bytes are incomplete, complete, oversized, or invalid. It does not perform application routing.
 
-## HTTP/1.x
+### HTTP/1.x
 
 `http_protocol::is_kind_of()` identifies the HTTP/1.x form and `read_stream()` determines the request/response boundary.
 
@@ -34,7 +50,7 @@ Content-Length ?
 
 This is the stream-framing layer used before `http_request::open()` parses the actual request.
 
-## HTTP/2
+### HTTP/2
 
 `http2_protocol::read_stream()` recognizes the HTTP/2 connection preface and then validates the first frame as SETTINGS. Subsequent input is framed using the HTTP/2 frame header's 24-bit payload length.
 
@@ -55,7 +71,7 @@ http2_session
 http_request
 ```
 
-## HTTP/2 frame layer
+### HTTP/2 frame layer
 
 The `http2_frame` hierarchy represents protocol frames such as DATA, HEADERS, CONTINUATION, SETTINGS, PING, GOAWAY, RST_STREAM, WINDOW_UPDATE, PUSH_PROMISE, PRIORITY, and ALTSVC.
 
@@ -69,19 +85,25 @@ HTTP/2
                  common compression
 ```
 
-## HTTP/3 boundary
+### HTTP/3 boundary
 
 The source tree contains HTTP/3 frame and QPACK components, but the parent HTTP README records QUIC and the HTTP/3 simple server as incomplete. The transport-side QUIC implementation lives under `sdk/net/tls/quic`.
 
 Therefore this directory should not be read as a claim that HTTP/3 is a complete end-to-end server implementation.
 
-## Verification examples
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+### Verification examples
 
 `testcase_http2_frame.cpp` composes frames, compares them with RFC-style hexadecimal vectors, reads them back, and verifies round-trip equivalence.
 
 `testvector_http2.cpp` feeds YAML/pcap-derived HTTP/2 frame data through `network_session`, `network_protocol_group`, and `http2_session`, exercising the same protocol boundaries used by the server path.
 
-## Source / tests
+### Source / tests
 
 - `sdk/net/http/http1/http_protocol.*`
 - `sdk/net/http/http2/http2_protocol.*`
@@ -91,3 +113,11 @@ Therefore this directory should not be read as a claim that HTTP/3 is a complete
 - `sdk/net/http/qpack/*`
 - `test/testcase/net/http/testcase_http2_frame.cpp`
 - `test/testcase/net/http/testvector_http2.cpp`
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

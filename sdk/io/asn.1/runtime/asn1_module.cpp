@@ -190,11 +190,11 @@ asn1_object* asn1_module::get(const std::string& name) const {
     } else {
         auto iter = _dictionary.find(name);
         if (_dictionary.end() == iter) {
-            auto rtcontext = asn1_modules::get_instance();
+            auto modules = asn1_modules::get_instance();
             for (const auto& module : _imports) {
                 for (const auto& symbol : module.symbols) {
                     if (symbol == name) {
-                        auto outer = rtcontext->get(module.outer_module);
+                        auto outer = modules->get(module.outer_module);
                         if (outer) {
                             ret_value = outer->get(symbol);
                         }

@@ -29,23 +29,17 @@ return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const bin
 
 return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& ciphertext, const binary_t& aad,
                               binary_t& tag) const {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if ((nullptr == stream) && size) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto hint_cipher = advisor->hintof_cipher(get_scheme());
-
-        openssl_crypt crypt;
-        encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
-
-        ret = crypt.encrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, ciphertext, aad, tag, options);
+    if ((nullptr == stream) && size) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint_cipher = advisor->hintof_cipher(get_scheme());
+
+    openssl_crypt crypt;
+    encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
+
+    return crypt.encrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, ciphertext, aad, tag, options);
 }
 
 return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad, const binary_t& tag) const {
@@ -54,23 +48,17 @@ return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const bin
 
 return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& plaintext, const binary_t& aad,
                               const binary_t& tag) const {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if ((nullptr == stream) && size) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto hint_cipher = advisor->hintof_cipher(get_scheme());
-
-        openssl_crypt crypt;
-        encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
-
-        ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, plaintext, aad, tag, options);
+    if ((nullptr == stream) && size) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint_cipher = advisor->hintof_cipher(get_scheme());
+
+    openssl_crypt crypt;
+    encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
+
+    return crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, plaintext, aad, tag, options);
 }
 
 }  // namespace crypto

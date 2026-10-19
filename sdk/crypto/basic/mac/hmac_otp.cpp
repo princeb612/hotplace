@@ -78,69 +78,52 @@ return_t hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_
 }
 
 return_t hmac_otp::close(otp_context_t* handle) {
-    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
     openssl_hash hash;
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        hash.close(context->_hmac_context);
-        delete context;
+    if (nullptr == handle) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
 
-    return ret;
+    if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
+        return errorcode_t::invalid_context;
+    }
+
+    hash.close(context->_hmac_context);
+    delete context;
+
+    return errorcode_t::success;
 }
 
 return_t hmac_otp::set(otp_context_t* handle, uint32 count) {
-    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        context->_counter = count;
+    if (nullptr == handle) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
+        return errorcode_t::invalid_context;
+    }
+
+    context->_counter = count;
+
+    return errorcode_t::success;
 }
 
 return_t hmac_otp::get(otp_context_t* handle, uint32& code) {
-    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        get(handle, context->_counter, code);
-        context->_counter++;
+    if (nullptr == handle) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+    if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
+        return errorcode_t::invalid_context;
+    }
 
-    return ret;
+    get(handle, context->_counter, code);
+    context->_counter++;
+
+    return errorcode_t::success;
 }
 
 return_t hmac_otp::get(otp_context_t* handle, uint32 counter, uint32& code) {
@@ -202,31 +185,25 @@ return_t hmac_otp::get(otp_context_t* handle, binary_t counter, uint32& code) {
 }
 
 return_t hmac_otp::verify(otp_context_t* handle, uint32 counter, uint32 code) {
-    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        uint32 result = 0;
-        ret = get(handle, counter, result);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        if (code != result) {
-            ret = errorcode_t::mismatch;
-            __leave2;
-        }
+    if (nullptr == handle) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
+        return errorcode_t::invalid_context;
+    }
+
+    uint32 result = 0;
+    auto ret = get(handle, counter, result);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+    if (code != result) {
+        return errorcode_t::mismatch;
+    }
+
+    return errorcode_t::success;
 }
 
 }  // namespace crypto

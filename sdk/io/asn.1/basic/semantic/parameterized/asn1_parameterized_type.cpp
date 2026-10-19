@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_parameterized_type.hpp
+ * @file   asn1_parameterized_type.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -65,9 +65,13 @@ asn1_parameterized_type* asn1_parameterized_type::specialize(const std::string& 
     auto p = new asn1_parameterized_type(_types, name, get_object()->clone());
     p->_templ = this;
     p->_values = values;
-    addref();
+    addref();  // _templ refcount++
     return p;
 }
+
+void asn1_parameterized_type::set_module(asn1_module* module) { _module = module; }
+
+asn1_module* asn1_parameterized_type::get_module() const { return _module; }
 
 asn1_paramtypes& asn1_parameterized_type::get_types() { return _types; }
 

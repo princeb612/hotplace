@@ -90,52 +90,40 @@ return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary
 
 return_t crypto_key::ec_uncompressed_key(const EVP_PKEY* pkey, binary_t& uncompressed, binary_t& priv) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
 
-        crypto_kty_t kty = ktyof_evp_pkey(pkey);
-        if (kty_ec != kty) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
-
-        ret = get_key(pkey, public_key | private_key, uncompressed, priv, true);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    crypto_kty_t kty = ktyof_evp_pkey(pkey);
+    if (kty_ec != kty) {
+        return errorcode_t::different_type;
+    }
+
+    ret = get_key(pkey, public_key | private_key, uncompressed, priv, true);
+
     return ret;
 }
 
 return_t crypto_key::ec_compressed_key(const EVP_PKEY* pkey, binary_t& compressed, binary_t& priv) {
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        compressed.clear();
+    compressed.clear();
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        crypto_kty_t kty = ktyof_evp_pkey(pkey);
-        if (kty_ec != kty) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
+    crypto_kty_t kty = ktyof_evp_pkey(pkey);
+    if (kty_ec != kty) {
+        return errorcode_t::different_type;
+    }
 
-        binary_t x;
-        binary_t y;
-        binary_t d;
-        ret = get_key(pkey, kty, x, y, d, true);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
+    binary_t x;
+    binary_t y;
+    binary_t d;
+    ret = get_key(pkey, kty, x, y, d, true);
+    if (errorcode_t::success == ret) {
         // | y    | format  | ysign    |
         // | even | 02 || x | 0, false |
         // | odd  | 03 || x | 1, true  |
@@ -145,7 +133,6 @@ return_t crypto_key::ec_compressed_key(const EVP_PKEY* pkey, binary_t& compresse
         binary_append(compressed, x);
         priv = std::move(d);
     }
-    __finally2 {}
 
     return ret;
 }
@@ -215,32 +202,29 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
 
 return_t crypto_key::get_asn1public_key(const EVP_PKEY* pkey, binary_t& pub) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-        int type = EVP_PKEY_id(pkey);
-        if (EVP_PKEY_KEYMGMT != type) {
+    int type = EVP_PKEY_id(pkey);
+    if (EVP_PKEY_KEYMGMT != type) {
 #endif
-            int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
-            if (len < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            pub.resize(len);
-            byte_t* p = pub.data();
-            len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-        } else {
-            crypto_keychain keychain;
-            ret = keychain.pkey_encode(nullptr, pkey, pub, key_encoding_pub_der);
+        int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
+        if (len < 0) {
+            return errorcode_t::internal_error;
         }
-#endif
+        pub.resize(len);
+        byte_t* p = pub.data();
+        len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    } else {
+        crypto_keychain keychain;
+        ret = keychain.pkey_encode(nullptr, pkey, pub, key_encoding_pub_der);
     }
-    __finally2 {}
+#endif
+
     return ret;
 }
 
@@ -252,99 +236,97 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, binary_t& pub, binary_t& priv
 
 return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, binary_t& priv, bool preserve) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
 
-        pub.clear();
-        priv.clear();
-
-        crypto_kty_t kty = ktyof_evp_pkey(pkey);
-        crypt_datamap_t datamap;
-
-        ret = extract(pkey, flags, kty, datamap, preserve);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        auto lambda_get_item = [&datamap](crypt_item_t item, binary_t& bin) -> void {
-            auto iter = datamap.find(item);
-            if (datamap.end() != iter) {
-                bin = iter->second;
-            }
-        };
-
-        switch (kty) {
-            case kty_oct: {
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::hmac_k, priv);
-                }
-            } break;
-            case kty_rsa:
-            case kty_rsapss: {
-                if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::asn1der, pub);
-                }
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::rsa_d, priv);
-                }
-            } break;
-            case kty_ec: {
-                if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::asn1der, pub);
-                } else if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::ec_pub_uncompressed, pub);
-                }
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::ec_d, priv);
-                }
-            } break;
-            case kty_okp: {
-                if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::asn1der, pub);
-                } else if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::ec_x, pub);
-                }
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::ec_d, priv);
-                }
-            } break;
-            case kty_dh: {
-                if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::asn1der, pub);
-                } else if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::dh_pub, pub);
-                }
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::dh_priv, priv);
-                }
-            } break;
-            case kty_dsa: {
-                if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::asn1der, pub);
-                }
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::dsa_priv, priv);
-                }
-            } break;
-            case kty_mlkem:
-            case kty_mldsa:
-            case kty_slhdsa: {
-                if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::mlkem_pub, pub);
-                }
-                if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::mlkem_priv, priv);
-                }
-            } break;
-            default: {
-                ret = errorcode_t::not_supported;
-            } break;
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    pub.clear();
+    priv.clear();
+
+    crypto_kty_t kty = ktyof_evp_pkey(pkey);
+    crypt_datamap_t datamap;
+
+    ret = extract(pkey, flags, kty, datamap, preserve);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    auto lambda_get_item = [&datamap](crypt_item_t item, binary_t& bin) -> void {
+        auto iter = datamap.find(item);
+        if (datamap.end() != iter) {
+            bin = iter->second;
+        }
+    };
+
+    switch (kty) {
+        case kty_oct: {
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::hmac_k, priv);
+            }
+        } break;
+        case kty_rsa:
+        case kty_rsapss: {
+            if (asn1public_key & flags) {
+                lambda_get_item(crypt_item_t::asn1der, pub);
+            }
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::rsa_d, priv);
+            }
+        } break;
+        case kty_ec: {
+            if (asn1public_key & flags) {
+                lambda_get_item(crypt_item_t::asn1der, pub);
+            } else if (public_key & flags) {
+                lambda_get_item(crypt_item_t::ec_pub_uncompressed, pub);
+            }
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::ec_d, priv);
+            }
+        } break;
+        case kty_okp: {
+            if (asn1public_key & flags) {
+                lambda_get_item(crypt_item_t::asn1der, pub);
+            } else if (public_key & flags) {
+                lambda_get_item(crypt_item_t::ec_x, pub);
+            }
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::ec_d, priv);
+            }
+        } break;
+        case kty_dh: {
+            if (asn1public_key & flags) {
+                lambda_get_item(crypt_item_t::asn1der, pub);
+            } else if (public_key & flags) {
+                lambda_get_item(crypt_item_t::dh_pub, pub);
+            }
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::dh_priv, priv);
+            }
+        } break;
+        case kty_dsa: {
+            if (asn1public_key & flags) {
+                lambda_get_item(crypt_item_t::asn1der, pub);
+            }
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::dsa_priv, priv);
+            }
+        } break;
+        case kty_mlkem:
+        case kty_mldsa:
+        case kty_slhdsa: {
+            if (public_key & flags) {
+                lambda_get_item(crypt_item_t::mlkem_pub, pub);
+            }
+            if (private_key & flags) {
+                lambda_get_item(crypt_item_t::mlkem_priv, priv);
+            }
+        } break;
+        default: {
+            ret = errorcode_t::not_supported;
+        } break;
+    }
+
     return ret;
 }
 

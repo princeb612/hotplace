@@ -1,10 +1,27 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Huffman Coding
+
+## 1. Role
+
+### Introduction
 
 `huffman_coding` is the generic Huffman coding implementation used by hotplace for learning, importing, exporting, encoding, and decoding Huffman code tables.
 
 The implementation can derive codes from sample data or load a pre-trained table.
 
-## Two ways to obtain codes
+## 2. Model
+
+### Two ways to obtain codes
 
 ```text
 sample data
@@ -33,7 +50,7 @@ The latter is the path used for protocol-defined Huffman tables such as HTTP/2.
 
 The implementation uses frequency measurement and a binary-tree representation to construct codes. It also keeps a reverse code table for decoding.
 
-## Encoding
+### Encoding
 
 Huffman codes are bit-oriented rather than byte-oriented. The encoder therefore accumulates bits and emits complete bytes as they become available.
 
@@ -41,13 +58,15 @@ If the final code does not end on an octet boundary, padding can be inserted bef
 
 The implementation exposes `expect()` to calculate the expected encoded size before performing the actual encoding.
 
-## Decoding
+### Decoding
 
 The decoder supports both direct/manual and stream-oriented paths. The implementation keeps enough bit state to decode symbols even when symbol boundaries do not coincide with byte boundaries.
 
 This is important for HTTP/2 Huffman because RFC 7541 defines codes with different bit lengths and an EOS-related padding rule.
 
-## HTTP/2 Huffman
+## 3. Important behavior and lifetime
+
+### HTTP/2 Huffman
 
 `http_huffman_coding` derives from `huffman_coding` and loads the static code table defined by RFC 7541 Appendix B.
 
@@ -64,7 +83,7 @@ The singleton returned by `http_huffman_coding::get_instance()` provides the pro
 
 The actual table is kept in `detail/http_huffman_codes.*`.
 
-## Tests
+### Tests
 
 `test/testcase/encode/testcase_huffman.cpp`
 
@@ -80,7 +99,17 @@ The testcase covers:
 
 The RFC 7541 testcase is the important interoperability reference; the learning path demonstrates the generic algorithm separately.
 
-## Related source
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/encoding/huffman_coding.hpp`
 - `sdk/base/encoding/huffman_coding.cpp`

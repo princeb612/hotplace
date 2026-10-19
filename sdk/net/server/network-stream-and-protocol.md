@@ -1,8 +1,24 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # network stream and protocol interpretation
+
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
 
 `network_stream` and `network_protocol` form the framing boundary between arbitrary network reads and application-level messages.
 
-## Raw stream
+### Raw stream
 
 `network_stream::produce()` copies received bytes into a `network_stream_data` node and appends it to a protected queue. A node contains:
 
@@ -24,7 +40,7 @@ network_stream_data -> network_stream_data -> ...
 network_stream::consume
 ```
 
-## Protocol group
+### Protocol group
 
 `network_protocol_group` owns a map from `protocol_id()` to `network_protocol`. It provides three useful operations:
 
@@ -36,7 +52,7 @@ Protocol objects are reference-counted while registered or temporarily selected.
 
 `is_kind_of()` may return `more_data`, which is important when the current network buffer does not contain enough bytes to identify a protocol yet.
 
-## Protocol interpreter
+### Protocol interpreter
 
 A `network_protocol` supplies the protocol-specific framing decision:
 
@@ -54,7 +70,7 @@ The state can describe a completed message or a rejected/invalid/oversized input
 
 `use_alpn()` is available for protocols whose selection is associated with ALPN; the generic base implementation returns false. HTTP/3 is one example of a higher-level protocol where ALPN information matters.
 
-## Framing across multiple reads
+### Framing across multiple reads
 
 `network_stream::do_writep()` is the central framing loop. It concatenates queued `network_stream_data` into a temporary `basic_stream`, asks the protocol group to identify a protocol, and calls `read_stream()`.
 
@@ -80,18 +96,30 @@ read #1        read #2
 
 This is why the network server can treat TCP reads as arbitrary byte chunks rather than assuming one read equals one request.
 
-## Invalid input handling
+### Invalid input handling
 
 For `forged`, `crash` and `large`, the current implementation discards the queued stream data instead of leaving an invalid message in the processing path. A protocol implementation therefore controls both message boundaries and the basic failure state used by the generic stream layer.
 
-## Write/copy behavior
+## 3. Important behavior and lifetime
+
+### Write/copy behavior
 
 `network_stream::write()` copies queued data into another stream. With an empty protocol group it performs a direct copy. With protocol interpreters it performs framing and may emit one or more complete messages.
 
 This same mechanism is useful outside the full `network_server`: the HTTP/2 test vector directly feeds bytes to a session stream and invokes `session.consume()` with an `http2_protocol`.
 
-## Related modules
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+### Related modules
 
 - `sdk/net/http/http1/` and `sdk/net/http/http2/` — concrete protocol interpreters using this boundary
 - `sdk/net/http/http3/` — HTTP/3 processing and QUIC/ALPN integration
 - `sdk/net/basic/` — byte transport and socket lifecycle below this layer
+
+## 6. References
+
+Source references and related documents are retained here where available.

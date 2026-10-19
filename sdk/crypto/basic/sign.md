@@ -1,14 +1,30 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # Digital Signatures
+
+## 1. Role
 
 `sdk/crypto/basic/sign` provides the common signing/verifying abstraction and concrete algorithm implementations.
 
-## Common interface
+## 2. Model
+
+### Common interface
 
 `crypto_sign_builder` selects a signature category and digest.  It can also accept TLS signature schemes and JOSE identifiers, allowing higher-level protocol code to select a primitive without directly constructing an OpenSSL operation.
 
 `crypto_sign` exposes `sign()` and `verify()` over either a byte stream or `binary_t`.  RSA-PSS salt length is retained as primitive configuration.
 
-## Implementation families
+## 3. Important behavior and lifetime
+
+### Implementation families
 
 The current source includes:
 
@@ -23,10 +39,18 @@ The current source includes:
 
 The digest-sign path is represented separately for algorithms such as EdDSA and the newer signature families where the backend operation is not simply the traditional explicit digest-then-sign flow.
 
-## Identifier boundary
+## 4. Example from the source tests
+
+### Tests
+
+`test/testcase/crypto/sign/` covers generic signing, ECDSA, HMAC, ML-DSA, RSA signatures, SLH-DSA, X.509-related signing and DSA/ECDSA/RSA test vectors.
+
+## 5. Relationships
+
+### Identifier boundary
 
 The builder accepts TLS and JOSE-facing identifiers, but it is still a primitive layer.  Protocol semantics remain outside `crypto/basic`; `crypto/advisor` supplies common algorithm/identifier metadata.
 
-## Tests
+## 6. References
 
-`test/testcase/crypto/sign/` covers generic signing, ECDSA, HMAC, ML-DSA, RSA signatures, SLH-DSA, X.509-related signing and DSA/ECDSA/RSA test vectors.
+Relevant source paths, sibling documentation, and standards references are retained here where available.

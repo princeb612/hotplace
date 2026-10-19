@@ -1,148 +1,56 @@
-### Guidelines for CFG/LALR Grammars & Token Mapping
+## Publication
 
-#### 1. Alignment Between Lexer Tokens and LALR Terminal Symbols
-
-* **Prevent Token Mapping Omissions**: Ensure that all token types extracted by the lexer (`token_quoted`, `token_string`, `token_floatingpoint`, etc.) are mapped to parser terminal symbols (`quot_string`, `fp`, `num`, `id`) in the conversion loop (`dump_handler` / `switch-case`) without exception.
-* **Multi-character Token Precedence**: Ensure multi-character operators or tokens such as `..` (fromto), `::=` (assign), and `--` (comments) are registered and evaluated before single-character tokens.
-
-#### 2. Tagged Types and Recursive Grammar Structuring
-
-* **TagSpec and Class Combination Branches**: Explicitly define all possible combinations in production rules regarding the presence of class names and `EXPLICIT`/`IMPLICIT` specifiers:
-  * `[ TagClass num ] TagSpec TypeSpec`
-  * `[ TagClass num ] TypeSpec`
-  * `[ num ] TagSpec TypeSpec`
-  * `[ num ] TagSpec TypeSpec`
-* **Recursive Path Resolution**: Ensure seamless recursion for nested structures or choice types within TaggedTypes (e.g., `TypeSpec` -> `TypeBase` -> `TaggedType` -> `TypeSpec`).
-
-#### 3. Constraints & Literal Range Expansion
-
-* **Subtype / Constraint Elements**: Include all literals and keywords used in constraint expressions (`ConstraintExpr`) under the `ValueElement` production rule:
-  * Identifiers (`id`), Numbers (`num`), Floating points (`fp`), Quoted strings (`quot_string`)
-  * Boundary keywords (`MIN`, `MAX`) and Booleans (`TRUE`, `FALSE`)
-
-#### 4. Mitigating Shift/Reduce and Reduce/Reduce Conflicts
-
-* **Hierarchical Rules and Operator Precedence**: Eliminate ambiguity when using compound operators like `INTERSECTION`, `EXCEPT`, and `|` (UNION) by strictly separating grammar levels (`ConstraintExpr` -> `SubtypeElementSet` -> `IntersectionElement` -> `PrimaryElement`).
-* **Single Augmented Start Symbol (Root Unification)**: Avoid defining multiple direct productions for the augmented start symbol (`S'`). Group top-level entry points into a single non-terminal (e.g., `S' -> Statement`) before branching into specific statements (`Assignment`, `TypeSpec`, `Constraint`). This prevents Lookahead set overlap at State 0 and avoids unintentional action table drops.
-* **First-Token Lookahead Disambiguation**: When multiple top-level productions share the same leading token type (e.g., `symid`), ensure the grammar path can be uniquely resolved without causing Reduce/Reduce conflicts during LALR table generation.
-
-#### 5. Rules for Robust Production Creation
-
-* **Avoid Overlapping Left-Hand Side (LHS) Entry Paths**: Ensure top-level standalone expressions and assignment expressions do not cause lookahead collisions when parsed without context.
-* **Explicit Non-Terminal Wrapping**: Wrap structural statements (e.g., `SEQUENCE`, `SET`, `CHOICE`) into dedicated non-terminals (such as `StatementSequence`, `StatementSet`) rather than directly embedding them as raw token sequences across disparate production rules.
-* **Completeness of Optional/Default Branches**: For productions containing optional attributes or field qualifiers (`OPTIONAL`, `DEFAULT`), ensure all terminal and non-terminal fallback paths are explicitly mapped to prevent early parser reduction failures.
-
-#### 6. Checklist for Adding New Grammar Patterns
-
-1. **Lexer**: Register new keyword/symbol tokens and verify `get_config()` flags.
-2. **Grammar**: Declare terminal symbols via `add_terminal()` and construct production rules via `add_production()`.
-3. **Start Symbol Integrity**: Verify that `S'` delegates to a unified root non-terminal to prevent initial state conflicts.
-4. **Mapper**: Update the token translation `switch-case` block for Lexer output -> Parser input.
-5. **Test Vector**: Create minimal test vectors and inspect dynamic execution traces to confirm parsing success.
-
-### Study
-
-```
-state = stack.top();
-token = lookahead;
-
-action = ACTION[state][token];
-
-switch (action.type) {
-case SHIFT:
-    push(token);
-    state = action.state;
-    read_next_token();
-    break;
-
-case REDUCE:
-    pop(rhs_size);
-    lhs = rule.lhs;
-    state = GOTO[stack.top()][lhs];
-    push(lhs);
-    break;
-
-case ACCEPT:
-    return success;
-
-case ERROR:
-    return error;
-}
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1105                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
-#### Type1 ::= VisibleString
+# Parser Testcases
 
-```
-[000] line 1 type 33(lvalue) index 0 pos 0 len 5 (Type1)
-[001] line 1 type 32(assign) index 1 pos 6 len 3 (::=)
-[002] line 1 type 4124(VisibleString) index 2 pos 10 len 13 (VisibleString)
-LALR(1) Dynamic Parsing Execution Trace
-state stack           token                 action
---------------------------------------------------------------------------
-[ 0 ]                 Type1 (29)            shift -> State 49
-[ 0 49 ]              ::= (32)              shift -> State 84
-[ 0 49 84 ]           VisibleString (4124)  shift -> State 47
-[ 0 49 84 47 ]        $ (4294967295)        reduce -> Rule 75 (SimpleType)
-[ 0 49 84 30 ]        $ (4294967295)        reduce -> Rule 38 (TypeBase)
-[ 0 49 84 41 ]        $ (4294967295)        reduce -> Rule 32 (TypeSpec)
-[ 0 49 84 118 ]       $ (4294967295)        reduce -> Rule 4 (Assignment)
-[ 0 3 ]               $ (4294967295)        reduce -> Rule 1 (Statement)
-[ 0 31 ]              $ (4294967295)        accept
+## 1. Role
 
-parse tree
-Statement
-  Assignment
-    id (Type1)
-    ::=
-    TypeSpec
-      TypeBase
-        SimpleType
-          VisibleString
-```
+This directory contains direct tests for the lexical analyzer and parser engines, parser-table import, YAML-driven parser test vectors, and an ASN.1 module-boundary reducer experiment. These are related parsing tools, but they do not all exercise the same layer: lexer tests validate tokenization; parser tests validate grammar execution; the YAML vector test validates module-range detection and switching signals.
 
-trace
-```
-state       lookahead                   action
-----------------------------------------------------------------
-0           ... id (S49) ...            shift 49, push 49
-0 49        ... ::= (S84) ...           shift 84, push 84
-0 49 84     ... VisibleString (S47) ... shift 47, push 47
-0 49 84 47  ... $ (R75) ...             reduce 75
-0 49 84     pop size(rhs of 75),        stacktop 84, push 84:SimpleType -> 30
-0 49 84 30  ... $ (R38) ...             reduce 38
-0 49 84     pop size(rhs of 38),        stacktop 84, push 84:TypeBase -> 41
-0 49 84 41  ... $ (R32) ...             reduce 32
-0 49 84     pop size(rhs of 32),        stacktop 84, push 84:TypeSpec -> 118
-0 49 84 118 ... $ (R4) ...              reduce 4
-0           pop size(rhs of 4),         stacktop 0, push 0:Assignment -> 3
-0 3         ... $ (R1) ...              reduce 1
-0           pop size(rhs of 1),         stacktop 0, 0:Statement -> 31
-0 31        ... $ (A0) ...              accept
-----------------------------------------------------------------
+## 2. Test model
 
-ACTION table
-  {(0:id) -> shift target 49},
-  {(49:::=) -> shift target 84},
-  {(84:VisibleString) -> shift target 47},
-  {(47:$) -> reduce target 75},
-  {(30:$) -> reduce target 38},
-  {(41:$) -> reduce target 32},
-  {(118:$) -> reduce target 4},
-  {(3:$) -> reduce target 1},
-  {(31:$) -> accept target 0},
+- `testcase_lexer.cpp` tests lexical tokenization, token options, and ASN.1-style hex-string handling.
+- `testcase_parser.cpp` exercises ASN.1 notation with LALR and GLR parser instances, both runtime-built and imported; it also contains the direct `asn1notation.ptb` import case and the Aho–Corasick reducer test.
+- `testvector_parser.cpp` loads `testvector_parser.yml`, runs the module-boundary reducer, and compares expected ranges for module clauses and level-/edge-trigger behavior.
+- `asn1module.cpp` / `asn1module.hpp` provide helper grammar/reducer definitions and the shared `test_asn1parser()` test helper.
+- `testvector_parser.yml` supplies data-driven input and expected ranges for the reducer path.
 
-GOTO table
-  {(84:SimpleType) -> 30},
-  {(84:TypeBase) -> 41},
-  {(84:TypeSpec) -> 118},
-  {(0:Assignment) -> 3},
-  {(0:Statement) -> 31},
+## 3. Example: follow one input through the layers
 
-production set
-  [75] lhs:SimpleType rhs:{VisibleString}
-  [38] lhs:TypeBase rhs:{SimpleType}
-  [32] lhs:TypeSpec rhs:{TypeBase}
-  {(84:TypeSpec) -> 118},
-  [4] lhs:Assignment rhs:{id,::=,TypeSpec}
-  [1] lhs:Statement rhs:{Assignment}
-```
+For tokenization, start at `testcase_lexer.cpp::test_lexer()`: the same ASN.1 sample is tokenized under two configurations, and the test asserts different token counts. Continue into `lexical_analyzer_parse.cpp` to see how registered tokens and options affect recognition.
+
+For grammar parsing, start at `testcase_parser.cpp::test_asn1_notation()`. The function obtains four parser instances (LALR build/import and GLR build/import), checks readiness, and runs shared notation vectors through them. For a minimal import path, `test_load_parsingtable()` reads `asn1notation.ptb` and parses `Type1 ::= VisibleString`. Follow `test_asn1parser()` in `asn1module.hpp` and the engine's `parse()` implementation to connect input, parser actions, and optional parse-tree output.
+
+For module-boundary recognition, start at `testvector_parser.cpp::test_yaml_testvector_parser()`. It loads YAML vectors, runs the Aho–Corasick reducer against the ASN.1 text, then compares discovered ranges with expected module-header/export/import ranges and checks level-/edge-trigger behavior. This is a separate pre-parsing aid rather than a replacement for the grammar parser.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+The listed functions and assertions establish what these sources intend to check. They do not establish that every production, conflict case, malformed input, or error-recovery path is covered. For a specific grammar change, inspect the relevant vector and its expected outcome alongside the production and token mapping being changed.
+
+### 4.2 Documentation and verification status
+
+This README records source-level test intent and paths. The documentation update did not rebuild or execute the test suite, so it makes no new runtime-pass claim. The available report archive does not identify a matching OS/compiler configuration and source revision for these tests.
+
+## 5. Relationships
+
+- Implementation: `sdk/io/parser/`
+- Higher-level consumer: `sdk/io/asn.1/`
+- Test registration and shared harness: the surrounding testcase CMake configuration and `test/testcase/io/sample.hpp`.
+
+## 6. References
+
+- `testcase_lexer.cpp`
+- `testcase_parser.cpp`
+- `testvector_parser.cpp`
+- `testvector_parser.yml`
+- `asn1module.cpp`, `asn1module.hpp`

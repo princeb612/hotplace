@@ -1,4 +1,27 @@
-#### COSE
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
+# COSE testcase assets
+
+## 1. Role
+
+Identifies COSE RFC/example vectors and documents the YAML schema for keys and message cases.
+
+## 2. Test model
+
+The directory contains RFC and COSE working-group examples plus a YAML schema for keys, CBOR message bytes, and cryptographic inputs.
+
+### Existing vector schema and notes
+
+### COSE
 
 * test vector
   * RFC 8152 CBOR Object Signing and Encryption (COSE)
@@ -7,7 +30,7 @@
   * RFC 8392 CBOR Web Token (CWT)
   * https://github.com/cose-wg/Examples
 
-#### YAML schema
+### YAML schema
 
 * COSE YAML schema
 
@@ -67,3 +90,28 @@ testvector:
         untagged: bit
         debug: bit              # breakpoint
 ````
+
+## 3. Example: RFC COSE vectors
+
+A COSE vector can reference a key set, message CBOR, shared inputs, crypto inputs, and flags such as skip or untagged.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+`testcase_rfc8152.cpp` checks CBOR parse/compose results against RFC assets; `testcase_cose.cpp` exercises sign/verify, encrypt/decrypt and MAC/verify; resource and AKP tests cover their named paths.
+
+### 4.2 Documentation and verification status
+
+The supplied report is identified as **MinGW64, source revision 1104**: **2013 pass, 0 expt, 0 fail, 2 skip, 0 triv**. The documentation task did not rerun the tests.
+
+## 5. Relationships
+
+- `sdk/crypto/cose/` contains COSE processing.
+- `sdk/io/cbor/` provides CBOR parsing and encoding.
+- `sdk/crypto/basic/` supplies cryptographic primitives.
+
+## 6. References
+
+- RFC 8152 / RFC 9052; RFC 8392; RFC 8778; RFC 9338.
+- `test/testcase/cose/` sources and vector assets (Revision 1104).

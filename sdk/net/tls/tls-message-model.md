@@ -1,6 +1,18 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # TLS message model
 
-## Role
+## 1. Role
+
+### Role
 
 `sdk/net/tls/tls` is the wire-message model for TLS and DTLS. It separates the three major protocol objects used by the implementation:
 
@@ -19,7 +31,9 @@ TLS / DTLS
 
 The classes are primarily responsible for representing, encoding and decoding protocol messages. Cryptographic state is handled by `protection/`, while session-level sequencing and transport integration are handled by `session/` and the surrounding network layer.
 
-## Record layer
+## 2. Model
+
+### Record layer
 
 The record classes represent TLS record content and the DTLS-specific ciphertext path.
 
@@ -49,7 +63,7 @@ handshake / application / alert
 
 DTLS adds transport-specific sequencing and fragmentation concerns; those are complemented by the session-level DTLS record arrangement/publishing code.
 
-## Handshake layer
+### Handshake layer
 
 The handshake model is divided into a common collection and message-specific classes. The implementation contains both TLS 1.2-era messages and TLS 1.3 messages, including:
 
@@ -79,7 +93,7 @@ extension / key / certificate fields
 
 The RFC documents in this directory remain the protocol-study references; this document records how those concepts map to hotplace classes.
 
-## Extension layer
+### Extension layer
 
 TLS extensions are represented independently so that ClientHello, ServerHello and related messages can compose extension objects without embedding every extension into the handshake class itself.
 
@@ -101,15 +115,13 @@ Implemented examples include:
 
 The extension builder/collection classes form the common dispatch boundary.
 
-## Related source
+## 3. Important behavior and lifetime
 
-- `sdk/net/tls/tls/record/`
-- `sdk/net/tls/tls/handshake/`
-- `sdk/net/tls/tls/extension/`
-- `sdk/net/tls/protection/`
-- `sdk/net/tls/session/`
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
 
-## Related tests
+## 4. Example from the source tests
+
+### Related tests
 
 Representative tests include:
 
@@ -121,3 +133,17 @@ Representative tests include:
 - `testcase_alert.cpp`
 - `testcase_understand_tls12.cpp`
 - `testcase_understand_tls13.cpp`
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+### Related source
+
+- `sdk/net/tls/tls/record/`
+- `sdk/net/tls/tls/handshake/`
+- `sdk/net/tls/tls/extension/`
+- `sdk/net/tls/protection/`
+- `sdk/net/tls/session/`

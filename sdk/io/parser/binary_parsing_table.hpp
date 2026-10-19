@@ -18,26 +18,6 @@ namespace hotplace {
 namespace io {
 
 #pragma pack(push, 1)
-// struct bpt_header_t {
-//     char magic[4];
-//     uint16 version;
-//     uint16 endian;
-//     uint32 crc32;
-//     uint64 blocks_size;
-// };
-//
-// struct bpt_string_item_t {
-//     uint16 len;
-//     const char* symbol;  // not null-terminated
-// };
-//
-// struct bpt_production_item_t {
-//     uint32 id;
-//     uint32 lhs;
-//     uint32 count;
-//     uint32* rhs;
-// };
-
 struct bpt_action_item_t {
     uint32 state;
     uint32 lookahead;

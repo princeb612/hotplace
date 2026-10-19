@@ -31,12 +31,17 @@ static const char* example_parameterized = R"(
 
 void test_parameterized1() {
     _test_case.begin("parameterization");
+
+    // auto modules = asn1_modules::get_instance();
+    // auto module6 = modules->add("GenericContainerModule");
+    // auto module7 = modules->add("TemplateModule");
+
     // Envelope {TypeParameter} ::= SEQUENCE {
     //     version     INTEGER,
     //     messageId   OCTET STRING (SIZE(16)),
     //     payload     TypeParameter
     // }
-    auto example6 = asn1_parameterized_type::define("Envelope", [](asn1_parameterized_type* templ) -> asn1_object* {
+    auto example6_type1 = asn1_parameterized_type::define("Envelope", [](asn1_parameterized_type* templ) -> asn1_object* {
         auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
             auto seq = static_cast<asn1_sequence*>(builtin);
             (*seq) << new asn1_integer("version")  //
@@ -49,11 +54,12 @@ void test_parameterized1() {
     });
 
     // ActualMessage ::= Envelope { INTEGER }
-    auto example6_inst1 = example6->specialize("ActualMessage", {asn1_paramvalue{"INTEGER"}});
+    auto example6_inst1 = example6_type1->specialize("ActualMessage", {{"INTEGER"}});
 
     auto example7_type1 = asn1_parameterized_type::define(
         "FRAME",  //
         [](asn1_parameterized_type* templ) -> asn1_object* {
+            (*templ).add_paramtype("TypeParam").add_paramtype("INTEGER", "maxSize");
             auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
                 auto seq = static_cast<asn1_sequence*>(builtin);
                 (*seq) << new asn1_integer("header") << new asn1_parameter(templ, "payload", "TypeParam")
@@ -121,6 +127,7 @@ void test_parameterized1() {
     auto example7_type5 = asn1_parameterized_type::define(  //
         "ALGORITHM-CONTAINER",                              //
         [](asn1_parameterized_type* templ) -> asn1_object* {
+            (*templ).add_paramtype("OBJECT IDENTIFIER", "algorithmOid").add_paramtype("TypeParam");
             auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
                 auto seq = static_cast<asn1_sequence*>(builtin);
                 (*seq) << asn1_builder::build(                 //
@@ -148,6 +155,7 @@ void test_parameterized1() {
     auto example7_type6 = asn1_parameterized_type::define(  //
         "SECURE-MESSAGE",                                   //
         [](asn1_parameterized_type* templ) -> asn1_object* {
+            (*templ).add_paramtype("BOOLEAN", "isEncrypted").add_paramtype("TypeParam");
             auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
                 auto seq = static_cast<asn1_sequence*>(builtin);
                 (*seq) << new asn1_builtin_type("flagEncrypted", asn1_entity_boolean, asn1_parameter::value<variant>(templ, "BOOLEAN", "isEncrypted"))
@@ -156,13 +164,16 @@ void test_parameterized1() {
             return obj;
         });
     auto example7_inst6_1 = example7_type6->specialize("EncryptedMessage", {{true}, {"OCTET STRING"}});
+#if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
     auto example7_inst6_2 = example7_type6->specialize("PlainMessage", {{false}, {"VisibleString"}});
+#endif
 
     auto example7_type7 = asn1_referenced_type::define("ProtocolVersion", new asn1_enum({{"v1", 1}, {"v2", 2}, {"v3", 3}}));
 
     auto example7_type8 = asn1_parameterized_type::define(  //
         "HEADER-ENVELOPE",                                  //
         [](asn1_parameterized_type* templ) -> asn1_object* {
+            (*templ).add_paramtype("ProtocolVersion", "ver").add_paramtype("TypeParam");
             auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
                 auto seq = static_cast<asn1_sequence*>(builtin);
                 (*seq) << asn1_referenced_type::refer("version", "ProtocolVersion", asn1_parameter::value<variant>(templ, "ProtocolVersion", "ver"))
@@ -175,6 +186,7 @@ void test_parameterized1() {
     auto example7_type9 = asn1_parameterized_type::define(  //
         "PACKET-HEADER",                                    //
         [](asn1_parameterized_type* templ) -> asn1_object* {
+            (*templ).add_paramtype("OCTET STRING", "signature").add_paramtype("TypeParam");
             auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
                 auto seq = static_cast<asn1_sequence*>(builtin);
                 (*seq) << asn1_builder::build(                 //
@@ -213,12 +225,12 @@ void test_parameterized1() {
         const char* expect;
     } table[] = {
         {
-            "example6.asn1 #1",
-            example6,
+            "example6_type1.asn1 #1",
+            example6_type1,
             "Envelope {TypeParameter} ::= SEQUENCE {version INTEGER, messageId OCTET STRING (SIZE(16)), payload TypeParameter}",
         },
         {
-            "example6.asn1 #1",
+            "example6_type1.asn1 #1",
             example6_inst1,
             "ActualMessage ::= Envelope {INTEGER}",
         },
@@ -284,11 +296,13 @@ void test_parameterized1() {
             example7_inst6_1,
             "EncryptedMessage ::= SECURE-MESSAGE {TRUE, OCTET STRING}",
         },
+#if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
         {
             "example7.asn1 #6",
             example7_inst6_2,
             "PlainMessage ::= SECURE-MESSAGE {FALSE, VisibleString}",
         },
+#endif
         {
             "example7.asn1 #7",
             example7_type7,
@@ -332,7 +346,7 @@ void test_parameterized1() {
         basic_stream bs;
         entry.object->publish(&bs);
         _logger->writeln(bs);
-        _test_case.assert(bs == entry.expect, __FUNCTION__, "%s expect", entry.text);
+        _test_case.assert(bs == entry.expect, __FUNCTION__, "%s", entry.text);
         entry.object->release();
     }
 }
@@ -362,7 +376,7 @@ void test_parameterized2() {
 
 void test_parameterized3() {
     // parameterized value
-    // example6.asn1
+    // example6_type1.asn1
     // example7.asn1
 }
 

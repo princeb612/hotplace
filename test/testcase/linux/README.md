@@ -1,13 +1,10 @@
-### Linux-specific test applet/sample
+# Linux-specific test cases
 
-This directory contains the tests/samples for the corresponding hotplace module.
+This directory contains Linux-specific diagnostics and their shared test harness.
 
-#### test sources
+## Current coverage
 
-* `sample.cpp`
+- [`sample.cpp`](sample.cpp) defines `test_trace()`, which calls `debug_trace()` and emits the resulting trace text.
+- `CMakeLists.txt` defines how the sample is built.
 
-#### test data / build files
-
-* `CMakeLists.txt`
-
-The directory is organized around the concrete testcase sources present here; detailed protocol or implementation notes belong to the corresponding `sdk` documentation.
+This is a small platform-specific diagnostic test, not a general Linux system-test suite. Other Linux integrations, such as epoll and Netlink, are documented with their implementation modules under `sdk/io/system`.

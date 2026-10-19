@@ -1,3 +1,49 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
+# Post-quantum cryptography overview
+
+## 1. Role
+
+This overview records post-quantum algorithm families and terminology relevant to hotplace. It is a background reference, not a definitive inventory of algorithms enabled by the current build.
+
+## 2. Model
+
+The source overview discusses lattice-based KEM/signature families and hash-based signatures. Algorithm names and standardization labels evolve; distinguish the historical names in a study table from the provider algorithm names actually discovered at runtime.
+
+The current integration boundary is the OpenSSL 3 `oqsprovider` adapter described in [the provider overview](README.md).
+
+## 3. Important behavior and lifetime
+
+Provider availability, OpenSSL version, OID registration, and hotplace's common key/operation support are separate constraints. A family name appearing in a background table does not prove that the corresponding implementation is available or tested in a particular environment.
+
+## 4. Example from the source tests
+
+The direct integration tests enumerate algorithms from the loaded provider and gate full tests on OID registration. See [OQS test coverage](oqs-tests.md).
+
+## 5. Relationships
+
+- [OQS provider adapter](oqs-provider-adapter.md)
+- `../basic/` — common cryptographic operations
+- `../../../test/testcase/crypto/pqc/` — PQC tests
+
+## 6. References
+
+- Source overview content retained below for maintainer review.
+- NIST post-quantum cryptography standardization resources
+- OpenSSL 3 provider API
+
+## Development Notes (for maintainer review)
+
+The following legacy overview material is retained as supplied. Review algorithm names, standardization status, and external links before treating this table as current.
 
 #### PQC
 

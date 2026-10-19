@@ -3,69 +3,83 @@
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1096
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
+## 1. Role
 
-`sdk/crypto/authenticode` implements the project's Windows Authenticode verification path. The scope is deliberately narrow: inspect a signed PE file, extract its Authenticode/PKCS#7 data, verify the embedded digest and certificate/signature information, and perform the PE-specific checks needed by the verifier.
+`sdk/crypto/authenticode/` implements the project's Authenticode verification path for Windows Portable Executable (PE) files. It extracts the embedded signature material, calculates the PE Authenticode image digest, compares it with the digest described by the signed content, and delegates signer/certificate verification to OpenSSL.
 
-This is **not** a general-purpose digital-certificate or PKI framework.
+This module is a format-specific verification feature, **not a general-purpose PKI framework**. The current concrete format implementation is PE; the abstract plugin interface still carries hooks associated with separated signatures and other historical file formats.
 
-## Implementation map
+## 2. Model
 
-| Module | Role |
+| Source unit | Responsibility |
 |---|---|
-| `authenticode_verifier` | verification context, engine selection, PE signature/digest verification, certificate trust handling |
-| `authenticode_plugin` | format-independent plugin interface |
-| `authenticode_plugin_pe` | PE detection, Authenticode extraction, PE image digest and checksum handling |
-| `sdk.cpp` | Authenticode-specific PKCS#7/ASN.1 helper structures and CRL/X.509 helpers |
+| `authenticode_verifier.hpp/.cpp` | Public verification API, context/options, engine selection, digest comparison, signer/trust verification |
+| `authenticode_plugin.hpp/.cpp` | Format-engine interface and shared-reference lifecycle |
+| `authenticode_plugin_pe.hpp/.cpp` | PE recognition, certificate-table extraction/writing, Authenticode image digest and PE checksum operations |
+| `sdk.hpp/.cpp` | X.509 CRL distribution-point helper and Authenticode-specific OpenSSL support |
+| `types.hpp` | Engine identifiers and module-level types |
 
-## Documents
-
-- [authenticode-verifier](authenticode_verifier.md)
-- [authenticode-pe-plugin](authenticode-pe-plugin.md)
-
-## Verification flow
+The main path is: `authenticode_verifier::verify()` opens a `file_stream`, chooses a registered engine using `is_kind_of()`, extracts the signature payload, decodes PKCS#7 signed data, reads `SpcIndirectDataContent`, and asks the PE plugin for the Authenticode image digest. A digest match is followed by PKCS#7 signer/certificate verification.
 
 ```text
 PE file
-  ↓
-authenticode_plugin_pe::is_kind_of()
-  ↓
-authenticode_plugin_pe::extract()
-  ↓
-PKCS#7 / SpcIndirectDataContent
-  ↓
-pkcs7_digest_info()
-  ↓
-PE Authenticode image digest
-  ↓
-digest comparison
-  ↓
-certificate / signer verification
+  │
+  ▼
+authenticode_verifier::verify()
+  │ engine selection
+  ▼
+authenticode_plugin_pe
+  ├─ identify PE / extract certificate-table payload
+  ├─ calculate PE Authenticode image digest
+  └─ read / calculate / update PE checksum
+  │
+  ▼
+PKCS#7 SignedData + SpcIndirectDataContent
+  │
+  ├─ compare embedded digest with calculated digest
+  └─ verify signer and certificate chain using OpenSSL
 ```
 
-The public entry point is `authenticode_verifier::verify()`.
+## 3. Important behavior and lifetime
 
-## Related areas
+- The PE image digest is **not** an ordinary hash of every file byte. PE checksum and certificate-table regions are handled according to the Authenticode hashing layout.
+- `authenticode_plugin_pe` owns PE layout knowledge; `authenticode_verifier` owns orchestration and trust configuration.
+- `authenticode_context_t` is opened through `authenticode_verifier::open()`, configured, passed to `verify()`, and released with `close()`. Trust roots can be added with `add_trusted_rootcert()`.
+- The PE plugin reports `separated() == false`; the interface's separated-file hooks should not be read as proof that this PE implementation verifies detached signatures.
+- CRL distribution-point parsing, download/cache configuration, and X.509 store setup are present, but revocation handling needs separate scrutiny before treating it as production-complete. The applet disables CRL downloading.
+- The verifier uses OpenSSL PKCS#7/X.509 APIs directly. The wider project's ASN.1 runtime is not a direct dependency of this verification path.
 
-- `sdk/crypto/basic/openssl_sdk.hpp` — OpenSSL startup/hash support
-- `sdk/crypto/` — cryptographic primitives and certificate-related facilities used by verification
-- `sdk/io/stream/` — PE file access through `file_stream`
-- `sdk/io/string/` — CRL URL decomposition through `split_url`
-- `sdk/io/asn.1/` — ASN.1 concepts relevant to the wider project; this verifier uses OpenSSL's PKCS#7/X.509 APIs directly for this path
+## 4. Example from the source tests
 
-## Test / applet
+`test/applet/authenticode/sample.cpp` demonstrates the concrete calling sequence: initialize OpenSSL, parse a target file argument, open a verifier context, disable CRL downloading for the sample, add `trust.crt` as trusted root material, call `verify()`, close the context, and report the result. It is an applet/sample rather than a dedicated `test/testcase/crypto/authenticode/` testcase directory.
 
-There is no dedicated `test/testcase/crypto/authenticode/` directory. The practical executable is:
+A typical invocation shown in the source comments is `test-authenticate -v -i /path/to/target.exe`; the target file and `trust.crt` must be supplied in the environment. This documentation pass did not run the applet.
 
-- `test/applet/authenticode/sample.cpp`
+## 5. Relationships
 
-The applet opens a target file, adds a trust certificate (`trust.crt`), disables CRL download for the sample, and invokes `verify()` with the separated-signature flag enabled.
+- [`authenticode_verifier.md`](authenticode_verifier.md) — context lifecycle, verification stages, trust and CRL boundaries.
+- [`authenticode-pe-plugin.md`](authenticode-pe-plugin.md) — PE parsing, digest exclusions and checksum API.
+- [`../../basic/openssl_sdk.hpp`](../basic/openssl_sdk.hpp) — OpenSSL initialization/hash support used by the surrounding crypto layer.
+- [`../../../io/stream/`](../../io/stream/) — file access through `file_stream`.
+- [`../../../io/string/`](../../io/string/) — CRL URL decomposition through `split_url`.
+- [`../../io/asn.1/`](../../io/asn.1/) — broader ASN.1 module; not the direct parser used for this PKCS#7 path.
+- [`../../../test/applet/authenticode/`](../../../test/applet/authenticode/) — sample executable and build definition.
 
-## Historical scope
+## 6. References
 
-The verifier source records a long evolution from Windows SDK based verification, through an OpenSSL implementation, to the current plugin-oriented PE implementation. MSI/Cabinet engines are explicitly outside the current PE-focused implementation.
+- `authenticode.hpp`, `authenticode_verifier.hpp/.cpp`, `authenticode_plugin.hpp/.cpp`, `authenticode_plugin_pe.hpp/.cpp`, `sdk.hpp/.cpp`, `types.hpp`.
+- `test/applet/authenticode/README.md`, `sample.cpp`, `CMakeLists.txt`.
+
+### Development Notes (for maintainer review)
+
+- Source comments and revision history record the evolution from Windows SDK verification to OpenSSL and then to a plugin-oriented implementation. Keep this history distinct from the current supported-format claim.
+- The plugin interface documents PE, MSI, and Cabinet as historical/intended engine types, but this directory's concrete implementation and this documentation scope are PE-focused.
+- CRL download/cache behavior is configurable in code, while source comments describe revocation-related work as temporary or disabled in places. Verify the current behavior and policy before describing revocation checking as complete.

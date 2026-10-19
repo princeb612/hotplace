@@ -1,4 +1,19 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Exact floating-point arithmetic
+
+## 1. Role
+
+### Introduction
 
 `floating_point` is hotplace's abstraction for arithmetic that needs an exact decimal or rational representation rather than the approximation semantics of native `float`/`double`.
 
@@ -15,9 +30,29 @@ The implementation is built from three related types:
                     bignumber
 ```
 
-## Components
+## 2. Model
 
-### `decimal_float`
+### Implementation
+
+Main headers:
+
+- `sdk/base/system/floating_point.hpp`
+- `sdk/base/system/decimal_float.hpp`
+- `sdk/base/system/rational_float.hpp`
+
+Implementation files:
+
+- `sdk/base/system/floating_point.cpp`
+- `sdk/base/system/decimal_float.cpp`
+- `sdk/base/system/rational_float.cpp`
+
+The arithmetic ultimately relies on `bignumber` for arbitrary-width integer operations.
+
+## 3. Important behavior and lifetime
+
+### Components
+
+#### `decimal_float`
 
 Represents a decimal value as a `bignumber` mantissa and a base-10 exponent.
 
@@ -27,7 +62,7 @@ value = mantissa x 10^exponent
 
 This representation is useful when decimal precision is important. Decimal expressions such as `0.1`, `0.2`, `1e8`, and `-0.00123` can be retained without converting them through binary floating-point first.
 
-### `rational_float`
+#### `rational_float`
 
 Represents a value as an exact numerator/denominator pair of `bignumber` values.
 
@@ -42,13 +77,13 @@ Examples include:
 
 The representation is normalized so that arithmetic and comparison can operate on the exact rational value.
 
-### `floating_point`
+#### `floating_point`
 
 `floating_point` provides the common public abstraction. It can hold either decimal or rational representation and performs arithmetic while preserving an exact representation where possible.
 
 A string containing `/` is interpreted as a rational expression; other numeric expressions are interpreted as decimal values.
 
-## Arithmetic behavior
+### Arithmetic behavior
 
 The implementation supports:
 
@@ -66,7 +101,7 @@ Division by zero is rejected. Decimal division that is not exactly representable
 
 The decimal implementation uses `bignumber::pow10()` and a bounded precision adjustment when aligning decimal exponents during addition/subtraction.
 
-## Why this exists
+### Why this exists
 
 The important distinction is between **exact decimal/rational arithmetic** and native binary floating-point arithmetic.
 
@@ -82,23 +117,7 @@ Large decimal values are also tested, including arithmetic around `1000000000000
 
 This is therefore not intended as a general replacement for `float` or `double`. It is a separate exact-arithmetic facility built on top of `bignumber`.
 
-## Implementation
-
-Main headers:
-
-- `sdk/base/system/floating_point.hpp`
-- `sdk/base/system/decimal_float.hpp`
-- `sdk/base/system/rational_float.hpp`
-
-Implementation files:
-
-- `sdk/base/system/floating_point.cpp`
-- `sdk/base/system/decimal_float.cpp`
-- `sdk/base/system/rational_float.cpp`
-
-The arithmetic ultimately relies on `bignumber` for arbitrary-width integer operations.
-
-## Tests
+### Tests
 
 Primary tests:
 
@@ -108,7 +127,17 @@ Primary tests:
 
 The testcase covers decimal/rational construction and arithmetic, while the YAML-driven test vector covers a broader set of add/subtract/multiply/divide cases.
 
-## Relationship to other system types
+### Status
+
+This is an implementation-specific exact-arithmetic utility in `sdk/base/system`. It should be understood together with `bignumber`, rather than as a general floating-point library.
+
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+### Relationship to other system types
 
 ```text
 bignumber
@@ -124,6 +153,6 @@ bignumber
 
 `bignumber` supplies the integer foundation; `floating_point` combines decimal and rational forms into a higher-level arithmetic interface.
 
-## Status
+## 6. References
 
-This is an implementation-specific exact-arithmetic utility in `sdk/base/system`. It should be understood together with `bignumber`, rather than as a general floating-point library.
+Implementation and test paths are retained in the sections above or the source tree.

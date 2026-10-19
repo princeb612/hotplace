@@ -1,4 +1,20 @@
-## TLS key schedule
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# TLS key schedule
+
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
 
 The following additions refine the TLS Key Schedule documentation by incorporating missing cryptographic steps, secret derivations, and protocol details.
 
@@ -78,3 +94,19 @@ Master Secret ───┬───> [ HKDF-Expand-Label ] ───> Client App
 | Handshake Transcript Context | Not directly mixed into Master Secret | Every derived secret explicitly binds the current Transcript Hash |
 | Key Update Support | Requires full renegotiation or session resumption | Native post-handshake key updates via HKDF-Expand-Label |
 | IV Handling | Fixed IVs or explicit per-record IVs derived from Key Block | Implicit static IV derived per secret; XOR-masked with sequence numbers |
+
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

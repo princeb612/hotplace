@@ -1,6 +1,23 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # CBOR Object Model
 
-## Role
+## 1. Role
+
+Describes the CBOR object tree and its concrete value, array, map, pair, string, and simple-value types.
+
+## 2. Model
+
+### Role
 
 The CBOR implementation represents one CBOR data item as a tree of `cbor_object` instances.
 
@@ -21,7 +38,7 @@ CBOR data item
 
 This keeps CBOR structure separate from the binary encoding itself.
 
-## Base object
+### Base object
 
 `cbor_object` provides the common boundary for the object tree.
 
@@ -38,7 +55,7 @@ It carries:
 
 Concrete objects derive from this base.
 
-## Concrete types
+### Concrete types
 
 The main object classes are:
 
@@ -52,7 +69,7 @@ The main object classes are:
 
 The distinction between `cbor_array` and `cbor_map` is structural, while `cbor_data` provides the value boundary.
 
-## Maps
+### Maps
 
 A map is represented as a collection of `cbor_pair` objects.
 
@@ -70,7 +87,35 @@ cbor_map
 
 The implementation provides convenience `add()` overloads for common key/value combinations and nested maps/arrays.
 
-## Indefinite-length data
+### Tags
+
+`cbor_object` can carry a CBOR tag. Tag handling is therefore attached to the object boundary rather than implemented only as a reader-side annotation.
+
+### Values and hotplace types
+
+`cbor_data` accepts the project's common value representations, including:
+
+- integer types
+- `bignumber`
+- `binary_t`
+- strings
+- floating-point values
+- `variant` / `variant_t`
+
+This lets CBOR reuse existing hotplace numeric and value abstractions instead of introducing a separate value system.
+
+### Representation
+
+Every object can be represented through:
+
+- `represent(stream_t*)`
+- `represent(binary_t*)`
+
+Higher-level publication is provided by `cbor_publisher`.
+
+## 3. Important behavior and lifetime
+
+### Indefinite-length data
 
 CBOR supports both definite and indefinite-length forms.
 
@@ -84,33 +129,9 @@ logical CBOR object
 one specific binary layout
 ```
 
-## Tags
+## 4. Example from the source tests
 
-`cbor_object` can carry a CBOR tag. Tag handling is therefore attached to the object boundary rather than implemented only as a reader-side annotation.
-
-## Values and hotplace types
-
-`cbor_data` accepts the project's common value representations, including:
-
-- integer types
-- `bignumber`
-- `binary_t`
-- strings
-- floating-point values
-- `variant` / `variant_t`
-
-This lets CBOR reuse existing hotplace numeric and value abstractions instead of introducing a separate value system.
-
-## Representation
-
-Every object can be represented through:
-
-- `represent(stream_t*)`
-- `represent(binary_t*)`
-
-Higher-level publication is provided by `cbor_publisher`.
-
-## Tests
+### Tests
 
 Primary tests:
 
@@ -122,7 +143,9 @@ The YAML vector file is:
 
 - `test/testcase/cbor/testvector_cbor.yml`
 
-## Related source
+## 5. Relationships
+
+### Related source
 
 - `cbor_object.*`
 - `cbor_data.*`
@@ -133,3 +156,7 @@ The YAML vector file is:
 - `cbor_tstrings.*`
 - `cbor_simple.*`
 - `cbor_publisher.*`
+
+## 6. References
+
+- Source: this module and its related testcase directory (Revision 1104).

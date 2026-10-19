@@ -1,6 +1,16 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # ASN.1 Visitor
 
-## Role
+## 1. Role
 
 The visitor layer provides operations over ASN.1 semantic/structural objects without embedding every traversal or representation operation into the node classes themselves.
 
@@ -14,7 +24,9 @@ At revision 1095 the visitor family includes:
 - `asn1_constraint_notation_visitor`
 - `asn1_constraint_evaluator`
 
-## Main visitor paths
+## 2. Model
+
+### Main visitor paths
 
 The visitors serve different interpretations of the same ASN.1 model.
 
@@ -54,7 +66,7 @@ The constraint visitor family separates traversal from constraint-specific opera
 - `asn1_constraint_notation_visitor` — notation representation of constraints
 - `asn1_constraint_evaluator` — evaluates constraints into a runtime allowed-value set and supports value membership through that result
 
-## Design significance
+### Design significance
 
 The visitor layer keeps operations such as:
 
@@ -69,7 +81,31 @@ outside the core semantic object classes.
 
 That matters because the same `asn1_object` hierarchy is used by runtime construction, schema inspection, encoding, and validation.
 
-## Related source
+## 3. Important behavior and lifetime
+
+No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+
+## 4. Example from the source tests
+
+### Related tests
+
+- `test/testcase/asn.1/testcase_basic2.cpp`
+- `test/testcase/asn.1/testcase_basic3.cpp`
+- `test/testcase/asn.1/testcase_constraints.cpp`
+- `test/testcase/asn.1/testvector_der.cpp`
+
+## 5. Relationships
+
+### Related areas
+
+- `../semantic/` — semantic object hierarchy
+- `../structural/` — structural node hierarchy
+- `../../runtime/` — runtime schema/value handling
+- `../../parser/` — parsed ASN.1 representation
+
+## 6. References
+
+### Related source
 
 - `sdk/io/asn.1/basic/visitor/asn1_visitor.hpp`
 - `sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp`
@@ -77,17 +113,3 @@ That matters because the same `asn1_object` hierarchy is used by runtime constru
 - `sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp`
 - `sdk/io/asn.1/basic/visitor/asn1_constraint_visitor.hpp`
 - `sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.hpp`
-
-## Related areas
-
-- `../semantic/` — semantic object hierarchy
-- `../structural/` — structural node hierarchy
-- `../../runtime/` — runtime schema/value handling
-- `../../parser/` — parsed ASN.1 representation
-
-## Related tests
-
-- `test/testcase/asn.1/testcase_basic2.cpp`
-- `test/testcase/asn.1/testcase_basic3.cpp`
-- `test/testcase/asn.1/testcase_constraints.cpp`
-- `test/testcase/asn.1/testvector_der.cpp`

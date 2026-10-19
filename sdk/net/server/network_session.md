@@ -1,8 +1,22 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # network session
+
+## 1. Role
 
 `network_session` is the server-side object that binds a socket to stream buffers and session state. It is the unit passed between the producer and consumer stages of `network_server`.
 
-## Session state
+## 2. Model
+
+### Session state
 
 A session owns or references:
 
@@ -15,7 +29,7 @@ A session owns or references:
 
 The object is reference-counted because the session manager, producer queue, consumer and callbacks can overlap in lifetime.
 
-## TCP/TLS sessions
+### TCP/TLS sessions
 
 `network_session_manager::connected()` creates one `network_session` per accepted socket and stores it in `_session_map`, keyed by the event socket handle.
 
@@ -35,7 +49,7 @@ accept
 
 When a socket closes, `ready_to_close()` removes the session from the manager before the multiplexer binding is released. This prevents concurrent event handling from retaining the session through the manager's normal lookup path.
 
-## UDP and DTLS sessions
+### UDP and DTLS sessions
 
 Datagram sessions are different because the listening socket is shared.
 
@@ -56,7 +70,7 @@ DTLS
 
 `network_session::udp_session_open()` and `dtls_session_open()` establish the datagram-side socket state. `dtls_session_handshake()` performs the DTLS session handshake after the per-peer session is obtained.
 
-## Producer / consumer interface
+### Producer / consumer interface
 
 `produce()` is the input side. It routes to `produce_stream()` or `produce_dgram()` and pushes received bytes into `_stream` while placing the session on the multi-level feedback queue when appropriate.
 
@@ -64,20 +78,34 @@ DTLS
 
 This separation is important: a multiplexer event is not necessarily one application message. TCP can split or combine messages, and protocol framing is therefore handled after bytes have entered the raw stream.
 
-## Send path
+### Send path
 
 `send()` sends through the session's associated server socket. `sendto()` supplies an explicit peer address for datagram operation. The session therefore exposes both connected-stream and address-oriented datagram output without making protocol framing part of the socket abstraction.
 
-## Priority
+### Priority
 
 `network_session` has a session priority used by the producer/consumer queue. Protocol parsing can also set priority on `network_stream_data`; the remaining data is retained with that priority when a message boundary falls inside a buffered item.
 
-## Higher-level state
+### Higher-level state
 
 `get_session_data()` provides a small session-owned key/value state object. `get_http2_session()` exposes an optional HTTP/2 session object used by HTTP-layer processing. These are integrations above the generic transport/session machinery, not a requirement of every network session.
 
-## Related tests
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+### Related tests
 
 The HTTP/2 test vector is a useful direct illustration of the same producer/consumer model. It creates a `network_session`, feeds frames into its stream, then calls `consume()` with an `http2_protocol` before passing the resulting data to `http2_session`.
 
 See `test/testcase/net/http/testvector_http2.cpp` and `test/testcase/net/http/testcase_http.cpp`.
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

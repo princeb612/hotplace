@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_parameterized.hpp
+ * @file   asn1_paramtype.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

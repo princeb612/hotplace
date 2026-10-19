@@ -43,6 +43,7 @@ struct filetime_t;
 struct systemtime_t;
 struct uint24_t;
 struct uint48_t;
+struct execparam;
 
 class bignumber;
 class critical_section;
@@ -51,6 +52,11 @@ class error_advisor;
 class semaphore;
 class signalwait_threads;
 class thread;
+
+class process_t;
+class redirection_t;
+class process;
+class redirection;
 
 }  // namespace hotplace
 

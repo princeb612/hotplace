@@ -360,7 +360,7 @@ The resulting runtime usage can be summarized as:
                  decode input value
                         │
                         ▼
-                  asn1_value
+                   asn1_value
                    │         │
                    ▼         ▼
               notation     DER encode

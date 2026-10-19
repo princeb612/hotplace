@@ -1,12 +1,28 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # QUIC packet publisher
 
-## Identity
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
+
+### Identity
 
 `quic_packet_publisher` is the session-level QUIC packet construction component. It collects TLS handshake messages, QUIC frames, HTTP/3 frames, and QPACK stream data, then packs them into QUIC packets according to the applicable protection space and payload limit.
 
 It is exposed through `tls_session::get_quic_packet_publisher()`.
 
-## Construction model
+### Construction model
 
 ```text
 TLS handshake
@@ -41,7 +57,7 @@ QUIC packet output
 
 The publisher is therefore a construction boundary between higher-level TLS/HTTP/3 content and the QUIC packet/frame layer.
 
-## Protection spaces
+### Protection spaces
 
 `publish()` first determines which QUIC protection spaces contain pending work. The implementation publishes each relevant space separately, including:
 
@@ -51,13 +67,13 @@ The publisher is therefore a construction boundary between higher-level TLS/HTTP
 
 TLS handshake messages are encoded into QUIC CRYPTO frames for their applicable protection space. Application-space content can additionally become QUIC STREAM frames carrying HTTP/3 or QPACK data.
 
-## Payload segmentation
+### Payload segmentation
 
 `set_payload_size()` defines the publisher's packet payload target. Internally, pending data is converted into segment entries and consumed while packet payload capacity remains.
 
 This is intentionally different from `dtls_record_publisher::set_fragment_size()`: QUIC segmentation is driven by packet payload capacity and frame construction rather than DTLS handshake fragmentation.
 
-## Accepted content
+### Accepted content
 
 The publisher can queue:
 
@@ -68,11 +84,21 @@ The publisher can queue:
 
 `set_flags()` supports packet-level behavior such as ACK and PADDING generation.
 
-## Consumption
+### Consumption
 
 `consume(quic_packet*, paid, callback)` provides the corresponding packet-payload segmentation path. It determines the protection space from the packet type, calculates available payload capacity, and exposes segments through the callback.
 
-## Session relationship
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+### Session relationship
 
 ```text
 tls_session
@@ -92,7 +118,9 @@ tls_session
 
 The publisher does not replace QUIC packet/frame classes. It orchestrates their construction and packing for a session.
 
-## Related source
+## 6. References
+
+### Related source
 
 - `quic_packet_publisher.hpp`
 - `session/quic_packet_publisher.cpp`
@@ -100,12 +128,3 @@ The publisher does not replace QUIC packet/frame classes. It orchestrates their 
 - `quic/README.md`
 - `quic-tls-integration.md`
 - `tls-session` / QUIC session handling
-
-## Publication
-
-```text
-hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
-```

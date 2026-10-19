@@ -1,16 +1,16 @@
-# ASN.1 Constraints
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1096
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
+# ASN.1 Constraints
 
-
-## Role
+## 1. Role
 
 The constraint implementation under `sdk/io/asn.1/basic/semantic/constraints` represents the semantic form of ASN.1 subtype/value constraints.
 
@@ -31,7 +31,9 @@ accept / reject a value
 
 The constraint layer therefore sits between ASN.1 notation and runtime value validation.
 
-## Constraint model
+## 2. Model
+
+### Constraint model
 
 The implementation is organized around `asn1_constraint`.
 
@@ -46,7 +48,7 @@ This lets the same constraint definition participate in:
 
 The semantic ASN.1 object owns/associates its constraints, so a type and its restrictions remain together.
 
-## Concrete constraint forms
+### Concrete constraint forms
 
 The current implementation represents individual constraint forms as semantic nodes under `asn1_constraint`, rather than encoding every form directly into the evaluator. The rev1096 source tree contains concrete nodes for: 
 
@@ -62,7 +64,7 @@ The current implementation represents individual constraint forms as semantic no
 
 The evaluator does not replace these nodes. It visits them and accumulates their meaning in `t_set_runtime<T>`. This is the important implementation boundary: **constraint classes describe the semantic operation; the evaluator executes that operation against a value-domain representation**.
 
-## Constraint categories
+### Constraint categories
 
 The constraint implementation covers the major forms needed by the ASN.1 subtype notation used by the project, including:
 
@@ -75,7 +77,9 @@ The constraint implementation covers the major forms needed by the ASN.1 subtype
 
 The exact class hierarchy should be read from the implementation when extending the supported grammar; the important architectural point is that constraints are represented as objects and traversed by the visitor/evaluator layer.
 
-## Notation versus semantic representation
+## 3. Important behavior and lifetime
+
+### Notation versus semantic representation
 
 The existing `subtype-notation.md` is a study/reference document for ASN.1 subtype notation.
 
@@ -107,7 +111,7 @@ asn1_constraint
 
 This distinction is useful when maintaining the parser: changing the notation grammar does not automatically mean changing the evaluator, and vice versa.
 
-## Evaluation
+### Evaluation
 
 `asn1_constraint_evaluator` walks the semantic constraint tree and builds a runtime set describing the permitted value domain. A value can then be checked against that resulting set.
 
@@ -142,7 +146,63 @@ ALL EXCEPT   → invert()
 
 The evaluator is therefore the semantic bridge from ASN.1 constraint nodes to a concrete allowed-value domain; it is not part of DER encoding itself.
 
-## Visitor relationship
+### Evaluation implementation map
+
+The current evaluator-to-set relationship is implemented as a concrete runtime chain:
+
+```text
+asn1_constraint
+      │
+      ▼
+asn1_constraint_evaluator<T>
+      │
+      │ get_result_set()
+      ▼
+t_set_runtime<T>
+      │
+      ├── numeric / real → t_range_set<t_range_value<T>>
+      └── std::string    → string_set
+```
+
+The evaluator performs semantic traversal of the constraint tree; `t_set_runtime` supplies the type-dependent representation. This separation lets the generic set implementation remain under `sdk/base/nostd` while the meaning of ASN.1 constraint nodes remains under `sdk/io/asn.1`.
+
+### Current status
+
+The constraint layer is an implemented part of the semantic ASN.1 model, while the exact set of supported constraint forms should be determined from the current parser, semantic classes, and tests.
+
+When new ASN.1 constraint syntax is added, the maintenance path is generally:
+
+```text
+grammar / parser
+      |
+semantic constraint construction
+      |
+constraint representation
+      |
+notation / evaluator visitor
+      |
+testcase
+```
+
+## 4. Example from the source tests
+
+### Tests
+
+The main constraint-oriented test entry point is:
+
+- `test/testcase/asn.1/testcase_constraints.cpp`
+
+The test follows the same semantic construction path used by the other ASN.1 runtime experiments rather than testing notation parsing in isolation.
+
+Related ASN.1 tests include:
+
+- `testcase_basic2.cpp`
+- `testcase_basic3.cpp`
+- DER test vectors under `test/testcase/asn.1/`
+
+## 5. Relationships
+
+### Visitor relationship
 
 Constraint traversal is separated from evaluation.
 
@@ -166,27 +226,7 @@ This allows the same constraint tree to be used for both representation and exec
     ASN.1 notation      value validation
 ```
 
-## Evaluation implementation map
-
-The current evaluator-to-set relationship is implemented as a concrete runtime chain:
-
-```text
-asn1_constraint
-      │
-      ▼
-asn1_constraint_evaluator<T>
-      │
-      │ get_result_set()
-      ▼
-t_set_runtime<T>
-      │
-      ├── numeric / real → t_range_set<t_range_value<T>>
-      └── std::string    → string_set
-```
-
-The evaluator performs semantic traversal of the constraint tree; `t_set_runtime` supplies the type-dependent representation. This separation lets the generic set implementation remain under `sdk/base/nostd` while the meaning of ASN.1 constraint nodes remains under `sdk/io/asn.1`.
-
-## Relationship with the ASN.1 object model
+### Relationship with the ASN.1 object model
 
 Constraints are not an isolated utility.
 
@@ -209,29 +249,7 @@ asn1_object
 
 This is why constraint handling belongs to the semantic model rather than only to the parser.
 
-## Tests
-
-The main constraint-oriented test entry point is:
-
-- `test/testcase/asn.1/testcase_constraints.cpp`
-
-The test follows the same semantic construction path used by the other ASN.1 runtime experiments rather than testing notation parsing in isolation.
-
-Related ASN.1 tests include:
-
-- `testcase_basic2.cpp`
-- `testcase_basic3.cpp`
-- DER test vectors under `test/testcase/asn.1/`
-
-## Related source
-
-- `sdk/io/asn.1/basic/semantic/constraints/`
-- `sdk/io/asn.1/basic/visitor/asn1_constraint_visitor.*`
-- `sdk/io/asn.1/basic/visitor/asn1_constraint_notation_visitor.*`
-- `sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.*`
-- `sdk/io/asn.1/basic/semantic/asn1_object.*`
-
-## Related documents
+### Related documents
 
 - `subtype-notation.md` — ASN.1 subtype notation study/reference
 - `../../../../base/nostd/set.md` — runtime set façade used by constraint evaluation
@@ -241,20 +259,12 @@ Related ASN.1 tests include:
 - `../../asn1-visitor.md` — general visitor architecture
 - `../../../runtime/` — runtime schema/value processing
 
-## Current status
+## 6. References
 
-The constraint layer is an implemented part of the semantic ASN.1 model, while the exact set of supported constraint forms should be determined from the current parser, semantic classes, and tests.
+### Related source
 
-When new ASN.1 constraint syntax is added, the maintenance path is generally:
-
-```text
-grammar / parser
-      |
-semantic constraint construction
-      |
-constraint representation
-      |
-notation / evaluator visitor
-      |
-testcase
-```
+- `sdk/io/asn.1/basic/semantic/constraints/`
+- `sdk/io/asn.1/basic/visitor/asn1_constraint_visitor.*`
+- `sdk/io/asn.1/basic/visitor/asn1_constraint_notation_visitor.*`
+- `sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.*`
+- `sdk/io/asn.1/basic/semantic/asn1_object.*`

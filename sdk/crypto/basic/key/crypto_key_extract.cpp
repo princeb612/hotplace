@@ -19,501 +19,460 @@ namespace crypto {
 
 return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool preserve) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        datamap.clear();
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    datamap.clear();
 
-        type = ktyof_evp_pkey(pkey);
-        switch (type) {
-            case crypto_kty_t::kty_oct:
-                ret = extract_oct(pkey, flags, type, datamap, preserve);
-                break;
-            case crypto_kty_t::kty_rsa:
-            case crypto_kty_t::kty_rsapss:
-                ret = extract_rsa(pkey, flags, type, datamap, preserve);
-                break;
-            case crypto_kty_t::kty_ec:
-                ret = extract_ec(pkey, flags, type, datamap, preserve);
-                break;
-            case crypto_kty_t::kty_okp:
-                ret = extract_okp(pkey, flags, type, datamap, preserve);
-                break;
-            case crypto_kty_t::kty_dh:
-                ret = extract_dh(pkey, flags, type, datamap, preserve);
-                break;
-            case crypto_kty_t::kty_dsa:
-                ret = extract_dsa(pkey, flags, type, datamap, preserve);
-                break;
-            case crypto_kty_t::kty_mlkem:
-            case crypto_kty_t::kty_mldsa:
-            case crypto_kty_t::kty_slhdsa:
-                ret = extract_ossl3(pkey, flags, type, datamap, false);
-                break;
-                break;
-            default:
-                break;
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    type = ktyof_evp_pkey(pkey);
+    switch (type) {
+        case crypto_kty_t::kty_oct:
+            ret = extract_oct(pkey, flags, type, datamap, preserve);
+            break;
+        case crypto_kty_t::kty_rsa:
+        case crypto_kty_t::kty_rsapss:
+            ret = extract_rsa(pkey, flags, type, datamap, preserve);
+            break;
+        case crypto_kty_t::kty_ec:
+            ret = extract_ec(pkey, flags, type, datamap, preserve);
+            break;
+        case crypto_kty_t::kty_okp:
+            ret = extract_okp(pkey, flags, type, datamap, preserve);
+            break;
+        case crypto_kty_t::kty_dh:
+            ret = extract_dh(pkey, flags, type, datamap, preserve);
+            break;
+        case crypto_kty_t::kty_dsa:
+            ret = extract_dsa(pkey, flags, type, datamap, preserve);
+            break;
+        case crypto_kty_t::kty_mlkem:
+        case crypto_kty_t::kty_mldsa:
+        case crypto_kty_t::kty_slhdsa:
+            ret = extract_ossl3(pkey, flags, type, datamap, false);
+            break;
+            break;
+        default:
+            break;
+    }
+
     return ret;
 }
 
 return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
+    datamap.clear();
 
-    __try2 {
-        datamap.clear();
-
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        type = ktyof_evp_pkey(pkey);
-
-        if (crypto_kty_t::kty_oct != type) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
-
-        if (crypt_access_t::private_key & flags) {
-            size_t key_length = 0;
-            binary_t bin_k;
-            EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
-            bin_k.resize(key_length);
-            EVP_PKEY_get_raw_private_key(pkey, bin_k.data(), &key_length);
-
-            datamap.emplace(crypt_item_t::hmac_k, std::move(bin_k));
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    type = ktyof_evp_pkey(pkey);
+
+    if (crypto_kty_t::kty_oct != type) {
+        return errorcode_t::different_type;
+    }
+
+    if (crypt_access_t::private_key & flags) {
+        size_t key_length = 0;
+        binary_t bin_k;
+        EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
+        bin_k.resize(key_length);
+        EVP_PKEY_get_raw_private_key(pkey, bin_k.data(), &key_length);
+
+        datamap.emplace(crypt_item_t::hmac_k, std::move(bin_k));
+    }
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
+    datamap.clear();
 
-    __try2 {
-        datamap.clear();
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    type = ktyof_evp_pkey(pkey);
 
-        type = ktyof_evp_pkey(pkey);
+    if ((crypto_kty_t::kty_rsa != type) && (crypto_kty_t::kty_rsapss != type)) {
+        return errorcode_t::different_type;
+    }
 
-        if ((crypto_kty_t::kty_rsa != type) && (crypto_kty_t::kty_rsapss != type)) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
+    const BIGNUM* bn_n = nullptr;
+    const BIGNUM* bn_e = nullptr;
+    const BIGNUM* bn_d = nullptr;
 
-        const BIGNUM* bn_n = nullptr;
-        const BIGNUM* bn_e = nullptr;
-        const BIGNUM* bn_d = nullptr;
+    const RSA* rsa = EVP_PKEY_get0_RSA((EVP_PKEY*)pkey);
+    RSA_get0_key(rsa, &bn_n, &bn_e, &bn_d);
 
-        const RSA* rsa = EVP_PKEY_get0_RSA((EVP_PKEY*)pkey);
-        RSA_get0_key(rsa, &bn_n, &bn_e, &bn_d);
+    if (crypt_access_t::asn1public_key & flags) {
+        /**
+         * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+         * 2.3.1  RSA Keys
+         * The RSA public key MUST be encoded using the ASN.1 type RSAPublicKey:
+         *
+         *    RSAPublicKey ::= SEQUENCE {
+         *       modulus            INTEGER,    -- n
+         *       publicExponent     INTEGER  }  -- e
+         */
+        binary_t bin_pub;
+        get_asn1public_key(pkey, bin_pub);
+        datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
+    } else if (crypt_access_t::public_key & flags) {
+        binary_t bin_n;
+        binary_t bin_e;
+        bn2bin(bn_n, bin_n);
+        bn2bin(bn_e, bin_e);
+        datamap.emplace(crypt_item_t::rsa_n, std::move(bin_n));
+        datamap.emplace(crypt_item_t::rsa_e, std::move(bin_e));
+    }
 
-        if (crypt_access_t::asn1public_key & flags) {
-            /**
-             * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
-             * 2.3.1  RSA Keys
-             * The RSA public key MUST be encoded using the ASN.1 type RSAPublicKey:
-             *
-             *    RSAPublicKey ::= SEQUENCE {
-             *       modulus            INTEGER,    -- n
-             *       publicExponent     INTEGER  }  -- e
-             */
-            binary_t bin_pub;
-            get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
-        } else if (crypt_access_t::public_key & flags) {
-            binary_t bin_n;
-            binary_t bin_e;
-            bn2bin(bn_n, bin_n);
-            bn2bin(bn_e, bin_e);
-            datamap.emplace(crypt_item_t::rsa_n, std::move(bin_n));
-            datamap.emplace(crypt_item_t::rsa_e, std::move(bin_e));
-        }
-
-        if (crypt_access_t::private_key & flags) {
-            if (bn_d) {
-                binary_t bin_d;
-                int len_d = BN_num_bytes(bn_d);
-                bin_d.resize(len_d);
-                BN_bn2bin(bn_d, bin_d.data());
-                datamap.emplace(crypt_item_t::rsa_d, std::move(bin_d));
-            }
+    if (crypt_access_t::private_key & flags) {
+        if (bn_d) {
+            binary_t bin_d;
+            int len_d = BN_num_bytes(bn_d);
+            bin_d.resize(len_d);
+            BN_bn2bin(bn_d, bin_d.data());
+            datamap.emplace(crypt_item_t::rsa_d, std::move(bin_d));
         }
     }
-    __finally2 {}
-    return ret;
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
     int ret_openssl = 1;
 
-    __try2 {
-        datamap.clear();
+    datamap.clear();
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        type = ktyof_evp_pkey(pkey);
+    type = ktyof_evp_pkey(pkey);
 
-        if (crypto_kty_t::kty_ec != type) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
+    if (crypto_kty_t::kty_ec != type) {
+        return errorcode_t::different_type;
+    }
 
-        // preserve leading zero octets
-        uint32 keysize = 0;
-        if (plzero || (crypt_access_t::public_key & flags)) {
-            uint32 nid = 0;
-            nidof_evp_pkey(pkey, nid);
-            crypto_advisor* advisor = crypto_advisor::get_instance();
-            auto hint = advisor->hintof_curve_nid(nid);
-            keysize = keysizeof(hint);
-        }
+    // preserve leading zero octets
+    uint32 keysize = 0;
+    if (plzero || (crypt_access_t::public_key & flags)) {
+        uint32 nid = 0;
+        nidof_evp_pkey(pkey, nid);
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_curve_nid(nid);
+        keysize = keysizeof(hint);
+    }
 
-        if (crypt_access_t::asn1public_key & flags) {
-            binary_t bin_pub;
-            get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
-        } else if (crypt_access_t::public_key & flags) {
-            BN_ptr bn_x(BN_new());
-            BN_ptr bn_y(BN_new());
-            EC_KEY_ptr ec(EVP_PKEY_get1_EC_KEY((EVP_PKEY*)pkey));
+    if (crypt_access_t::asn1public_key & flags) {
+        binary_t bin_pub;
+        get_asn1public_key(pkey, bin_pub);
+        datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
+    } else if (crypt_access_t::public_key & flags) {
+        BN_ptr bn_x(BN_new());
+        BN_ptr bn_y(BN_new());
+        EC_KEY_ptr ec(EVP_PKEY_get1_EC_KEY((EVP_PKEY*)pkey));
 
-            const EC_GROUP* group = EC_KEY_get0_group(ec.get());
-            const EC_POINT* pub = EC_KEY_get0_public_key(ec.get());
+        const EC_GROUP* group = EC_KEY_get0_group(ec.get());
+        const EC_POINT* pub = EC_KEY_get0_public_key(ec.get());
 
-            ret_openssl = EC_POINT_get_affine_coordinates(group, pub, bn_x.get(), bn_y.get(), nullptr);  // EC_POINT_get_affine_coordinates_GFp
-            if (ret_openssl) {
-                binary_t bin_x;
-                binary_t bin_y;
+        ret_openssl = EC_POINT_get_affine_coordinates(group, pub, bn_x.get(), bn_y.get(), nullptr);  // EC_POINT_get_affine_coordinates_GFp
+        if (ret_openssl) {
+            binary_t bin_x;
+            binary_t bin_y;
 
-                bn2bin(bn_x.get(), bin_x);
-                bn2bin(bn_y.get(), bin_y);
+            bn2bin(bn_x.get(), bin_x);
+            bn2bin(bn_y.get(), bin_y);
 
-                auto len_x = bin_x.size();
-                auto len_y = bin_y.size();
+            auto len_x = bin_x.size();
+            auto len_y = bin_y.size();
 
-                if (keysize) {
-                    if (keysize > len_x) {
-                        bin_x.insert(bin_x.begin(), keysize - len_x, 0);
-                    }
-                    if (keysize > len_y) {
-                        bin_y.insert(bin_y.begin(), keysize - len_y, 0);
-                    }
+            if (keysize) {
+                if (keysize > len_x) {
+                    bin_x.insert(bin_x.begin(), keysize - len_x, 0);
                 }
-
-                binary_t uncompressed;
-                binary_append(uncompressed, uint8(4));
-                binary_append(uncompressed, bin_x);
-                binary_append(uncompressed, bin_y);
-
-                datamap.emplace(crypt_item_t::ec_x, std::move(bin_x));
-                datamap.emplace(crypt_item_t::ec_y, std::move(bin_y));
-                datamap.emplace(crypt_item_t::ec_pub_uncompressed, std::move(uncompressed));
-            }
-        }
-        if (crypt_access_t::private_key & flags) {
-            const BIGNUM* d = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey));
-            if (d) {
-                binary_t bin_d;
-                bn2bin(d, bin_d);
-
-                auto len_d = bin_d.size();
-
-                if (keysize) {
-                    if (keysize > len_d) {
-                        bin_d.insert(bin_d.begin(), keysize - len_d, 0);
-                    }
+                if (keysize > len_y) {
+                    bin_y.insert(bin_y.begin(), keysize - len_y, 0);
                 }
-
-                datamap.emplace(crypt_item_t::ec_d, std::move(bin_d));
             }
+
+            binary_t uncompressed;
+            binary_append(uncompressed, uint8(4));
+            binary_append(uncompressed, bin_x);
+            binary_append(uncompressed, bin_y);
+
+            datamap.emplace(crypt_item_t::ec_x, std::move(bin_x));
+            datamap.emplace(crypt_item_t::ec_y, std::move(bin_y));
+            datamap.emplace(crypt_item_t::ec_pub_uncompressed, std::move(uncompressed));
         }
     }
-    __finally2 {}
-    return ret;
+    if (crypt_access_t::private_key & flags) {
+        const BIGNUM* d = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey));
+        if (d) {
+            binary_t bin_d;
+            bn2bin(d, bin_d);
+
+            auto len_d = bin_d.size();
+
+            if (keysize) {
+                if (keysize > len_d) {
+                    bin_d.insert(bin_d.begin(), keysize - len_d, 0);
+                }
+            }
+
+            datamap.emplace(crypt_item_t::ec_d, std::move(bin_d));
+        }
+    }
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
     int ret_openssl = 1;
-    __try2 {
-        datamap.clear();
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    datamap.clear();
 
-        type = ktyof_evp_pkey(pkey);
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        if (crypto_kty_t::kty_okp != type) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
+    type = ktyof_evp_pkey(pkey);
 
-        // preserve leading zero octets
-        uint32 curve_size = 0;
-        if (plzero) {
-            uint32 nid = 0;
-            nidof_evp_pkey(pkey, nid);
-            auto advisor = crypto_advisor::get_instance();
-            auto hint = advisor->hintof_curve_nid(nid);
-            curve_size = hint->keysize;
-        }
+    if (crypto_kty_t::kty_okp != type) {
+        return errorcode_t::different_type;
+    }
 
-        if (crypt_access_t::asn1public_key & flags) {
-            binary_t bin_pub;
-            get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
-        } else if (crypt_access_t::public_key & flags) {
-            binary_t bin_x;
-            size_t len_x = curve_size ? curve_size : 256;
-            bin_x.resize(len_x);
-            ret_openssl = EVP_PKEY_get_raw_public_key(pkey, bin_x.data(), &len_x);
-            bin_x.resize(len_x);
+    // preserve leading zero octets
+    uint32 curve_size = 0;
+    if (plzero) {
+        uint32 nid = 0;
+        nidof_evp_pkey(pkey, nid);
+        auto advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_curve_nid(nid);
+        curve_size = hint->keysize;
+    }
 
-            if (curve_size) {
-                if (curve_size > len_x) {
-                    bin_x.insert(bin_x.begin(), curve_size - len_x, 0);
-                }
-            }
+    if (crypt_access_t::asn1public_key & flags) {
+        binary_t bin_pub;
+        get_asn1public_key(pkey, bin_pub);
+        datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
+    } else if (crypt_access_t::public_key & flags) {
+        binary_t bin_x;
+        size_t len_x = curve_size ? curve_size : 256;
+        bin_x.resize(len_x);
+        ret_openssl = EVP_PKEY_get_raw_public_key(pkey, bin_x.data(), &len_x);
+        bin_x.resize(len_x);
 
-            if (1 == ret_openssl) {
-                datamap.emplace(crypt_item_t::ec_x, std::move(bin_x));
+        if (curve_size) {
+            if (curve_size > len_x) {
+                bin_x.insert(bin_x.begin(), curve_size - len_x, 0);
             }
         }
-        if (crypt_access_t::private_key & flags) {
-            binary_t bin_d;
-            size_t len_d = curve_size ? curve_size : 256;
-            bin_d.resize(len_d);
-            ret_openssl = EVP_PKEY_get_raw_private_key(pkey, bin_d.data(), &len_d);
-            bin_d.resize(len_d);
 
-            if (curve_size) {
-                if (curve_size > len_d) {
-                    bin_d.insert(bin_d.begin(), curve_size - len_d, 0);
-                }
-            }
-
-            if (1 == ret_openssl) {
-                datamap.emplace(crypt_item_t::ec_d, std::move(bin_d));
-            }
+        if (1 == ret_openssl) {
+            datamap.emplace(crypt_item_t::ec_x, std::move(bin_x));
         }
     }
-    __finally2 {}
-    return ret;
+    if (crypt_access_t::private_key & flags) {
+        binary_t bin_d;
+        size_t len_d = curve_size ? curve_size : 256;
+        bin_d.resize(len_d);
+        ret_openssl = EVP_PKEY_get_raw_private_key(pkey, bin_d.data(), &len_d);
+        bin_d.resize(len_d);
+
+        if (curve_size) {
+            if (curve_size > len_d) {
+                bin_d.insert(bin_d.begin(), curve_size - len_d, 0);
+            }
+        }
+
+        if (1 == ret_openssl) {
+            datamap.emplace(crypt_item_t::ec_d, std::move(bin_d));
+        }
+    }
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
+    datamap.clear();
 
-    __try2 {
-        datamap.clear();
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    type = ktyof_evp_pkey(pkey);
 
-        type = ktyof_evp_pkey(pkey);
+    if (crypto_kty_t::kty_dh != type) {
+        return errorcode_t::different_type;
+    }
 
-        if (crypto_kty_t::kty_dh != type) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
+    const DH* dh = nullptr;
+    const BIGNUM* bn_pub = nullptr;
+    const BIGNUM* bn_priv = nullptr;
+    binary_t bin_pub;
+    binary_t bin_priv;
 
-        const DH* dh = nullptr;
-        const BIGNUM* bn_pub = nullptr;
-        const BIGNUM* bn_priv = nullptr;
-        binary_t bin_pub;
-        binary_t bin_priv;
+    dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
+    if (nullptr == dh) {
+        return errorcode_t::internal_error;
+    }
 
-        dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
-        if (nullptr == dh) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
+    DH_get0_key(dh, &bn_pub, &bn_priv);
 
-        DH_get0_key(dh, &bn_pub, &bn_priv);
-
-        /**
-         * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
-         * 2.3.3  Diffie-Hellman Key Exchange Keys
-         */
-        if (crypt_access_t::asn1public_key & flags) {
-            get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
-        } else if (crypt_access_t::public_key & flags) {
-            const BIGNUM* bn_p = nullptr;
-            const BIGNUM* bn_q = nullptr;
-            const BIGNUM* bn_g = nullptr;
-            binary_t bin_p;
-            binary_t bin_q;
-            binary_t bin_g;
-            DH_get0_pqg(dh, &bn_p, &bn_q, &bn_g);
-            bn2bin(bn_p, bin_p);
-            bn2bin(bn_q, bin_q);
-            bn2bin(bn_g, bin_g);
-            if (false == plzero) {
-                while ((false == bin_p.empty()) && (0 == bin_p.front())) {
-                    bin_p.erase(bin_p.begin());
-                }
-                while ((false == bin_q.empty()) && (0 == bin_q.front())) {
-                    bin_q.erase(bin_q.begin());
-                }
+    /**
+     * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+     * 2.3.3  Diffie-Hellman Key Exchange Keys
+     */
+    if (crypt_access_t::asn1public_key & flags) {
+        get_asn1public_key(pkey, bin_pub);
+        datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
+    } else if (crypt_access_t::public_key & flags) {
+        const BIGNUM* bn_p = nullptr;
+        const BIGNUM* bn_q = nullptr;
+        const BIGNUM* bn_g = nullptr;
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_g;
+        DH_get0_pqg(dh, &bn_p, &bn_q, &bn_g);
+        bn2bin(bn_p, bin_p);
+        bn2bin(bn_q, bin_q);
+        bn2bin(bn_g, bin_g);
+        if (false == plzero) {
+            while ((false == bin_p.empty()) && (0 == bin_p.front())) {
+                bin_p.erase(bin_p.begin());
             }
-
-            datamap.emplace(crypt_item_t::dh_p, std::move(bin_p));
-            datamap.emplace(crypt_item_t::dh_q, std::move(bin_q));
-            datamap.emplace(crypt_item_t::dh_g, std::move(bin_g));
-            if (bn_pub) {
-                bn2bin(bn_pub, bin_pub);
-                datamap.emplace(crypt_item_t::dh_pub, std::move(bin_pub));
+            while ((false == bin_q.empty()) && (0 == bin_q.front())) {
+                bin_q.erase(bin_q.begin());
             }
         }
 
-        if (crypt_access_t::private_key & flags) {
-            if (bn_priv) {
-                bn2bin(bn_priv, bin_priv);
-                datamap.emplace(crypt_item_t::dh_priv, std::move(bin_priv));
-            }
+        datamap.emplace(crypt_item_t::dh_p, std::move(bin_p));
+        datamap.emplace(crypt_item_t::dh_q, std::move(bin_q));
+        datamap.emplace(crypt_item_t::dh_g, std::move(bin_g));
+        if (bn_pub) {
+            bn2bin(bn_pub, bin_pub);
+            datamap.emplace(crypt_item_t::dh_pub, std::move(bin_pub));
         }
     }
-    __finally2 {}
-    return ret;
+
+    if (crypt_access_t::private_key & flags) {
+        if (bn_priv) {
+            bn2bin(bn_priv, bin_priv);
+            datamap.emplace(crypt_item_t::dh_priv, std::move(bin_priv));
+        }
+    }
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        datamap.clear();
+    datamap.clear();
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    type = ktyof_evp_pkey(pkey);
+
+    if (crypto_kty_t::kty_dsa != type) {
+        return errorcode_t::different_type;
+    }
+
+    auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
+    const BIGNUM* bn_y = nullptr;
+    const BIGNUM* bn_x = nullptr;
+
+    DSA_get0_key(dsa, &bn_y, &bn_x);
+
+    /**
+     * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+     * 2.3.2  DSA Signature Keys
+     */
+    if (crypt_access_t::asn1public_key & flags) {
+        binary_t bin_pub;
+        get_asn1public_key(pkey, bin_pub);
+        datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
+    } else if (crypt_access_t::public_key & flags) {
+        const BIGNUM* bn_p = nullptr;
+        const BIGNUM* bn_q = nullptr;
+        const BIGNUM* bn_g = nullptr;
+        DSA_get0_pqg(dsa, &bn_p, &bn_q, &bn_g);
+
+        if (bn_y) {
+            binary_t bin_y;
+            bn2bin(bn_y, bin_y);
+            datamap.emplace(crypt_item_t::dsa_y, std::move(bin_y));
         }
-
-        type = ktyof_evp_pkey(pkey);
-
-        if (crypto_kty_t::kty_dsa != type) {
-            ret = errorcode_t::different_type;
-            __leave2;
+        if (bn_p) {
+            binary_t bin_p;
+            bn2bin(bn_p, bin_p);
+            datamap.emplace(crypt_item_t::dsa_p, std::move(bin_p));
         }
-
-        auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
-        const BIGNUM* bn_y = nullptr;
-        const BIGNUM* bn_x = nullptr;
-
-        DSA_get0_key(dsa, &bn_y, &bn_x);
-
-        /**
-         * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
-         * 2.3.2  DSA Signature Keys
-         */
-        if (crypt_access_t::asn1public_key & flags) {
-            binary_t bin_pub;
-            get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
-        } else if (crypt_access_t::public_key & flags) {
-            const BIGNUM* bn_p = nullptr;
-            const BIGNUM* bn_q = nullptr;
-            const BIGNUM* bn_g = nullptr;
-            DSA_get0_pqg(dsa, &bn_p, &bn_q, &bn_g);
-
-            if (bn_y) {
-                binary_t bin_y;
-                bn2bin(bn_y, bin_y);
-                datamap.emplace(crypt_item_t::dsa_y, std::move(bin_y));
-            }
-            if (bn_p) {
-                binary_t bin_p;
-                bn2bin(bn_p, bin_p);
-                datamap.emplace(crypt_item_t::dsa_p, std::move(bin_p));
-            }
-            if (bn_q) {
-                binary_t bin_q;
-                bn2bin(bn_q, bin_q);
-                datamap.emplace(crypt_item_t::dsa_q, std::move(bin_q));
-            }
-            if (bn_g) {
-                binary_t bin_g;
-                bn2bin(bn_g, bin_g);
-                datamap.emplace(crypt_item_t::dsa_g, std::move(bin_g));
-            }
+        if (bn_q) {
+            binary_t bin_q;
+            bn2bin(bn_q, bin_q);
+            datamap.emplace(crypt_item_t::dsa_q, std::move(bin_q));
         }
-
-        if (crypt_access_t::private_key & flags) {
-            if (bn_x) {
-                binary_t bin_x;
-                bn2bin(bn_x, bin_x);
-                datamap.emplace(crypt_item_t::dsa_priv, std::move(bin_x));
-            }
+        if (bn_g) {
+            binary_t bin_g;
+            bn2bin(bn_g, bin_g);
+            datamap.emplace(crypt_item_t::dsa_g, std::move(bin_g));
         }
     }
-    __finally2 {}
-    return ret;
+
+    if (crypt_access_t::private_key & flags) {
+        if (bn_x) {
+            binary_t bin_x;
+            bn2bin(bn_x, bin_x);
+            datamap.emplace(crypt_item_t::dsa_priv, std::move(bin_x));
+        }
+    }
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::extract_ossl3(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        datamap.clear();
+    datamap.clear();
 
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        type = ktyof_evp_pkey(pkey);
-        switch (type) {
-            case crypto_kty_t::kty_mlkem:
-            case crypto_kty_t::kty_mldsa:
-            case crypto_kty_t::kty_slhdsa:
-                break;
-            default:
-                ret = errorcode_t::different_type;
-                break;
-        }
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+    type = ktyof_evp_pkey(pkey);
+    switch (type) {
+        case crypto_kty_t::kty_mlkem:
+        case crypto_kty_t::kty_mldsa:
+        case crypto_kty_t::kty_slhdsa:
+            break;
+        default:
+            return errorcode_t::different_type;
+            break;
+    }
 
-        crypto_keychain keychain;
-        if (crypt_access_t::public_key & flags) {
-            key_encoding_t encoding = (crypt_access_t::asn1public_key & flags) ? key_encoding_pub_der : key_encoding_pub_raw;
-            crypt_item_t item = (crypt_access_t::asn1public_key & flags) ? crypt_item_t::asn1der : crypt_item_t::mlkem_pub;
-            binary_t bin_pub;
-            ret = keychain.pkey_encode(nullptr, pkey, bin_pub, encoding);
-            if (errorcode_t::success == ret) {
-                datamap.emplace(item, std::move(bin_pub));
-            }
-        }
-
-        if (crypt_access_t::private_key & flags) {
-            binary_t bin_keypair;
-            ret = keychain.pkey_encode(nullptr, pkey, bin_keypair, key_encoding_priv_raw);
-            if (errorcode_t::success == ret) {
-                datamap.emplace(crypt_item_t::mlkem_priv, std::move(bin_keypair));
-            }
+    crypto_keychain keychain;
+    if (crypt_access_t::public_key & flags) {
+        key_encoding_t encoding = (crypt_access_t::asn1public_key & flags) ? key_encoding_pub_der : key_encoding_pub_raw;
+        crypt_item_t item = (crypt_access_t::asn1public_key & flags) ? crypt_item_t::asn1der : crypt_item_t::mlkem_pub;
+        binary_t bin_pub;
+        ret = keychain.pkey_encode(nullptr, pkey, bin_pub, encoding);
+        if (errorcode_t::success == ret) {
+            datamap.emplace(item, std::move(bin_pub));
         }
     }
-    __finally2 {}
+
+    if (crypt_access_t::private_key & flags) {
+        binary_t bin_keypair;
+        ret = keychain.pkey_encode(nullptr, pkey, bin_keypair, key_encoding_priv_raw);
+        if (errorcode_t::success == ret) {
+            datamap.emplace(crypt_item_t::mlkem_priv, std::move(bin_keypair));
+        }
+    }
+
     return ret;
 }
 

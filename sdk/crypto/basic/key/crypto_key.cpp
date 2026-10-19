@@ -32,80 +32,68 @@ crypto_key::crypto_key(crypto_key&& other) {
 crypto_key::~crypto_key() { clear(); }
 
 return_t crypto_key::add(const crypto_key_object& key, bool up_ref) {
-    return_t ret = errorcode_t::success;
-
     critical_section_guard guard(_lock);
-    __try2 {
-        auto pkey = key.get_pkey();
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
 
-        if (crypto_use_t::use_unknown == (key.get_desc().get_use() & crypto_use_t::use_any)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_kty_t type = ktyof_evp_pkey(pkey);
-        if (crypto_kty_t::kty_unknown == type) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        if (up_ref) {
-            auto pkey = (EVP_PKEY*)key.get_pkey();
-            if (pkey) {
-                EVP_PKEY_up_ref(pkey);
-            }
-            auto x509 = (X509*)key.get_x509();
-            if (x509) {
-                X509_up_ref(x509);
-            }
-        }
-
-        _key_map.emplace(key.get_desc().get_kid_str(), key);
+    auto pkey = key.get_pkey();
+    if (nullptr == pkey) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    if (crypto_use_t::use_unknown == (key.get_desc().get_use() & crypto_use_t::use_any)) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    crypto_kty_t type = ktyof_evp_pkey(pkey);
+    if (crypto_kty_t::kty_unknown == type) {
+        return errorcode_t::not_supported;
+    }
+
+    if (up_ref) {
+        auto pkey = (EVP_PKEY*)key.get_pkey();
+        if (pkey) {
+            EVP_PKEY_up_ref(pkey);
+        }
+        auto x509 = (X509*)key.get_x509();
+        if (x509) {
+            X509_up_ref(x509);
+        }
+    }
+
+    _key_map.emplace(key.get_desc().get_kid_str(), key);
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::add(crypto_key_object&& key, bool up_ref) {
-    return_t ret = errorcode_t::success;
-
     critical_section_guard guard(_lock);
-    __try2 {
-        if (nullptr == key.get_pkey()) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
 
-        if (crypto_use_t::use_unknown == (key.get_desc().get_use() & crypto_use_t::use_any)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_kty_t type = ktyof_evp_pkey(key);
-        if (crypto_kty_t::kty_unknown == type) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        if (up_ref) {
-            auto pkey = (EVP_PKEY*)key.get_pkey();
-            if (pkey) {
-                EVP_PKEY_up_ref(pkey);
-            }
-            auto x509 = (X509*)key.get_x509();
-            if (x509) {
-                X509_up_ref(x509);
-            }
-        }
-
-        _key_map.emplace(key.get_desc().get_kid_str(), std::move(key));
+    if (nullptr == key.get_pkey()) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    if (crypto_use_t::use_unknown == (key.get_desc().get_use() & crypto_use_t::use_any)) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    crypto_kty_t type = ktyof_evp_pkey(key);
+    if (crypto_kty_t::kty_unknown == type) {
+        return errorcode_t::not_supported;
+    }
+
+    if (up_ref) {
+        auto pkey = (EVP_PKEY*)key.get_pkey();
+        if (pkey) {
+            EVP_PKEY_up_ref(pkey);
+        }
+        auto x509 = (X509*)key.get_x509();
+        if (x509) {
+            X509_up_ref(x509);
+        }
+    }
+
+    _key_map.emplace(key.get_desc().get_kid_str(), std::move(key));
+
+    return errorcode_t::success;
 }
 
 return_t crypto_key::add(EVP_PKEY* pkey, const char* kid, bool up_ref) {
@@ -136,25 +124,20 @@ void crypto_key::clear() {
 size_t crypto_key::size() const { return _key_map.size(); }
 
 return_t crypto_key::append(crypto_key* source) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        critical_section_guard guard_source(source->_lock);
-        for (auto& pair : _key_map) {
-            const std::string& name = pair.first;
-            crypto_key_object& keyobj = pair.second;
-            EVP_PKEY_up_ref((EVP_PKEY*)keyobj.get_pkey());
-            _key_map.emplace(name, keyobj);
-        }
+    if (nullptr == source) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    critical_section_guard guard(_lock);
+    critical_section_guard guard_source(source->_lock);
+    for (auto& pair : _key_map) {
+        const std::string& name = pair.first;
+        crypto_key_object& keyobj = pair.second;
+        EVP_PKEY_up_ref((EVP_PKEY*)keyobj.get_pkey());
+        _key_map.emplace(name, keyobj);
+    }
+
+    return errorcode_t::success;
 }
 
 int crypto_key::addref() { return _shared.addref(); }
@@ -162,18 +145,16 @@ int crypto_key::addref() { return _shared.addref(); }
 int crypto_key::release() { return _shared.delref(); }
 
 void crypto_key::for_each(std::function<void(const crypto_key_object*, void*)> fp_dump, void* param) const {
-    critical_section_guard guard(_lock);
-    __try2 {
-        if (nullptr == fp_dump) {
-            __leave2;
-        }
-
-        for (auto& pair : _key_map) {
-            const auto& keyobj = pair.second;
-            fp_dump(&keyobj, param);
-        }
+    if (nullptr == fp_dump) {
+        return;
     }
-    __finally2 {}
+
+    critical_section_guard guard(_lock);
+
+    for (auto& pair : _key_map) {
+        const auto& keyobj = pair.second;
+        fp_dump(&keyobj, param);
+    }
 }
 
 void crypto_key::erase(const std::string& kid) {

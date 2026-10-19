@@ -1,6 +1,19 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                         │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 ### Encoding testcases
 
 This directory contains the tests/samples for the corresponding hotplace module.
+
+See [testcase_encoding.md](testcase_encoding.md) for the source-level coverage review and the supplied report summary.
 
 #### test sources
 

@@ -1,22 +1,34 @@
-# Current implementation note (Revision 1104 working source)
+## Publication
+
+```text
+hotplace source tree
+Edition 1 · Revision 1104
+Documented with GPT-6
+— source structure, implementation & tests
+```
+
+# ASN.1 testcase suite
+
+## 1. Role
+
+This directory contains ASN.1 object-model, parser, loader, publisher, DER/X.690 encoding, constraints, and parameterized-notation test sources. It also contains schema and test-vector fixtures. The directory spans focused unit-style checks and exploratory/progressive integration work; these must not be treated as one uniformly complete end-to-end pipeline.
+
+## 2. Test model
+
+The suite is split across `testcase_basic*.cpp`, `testcase_constraints.cpp`, `testvector_der.cpp`, `testvector_parser.cpp`, `runtime/`, `loader/`, and `parameterized/`. YAML fixtures are stored in `testvector_der.yml` and `testvector_parser.yml`. The ASN.1 runtime implementation lives under `sdk/io/asn.1/`.
+
+### Preserved source material
 
 The ASN.1 runtime representation is now `asn1_module`; the singleton registry for named modules is `asn1_modules`. The former `asn1_module_context` name is not current in Revision 1104.
 
 Parameterized ASN.1 has two distinct workstreams in this revision. The LALR/GLR grammar and binary parsing tables are at revision 3, while `parameterized/testcase_parameterized.cpp` actively exercises direct semantic prototypes through `test_parameterized1()` (`define()`, `specialize()`, and parameter values). The parser → loader → publisher probe (`test_parameterized2()`) remains disabled in `testcase_parameterized()`. This is progress beyond grammar-only work, but it is not complete end-to-end parameterized ASN.1 support.
 
-#### TODO
-
-- [ ] ASN.1 Runtime
-- [ ] ASN.1 Compiler
-- [ ] ASN.1 Schema Loader
-- [ ] ASN.1 Repository
-
-#### references
+##### references
 
 * [ASN.1 JavaScript decoder](https://lapo.it/asn1js/)
 * [ASN.1 Decoder](https://holtstrom.com/michael/tools/asn1decoder.php)
 
-#### YAML schema
+##### YAML schema
 
 * DER YAML schema
 
@@ -44,7 +56,7 @@ testvector:
         der: hexstring          # [mandatory] base16 stream
 ````
 
-#### using pyasn1
+##### using pyasn1
 
 from pyasn1.type import univ
 from pyasn1.codec.der.encoder import encode
@@ -57,7 +69,7 @@ encode(univ.Real(0.0)).hex()
 print("Decoded Integer:", decode(binascii.unhexlify('020100'), asn1Spec=univ.Integer()))
 print("Decoded REAL:", decode(binascii.unhexlify('0900'), asn1Spec=univ.Real()))
 
-#### ASN.1 DER
+##### ASN.1 DER
 
 - RFC 2459 Internet X.509 Public Key Infrastructure Certificate and CRL Profile
 - RFC 3039 Internet X.509 Public Key Infrastructure Qualified Certificates Profile
@@ -349,3 +361,44 @@ SEQUENCE {
    BITSTRING 0x306502304c34053f7cd03415f9d23553680c780ddb13e70cdcc8861fa9cc8767e771119d0a9129a88bb5aa14004ca1a9eaec43d9023100acf1ef2fd5dd2fe9a174b17a513846c3fc6c30f1123f47cefffc94a35e80516b778cfc942d3d451aa75ee293417d1b57 : 0 unused bit(s)
 }
 ````
+
+## 3. Example: DER and notation test vectors
+
+`testcase_basic1.cpp` tests X.690 identifier and length octets with positive and negative vectors. `runtime/testcase_parser.cpp` feeds a table of ASN.1 type assignments and constraints to `asn1_parser`. `parameterized/testcase_parameterized.cpp` includes `test_parameterized1()` for direct semantic specialization and a separate `test_parameterized2()` integration probe that is disabled in the current testcase dispatcher.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+- **O** — source includes explicit DER/X.690 byte comparisons and invalid-encoding checks.
+- **O** — parser test source supplies a broad table of ASN.1 type notation and constraints.
+- **O** — object-model, module/publisher, loader, and constraints paths have dedicated testcase sources.
+- **△** — parameterized direct semantic prototype coverage does not imply full parser → loader → publisher integration; the `test_parameterized2()` probe is disabled in the current dispatcher.
+- **△** — source coverage alone does not establish successful execution on Revision 1104.
+
+### 4.2 Documentation and verification status
+
+The supplied `asn.1/report` records pass 1628, expt 40, fail 0, skip 0, triv 0. The report does not define `expt` here, and does not identify OS/compiler/build configuration or source revision. No test was executed as part of this documentation update.
+
+## 5. Relationships
+
+- [`sdk/io/asn.1/README.md`](../../../sdk/io/asn.1/README.md) — implementation overview
+- [`basic/asn1-object-model.md`](basic/asn1-object-model.md) — object model
+- [`runtime/README.md`](runtime/README.md) — module, parser, publisher
+- [`loader/asn1_loader.md`](loader/asn1_loader.md) — loading path
+- [`testvector_der.yml`](testvector_der.yml) and [`testvector_parser.yml`](testvector_parser.yml) — vector fixtures
+
+## 6. References
+
+- `test/testcase/asn.1/`
+- `sdk/io/asn.1/`
+- `test/testcase/asn.1/CMakeLists.txt`
+
+## 7. Development Notes (for maintainer review)
+
+The original README contains a working-status checklist for ASN.1 Runtime, Compiler, Schema Loader, and Repository, plus reference-decoder links, YAML schema examples, a `pyasn1` scratch example, and a DER certificate vector. These items are preserved below for maintainer review; the checklist is not a claim that the listed components are absent or complete.
+
+- [ ] ASN.1 Runtime
+- [ ] ASN.1 Compiler
+- [ ] ASN.1 Schema Loader
+- [ ] ASN.1 Repository

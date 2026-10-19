@@ -1,81 +1,53 @@
-# OQS Provider Adapter
+## Publication
 
-`sdk/crypto/oqs` is a thin integration layer between OpenSSL 3's provider API and hotplace's crypto abstractions. The important design point is that hotplace does not contain an independent ML-KEM/Dilithium/Falcon/SPHINCS+ implementation here. The actual cryptographic implementation is supplied by `oqsprovider`.
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 
-## Context and provider discovery
+# OQS provider adapter — implementation details
 
-`pqc_oqs::open()` creates a private `OSSL_LIB_CTX`, loads the OpenSSL default provider and `oqsprovider`, then queries `OSSL_OP_KEM` and `OSSL_OP_SIGNATURE`.
+## 1. Role
 
-The discovered names are retained in `oqs_context`:
+This document describes the boundary between hotplace and the external OpenSSL `oqsprovider` module.
 
-- a general algorithm-name map
-- KEM algorithm list
-- signature algorithm list
-- flags indicating whether an OpenSSL NID/OID mapping is available
+## 2. Model
 
-`close()` unloads both providers and frees the library context.
+The adapter keeps provider discovery separate from operations. `pqc_oqs::open()` creates a library context, loads the default provider and OQS provider, then queries KEM and signature operation names. The resulting `oqs_context` retains the discovered names and whether NID/OID mapping is available.
 
-## Algorithm enumeration
-
-`for_each()` exposes the discovered KEM and signature names to callers. This keeps provider-specific algorithm discovery separate from the actual cryptographic operations.
-
-The OID flag is significant to the current tests: algorithms without an OpenSSL NID mapping are reported as unsupported by the OQS testcases rather than being treated as fully supported hotplace algorithms.
-
-## Key and operation bridge
-
-The adapter delegates most work to existing hotplace/OpenSSL helpers:
+The main bridge operations are:
 
 - `keygen()` → `crypto_keychain::pkey_keygen_byname()`
-- `encode()` / `decode()` → `crypto_keychain` key serialization
+- `encode()` / `decode()` → key serialization helpers
 - `encapsule()` / `decapsule()` → `openssl_pqc`
 - `sign()` / `verify()` → `openssl_pqc`
 
-This means the OQS layer is mainly responsible for provider selection and context management; key representation and cryptographic EVP operation details remain in `crypto/basic`.
+## 3. Important behavior and lifetime
 
-## Supported operation shape
+Provider handles and the library context have an explicit lifetime. `close()` unloads providers and frees the context. The adapter is conditional on OpenSSL 3; a provider module must also be installed where OpenSSL can load it.
 
-### KEM
+Algorithm discovery is not equivalent to uniform support: the existing tests gate full operation attempts on `oqs_alg_oid_registered`, and classify other enumerated entries as `not_supported`.
 
-```text
-Alice: keygen
-   ↓
-public/private key
-   ↓ public key
-Bob: encapsulate
-   ↓
-capsule + shared secret
-   ↓ capsule
-Alice: decapsulate with private key
-   ↓
-shared secret
-```
+## 4. Example from the source tests
 
-The KEM testcase compares Bob's and Alice's resulting shared secrets.
+The KEM test compares the shared secret produced by encapsulation with the secret recovered by decapsulation. The signature test signs with a private key and verifies with the public key. These validate the integrated provider path, not a full independent mathematical implementation.
 
-### Signature
+## 5. Relationships
 
 ```text
-keygen
-  ↓
-private/public key
-  ↓
-sign(message, private key)
-  ↓
-signature
-verify(message, public key, signature)
+provider discovery → key abstraction → EVP-backed operation
+        OQS         crypto_keychain      openssl_pqc
 ```
 
-The DSA testcase exercises this path for each OID-registered provider signature algorithm.
+See [OQS tests](oqs-tests.md) for source coverage and limitations.
 
-## Version boundary
+## 6. References
 
-The implementation is guarded by `OPENSSL_VERSION_NUMBER >= 0x30000000L` because the provider architecture is an OpenSSL 3 API. Older OpenSSL builds return `not_supported` from the OQS adapter.
-
-## External dependency
-
-The provider itself is external:
-
-- `oqs-provider` supplies the PQC algorithms.
-- The test environment must make the provider module available to OpenSSL (`ossl-modules`).
-
-The existing `test/testcase/crypto/oqs-provider.md` remains the place for provider-specific study notes and external test-vector work.
+- `oqs.hpp`, `oqs.cpp`, `types.hpp`
+- `test/testcase/crypto/pqc/oqs/testcase_oqs_encode.cpp`
+- `test/testcase/crypto/pqc/oqs/testcase_oqs_kem.cpp`
+- `test/testcase/crypto/pqc/oqs/testcase_oqs_dsa.cpp`

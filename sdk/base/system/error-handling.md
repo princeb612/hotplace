@@ -1,8 +1,29 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Error handling and error advice
+
+## 1. Role
+
+### Introduction
 
 The system error layer connects hotplace's `return_t` / `errorcode_t` model with platform or library-specific return conventions.
 
-## `error_traits`
+## 2. Model
+
+The component model is described by the implementation and retained subsections below.
+
+## 3. Important behavior and lifetime
+
+### `error_traits`
 
 `error_traits<T, category>` provides a small adapter interface for different error domains.
 
@@ -21,7 +42,7 @@ The adapter provides operations such as:
 
 The intent is to keep protocol/system code using the same hotplace return model even when the underlying API has different success conventions.
 
-## `error_advisor`
+### `error_advisor`
 
 `error_advisor` maps hotplace error codes to:
 
@@ -34,8 +55,18 @@ The table is initialized from the project's error descriptions and protected by 
 
 This makes error reporting separate from the actual operation that produced the error: the operation returns a code, while the advisor provides its presentation/interpretation.
 
-## Relationship to tracing and tests
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+### Relationship to tracing and tests
 
 The error layer is used by the project's trace macros and unittest result reporting. In particular, error categories can distinguish ordinary success/expected-failure cases from severe errors without forcing every caller to reproduce the mapping logic.
 
 `error_advisor` is therefore a **project-wide error interpretation layer**, rather than merely a wrapper around `errno`.
+
+## 6. References
+
+Implementation and test paths are retained in the sections above or the source tree.

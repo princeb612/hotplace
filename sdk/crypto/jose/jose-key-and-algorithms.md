@@ -1,82 +1,65 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # JWK and JOSE algorithm mapping
 
-## JWK
+## 1. Role
 
-`json_web_key` is the bridge between JSON Web Key material and hotplace's `crypto_key` abstraction.
+This record describes the boundary between JSON Web Key (JWK) material, JOSE algorithm identifiers, and hotplace's common crypto/key abstractions.
 
-The current implementation handles the main JWK families:
+## 2. Model
+
+`json_web_key` bridges JWK JSON and `crypto_key`. The source's existing status table lists these key types:
 
 - `oct` — symmetric keys
 - `RSA`
 - `EC` — P-256, P-384 and P-521
 - `OKP` — Ed25519, Ed448, X25519 and X448
 
-The implementation supports reading JSON key material and writing the corresponding representation. The test suite also exercises JWK/PEM interoperability and the RFC 7638 thumbprint examples.
+`types.hpp` groups algorithm identifiers by protocol role: `jws_t` for JWS signature/MAC algorithms, `jwa_t` for JWE key management, `jwe_t` for content encryption, and related family metadata.
 
-The important boundary is:
+## 3. Important behavior and lifetime
 
-```text
-JWK JSON
-   ↓
-json_web_key
-   ↓
-crypto_key
-   ↓
-crypto/basic
-```
+The module uses enum-like JOSE identifiers to select protocol processing rather than distributing algorithm-name string handling across every call site. JWK parsing/writing converts key representations to and from `crypto_key`; the common key and operation layers remain responsible for the underlying key material and cryptographic operation.
 
-## Algorithm identifiers
+The existing status matrix in [JOSE overview](jose-overview.md) is preserved from the source documentation. Its `O`/`-` marks and TODO list are not newly verified in this pass. In particular, the old TODO mentions disabling `RSA1_5`, JWK SHA-256 thumbprints, post-quantum drafts, and Edwards-curve encryption; the RFC 7638 test source and current AKP vectors exist, so that old list may be stale and should be reviewed rather than interpreted as a reliable current backlog.
 
-`types.hpp` groups JOSE identifiers into protocol roles:
+## 4. Example from the source tests
 
-- `jws_t` — JWS signature/MAC algorithms
-- `jwa_t` — JWE key-management algorithms
-- `jwe_t` — JWE content-encryption algorithms
-- `jwa_group_t` / related metadata — algorithm families
+The test sources include JWK loading and PEM interoperability (`testcase_rfc7515.cpp`), RFC 7517 JWK examples (`testcase_rfc7517.cpp`), thumbprint examples (`testcase_rfc7638.cpp`), and RFC 8037 X25519/Ed25519-family cases (`testcase_rfc8037.cpp`). The AKP test uses `crypto_keychain::add_ossl3` for ML-DSA-44/65/87 and signs/verifies through `json_web_signature`; it is gated on OpenSSL 3.5 or newer.
 
-The JOSE implementation uses these identifiers to select the cryptographic path rather than scattering string comparisons throughout the implementation.
-
-## Algorithm mapping
-
-The current implementation covers the major RFC 7518 families used by the source:
+## 5. Relationships
 
 ```text
-JWS
- ├── HS256/384/512
- ├── RS256/384/512
- ├── PS256/384/512
- ├── ES256/384/512
- └── EdDSA
-
-JWE key management
- ├── RSA1_5 / RSA-OAEP variants
- ├── A128/192/256KW
- ├── dir
- ├── ECDH-ES and ECDH-ES+KW
- ├── A128/192/256GCMKW
- └── PBES2-HS*+A*KW
-
-JWE content encryption
- ├── A128/192/256CBC-HS*
- └── A128/192/256GCM
+JWK JSON ─► json_web_key ─► crypto_key / crypto_keychain
+                                  │
+JOSE alg name ─► JOSE identifiers + crypto_advisor metadata
+                                  │
+                                  ▼
+                         JWS / JWE processing
+                                  │
+                                  ▼
+                            crypto/basic
 ```
 
-The exact implementation status and historical TODOs remain documented in the existing source README; this document records the architectural mapping rather than duplicating the full status table.
+- `../advisor/` supplies shared algorithm/resource metadata.
+- `../basic/` supplies keys and cryptographic operations.
+- `../cose/` has a related key/algorithm boundary for CBOR Object Signing and Encryption, but uses COSE's own identifiers and serialization.
 
-## Relationship to advisor
+## 6. References
 
-`crypto/advisor` provides common algorithm/resource metadata. JOSE adds the protocol-specific identifier layer and parameter rules required by JWS/JWE/JWK.
-
-```text
-crypto/advisor
-      ↓
-JOSE identifier / protocol metadata
-      ↓
-JWS / JWE processing
-      ↓
-crypto/basic
-```
-
-## Tests and references
-
-The primary test directory is `test/testcase/jose/`. Important coverage includes RFC 7515/7516/7517/7518, RFC 7520 examples, RFC 7638 thumbprints and RFC 8037 algorithms, plus the current AKP/ML-DSA vectors.
+- `types.hpp`
+- `json_web_key.hpp/.cpp`
+- `../advisor/crypto_advisor_jose.cpp`
+- `test/testcase/jose/testcase_rfc7517.cpp`
+- `test/testcase/jose/testcase_rfc7638.cpp`
+- `test/testcase/jose/testcase_rfc8037.cpp`
+- `test/testcase/jose/testcase_akp.cpp`

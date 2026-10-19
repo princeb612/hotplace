@@ -1,10 +1,22 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # Trial Socket and TLS Composer
+
+## 1. Role
 
 `sdk/net/basic/trial` is the experimental composition layer used while developing secure socket and handshake flows.
 
 It is deliberately separate from the stable `naive` transport and OpenSSL adapter implementations.
 
-## Main roles
+### Main roles
 
 - `trial_*_client_socket` / `trial_*_server_socket` — experimental socket implementations
 - `secure_client_socket` / `secure_prosumer` — secure transport composition
@@ -16,7 +28,32 @@ It is deliberately separate from the stable `naive` transport and OpenSSL adapte
 
 The important point is that `trial` is not another permanent protocol layer. It is where experimental combinations are assembled before or alongside the more established network/session implementation.
 
-## QUIC relationship
+## 2. Model
+
+### Source
+
+- `trial_*_socket.*`
+- `secure_client_socket.*`
+- `secure_prosumer.*`
+- `client_socket_prosumer.*`
+- `tls_composer.*`
+- `tls_composer_construct.cpp`
+- `tls_composer_tls_handshake.cpp`
+- `tls_composer_quic_handshake.cpp`
+
+## 3. Important behavior and lifetime
+
+### Status
+
+This directory is experimental by design. The document records the current implementation boundary and should not be interpreted as a statement that every trial path is the primary production path.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+### QUIC relationship
 
 The QUIC composer path demonstrates the boundary between transport and TLS:
 
@@ -32,17 +69,6 @@ QUIC CRYPTO frames
 
 The actual QUIC packet/frame implementation belongs under `sdk/net/tls/quic/`.
 
-## Source
+## 6. References
 
-- `trial_*_socket.*`
-- `secure_client_socket.*`
-- `secure_prosumer.*`
-- `client_socket_prosumer.*`
-- `tls_composer.*`
-- `tls_composer_construct.cpp`
-- `tls_composer_tls_handshake.cpp`
-- `tls_composer_quic_handshake.cpp`
-
-## Status
-
-This directory is experimental by design. The document records the current implementation boundary and should not be interpreted as a statement that every trial path is the primary production path.
+Source references and related documents are retained here where available.

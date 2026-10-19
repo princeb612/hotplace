@@ -25,3 +25,10 @@
 - tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng
   - [server](tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256-server.md)
   - [client](tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256-client.md)
+
+
+## Capture organization
+
+The capture set is organized around negotiated TLS 1.2 cipher suites and behavior variants. In particular, the `tls12etm_` and `tls12mte_` filenames distinguish Encrypt-then-MAC and MAC-then-Encrypt CBC protection arrangements; the renegotiation captures cover separate handshake behavior. Each PCAP is paired with server/client notes, and `sslkeylog` material supports decryption during analysis.
+
+These are recorded scenarios, not an exhaustive matrix of TLS 1.2 cipher suites or a general interoperability claim. Treat key-log files as sensitive when captures contain real traffic.

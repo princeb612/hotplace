@@ -1,12 +1,24 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # ASN.1 Object Model
 
-## Role
+## 1. Role
 
 The semantic layer under `sdk/io/asn.1/basic/semantic` is the main in-memory representation of ASN.1 types and values used by the runtime, visitors, constraints, and DER encoding paths.
 
 At revision 1095 it contains the bulk of the ASN.1 type model: built-in types, constructed types, tagging, references, constraints, object classes, and container forms.
 
-## Central abstraction: `asn1_object`
+## 2. Model
+
+### Central abstraction: `asn1_object`
 
 `asn1_object` is the common base of the semantic model.
 
@@ -35,7 +47,7 @@ schema object
 
 `update_linkage()` is important for constructed/tagged structures because linkage information is propagated through the object hierarchy.
 
-## Type families
+### Type families
 
 The semantic implementation contains several major families.
 
@@ -87,7 +99,7 @@ The API distinguishes:
 
 This is a key bridge between notation-derived definitions and runtime schema lookup.
 
-## Values
+### Values
 
 `asn1_value` is separate from the schema object.
 
@@ -101,7 +113,20 @@ asn1_value
 
 An `asn1_value` keeps a schema pointer and a multimap of named `variant` values. It can therefore represent named components and repeated values without making the schema object itself the value container.
 
-## Constraints
+### Visitors and encoding
+
+The semantic objects are consumed by visitor implementations:
+
+- AST/semantic traversal
+- ASN.1 notation representation
+- DER encoding
+- constraint evaluation
+
+The same object model therefore serves both the human-readable ASN.1 representation and binary encoding paths.
+
+## 3. Important behavior and lifetime
+
+### Constraints
 
 Constraints are owned by `asn1_object` and exposed through `asn1_constraints`.
 
@@ -119,18 +144,20 @@ constraints
 
 rather than treating constraints as a separate post-processing feature.
 
-## Visitors and encoding
+## 4. Example from the source tests
 
-The semantic objects are consumed by visitor implementations:
+### Related tests
 
-- AST/semantic traversal
-- ASN.1 notation representation
-- DER encoding
-- constraint evaluation
+- `test/testcase/asn.1/testcase_basic2.cpp`
+- `test/testcase/asn.1/testcase_basic3.cpp`
+- `test/testcase/asn.1/testcase_constraints.cpp`
+- `test/testcase/asn.1/runtime/`
 
-The same object model therefore serves both the human-readable ASN.1 representation and binary encoding paths.
+These tests demonstrate the transition from manually constructed/parsed schema objects to runtime values and strongly typed use.
 
-## Runtime relationship
+## 5. Relationships
+
+### Runtime relationship
 
 The current high-level relationship is:
 
@@ -154,7 +181,9 @@ asn1_value / strongly typed use
 
 The semantic layer is consequently the central model between parsing and runtime use.
 
-## Related source
+## 6. References
+
+### Related source
 
 - `sdk/io/asn.1/basic/semantic/asn1_object.hpp`
 - `sdk/io/asn.1/basic/semantic/asn1_type.hpp`
@@ -165,12 +194,3 @@ The semantic layer is consequently the central model between parsing and runtime
 - `sdk/io/asn.1/basic/semantic/builtin/`
 - `sdk/io/asn.1/basic/semantic/constraints/`
 - `sdk/io/asn.1/basic/asn1_value.hpp`
-
-## Related tests
-
-- `test/testcase/asn.1/testcase_basic2.cpp`
-- `test/testcase/asn.1/testcase_basic3.cpp`
-- `test/testcase/asn.1/testcase_constraints.cpp`
-- `test/testcase/asn.1/runtime/`
-
-These tests demonstrate the transition from manually constructed/parsed schema objects to runtime values and strongly typed use.

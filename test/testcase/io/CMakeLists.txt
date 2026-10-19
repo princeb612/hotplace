@@ -10,6 +10,7 @@ file (GLOB SOURCE_FILES
     basic/*.cpp
     parser/*.cpp
     stream/*.cpp
+    string/*.cpp
     system/*.cpp
 )
 file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/*.hpp)

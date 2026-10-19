@@ -1,27 +1,47 @@
-#### CBOR
+## Publication
 
-* test vector
-  * QUIC: A UDP-Based Multiplexed and Secure Transport
-    * A.1.  Sample Variable-Length Integer Decoding
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# Io Testcases
 
-#### YAML schema
+## 1. Role
 
-* PARSER YAML schema
+This directory contains I/O-related testcase support material. The listed source files and test vectors define the actual coverage.
 
-````
-testvector:
-  - example: string                 # [mandatory] testcase
-    schema: PARSER                  # [mandatory] "PARSER"
-    items:
-      - item: string                # [mandatory]
-        asn1: |
-          statements                # [mandatory] ASN.1 notation
-        expect:                     # [mandatory]
-          imports_clause: array     # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-          exports_clause: array     # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-          header_clause: array      # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-          level_unmatched: array    # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-          level_matched: array      # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-          edge_unmatched: array     # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-          edge_matched: array       # [mandatory] ex. [[begin1, end1],[begin2, end2]]
-````
+## 2. Test model
+
+Test source files in this directory: `sample.cpp`
+
+No additional legacy notes were present in this README.
+
+## 3. Example: source testcase entry points
+
+The source-level examples are listed below; the corresponding C++ sources are the authoritative record of assertions and execution paths.
+
+Source files:
+- `sample.cpp`
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+Coverage must be inferred from the actual testcase functions and assertions in the source files; the presence of a test file alone does not prove each behavior is meaningfully checked.
+
+### 4.2 Documentation and verification status
+
+This README documents the directory and source inventory. It does not itself prove a successful runtime execution. The available report archive does not identify the exact operating system, compiler configuration, or source revision for its results.
+
+## 5. Relationships
+
+- Corresponding implementation documentation is under `sdk/io/`.
+- Shared test registration and build integration are defined by the surrounding testcase CMake configuration.
+
+## 6. References
+
+- `test/testcase/io/sample.cpp`

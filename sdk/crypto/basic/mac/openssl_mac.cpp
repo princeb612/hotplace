@@ -28,19 +28,15 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
     hash_context_t* handle = nullptr;
     openssl_hash hash;
 
-    __try2 {
-        if (nullptr == alg || (size && (nullptr == stream))) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = hash.open(&handle, alg, key.data(), t_narrow_cast(key.size()));
-        if (errorcode_t::success == ret) {
-            ret = hash.hash(handle, stream, size, output);
-        }
-        hash.close(handle);
+    if (nullptr == alg || (size && (nullptr == stream))) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    ret = hash.open(&handle, alg, key.data(), t_narrow_cast(key.size()));
+    if (errorcode_t::success == ret) {
+        ret = hash.hash(handle, stream, size, output);
+    }
+    hash.close(handle);
 
     return ret;
 }
@@ -54,49 +50,29 @@ return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte
     hash_context_t* handle = nullptr;
     openssl_hash hash;
 
-    __try2 {
-        if (size && (nullptr == stream)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (size && (nullptr == stream)) return errorcode_t::invalid_parameter;
 
-        ret = hash.open(&handle, alg, key.data(), t_narrow_cast(key.size()));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        hash.hash(handle, stream, size, output);
-        hash.close(handle);
+    ret = hash.open(&handle, alg, key.data(), t_narrow_cast(key.size()));
+    if (errorcode_t::success == ret) {
+        ret = hash.hash(handle, stream, size, output);
     }
-    __finally2 {}
+    hash.close(handle);
 
     return ret;
 }
 
 return_t openssl_mac::cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
-    return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    __try2 {
-        if (nullptr == alg) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (nullptr == alg) return errorcode_t::invalid_parameter;
 
-        auto hint = advisor->hintof_cipher(alg);
-        if (nullptr == hint) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        ret = cmac(hint->algorithm, key, input, output);
-    }
-    __finally2 {}
+    auto hint = advisor->hintof_cipher(alg);
+    if (nullptr == hint) return errorcode_t::invalid_parameter;
 
-    return ret;
+    return cmac(hint->algorithm, key, input, output);
 }
 
 return_t openssl_mac::cmac(crypt_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output) {
-    return_t ret = errorcode_t::success;
-
     /**
      * RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
      * Step 1.   If VKlen is equal to 16
@@ -112,9 +88,7 @@ return_t openssl_mac::cmac(crypt_algorithm_t alg, const binary_t& key, const bin
      *  RFC 4614 4.  Test Vectors
      */
     openssl_kdf kdf;
-    ret = kdf.cmac_kdf_extract(output, alg, key, input);
-
-    return ret;
+    return kdf.cmac_kdf_extract(output, alg, key, input);
 }
 
 return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {

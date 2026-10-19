@@ -1,8 +1,23 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # string_set
+
+## 1. Role
+
+### Introduction
 
 `string_set` is the string-domain counterpart of `t_range_set`. It represents allowed textual values using literal members and lexicographical string ranges, with additional operations needed by ASN.1 string constraints.
 
-## Role in the set engine
+### Role in the set engine
 
 ```text
                  t_set_runtime<std::string>
@@ -17,7 +32,9 @@
 
 `t_set_runtime<std::string>` selects `string_set` as its concrete backend. This keeps the ASN.1 evaluator independent of the representation details.
 
-## Representation
+## 2. Model
+
+### Representation
 
 The implementation keeps two complementary forms:
 
@@ -37,7 +54,9 @@ range
 
 Endpoint flags allow open and closed string ranges just as they do for numeric ranges.
 
-## Operations
+## 3. Important behavior and lifetime
+
+### Operations
 
 The public API provides:
 
@@ -53,7 +72,24 @@ The public API provides:
 
 The distinction between these operations matters for ASN.1 constraints: a literal value, a permitted string range, a `FROM` restriction, and a `PATTERN` restriction are different semantic forms even though they ultimately describe allowed strings.
 
-## ASN.1 relationship
+### Tests
+
+`test/testcase/base/nostd/testcase_set.cpp` covers:
+
+- literal membership
+- `FROM` substring behavior
+- string ranges such as `"a".."z"`
+- open/closed range removal
+- regular-expression matching
+- `t_set_runtime<std::string>` integration
+
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+### ASN.1 relationship
 
 ```text
 ASN.1 constraint
@@ -81,18 +117,9 @@ A EXCEPT B         → erase_from()
 ALL EXCEPT A       → invert()
 ```
 
-## Tests
+## 6. References
 
-`test/testcase/base/nostd/testcase_set.cpp` covers:
-
-- literal membership
-- `FROM` substring behavior
-- string ranges such as `"a".."z"`
-- open/closed range removal
-- regular-expression matching
-- `t_set_runtime<std::string>` integration
-
-## Related source
+### Related source
 
 - `sdk/base/nostd/string_set.hpp`
 - `sdk/base/nostd/string_set.cpp`

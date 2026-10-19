@@ -1,4 +1,20 @@
-### understanding TLS
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# understanding TLS
+
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
 
 * RFCs
   * [RFC 5246](https://datatracker.ietf.org/doc/html/rfc5246) [summary](rfc5246.md)
@@ -416,9 +432,25 @@ end
 * `sdk/net/http/` - HTTP/2 and HTTP/3 protocol layers above TLS/QUIC
 * `sdk/net/basic/` - secure socket and transport integration
 
-## Module records
+### Module records
 
 - [TLS message model](tls-message-model.md) — record, handshake and extension implementation boundaries
 - [TLS protection and session model](tls-protection-and-session.md) — protection state, key schedule, session and SSLKEYLOG integration
 - [TLS advisor](tls_advisor.md) — TLS/DTLS/QUIC identifier and parameter mapping
 - [QUIC and TLS integration](quic-tls-integration.md) — TLS 1.3 key material and QUIC packet/frame boundary
+
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

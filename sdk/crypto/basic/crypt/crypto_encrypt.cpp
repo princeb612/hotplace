@@ -21,10 +21,8 @@ return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext
 }
 
 return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext) const {
-    return_t ret = errorcode_t::success;
     openssl_crypt crypt;
-    ret = crypt.encrypt(pkey, stream, size, ciphertext, _enc);
-    return ret;
+    return crypt.encrypt(pkey, stream, size, ciphertext, _enc);
 }
 
 return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext) const {
@@ -32,10 +30,8 @@ return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertex
 }
 
 return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext) const {
-    return_t ret = errorcode_t::success;
     openssl_crypt crypt;
-    ret = crypt.decrypt(pkey, stream, size, plaintext, _enc);
-    return ret;
+    return crypt.decrypt(pkey, stream, size, plaintext, _enc);
 }
 
 void crypto_encrypt::addref() { _shared.addref(); }

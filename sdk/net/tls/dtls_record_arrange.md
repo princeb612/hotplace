@@ -1,12 +1,28 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # DTLS record arrangement
 
-## Identity
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
+
+### Identity
 
 `dtls_record_arrange` is the session-level DTLS 1.2 record reordering component. It accepts datagrams containing one or more DTLS records, groups records by the peer address, and holds records until the next expected `(epoch, sequence)` can be consumed.
 
 It is exposed through `tls_session::get_dtls_record_arrange()` and is used by the DTLS receive path and the corresponding construction test.
 
-## Arrangement model
+### Arrangement model
 
 ```text
 UDP datagram
@@ -35,7 +51,16 @@ dtls_record_arrange::consume()
 
 The internal pool is keyed by a cookie derived from the peer address. Each peer entry maintains the current epoch, next expected sequence number, and an ordered map of stored packets.
 
-## Reordering behavior
+### Interface
+
+- `produce(addr, addrlen, stream, size)` parses and queues DTLS records from a datagram.
+- `consume(addr, addrlen, bin)` returns the next record when it is ready.
+- `consume(addr, addrlen, epoch, seq, bin)` additionally exposes the record position.
+- `make_epoch_seq()` and `get_epoch_seq()` encode/decode the 16-bit epoch and 48-bit sequence into an ordered key.
+
+## 3. Important behavior and lifetime
+
+### Reordering behavior
 
 For example, records arriving as:
 
@@ -57,14 +82,13 @@ Records older than the current `(epoch, sequence)` are treated as retransmission
 
 When a ChangeCipherSpec record is consumed, the expected epoch advances and the sequence number is reset. Otherwise the next expected sequence is incremented.
 
-## Interface
+## 4. Example from the source tests
 
-- `produce(addr, addrlen, stream, size)` parses and queues DTLS records from a datagram.
-- `consume(addr, addrlen, bin)` returns the next record when it is ready.
-- `consume(addr, addrlen, epoch, seq, bin)` additionally exposes the record position.
-- `make_epoch_seq()` and `get_epoch_seq()` encode/decode the 16-bit epoch and 48-bit sequence into an ordered key.
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
 
-## Session relationship
+## 5. Relationships
+
+### Session relationship
 
 ```text
 tls_session
@@ -81,19 +105,12 @@ tls_session
 
 The class is concerned with **receive-side ordering**. It does not construct DTLS handshake fragments; that responsibility belongs to `dtls_record_publisher`.
 
-## Related source and tests
+## 6. References
+
+### Related source and tests
 
 - `dtls_record_arrange.hpp`
 - `session/dtls_record_arrange.cpp`
 - `test/testcase/tls/testcase_dtls_record_arrange.cpp`
 - `test/testcase/tls/testcase_construct_dtls12_1.cpp`
 - `test/testcase/tls/testcase_construct_dtls12_2.cpp`
-
-## Publication
-
-```text
-hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
-```

@@ -1,4 +1,23 @@
-#### bignumber
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
+# bignumber
+
+## 1. Role
+
+`bignumber` is an arbitrary-precision integer utility. This file records signed and unsigned fixed-width boundary values, from 8-bit through 4096-bit widths, as a readable reference for comparison with the implementation and tests.
+
+## 2. Model
+
+### bignumber values
 
 - int8
   - int8.min -2<sup>7</sup>
@@ -110,3 +129,19 @@
   - uint4096.max 2<sup>4096</sup>-1
   - uint4096.max 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   - uint4096.max 1044388881413152506691752710716624382579964249047383780384233483283953907971557456848826811934997558340890106714439262837987573438185793607263236087851365277945956976543709998340361590134383718314428070011855946226376318839397712745672334684344586617496807908705803704071284048740118609114467977783598029006686938976881787785946905630190260940599579453432823469303026696443059025015972399867714215541693835559885291486318237914434496734087811872639496475100189041349008417061675093668333850551032972088269550769983616369411933015213796825837188091833656751221318492846368125550225998300412344784862595674492194617023806505913245610825731835380087608622102834270197698202313169017678006675195485079921636419370285375124784014907159135459982790513399611551794271106831134090584272884279791554849782954323534517065223269061394905987693002122963395687782878948440616007412945674919823050571642377154816321380631045902916136926708342856440730447899971901781465763473223850267253059899795996090799469201774624817718449867455659250178329070473119433165550807568221846571746373296884912819520317457002440926616910874148385078411929804522981857338977648103126085903001302413467189726673216491511131602920781738033436090243804708340403154190335
+
+## 3. Important behavior and lifetime
+
+The table describes numeric limits rather than object lifetime. `bignumber` supports values wider than native integer types; implementation behavior should be checked against `bignumber.hpp` and its tests.
+
+## 4. Example from the source tests
+
+`test_bn3()` in `test/testcase/base/system/testcase_bignumber.cpp` constructs the minimum and maximum values with shifts and compares their decimal strings with expected vectors. The testcase checks signed limits and unsigned maxima through 128 bits; the table in this document lists additional wider values.
+
+## 5. Relationships
+
+The implementation is in `sdk/base/system/bignumber.hpp`; arithmetic operators are implemented in the adjacent `bignumber_*` source files. The testcase uses `bignumber` operations to verify both range boundaries and arithmetic results.
+
+## 6. References
+
+Implementation and test paths are retained in the sections above or the source tree.

@@ -1,4 +1,16 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # mlfq
+
+## 1. Role
 
 `mlfq.hpp` provides a multi-level feedback queue scheduling structure in the system I/O layer.
 
@@ -18,10 +30,26 @@ incoming work
   +-------+
 ```
 
-## Related source
+## 2. Model
 
-- `sdk/io/system/mlfq.hpp`
+The existing implementation notes are retained below; see the references for the concrete source files.
 
-## Related area
+## 3. Important behavior and lifetime
+
+No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+
+## 4. Example from the source tests
+
+No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
+
+## 5. Relationships
+
+### Related area
 
 The scheduler is conceptually adjacent to the asynchronous I/O/server architecture but is not the same abstraction as the multiplexer itself.
+
+## 6. References
+
+### Related source
+
+- `sdk/io/system/mlfq.hpp`

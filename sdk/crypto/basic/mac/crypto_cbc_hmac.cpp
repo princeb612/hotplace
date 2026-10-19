@@ -71,51 +71,45 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_flag(uint16 flag) {
 uint16 crypto_cbc_hmac::get_flag() const { return _flag; }
 
 return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary_t& mackey) const {
-    return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    __try2 {
-        enckey.clear();
-        mackey.clear();
 
-        auto enc_alg = get_enc_alg();
-        auto mac_alg = get_mac_alg();
+    enckey.clear();
+    mackey.clear();
 
-        auto hint_cipher = advisor->hintof_cipher(enc_alg, crypt_mode_t::cbc);
-        if (nullptr == hint_cipher) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    auto enc_alg = get_enc_alg();
+    auto mac_alg = get_mac_alg();
 
-        const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
-        if (nullptr == hint_blockcipher) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        const hint_digest_t* hint_digest = advisor->hintof_digest(mac_alg);
-        if (nullptr == hint_digest) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        uint16 keysize = sizeof_key(hint_blockcipher);
-        // uint16 ivsize = sizeof_iv(hint_blockcipher);
-        // uint16 blocksize = sizeof_block(hint_blockcipher);
-        uint16 digestsize = sizeof_digest(hint_digest);
-        digestsize >>= 1;  // truncate
-
-        if (key.size() < std::max(digestsize, keysize)) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        } else {
-            /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
-            mackey.insert(mackey.end(), key.data(), key.data() + digestsize);
-            /* ENC_KEY = final ENC_KEY_LEN bytes of K */
-            size_t pos = key.size() - keysize;
-            enckey.insert(enckey.end(), &key[pos], &key[pos] + keysize);
-        }
+    auto hint_cipher = advisor->hintof_cipher(enc_alg, crypt_mode_t::cbc);
+    if (nullptr == hint_cipher) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
+    if (nullptr == hint_blockcipher) {
+        return errorcode_t::invalid_parameter;
+    }
+    const hint_digest_t* hint_digest = advisor->hintof_digest(mac_alg);
+    if (nullptr == hint_digest) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    uint16 keysize = sizeof_key(hint_blockcipher);
+    // uint16 ivsize = sizeof_iv(hint_blockcipher);
+    // uint16 blocksize = sizeof_block(hint_blockcipher);
+    uint16 digestsize = sizeof_digest(hint_digest);
+    digestsize >>= 1;  // truncate
+
+    if (key.size() < std::max(digestsize, keysize)) {
+        return errorcode_t::bad_data;
+    } else {
+        /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
+        mackey.insert(mackey.end(), key.data(), key.data() + digestsize);
+        /* ENC_KEY = final ENC_KEY_LEN bytes of K */
+        size_t pos = key.size() - keysize;
+        enckey.insert(enckey.end(), &key[pos], &key[pos] + keysize);
+    }
+
+    return errorcode_t::success;
 }
 
 /* concatenated tag

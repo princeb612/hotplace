@@ -1,8 +1,22 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # Socket Model
+
+## 1. Role
 
 The basic network socket layer separates the common socket contract from concrete transport and security implementations.
 
-## Class hierarchy
+## 2. Model
+
+### Class hierarchy
 
 ```text
 basic_socket
@@ -27,7 +41,7 @@ basic_socket
 
 The concrete class therefore selects transport and security without changing the common caller-facing model.
 
-## Scheme model
+### Scheme model
 
 The implementation uses combinations such as:
 
@@ -41,7 +55,27 @@ TLS + TRIAL + CLIENT
 
 This scheme information is useful to higher layers when they need to distinguish transport, security backend, and endpoint role.
 
-## Boundary with higher layers
+### Source
+
+- `basic_socket.hpp/.cpp`
+- `client_socket.hpp/.cpp`
+- `server_socket.hpp/.cpp`
+- `server_socket_adapter.hpp/.cpp`
+- `server_socket_builder.hpp/.cpp`
+
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+### Tests
+
+The common socket classes are exercised mainly through the concrete network test programs rather than a single exhaustive `basic_socket` unit test. `test/testcase/net/basic/` contains the current basic-network tests.
+
+## 5. Relationships
+
+### Boundary with higher layers
 
 `basic` is intentionally below the protocol/session layers:
 
@@ -57,14 +91,6 @@ OS socket API
 
 The `server` layer builds sessions and network streams above this abstraction; `tls` adds protocol-specific TLS/DTLS/QUIC behavior.
 
-## Source
+## 6. References
 
-- `basic_socket.hpp/.cpp`
-- `client_socket.hpp/.cpp`
-- `server_socket.hpp/.cpp`
-- `server_socket_adapter.hpp/.cpp`
-- `server_socket_builder.hpp/.cpp`
-
-## Tests
-
-The common socket classes are exercised mainly through the concrete network test programs rather than a single exhaustive `basic_socket` unit test. `test/testcase/net/basic/` contains the current basic-network tests.
+Source references and related documents are retained here where available.

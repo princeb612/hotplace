@@ -187,6 +187,30 @@ class t_gss {
         std::unordered_set<node_type*> visited;
         start_node->retrace(depth, current_path, path_handler, visited);
     }
+
+    // generate a state stack string by backtracking from the GSS node to the root (parent)
+    std::string backtrack_string(node_ptr node) {
+        if (nullptr == node) return "";
+
+        std::vector<STATE> states;
+        node_ptr curr = node;
+
+        // traverse up the first parent path to the root (when there are no parents)
+        while (curr) {
+            states.push_back(curr->state);
+            if (false == curr->parents.empty()) {
+                curr = curr->parents[0];
+            } else {
+                break;
+            }
+        }
+
+        std::string result;
+        for (auto it = states.rbegin(); it != states.rend(); ++it) {
+            result += std::to_string(*it) + " ";
+        }
+        return result;
+    }
 };
 
 }  // namespace hotplace

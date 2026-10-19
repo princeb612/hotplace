@@ -1,10 +1,27 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1105                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Logger
+
+## 1. Role
+
+### Introduction
 
 `logger` is hotplace's common output facility for test and diagnostic messages.
 
 It provides a single interface for console output, file output, formatted messages, stream-based messages, binary dumps, log-level filtering, colors, and buffered/asynchronous flushing.
 
-## Construction
+## 2. Model
+
+### Construction
 
 `logger_builder` configures the logger before construction.
 
@@ -36,7 +53,7 @@ logger_builder
             └── consumer thread
 ```
 
-## Output interfaces
+### Output interfaces
 
 The logger exposes several equivalent output forms:
 
@@ -61,27 +78,7 @@ This keeps callers independent of the final output destination.
 
 `consoleln()` writes to the console path, while `write()` and `writeln()` use the configured general output path. `colorln()` adds explicit console color handling.
 
-## Log levels
-
-The logger maintains two levels:
-
-- the configured log level
-- the implicit level used when a message does not explicitly provide a level
-
-A message is emitted when its effective level satisfies the configured threshold.
-
-```text
-message level >= configured log level
-        │
-        ├── true  → log
-        └── false → suppress
-```
-
-The distinction between explicit and implicit levels allows callers to set a default verbosity while still selecting a level for individual messages.
-
-`testcase_loglevel.cpp` systematically exercises the level combinations and records the expected filtering behavior.
-
-## Buffered output and consumer
+### Buffered output and consumer
 
 The logger maintains per-thread logger streams and uses a consumer thread for output processing.
 
@@ -102,7 +99,7 @@ caller thread
 
 The implementation uses synchronization around the shared logger state and retains per-thread output context.
 
-## File output and rotation
+### File output and rotation
 
 File logging can be enabled through `logger_builder::set_logfile()`.
 
@@ -115,7 +112,29 @@ The builder also exposes configuration for:
 
 These settings allow the same logger abstraction to be used for short-lived test programs as well as longer-running diagnostic output.
 
-## Binary dumps
+## 3. Important behavior and lifetime
+
+### Log levels
+
+The logger maintains two levels:
+
+- the configured log level
+- the implicit level used when a message does not explicitly provide a level
+
+A message is emitted when its effective level satisfies the configured threshold.
+
+```text
+message level >= configured log level
+        │
+        ├── true  → log
+        └── false → suppress
+```
+
+The distinction between explicit and implicit levels allows callers to set a default verbosity while still selecting a level for individual messages.
+
+`testcase_loglevel.cpp` systematically exercises the level combinations and records the expected filtering behavior.
+
+### Binary dumps
 
 `dump()` and `hdump()` connect the logger with hotplace's binary-debugging facilities.
 
@@ -129,7 +148,7 @@ The optional header in `hdump()` is useful for identifying a packet, buffer, cer
 
 This is complementary to `dump_memory`: the latter is the reusable formatting primitive, while `logger` provides the logging/output path.
 
-## Console colors
+### Console colors
 
 `console_color.hpp` provides the console styling used by the logger.
 
@@ -137,29 +156,7 @@ This is complementary to `dump_memory`: the latter is the reusable formatting pr
 
 The test suite contains a separate console-color testcase because color handling is a distinct terminal concern from ordinary logging.
 
-## Test-case integration
-
-A logger can attach to a `test_case` instance.
-
-```text
- test_case ──────► logger
-     │               │
-     │               ├── diagnostic output
-     │               ├── report output
-     │               └── log filtering
-     │
-     └── pass/fail semantics
-```
-
-This separation is useful in hotplace tests: `test_case` decides whether a test passed, failed, or was intentionally skipped, while `logger` controls how diagnostic information is presented.
-
-## Historical note
-
-`logger.hpp` retains a history reaching back to the 2008 implementation. The current implementation was rebooted in the hotplace line in 2024.
-
-The two `sketch_logger_2008_*.jpg` files in this directory are retained as historical design material. They document earlier ideas such as schedulable stream handling and conditional flush; they should not be read as a current implementation diagram.
-
-## Tests
+### Tests
 
 The main logging tests are:
 
@@ -169,7 +166,34 @@ The main logging tests are:
 
 Together they demonstrate log-level filtering, console color support, formatted output, and logger/test-case integration.
 
-## Related source
+## 4. Example from the source tests
+
+### Follow log-level filtering
+
+`test/testcase/base/unittest/testcase_loglevel.cpp` exercises explicit and implicit log levels. The important trace is not simply “call logger and see text”; it is to compare the configured threshold with the effective level of each message and confirm which messages are emitted.
+
+```text
+configured logger threshold
+          │
+          ▼
+message with explicit level ──┐
+message with implicit level ───┼──► compare effective level ──► emit / suppress
+                              ┘
+```
+
+`testcase_consolecolor.cpp` covers console color handling separately, while `testcase_unittest.cpp` demonstrates logger use alongside test result recording. These tests are separate because filtering, terminal presentation, and test pass/fail semantics are distinct behaviors.
+
+## 5. Relationships
+
+- `test_case` can attach a logger for diagnostic output, but the test-case object owns the pass/fail/result accounting.
+- `basic_stream` and the project's formatting helpers provide message construction; logger routes and flushes the resulting output.
+- `dump_memory` provides the common byte-to-hex/ASCII formatting primitive; logger dump APIs expose that capability through the configured output path.
+- `console_color.hpp` handles terminal styling, which is independent of file output and log-level filtering.
+- The consumer/buffering path means logger lifetime and shutdown/flush behavior matter when output must be complete before process exit.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/unittest/logger.hpp`
 - `sdk/base/unittest/logger.cpp`
@@ -177,3 +201,14 @@ Together they demonstrate log-level filtering, console color support, formatted 
 - `sdk/base/unittest/logger_write.cpp`
 - `sdk/base/unittest/logger_dump.cpp`
 - `sdk/base/unittest/console_color.hpp`
+
+## 7. Development Notes (for maintainer review)
+
+Pre-existing notes or development-oriented material retained for the maintainer to review and reorganize.
+
+
+### Historical note
+
+`logger.hpp` retains a history reaching back to the 2008 implementation. The current implementation was rebooted in the hotplace line in 2024.
+
+The two `sketch_logger_2008_*.jpg` files in this directory are retained as historical design material. They document earlier ideas such as schedulable stream handling and conditional flush; they should not be read as a current implementation diagram.

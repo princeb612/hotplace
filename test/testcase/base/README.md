@@ -1,4 +1,21 @@
-#### reference
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
+# Readme
+
+## 1. Role
+
+### Introduction
+
+##### reference
 
 * test vector
   * modpow
@@ -7,7 +24,7 @@
   * https://www.calculator.net/big-number-calculator.html
   * https://bigcalculator.org/
 
-#### YAML schema
+##### YAML schema
 
 * bignumber YAML schema
 
@@ -165,3 +182,29 @@ testvector:
         match: string                       # [mandatory]
           words: array of occurrence        # [mandatory] ex. "words": [pos1, pos2, ...]
 ````
+
+## 2. Test model
+
+The testcase-to-module mapping is summarized by the retained source descriptions below.
+
+## 3. Example: representative testcase flow
+
+No standalone example was identified in the existing material; see source-level coverage for representative testcase functions.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+Inspect the named testcase source and its assertions; this document alone does not establish coverage.
+
+### 4.2 Documentation and verification status
+
+Documentation completeness, assertion strength, and recorded runtime execution are separate claims. State each only when supported by source or report evidence.
+
+## 5. Relationships
+
+Related implementation modules and testcase documents are listed in References where available.
+
+## 6. References
+
+Source paths and report provenance are recorded where available.

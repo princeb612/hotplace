@@ -1,81 +1,75 @@
-# Crypto Advisor
-
-`sdk/crypto/advisor` is the lookup and mapping layer that connects cryptographic names, identifiers, parameters, and OpenSSL representations to hotplace's crypto abstractions.
-
-It is not another primitive implementation. The implementation tables describe algorithms and parameters, while `crypto_advisor` provides the query interface used by crypto and protocol code.
-
-## Main role
-
-The advisor bridges several naming domains:
+## Publication
 
 ```text
-hotplace enum / scheme
-        ↕
-crypto_advisor
-        ↕
-resource tables
-        ↕
-OpenSSL NID / EVP / names
-        ↕
-TLS / JOSE / COSE identifiers
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
-Representative queries include:
+# Crypto Advisor: Lookup Domains and Resource Mapping
 
-- cipher and mode → cipher hint / EVP cipher
-- digest algorithm → digest hint / EVP MD
-- curve name/NID → curve hint, key type, TLS group
-- key/signature identifiers → corresponding metadata
-- JOSE/COSE algorithm names → implementation metadata
-- TLS signature scheme / group information → crypto metadata
-- OpenSSL `EVP_PKEY` / NID → hotplace hint information
+## 1. Role
 
-## Resource tables
+This document describes the implementation details behind [`crypto_advisor`](crypto_advisor.hpp): the lookup domains, resource metadata, and mapping boundary between hotplace's crypto abstractions and identifiers exposed by OpenSSL and protocols.
 
-The `resource_*.cpp` files are generated/static lookup data rather than independent crypto implementations. They cover areas such as:
+## 2. Model
 
-- cipher algorithms
-- digests
-- curves
-- keys
-- signatures and signature schemes
-- COSE
-- JOSE/JWA/JWE
-- TLS parameters
+The advisor is organized around domain-specific hint/resource tables and query methods. The tables preserve different kinds of information—algorithm names, hotplace enums/schemes, key types, curve aliases, protocol identifiers, and backend references—instead of forcing every domain into one common record.
 
-Keeping this data in the advisor separates identifier/parameter knowledge from the primitive implementations in `sdk/crypto/basic`.
+| Resource area | Representative information |
+|---|---|
+| Cipher | algorithm/mode, scheme, names, EVP cipher mapping |
+| Digest | digest algorithm, names, EVP MD mapping |
+| Curve | aliases, key type, OpenSSL NID, TLS group where applicable |
+| Key and signature | key/signature metadata and naming/identifier mappings |
+| JOSE | JWA/JWE/JWS-related names and metadata |
+| COSE | COSE algorithm identifiers and metadata |
+| TLS | signature schemes, groups, and TLS-related parameters |
 
-## Feature flags
+The feature index associates a name with one or more `advisor_feature_t` bits. Flags include cipher, digest, wrapping, JWA, JWE, JWS, COSE, curve, version-specific, signature-scheme, and TLS-group categories.
 
-`advisor_feature_t` records where an algorithm/parameter is used or supported. The current flags include cipher, digest, wrapping, JWA, JWE, JWS, COSE, curve, version-specific, signature-scheme, and TLS-group features.
+## 3. Important behavior and lifetime
 
-`query_feature()` and the `for_each_*()` family allow callers and tests to inspect the supported resource set without duplicating the tables.
+### Backend resolution is conditional
 
-## Relationship to OpenSSL
+The existence of a hint does not imply that OpenSSL provides a usable method in the active build. The implementation conditionally populates maps when an EVP cipher or digest can be resolved. Code using `find_evp_cipher()` or `find_evp_md()` must account for a null result.
 
-The advisor is also an adaptation boundary between hotplace identifiers and OpenSSL identifiers. Examples include:
+### OpenSSL version paths
 
-- `find_evp_cipher()`
-- `find_evp_md()`
-- curve NID lookup
-- `hintof_pkey()` / `hintof_ossl_nid()`
+The implementation uses OpenSSL 3 fetch APIs (`EVP_CIPHER_fetch` and related APIs) when compiled against OpenSSL 3. Earlier versions use the corresponding name-based lookup paths and include compatibility handling for selected cipher-wrap methods. These branches describe backend integration, not a guarantee that all listed algorithms are supported in every build.
 
-The implementation therefore contains OpenSSL-specific knowledge, but the purpose of the directory is still metadata/lookup rather than cryptographic computation.
+### Aliases and identifier domains
 
-## Verification
+Curve lookup methods accept names from multiple naming conventions and can map them to the same hint. Other lookup methods translate between hotplace enums/schemes, OpenSSL NIDs or EVP objects, and protocol-specific identifiers. The supported mappings are defined by the current resource data and build environment.
 
-`test/testcase/crypto/advisor/testcase_advisor.cpp` checks three important properties:
+### Feature enumeration
 
-1. advertised cipher/digest/JOSE/COSE/curve features can be queried;
-2. curve aliases such as `P-256`, `prime256v1`, and `secp256r1` resolve to the same curve metadata;
-3. cipher resource entries remain internally consistent with their algorithm/mode and fetch-name mappings.
+`query_feature()` and the `for_each_*()` family expose resource availability and allow callers/tests to inspect the advertised set without copying the resource tables. The feature index describes known/available mappings; it is not a security-policy evaluator.
 
-The testcase is especially useful as a record of the invariant expected from the resource tables: modifying a resource entry must not silently break the mapping between its public name, scheme, algorithm/mode, and backend representation.
+## 4. Example from the source tests
 
-## Related areas
+The source testcase in [`testcase_advisor.cpp`](../../../test/testcase/crypto/advisor/testcase_advisor.cpp) demonstrates three invariants:
 
-- `../basic/` — cryptographic primitive implementations
-- `../cose/` — COSE structures and algorithms
-- `../jose/` — JOSE structures and algorithms
-- `../../net/tls/` — TLS use of signature schemes, groups, ciphers, and digests
-- `../../../test/testcase/crypto/advisor/` — advisor verification
+1. Feature enumeration visits the cipher, digest, JOSE, COSE, and curve entries that the advisor advertises.
+2. `P-256`, `prime256v1`, and `secp256r1` resolve to the expected same NID in the tested OpenSSL configuration.
+3. Cipher resource entries are cross-checked so that their scheme's algorithm/mode agrees with the entry's fetch-name mapping.
+
+These checks protect table consistency. They are not comprehensive cryptographic known-answer tests, protocol conformance tests, or a claim that every listed algorithm is enabled in every build.
+
+## 5. Relationships
+
+- [`README.md`](README.md) — directory-level role and file map.
+- [`../basic/`](../basic/README.md) — cryptographic operations and core types.
+- [`../cose/`](../cose/README.md) and [`../jose/`](../jose/README.md) — protocol/object formats whose identifiers are represented in advisor data.
+- [`../../net/tls/`](../../net/tls/README.md) — TLS integration.
+- [`../../../test/testcase/crypto/advisor/`](../../../test/testcase/crypto/advisor/README.md) — advisor-specific tests.
+
+## 6. References
+
+- [`crypto_advisor.hpp`](crypto_advisor.hpp) — public methods, hint lookup APIs, and feature flags.
+- [`crypto_advisor.cpp`](crypto_advisor.cpp) — initialization and mapping construction.
+- `crypto_advisor_*.cpp` — domain-specific lookup implementation.
+- `resource_*.cpp` — static metadata tables.

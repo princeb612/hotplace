@@ -1,67 +1,71 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # JWS signing and JWE encryption
 
-## JWS
+## 1. Role
 
-`json_object_signing` implements RFC 7515 signing and verification. The public `sign()`/`verify()` operations select a `jws_t` algorithm and a JOSE serialization form, while the internal `dosign()`/`doverify()` operations perform the algorithm-specific cryptographic work.
+This record covers the operation flow for JSON Web Signature (JWS) and JSON Web Encryption (JWE). It focuses on how JOSE constructs protocol-specific inputs and coordinates common cryptographic operations.
 
-Supported algorithm families represented in the current implementation include HMAC, RSA PKCS#1 v1.5, RSA-PSS, ECDSA and EdDSA.
+## 2. Model
 
-`json_web_signature` provides the JWS-oriented signature helper used around this processing.
+### JWS
 
-The important conceptual split is:
+`json_object_signing` implements signing and verification. The public operations choose a `jws_t` algorithm and serialization form; internal `dosign()` / `doverify()` paths perform algorithm-specific work. The source represents HMAC, RSA PKCS#1 v1.5, RSA-PSS, ECDSA and EdDSA families. `json_web_signature` is a JWS-oriented helper.
 
 ```text
 JWS header + payload
         ↓
-JOSE signing input
+ JOSE signing input
         ↓
-crypto/basic signature or MAC
+ crypto/basic signature or MAC
         ↓
-JWS signature
+ signature bytes
         ↓
-compact / JSON serialization
+ compact / flattened JSON / general JSON
 ```
 
-## JWE
+### JWE
 
-`json_object_encryption` implements RFC 7516. It separates two cryptographic stages:
+`json_object_encryption` separates two stages:
 
-1. **Key management** — obtain, derive or wrap the CEK using algorithms such as RSA, AES-KW, ECDH-ES, AES-GCM-KW and PBES2.
-2. **Content encryption** — encrypt the payload using `jwe_t` algorithms such as AES-CBC-HMAC or AES-GCM.
+1. **Key management** — obtain, derive, or wrap the CEK using algorithms such as RSA, AES-KW, ECDH-ES, AES-GCM-KW, and PBES2.
+2. **Content encryption** — encrypt the payload with algorithms such as AES-CBC-HMAC or AES-GCM.
 
-For multi-recipient JSON serialization, the same content-encryption result is associated with multiple recipient entries, each carrying its own key-management operation.
+The source includes handling for direct (`dir`) and ECDH-ES cases, where CEK derivation differs from ordinary key wrapping.
 
-```text
-plaintext
-   ↓
-content encryption (CEK)
-   ↓
-ciphertext + IV + tag
+## 3. Important behavior and lifetime
 
-recipient key
-   ↓
-key management
-   ↓
-encrypted/derived CEK
+For multi-recipient JSON serialization, recipient-specific key-management results are represented separately from the shared content-encryption result. JWE compression is represented by `jose_deflate` in the context; this is protocol processing, not a replacement for the underlying cryptographic implementation.
 
-        ↓
-     JWE composer
-        ↓
-compact / flattened / JSON
-```
+The combined `json_object_signing_encryption` API exposes signing, verification, encryption and decryption through one JOSE-facing context. The focused signing and encryption classes contain the specific processing logic and composer paths.
 
-The implementation has explicit handling for `dir` and `ECDH-ES`, where the CEK is obtained differently from ordinary wrapping algorithms.
+## 4. Example from the source tests
 
-## Combined orchestration
+`testcase_rfc7515.cpp` exercises sign/verify and checks the RFC 7515 A.1 HS256 compact serialization against a known output, with additional flattened/general JSON forms. `testcase_rfc7516.cpp` covers RFC 7516 examples. `testcase_rfc7520.cpp` exercises JWS and JWE examples, including multiple content-encryption and key-management combinations. The provided report lists 164 successful checks under the RFC 7520 group.
 
-`json_object_signing_encryption` provides the common context lifecycle (`open`, `close`, `clear_context`) and exposes signing, verification, encryption and decryption operations through one JOSE-facing API.
+## 5. Relationships
 
-This class is the main high-level entry point; the dedicated signing/encryption classes contain the more focused processing logic and composers.
+- `jose-object-model.md` documents context and recipient/signature state.
+- `jose-key-and-algorithms.md` documents identifiers and JWK conversion.
+- `../basic/` performs the primitive cryptographic operations.
+- `../advisor/` supplies algorithm metadata used to connect JOSE names to cryptographic representations.
 
-## Compression
+## 6. References
 
-The JOSE context includes `jose_deflate`, corresponding to JWE compression processing. This is protocol-level handling rather than a replacement for the underlying crypto implementation.
-
-## Tests
-
-`test/testcase/jose/` exercises RFC 7515, 7516 and 7520 examples extensively, with JWK files and many RFC 7520 JWS/JWE fixtures. The RFC 7518 testcase provides the algorithm-level coverage.
+- `json_object_signing.hpp/.cpp`
+- `json_object_encryption.hpp/.cpp`
+- `json_object_signing_composer.cpp`
+- `json_object_encryption_composer.cpp`
+- `json_web_signature.hpp/.cpp`
+- `test/testcase/jose/testcase_rfc7515.cpp`
+- `test/testcase/jose/testcase_rfc7516.cpp`
+- `test/testcase/jose/testcase_rfc7520.cpp`

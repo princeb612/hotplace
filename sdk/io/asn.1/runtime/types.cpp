@@ -21,9 +21,9 @@ namespace io {
 
 void asn1_build_resultset::clear() {
     type = asn1_build_t::unknown;
-    auto rtcontext = asn1_modules::get_instance();
+    auto modules = asn1_modules::get_instance();
     for (const auto& name : module_names) {
-        rtcontext->remove(name);
+        modules->remove(name);
     }
     module_names.clear();
     if (object) {

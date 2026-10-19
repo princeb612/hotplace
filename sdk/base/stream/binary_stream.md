@@ -1,10 +1,59 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Binary Stream
 
-`binary_stream` is the binary-oriented companion to the text-focused `basic_stream`. It is kept separate because binary accumulation and byte-oriented operations have different usage patterns from formatted text output.
+## 1. Role
 
-The module is small; its importance is as a base abstraction used by code that needs an explicit binary stream representation rather than a textual formatter.
+`binary_stream` is a small builder around `binary_t` for assembling binary values in a defined byte order. It is separate from `basic_stream`, whose primary purpose is formatted text output, and from protocol-specific encoders that apply a wire format's own field rules.
 
-## Source
+## 2. Model
 
-- `sdk/base/stream/binary_stream.hpp`
-- `sdk/base/stream/binary_stream.cpp`
+The object owns a `binary_t` buffer and an endian flag. The default is big-endian. `set_endian(false)` selects the non-big-endian path used by integer serialization helpers; this setting affects integer `prefix()` and `append()` operations, not raw byte sequences or an already-encoded `binary_t`.
+
+- `append(value)` adds a value at the end of the buffer.
+- `prefix(value)` inserts a value at the beginning of the buffer.
+- Integer overloads cover signed and unsigned 8-, 16-, 32-, and 64-bit values.
+- Byte pointers, `std::string`, and `binary_t` can be appended as byte sequences; `binary_t` can also be prefixed.
+- `get()` exposes the underlying buffer by reference; `size()`, `empty()`, and `clear()` provide basic state operations.
+
+```text
+binary_stream
+   ├── endian policy ──► integer byte conversion
+   ├── prefix(value) ───► insert at buffer start
+   ├── append(value) ───► append at buffer end
+   └── get() ───────────► binary_t
+```
+
+## 3. Important behavior and lifetime
+
+- The builder's endian flag affects integer conversion overloads; callers should not assume it transforms raw byte buffers already supplied by the caller.
+- `get()` exposes the owned `binary_t` object by reference, so the reference is tied to the lifetime of the `binary_stream` instance and its contained object.
+- The class assembles primitive bytes only. It does not automatically add field lengths, tags, nested structure boundaries, or protocol framing.
+- No direct `binary_stream` use was identified in `test/testcase/base/stream/testcase_stream.cpp` or `testcase_bufferio.cpp`. Tests of `binary_t` or other stream helpers must not be represented as direct `binary_stream` coverage.
+
+## 4. Example from the source tests
+
+No direct example using `binary_stream` was identified in the reviewed `test/testcase/base/stream/` sources. To avoid presenting an invented or unverified snippet as a testcase example, this section records that evidence gap. A focused testcase should check integer `append()` and `prefix()` in both endian modes, raw byte appends, `clear()`, and the resulting bytes.
+
+## 5. Relationships
+
+- `sdk/base/nostd/binary.hpp` — defines `binary_t` and related byte-buffer helpers.
+- `sdk/base/system/endian-and-wire-integers.md` — byte-order helpers and wire-format integer context.
+- [`basic_stream.md`](basic_stream.md) — text formatting rather than primitive binary assembly.
+- `test/testcase/base/stream/testcase_stream.cpp` — related stream tests, but no direct `binary_stream` test was found in the reviewed source.
+
+## 6. References
+
+- Source: `sdk/base/stream/binary_stream.hpp`
+- Related type: `sdk/base/nostd/binary.hpp`
+- Related endian utilities: `sdk/base/system/endian-and-wire-integers.md`
+- Revision basis: hotplace source archive, revision 1104.

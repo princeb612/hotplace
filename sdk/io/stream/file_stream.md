@@ -1,6 +1,16 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # File Stream
 
-## Role
+## 1. Role
 
 `file_stream` is the concrete file-backed implementation of the common `stream_t` interface.
 
@@ -21,7 +31,91 @@ file_stream
        └── Windows: HANDLE + CreateFileMapping/MapViewOfFile
 ```
 
-## Open flags
+## 2. Model
+
+### Memory mapping
+
+Memory mapping is an explicit operation rather than an automatic property of `file_stream`.
+
+```text
+open()
+  │
+  ▼
+begin_mmap()
+  │
+  ├── data() → mapped file bytes
+  └── size() → file size
+  │
+  ▼
+end_mmap()
+```
+
+`begin_mmap()` rejects a closed stream and does nothing when the file is empty or already mapped.
+
+The mapping is useful when a caller needs random access to the entire file as a byte array. The direct testcase uses exactly this path.
+
+### Read/write versus mapped access
+
+The class therefore supports two different access styles:
+
+```text
+stream API
+  ├── read()
+  ├── write()
+  ├── seek()
+  └── truncate()
+
+mapped API
+  ├── begin_mmap()
+  ├── data()
+  └── end_mmap()
+```
+
+They are complementary. The testcase writes through the mapped view, unmaps it, seeks to the beginning, and verifies the data through `read()`.
+
+### Formatting output
+
+`printf()` and `vprintf()` do not call the operating-system formatted I/O API directly.
+
+Instead:
+
+```text
+printf / vprintf
+       │
+       ▼
+    bufferio
+       │
+       ▼
+   formatted bytes
+       │
+       ▼
+    write()
+       │
+       ▼
+      file
+```
+
+This reuses the formatting/buffer machinery already provided by `sdk/base/stream`.
+
+### Stream state
+
+`file_stream` exposes:
+
+- `is_open()`
+- `is_mmapped()`
+- `empty()`
+- `occupied()`
+- `size()`
+- `data()`
+- `get_stream_type()`
+
+The stream type is reported as `stream_type_t::file`.
+
+`data()` is meaningful for the active memory-mapped view; ordinary file access should use `read()`/`write()`.
+
+## 3. Important behavior and lifetime
+
+### Open flags
 
 `filestream_flag_t` describes the file-open policy.
 
@@ -47,7 +141,7 @@ Convenience combinations include:
 
 The abstraction deliberately keeps these policies at the hotplace API boundary instead of exposing POSIX/Win32 flags to callers.
 
-## Basic file lifecycle
+### Basic file lifecycle
 
 The normal lifecycle is:
 
@@ -67,7 +161,7 @@ fs.close()
 
 `close()` also releases an active mapping and platform-specific file lock.
 
-## Platform implementation
+### Platform implementation
 
 ### Linux
 
@@ -104,87 +198,17 @@ For a writable file, the mapping is created with `PROT_WRITE` and `MAP_SHARED`, 
 
 The narrow-character `open(const char*, ...)` path converts to a wide string and delegates to the Windows wide-character overload.
 
-## Memory mapping
+### Current scope
 
-Memory mapping is an explicit operation rather than an automatic property of `file_stream`.
+There is currently one substantive concrete implementation in this directory: `file_stream`.
 
-```text
-open()
-  │
-  ▼
-begin_mmap()
-  │
-  ├── data() → mapped file bytes
-  └── size() → file size
-  │
-  ▼
-end_mmap()
-```
+`string.hpp` is only a placeholder and does not justify a separate module record yet. Likewise, `types.hpp` only provides declarations/types shared by the directory and does not represent an independent feature.
 
-`begin_mmap()` rejects a closed stream and does nothing when the file is empty or already mapped.
+If additional concrete stream types are introduced later, they should get their own module records rather than expanding this document indefinitely.
 
-The mapping is useful when a caller needs random access to the entire file as a byte array. The direct testcase uses exactly this path.
+## 4. Example from the source tests
 
-## Read/write versus mapped access
-
-The class therefore supports two different access styles:
-
-```text
-stream API
-  ├── read()
-  ├── write()
-  ├── seek()
-  └── truncate()
-
-mapped API
-  ├── begin_mmap()
-  ├── data()
-  └── end_mmap()
-```
-
-They are complementary. The testcase writes through the mapped view, unmaps it, seeks to the beginning, and verifies the data through `read()`.
-
-## Formatting output
-
-`printf()` and `vprintf()` do not call the operating-system formatted I/O API directly.
-
-Instead:
-
-```text
-printf / vprintf
-       │
-       ▼
-    bufferio
-       │
-       ▼
-   formatted bytes
-       │
-       ▼
-    write()
-       │
-       ▼
-      file
-```
-
-This reuses the formatting/buffer machinery already provided by `sdk/base/stream`.
-
-## Stream state
-
-`file_stream` exposes:
-
-- `is_open()`
-- `is_mmapped()`
-- `empty()`
-- `occupied()`
-- `size()`
-- `data()`
-- `get_stream_type()`
-
-The stream type is reported as `stream_type_t::file`.
-
-`data()` is meaningful for the active memory-mapped view; ordinary file access should use `read()`/`write()`.
-
-## Test coverage
+### Test coverage
 
 `test/testcase/io/stream/testcase_filestream.cpp` currently exercises:
 
@@ -200,7 +224,23 @@ The stream type is reported as `stream_type_t::file`.
 
 The test is therefore also a compact example of the intended mmap/read workflow.
 
-## Related source
+### Related tests
+
+- `test/testcase/io/stream/testcase_filestream.cpp`
+- `test/testcase/io/sample.cpp`
+- `test/testcase/io/sample.hpp`
+
+## 5. Relationships
+
+### Related modules
+
+- `sdk/base/stream/` — common stream, buffer and formatting layer
+- `sdk/io/string/` — I/O string facilities
+- `sdk/io/basic/` — protocol-oriented binary I/O helpers
+
+## 6. References
+
+### Related source
 
 - `sdk/io/stream/file_stream.hpp`
 - `sdk/io/stream/linux/file_stream.cpp`
@@ -209,23 +249,3 @@ The test is therefore also a compact example of the intended mmap/read workflow.
 - `sdk/base/stream/stream.hpp`
 - `sdk/base/stream/basic_stream.hpp`
 - `sdk/base/stream/lowlevel/bufferio.hpp`
-
-## Related tests
-
-- `test/testcase/io/stream/testcase_filestream.cpp`
-- `test/testcase/io/sample.cpp`
-- `test/testcase/io/sample.hpp`
-
-## Related modules
-
-- `sdk/base/stream/` — common stream, buffer and formatting layer
-- `sdk/io/string/` — I/O string facilities
-- `sdk/io/basic/` — protocol-oriented binary I/O helpers
-
-## Current scope
-
-There is currently one substantive concrete implementation in this directory: `file_stream`.
-
-`string.hpp` is only a placeholder and does not justify a separate module record yet. Likewise, `types.hpp` only provides declarations/types shared by the directory and does not represent an independent feature.
-
-If additional concrete stream types are introduced later, they should get their own module records rather than expanding this document indefinitely.

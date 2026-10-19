@@ -1,20 +1,25 @@
-# t_range_set
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1096
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
+# t_range_set
+
+## 1. Role
+
+### Introduction
 
 `t_range_set` is hotplace's generic set implementation for ordered values represented as individual points and intervals. It is a general `nostd` utility, not an ASN.1-specific class.
 
 It is also the numeric backend selected by `t_set_runtime<T>` for integral and floating-point values.
 
-## Role in the set engine
+### Role in the set engine
 
 ```text
                  ASN.1 semantic layer
@@ -33,7 +38,9 @@ It is also the numeric backend selected by `t_set_runtime<T>` for integral and f
 
 The important distinction is that `t_range_set` knows how to represent and manipulate ranges, while the ASN.1 layer gives those operations their constraint semantics.
 
-## Representation
+## 2. Model
+
+### Representation
 
 A range is represented by an interval with explicit endpoint flags. `t_range_value<T>` additionally allows special boundary values such as `MIN` and `MAX`.
 
@@ -51,7 +58,9 @@ special bounds
 
 For integral types, adjacent values can be merged when the ranges are contiguous. For floating-point values, endpoint openness/closedness matters because there is no discrete `next` integer value.
 
-## Core operations
+## 3. Important behavior and lifetime
+
+### Core operations
 
 The implementation supports the set operations needed by constraint composition:
 
@@ -69,7 +78,7 @@ contains()         membership query
 
 The internal representation is kept normalized so that overlapping ranges can be merged instead of being retained as many redundant intervals.
 
-## Constraint evaluation path
+### Constraint evaluation path
 
 The source-level relationship is more precise than simply saying that ASN.1 “uses” `t_range_set`:
 
@@ -92,7 +101,7 @@ ASN.1 constraint object tree
 
 `asn1_constraint_evaluator<T>::get_result_set()` exposes the runtime set, while `t_set_runtime<T>` selects the concrete backend. `t_range_set` therefore implements the numeric domain operations; it does not interpret ASN.1 syntax itself.
 
-## Why ASN.1 uses it
+### Why ASN.1 uses it
 
 ASN.1 constraints naturally describe ordered value domains:
 
@@ -126,7 +135,7 @@ EXCEPT
 
 This makes the same machinery useful for both direct membership tests and composition of nested ASN.1 constraints.
 
-## Generic reuse
+### Generic reuse
 
 Although ASN.1 is an important consumer, `t_range_set` is not tied to ASN.1. The source comments also identify QUIC ACK ranges as a representative use case, and the range-set test suite exercises the data structure independently.
 
@@ -142,7 +151,7 @@ sdk/base/nostd/range_set.hpp
         +---- other range-oriented SDK uses
 ```
 
-## Tests
+### Tests
 
 `test/testcase/base/nostd/testcase_set.cpp` covers:
 
@@ -154,7 +163,17 @@ sdk/base/nostd/range_set.hpp
 - integral and floating-point domains
 - `t_range_value<T>` special boundary representation
 
-## Related source
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/nostd/range_set.hpp`
 - `sdk/base/nostd/range.hpp`

@@ -1,18 +1,23 @@
-# Graph-Structured Stack
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1096
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1105                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
+# Graph-Structured Stack
+
+## 1. Role
+
+### Introduction
 
 `gss.hpp` implements `gss<STATE, VALUE>`, a graph-structured stack used by the hotplace GLR parser. Unlike an ordinary LR stack, a GSS can retain several active heads and connect them to shared parent nodes so that alternative parser paths do not have to be copied into independent stacks.
 
-## Model
+## 2. Model
 
 ```text
                  GSS
@@ -30,7 +35,7 @@ Documented with GPT-5.6 Luna
 
 Each `gss_node<STATE, VALUE>` stores a parser/application state, an associated value, and zero or more parent nodes. `gss` maintains active `heads` and an index of nodes by state.
 
-## Operations used by GLR
+### Operations used by GLR
 
 The GLR parser currently uses the following operations:
 
@@ -57,7 +62,37 @@ ancestor paths
     └── ...
 ```
 
-## Hotplace parser relationship
+## 3. Important behavior and lifetime
+
+### Shared ancestry and path depth
+
+A GSS node can have multiple parents, and multiple active heads can share ancestors. Consequently, a reduction of depth `n` must enumerate all reachable ancestor paths of the requested depth rather than repeatedly popping one mutable linear stack.
+
+`push()` and parent-link operations affect the graph shape; `pop()` / `retrace_paths()` observe that shape. A bug can therefore appear as a missing or duplicated reduction path even when each individual node's state/value looks valid.
+
+### Ownership and value type
+
+The stack is templated over `STATE` and `VALUE`. The GSS stores those values and parent relationships, but parser-specific interpretation belongs to the caller. Inspect the node ownership and cleanup policy in the active implementation before changing lifetime behavior; do not assume the generic GSS owns pointed-to `VALUE` objects merely because the value type is a pointer.
+
+## 4. Example from the source tests
+
+### Shared-parent traversal
+
+`test/testcase/base/graph/testcase_gss.cpp` creates four nodes: a root, two alternatives, and a merge node. The two alternatives each link to the root; the merge links to both alternatives. The test then traverses from the merge and records visited values.
+
+```text
+          merge
+          /   \
+       A1       A2
+          \   /
+           root
+```
+
+This example isolates the defining GSS property: one current head can preserve multiple histories. For parser-level reduction behavior, follow the GSS operations from `sdk/io/parser/glr_parser.cpp`; the small base testcase demonstrates graph structure, while parser tests exercise the grammar-driven use.
+
+## 5. Relationships
+
+### Hotplace parser relationship
 
 The concrete GLR value type is currently a `parse_treenode*`:
 
@@ -80,7 +115,7 @@ sdk/io/parser/glr_parser.cpp
 parse-tree construction
 ```
 
-## Why it belongs in `base/graph`
+### Why it belongs in `base/graph`
 
 The GSS is not an ASN.1-specific structure. It is a graph-shaped stack primitive whose immediate consumer is the GLR parser. Keeping it in `base/graph` makes the dependency direction explicit:
 
@@ -96,9 +131,16 @@ base/graph
 
 The parser therefore depends on the graph infrastructure; the graph module does not depend on the parser.
 
-## Source and tests
+## 6. References
+
+### Implementation
 
 - `sdk/base/graph/gss.hpp`
+
+### Direct and consumer tests
+
+- `test/testcase/base/graph/testcase_gss.cpp`
 - `sdk/io/parser/glr_parser.cpp`
 - `test/testcase/io/parser/`
-- `test/testcase/asn.1/` — higher-level consumers
+- `test/testcase/asn.1/` — higher-level parser consumer coverage
+

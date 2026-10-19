@@ -16,25 +16,13 @@ namespace hotplace {
 return_t A2W(wide_string& target, const char* source, uint32 codepage) { return A2W(&target, source, codepage); }
 
 return_t A2W(stream_t* stream, const char* source, uint32 codepage) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::vector<wchar_t> buffer;
-        int sizeNeed = MultiByteToWideChar(codepage, 0, source, -1, nullptr, 0);
-        if (sizeNeed > 0) {
-            buffer.resize(sizeNeed);  // including null pad
-            MultiByteToWideChar(codepage, 0, source, -1, buffer.data(), sizeNeed);
-            if (size_t(sizeNeed) >= sizeof(wchar_t)) {
-                stream->write((void*)buffer.data(), (sizeNeed - 1) * sizeof(wchar_t));
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
+    auto lambda = [](stream_t*& target, void* p, size_t len) -> void { target->write(p, len); };
+    return ansi2wide(stream, lambda, source, codepage);
 }
+
+return_t A2W(std::wstring& target, const char* source, uint32 codepage) {
+    auto lambda = [](std::wstring& target, void* p, size_t len) -> void { target.append(static_cast<wchar_t*>(p), len / sizeof(wchar_t)); };
+    return ansi2wide(target, lambda, source, codepage);
+};
 
 }  // namespace hotplace

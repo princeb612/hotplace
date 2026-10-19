@@ -1,6 +1,23 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # CBOR Reader and Encoder
 
-## Role
+## 1. Role
+
+Describes conversion between encoded CBOR data and the project’s object representation.
+
+## 2. Model
+
+### Role
 
 `cbor_reader` and `cbor_encode` provide the binary boundary of the CBOR implementation.
 
@@ -22,7 +39,7 @@ CBOR binary
 
 The reader also accepts a diagnostic-expression path used by the test/sample layer.
 
-## Reader
+### Reader
 
 `cbor_reader` manages a `cbor_reader_context_t` while parsing.
 
@@ -38,7 +55,7 @@ The main entry points include:
 
 The parser builds the hierarchical object representation as it encounters CBOR major types and their payloads.
 
-## CBOR major types
+### CBOR major types
 
 The reader follows the CBOR major-type model:
 
@@ -55,20 +72,7 @@ The reader follows the CBOR major-type model:
 
 The first byte carries both the major type and the additional-information/control field. Additional bytes are consumed when the encoded value requires a larger integer or length representation.
 
-## Definite and indefinite lengths
-
-The implementation recognizes the indefinite-length forms for:
-
-- byte strings
-- text strings
-- arrays
-- maps
-
-These use the CBOR break marker to terminate the logical sequence.
-
-The reader therefore has to maintain container context while processing nested data.
-
-## Encoder
+### Encoder
 
 `cbor_encode` converts hotplace values and `cbor_object` structures into CBOR binary.
 
@@ -85,7 +89,7 @@ Its overloads cover:
 
 The encoder also handles the CBOR additional-information encoding used for lengths and integer values.
 
-## Object publication
+### Object publication
 
 `cbor_publisher` provides a higher-level publishing boundary:
 
@@ -100,7 +104,28 @@ cbor_object / reader context
 
 This keeps callers from having to operate the low-level encoder directly for common object-tree publication.
 
-## Test relationship
+## 3. Important behavior and lifetime
+
+### Definite and indefinite lengths
+
+The implementation recognizes the indefinite-length forms for:
+
+- byte strings
+- text strings
+- arrays
+- maps
+
+These use the CBOR break marker to terminate the logical sequence.
+
+The reader therefore has to maintain container context while processing nested data.
+
+## 4. Example from the source tests
+
+The relevant test sources are listed below; this document does not invent a standalone example.
+
+## 5. Relationships
+
+### Test relationship
 
 The main implementation evidence is under:
 
@@ -110,9 +135,13 @@ The main implementation evidence is under:
 
 The test vectors provide encoded/decoded CBOR examples while the RFC-oriented testcase exercises the older RFC 7049 reference material retained by the project.
 
-## Related source
+### Related source
 
 - `cbor_reader.*`
 - `cbor_encode.*`
 - `cbor_publisher.*`
 - `cbor.hpp`
+
+## 6. References
+
+- Source: this module and its related testcase directory (Revision 1104).

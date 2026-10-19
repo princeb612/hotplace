@@ -1,12 +1,24 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # ASN.1 Node
 
-## Role
+## 1. Role
 
 `asn1_node` is the lightweight structural tree used to represent parsed ASN.1 TLV structure independently of the richer semantic type model.
 
 It is intentionally simpler than `asn1_object`.
 
-## Structural model
+## 2. Model
+
+### Structural model
 
 The node stores:
 
@@ -36,7 +48,7 @@ asn1_node
           +-- ...
 ```
 
-## Why it is separate from `asn1_object`
+### Why it is separate from `asn1_object`
 
 The structural node describes what was encountered in an encoded ASN.1 stream.
 
@@ -58,7 +70,9 @@ asn1_object
 
 Keeping these representations separate allows a decoded TLV tree to exist before schema-specific interpretation is applied.
 
-## Operations
+## 3. Important behavior and lifetime
+
+### Operations
 
 `asn1_node` supports:
 
@@ -72,21 +86,27 @@ Keeping these representations separate allows a decoded TLV tree to exist before
 
 The node therefore acts as a generic tree container rather than a full ASN.1 schema object.
 
-## Related source
+## 4. Example from the source tests
 
-- `sdk/io/asn.1/basic/structural/asn1_node.hpp`
-- `sdk/io/asn.1/basic/structural/asn1_node.cpp`
-- `sdk/io/asn.1/basic/structural/asn1_primitive_node.*`
-- `sdk/io/asn.1/basic/structural/asn1_constructed_node.*`
-
-## Related documents
-
-- `structural/structural.md` — earlier structural design notes
-- `../asn1-object-model.md` — semantic representation
-
-## Related tests
+### Related tests
 
 Structural parsing is exercised as part of the ASN.1 parser/DER testcase set under:
 
 - `test/testcase/asn.1/`
 - `test/testcase/asn.1/runtime/`
+
+## 5. Relationships
+
+### Related documents
+
+- `structural/structural.md` — earlier structural design notes
+- `../asn1-object-model.md` — semantic representation
+
+## 6. References
+
+### Related source
+
+- `sdk/io/asn.1/basic/structural/asn1_node.hpp`
+- `sdk/io/asn.1/basic/structural/asn1_node.cpp`
+- `sdk/io/asn.1/basic/structural/asn1_primitive_node.*`
+- `sdk/io/asn.1/basic/structural/asn1_constructed_node.*`

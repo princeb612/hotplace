@@ -12,7 +12,7 @@ Its post-build step generates two parser tables:
 makeparsingtable
       │
       ├── asn1notation.ptb
-      └── asn1.ptb  (--glr)
+      └── asn1.ptb  (-glr)
              │
              ▼
        parsingtable.zip

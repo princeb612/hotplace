@@ -1,17 +1,22 @@
-# ASN.1
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1104
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
+# ASN.1
 
-ASN.1 support in hotplace covers notation, parsing, basic type/constraint representation, structural nodes, runtime representation, loading, and compiler-oriented processing.
+## 1. Role
 
-## Directory map
+The module identity is described by the implementation notes retained below.
+
+## 2. Model
+
+### Directory map
 
 - `basic/` — ASN.1 notation, types, tagging, constraints, structural representation, and parameterized semantic prototypes
 - `compiler/` — compiler-oriented ASN.1 processing and generation flow
@@ -21,7 +26,7 @@ ASN.1 support in hotplace covers notation, parsing, basic type/constraint repres
 
 The loader currently represents the first implemented step of the ASN.1 file-to-parse-tree path; publishing the resulting tree into runtime objects is exercised separately.
 
-## Detailed documents
+### Detailed documents
 
 - [ITU-T X.680 notation](basic/itu-t_x680.md)
 - [Prefixed type encoding](basic/prefixed-type-encoding.md)
@@ -31,7 +36,7 @@ The loader currently represents the first implemented step of the ASN.1 file-to-
 - [Loader flow](loader/loader-flow.md)
 - [Runtime examples](runtime/runtime-examples.md)
 
-## Implementation records
+### Implementation records
 
 - [ASN.1 object model](basic/asn1-object-model.md)
 - [ASN.1 structural node model](basic/asn1-node.md)
@@ -43,20 +48,30 @@ The loader currently represents the first implemented step of the ASN.1 file-to-
 - [ASN.1 loader](loader/asn1_loader.md)
 - [ASN.1 compiler direction](compiler/asn1-compiler.md)
 
-## Related areas
+## 3. Important behavior and lifetime
+
+No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+
+## 4. Example from the source tests
+
+### Related tests
+
+- `test/testcase/asn.1/`
+- `test/testcase/asn.1/runtime/`
+- `test/testcase/io/parser/`
+
+## 5. Relationships
+
+### Related areas
 
 - `sdk/io/parser/` — grammar parsing and parse-tree construction
 - `sdk/io/asn.1/basic/` — ASN.1 semantic and structural model
 - `sdk/io/asn.1/runtime/` — module schema/type/object representation
 - `sdk/crypto/` — ASN.1-derived cryptographic formats used by the project
 
-## Related tests
+## 6. References
 
-- `test/testcase/asn.1/`
-- `test/testcase/asn.1/runtime/`
-- `test/testcase/io/parser/`
-
-## References
+### References
 
 - ITU-T X.680–X.693 — ASN.1 notation and encoding rules
 - RFC 5280 — Internet X.509 PKI Certificate and CRL Profile

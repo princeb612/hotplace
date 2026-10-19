@@ -114,10 +114,10 @@ int main(int argc, char** argv) {
     testcase_testvector_floatingpoint();
     testcase_ieee754();
     testcase_shared();
-
     if (option.flags & option_thread) {
         testcase_signalwait_threads();
     }
+    testcase_process();
 
     testcase_consolecolor();
     testcase_loglevel();

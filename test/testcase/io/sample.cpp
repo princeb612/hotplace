@@ -56,10 +56,13 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
+    testcase_oid();
     testcase_payload();
     testcase_payload_quic();
 
     testcase_filestream();
+
+    testcase_string();
 
     if (option.flag_mlfq) {
         testcase_mlfq();

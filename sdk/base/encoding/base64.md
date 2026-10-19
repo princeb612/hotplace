@@ -1,10 +1,27 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Base64
+
+## 1. Role
+
+### Introduction
 
 `base64` implements RFC 4648 Base64 and Base64URL encoding and decoding.
 
 The same API is used for ordinary Base64 (`+` and `/`) and Base64URL (`-` and `_` without padding), selected through `encoding_t`.
 
-## Main operations
+## 2. Model
+
+### Main operations
 
 ```text
 binary / string
@@ -20,15 +37,7 @@ The corresponding decode functions accept both forms according to the selected e
 
 The public implementation uses the low-level Base64 implementation and `encoder_stream_traits` to support output containers such as `std::string`, `binary_t`, and `basic_stream`.
 
-## Multiline Base64
-
-`base64_encode_multiline()` and `base64_decode_multiline()` provide line-oriented processing for data represented across multiple lines.
-
-The encoder accepts a requested column width. A zero width disables wrapping.
-
-This is useful for formats where Base64 is presented as text rather than as a single uninterrupted string.
-
-## Streaming
+### Streaming
 
 `encoder_stream` and `decoder_stream` maintain incomplete 3-byte/4-character units between `write()` calls.
 
@@ -48,13 +57,23 @@ input chunks
 
 The tests deliberately vary the chunk size to verify that the result is independent of the input boundaries.
 
-## Relation to Radix-64
+## 3. Important behavior and lifetime
+
+### Multiline Base64
+
+`base64_encode_multiline()` and `base64_decode_multiline()` provide line-oriented processing for data represented across multiple lines.
+
+The encoder accepts a requested column width. A zero width disables wrapping.
+
+This is useful for formats where Base64 is presented as text rather than as a single uninterrupted string.
+
+### Relation to Radix-64
 
 Radix-64 support is implemented separately in `radix64.*`, but its encoding layer is Base64. Radix-64 adds CRC-24 and armor processing around the Base64 representation.
 
 See [radix64.md](radix64.md).
 
-## Tests
+### Tests
 
 `test/testcase/encode/testcase_base64.cpp`
 
@@ -67,7 +86,17 @@ The testcase covers:
 - RFC 4880 section 6.5 Radix-64 vectors
 - RFC 4880 section 6.6 ASCII-armored message processing
 
-## Related source
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/encoding/base64.hpp`
 - `sdk/base/encoding/base64.cpp`

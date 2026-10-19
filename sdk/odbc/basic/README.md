@@ -1,61 +1,45 @@
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1096
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+hotplace source tree
+Edition 1 · Revision 1104
+Documented with GPT-6
+— source structure, implementation & tests
 ```
 
-### ODBC connector, query and record implementation
+# ODBC basic implementation
 
-`basic/` contains the concrete hotplace ODBC wrapper. It maps the native ODBC handle model into a small set of C++11-oriented classes while retaining direct access to ODBC concepts such as SQL statements, result sets, diagnostics and parameter binding.
+## 1. Role
+
+`basic/` contains the concrete ODBC wrapper classes. It maps native ODBC handles and operations to hotplace-oriented connector, query, record, field, diagnostics, and readiness objects.
+
+## 2. Model
 
 ```text
-odbc_connector
-     |
-     v
-odbc_query
-  |       \
-  |        +--> parameter binding / execution
-  v
-odbc_record
-     |
-     v
-odbc_field
-
-odbc_diagnose  <---- ODBC diagnostic records
-odbc_sinker    <---- query readiness / asynchronous integration
+odbc_connector -> odbc_query -> odbc_record -> odbc_field
+                       |
+                       +--> odbc_diagnose reports errors
+odbc_sinker wraps query readiness / timeout handling
 ```
 
-The implementation has ANSI/Unicode paths. Windows-specific Unicode source files live under `unicode/`; the main build selects the platform ODBC library and those Unicode sources on Windows.
+## 3. Important behavior and lifetime
 
-#### Source / test relationship
+The classes retain native ODBC behavior rather than hiding it behind a database-specific ORM. The source tree includes ANSI implementation files and Windows Unicode-specific files under `unicode/`. Build selection and native ODBC library linkage are defined in `sdk/odbc/CMakeLists.txt`.
 
-The implementation documents map one-to-one to the principal classes, while the ODBC testcase exercises them as a single path:
+## 4. Example from the source tests
 
-```text
-test/testcase/odbc
-       │
-       ▼
-odbc_connector
-       │
-       ▼
-odbc_query
-       │
-       ▼
-odbc_record → odbc_field
-       │
-       └── errors → odbc_diagnose
-```
+`test/testcase/odbc/sample.cpp` demonstrates the connector → query → record → field path using a caller-supplied connection string and table name.
 
-This is intentionally a source-tree implementation map, not a database usage tutorial.
+## 5. Relationships
 
-#### Module records
+- [`odbc_connector.md`](odbc_connector.md) — connection and environment lifecycle
+- [`odbc_query.md`](odbc_query.md) — statements, binding and result traversal
+- [`odbc_record.md`](odbc_record.md) and [`odbc_field.md`](odbc_field.md) — row and column values
+- [`odbc_diagnose.md`](odbc_diagnose.md) — diagnostics
+- [`odbc_sinker.md`](odbc_sinker.md) — readiness and timeout integration
 
-- [odbc_connector.md](odbc_connector.md)
-- [odbc_query.md](odbc_query.md)
-- [odbc_record.md](odbc_record.md)
-- [odbc_field.md](odbc_field.md)
-- [odbc_diagnose.md](odbc_diagnose.md)
-- [odbc_sinker.md](odbc_sinker.md)
+## 6. References
+
+- `sdk/odbc/basic/`
+- `sdk/odbc/CMakeLists.txt`
+- `test/testcase/odbc/sample.cpp`

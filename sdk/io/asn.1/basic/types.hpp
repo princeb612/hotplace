@@ -69,6 +69,10 @@ class asn1_node;
 class asn1_constructed_node;
 class asn1_primitive_node;
 
+// parameterization
+class asn1_parameter;
+class asn1_parameterized_type;
+
 }  // namespace io
 }  // namespace hotplace
 

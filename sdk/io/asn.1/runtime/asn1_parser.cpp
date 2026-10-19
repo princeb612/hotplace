@@ -23,127 +23,105 @@ namespace io {
 asn1_parser::asn1_parser(parser_type_t type, bool imported) : _ready(0), _type(type), _imported(imported) {}
 
 return_t asn1_parser::parse(const char* notation, asn1_build_resultset& result) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == notation) {
-            __leave2;
-        }
-        ret = parse(notation, strlen(notation), result);
+    if (nullptr == notation) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    return parse(notation, strlen(notation), result);
 }
 
 return_t asn1_parser::parse(const char* notation, size_t size, asn1_build_resultset& result) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == notation) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        parse_tree pt;
-        ret = parse(notation, &pt);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
+    if (nullptr == notation) {
+        return errorcode_t::invalid_parameter;
+    }
+    parse_tree pt;
+    ret = parse(notation, &pt);
+    if (errorcode_t::success == ret) {
         ret = to_result(&pt, result);
     }
-    __finally2 {}
     return ret;
 }
 
 return_t asn1_parser::parse(const char* notation, parse_tree* pt) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == notation || nullptr == pt) {
-            __leave2;
-        }
-        ret = parse(notation, strlen(notation), pt);
+    if (nullptr == notation || nullptr == pt) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+    return parse(notation, strlen(notation), pt);
 }
 
 return_t asn1_parser::parse(const char* notation, size_t size, parse_tree* pt) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == notation || nullptr == pt) {
-            __leave2;
-        }
+    if (nullptr == notation || nullptr == pt) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        std::vector<parser_token> tokens;
+    std::vector<parser_token> tokens;
 
-        ret = to_tokens(notation, size, tokens);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+    ret = to_tokens(notation, size, tokens);
+    if (errorcode_t::success == ret) {
         ret = to_parsetree(tokens, pt);
     }
-    __finally2 {}
     return ret;
 }
 
 return_t asn1_parser::to_tokens(const char* notation, size_t size, std::vector<parser_token>& tokens) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        load();
 
-        if (nullptr == notation) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = get_lexer().parse(_lexcontext, notation);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        tokens.clear();
-
-        // LALR tokens
-#if defined DEBUG
-        uint32 cnt = 0;
-#endif
-
-        auto resource = parser_resource::get_instance();
-        auto symid = resource->nameof(token_identifier);  // "identifier"
-        auto symuser = resource->nameof(token_usertype);  // "usertype"
-
-        auto lambda = [&](const token_description* desc) -> bool {
-            bool test = true;
-            const auto& type = desc->type;
-            std::string token(desc->p, desc->size);
-            switch (type) {
-                case token_lvalue: {
-                    tokens.push_back({token_identifier, symid});
-                } break;
-                case token_comments:
-                    break;
-                default: {
-                    tokens.push_back({type, token});
-                    break;
-                }
-            }
-
-#if defined DEBUG
-            if (token_comments != type) {
-                if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-                    trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                        dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt, desc->line, desc->type,
-                                    get_lexer().nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-                        cnt = tokens.size();
-                    });
-                }
-            }
-#endif
-
-            return test;
-        };
-        _lexcontext.for_each(lambda);
-        tokens.push_back({token_eof, "$"});
+    if (nullptr == notation) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    load();
+
+    ret = get_lexer().parse(_lexcontext, notation);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    tokens.clear();
+
+    // LALR tokens
+#if defined DEBUG
+    uint32 cnt = 0;
+#endif
+
+    auto resource = parser_resource::get_instance();
+    auto symid = resource->nameof(token_identifier);  // "identifier"
+    auto symuser = resource->nameof(token_usertype);  // "usertype"
+
+    auto lambda = [&](const token_description* desc) -> bool {
+        bool test = true;
+        const auto& type = desc->type;
+        std::string token(desc->p, desc->size);
+        switch (type) {
+            case token_lvalue: {
+                tokens.push_back({token_identifier, symid});
+            } break;
+            case token_comments:
+                break;
+            default: {
+                tokens.push_back({type, token});
+                break;
+            }
+        }
+
+#if defined DEBUG
+        if (token_comments != type) {
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                    dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt, desc->line, desc->type, get_lexer().nameof_token(desc->type).c_str(),
+                                desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+                    cnt = tokens.size();
+                });
+            }
+        }
+#endif
+
+        return test;
+    };
+    _lexcontext.for_each(lambda);
+    tokens.push_back({token_eof, "$"});
+
     return ret;
 }
 

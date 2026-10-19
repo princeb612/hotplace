@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_publisher_basics.cpp
+ * @file   asn1_publisher_module.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -54,7 +54,7 @@ void asn1_publisher::prepare_module() {
             // production("ModuleDefinition", {"ModuleIdentifier", "DEFINITIONS", "TagDefault", symassign, "BEGIN", "ModuleBody", "END"})
             // production("ModuleDefinition", {"ModuleIdentifier", "DEFINITIONS", symassign, "BEGIN", "ModuleBody", "END"})
 
-            auto rtcontext = asn1_modules::get_instance();
+            auto modules = asn1_modules::get_instance();
 
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);
@@ -71,14 +71,14 @@ void asn1_publisher::prepare_module() {
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
             auto module_id = rhs_id.value;
-            auto module = rtcontext->add(module_id);
+            auto module = modules->add(module_id);
 
             result.type = asn1_build_t::module_definition;
             result.module_names.push_back(module_id);
 
             context.get_runtime().as_module();  // as module
 
-            auto rtmodule = rtcontext->add(module_id);
+            auto rtmodule = modules->add(module_id);
             *rtmodule = std::move(context.get_runtime());
 
             auto iter = index.find("TagDefault");

@@ -1,3 +1,21 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# Elliptic Curves
+
+## 1. Role
+
+This document identifies the module or reference topic represented by this file.
+
+## 2. Model
+
 #### Classification of Elliptic Curves
 - Finite Field
   - Prime Field
@@ -24,3 +42,19 @@
   - Koblitz
     - Koblitz Curve
       - K-163, K-233, ...
+
+## 3. Important behavior and lifetime
+
+Implementation behavior is documented only to the extent supported by the retained notes and source references.
+
+## 4. Example from the source tests
+
+See the referenced testcase source files for concrete examples. A source reference alone does not prove runtime execution.
+
+## 5. Relationships
+
+Related implementation modules and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Relevant source paths, sibling documentation, and standards references are retained here where available.

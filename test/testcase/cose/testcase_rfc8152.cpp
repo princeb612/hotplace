@@ -543,7 +543,7 @@ void test_rfc8152_c_4_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    cose.set(cose_handle, cose_param_unsent_iv, base16_decode("89F52F65A1C5809300000061A7"));
+    cose.set(cose_handle, cose_param_unsent_iv, base16_decode("89F52F65A1C580930000000000"));
     do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV", false);
     cose.close(cose_handle);
 
@@ -1003,6 +1003,94 @@ void test_jose_from_cwk() {
     cose.close(handle);
 }
 
+void test_chacha20_poly1305_isolated() {
+    // cbor_object_signing_encryption::docrypt
+    // ...
+    // } else if (cose_group_t::enc_chacha20_poly1305 == group) {
+    //     // RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+    //     // RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
+    //     //     chacha20_aead_encrypt(aad, key, iv, constant, plaintext):
+    //     //        nonce = constant | iv
+    //     //        otk = poly1305_key_gen(key, nonce)
+    //     //        ciphertext = chacha20_encrypt(key, 1, nonce, plaintext)
+    //     //        mac_data = aad | pad16(aad)
+    //     //        mac_data |= ciphertext | pad16(ciphertext)
+    //     //        mac_data |= num_to_8_le_bytes(aad.length)
+    //     //        mac_data |= num_to_8_le_bytes(ciphertext.length)
+    //     //        tag = poly1305_mac(mac_data, otk)
+    //     //        return (ciphertext, tag)
+    //     // RFC 8152 10.3. ChaCha20 and Poly1305
+    //
+    //     // EVP_CIPHER::(*init) chacha_init_key @openssl
+    //     // EVP_CIPHER::(*do_cipher) chacha_cipher @openssl
+    //     // [0..3] key setup
+    //     // [4..11] key
+    //     // [12..15] 1byte counter 3bytes iv
+    //     //    \- ChaCha20_ctr32 @openssl-1.1.1, 3.0, 3.1, 3.2(alpha)
+    //
+    //     // cf. libsodium
+    //     // [0..3] key setup
+    //     // [4..11] key
+    //     // [12] counter+0   , counter
+    //     // [13] counter+4   , iv+0
+    //     // [14] iv+0        , iv+4
+    //     // [15] iv+4        , iv+8
+    //     //        \             \- crypto_aead_chacha20poly1305_ietf_encrypt/decrypt @libsodium
+    //     //         \- crypto_aead_chacha20poly1305_encrypt/decrypt @libsodium
+    //
+    //     ret = errorcode_t::not_supported;
+    // } else {
+
+    binary_t cek = base16_decode("0f1e2d3c4b5a69788796a5b4c3d2e1f01f2e3d4c5b6a798897a6b5c4d3e2f100");
+    binary_t iv = base16_decode("26682306d4fb28ca01b43b80");
+    binary_t aad = base16_decode("8367456e637279707444a101181840");
+    binary_t payload = base16_decode("5f2bd5381bbb04921a8477e55c0d850069674a05e683d416583aa0cee0e2929cdf648094");
+
+    return_t ret = errorcode_t::success;
+    openssl_crypt crypt;
+    size_t enc_size = 0;
+    binary_t output;
+    binary_t tag;
+    binary_t ct;
+    encrypt_option_t options[] = {
+        {crypt_ctrl_t::tsize, 16},
+        {},
+    };
+
+    auto split = [](const binary_t& source, size_t& sizeof_ciphertext, binary_t& tag, size_t tagsize) -> return_t {
+        // RFC 8152 Combine the authentication tag for encryption algorithms with the ciphertext.
+        return_t ret = errorcode_t::success;
+        tag.clear();
+        size_t size = source.size();
+        if (size > tagsize) {
+            const byte_t* ptr = source.data();
+            tag.insert(tag.end(), ptr + (size - tagsize), ptr + (size));
+            sizeof_ciphertext = (size - tagsize);
+        } else {
+            ret = errorcode_t::bad_format;
+        }
+        return ret;
+    };
+
+    split(payload, enc_size, tag, 16);
+    ct = payload;
+    ct.resize(enc_size);
+
+    _logger->write([&](basic_stream& dbs) -> void {
+        valist va;
+        va << cek << iv << aad << ct << tag;
+        dbs.vaprintln("CEK {1:0x}", va);
+        dbs.vaprintln("IV  {2:0x}", va);
+        dbs.vaprintln("AAD {3:0x}", va);
+        dbs.vaprintln("CT  {4:0x}", va);
+        dbs.vaprintln("TAG {5:0x}", va);
+    });
+
+    ret = crypt.decrypt("chacha20-poly1305", cek, iv, payload.data(), enc_size, output, aad, tag, options);
+    _test_case.ntest(ret, __FUNCTION__, "chacha20-poly1305");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "chacha20-poly1305");
+}
+
 void testcase_rfc8152() {
     const OPTION& option = _cmdline->value();
 
@@ -1065,4 +1153,5 @@ void testcase_rfc8152() {
     // part 2 .. test JWK, CWK compatibility
     // test crypto_key, crypto_keychain
     test_jose_from_cwk();
+    test_chacha20_poly1305_isolated();
 }

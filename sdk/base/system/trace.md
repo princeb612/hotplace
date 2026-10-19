@@ -1,8 +1,33 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Trace and debug events
+
+## 1. Role
+
+### Introduction
 
 `trace.hpp` provides hotplace's lightweight debug tracing mechanism. It is closely tied to the project's `return_t`-based control-flow macros and logging infrastructure.
 
-## Leave-trace helpers
+### Role in the project
+
+Trace is not a general logging replacement. The logger/testcase layer handles ordinary output, while this layer provides conditional, category-aware diagnostics useful when following internal control flow and failures.
+
+## 2. Model
+
+The component model is described by the implementation and retained subsections below.
+
+## 3. Important behavior and lifetime
+
+### Leave-trace helpers
 
 In debug builds, helpers such as:
 
@@ -16,7 +41,7 @@ record the source location and return code while following the project's `__try2
 
 In non-debug builds the tracing overhead is reduced to the corresponding control-flow operation.
 
-## Event tracing
+### Event tracing
 
 The event API allows code to emit structured debug events using a category and event identifier:
 
@@ -42,12 +67,20 @@ registered debug handler
 logger / diagnostic output
 ```
 
-## `trace_advisor`
+### `trace_advisor`
 
 `trace_advisor` maintains the mapping from trace categories/events to readable names. It is protected by the same `critical_section` abstraction used elsewhere in the system layer.
 
 This separates event identifiers used by source code from their presentation names.
 
-## Role in the project
+## 4. Example from the source tests
 
-Trace is not a general logging replacement. The logger/testcase layer handles ordinary output, while this layer provides conditional, category-aware diagnostics useful when following internal control flow and failures.
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+Implementation and test paths are retained in the sections above or the source tree.

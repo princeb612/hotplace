@@ -1,4 +1,20 @@
-## Transcript Hash
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# Transcript Hash
+
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
 
 ### 1. Standard Handshake Transcript Accumulation
 
@@ -130,4 +146,20 @@ Transcript Ranges & Derivation Contexts
 - 0-RTT Rejection Handling: If the server rejects 0-RTT, it omits the early_data extension in EncryptedExtensions. Early ciphertext is discarded by the server, but the transcript continues sequentially using the original ClientHello without re-calculation.
 - EndOfEarlyData Protocol Differences:
   - TLS 1.3 (RFC 8446): Requires explicit EndOfEarlyData handshake message to mark epoch transition, which is accumulated into the transcript hash.
-  - DTLS 1.3 (RFC 9147): Omits EndOfEarlyData entirely because record layer epoch headers explicitly define key transition boundaries.  
+  - DTLS 1.3 (RFC 9147): Omits EndOfEarlyData entirely because record layer epoch headers explicitly define key transition boundaries.
+
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

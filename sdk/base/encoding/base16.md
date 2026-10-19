@@ -1,10 +1,27 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Base16
+
+## 1. Role
+
+### Introduction
 
 `base16` implements hexadecimal encoding and decoding based on RFC 4648 Base16.
 
 The public API accepts common hotplace data types such as `std::string`, `binary_t`, `basic_stream`, and raw byte buffers. It can also write through `encoder_stream_traits`, allowing the same implementation to target different stream-like containers.
 
-## Main operations
+## 2. Model
+
+### Main operations
 
 ```text
 binary / string
@@ -18,7 +35,15 @@ The low-level implementation lives under `lowlevel/base16.*`; `base16.*` provide
 
 `base16_compare()` is provided for hexadecimal string comparison.
 
-## RFC-style helper
+### Streaming
+
+`encoder_stream(encoding_base16)` and `decoder_stream(encoding_base16)` retain partial input/output units between calls. This allows Base16 data to be processed when the input arrives in arbitrary chunks.
+
+The Base16 stream path is exercised by the encoding testcase with deliberately different chunk boundaries.
+
+## 3. Important behavior and lifetime
+
+### RFC-style helper
 
 Hotplace also provides `base16_encode_rfc()` and `base16_decode_rfc()` for textual hexadecimal forms used by RFC examples and test material.
 
@@ -36,13 +61,7 @@ or:
 
 This helper is distinct from ordinary Base16 encoding and should not be confused with another Base16 alphabet.
 
-## Streaming
-
-`encoder_stream(encoding_base16)` and `decoder_stream(encoding_base16)` retain partial input/output units between calls. This allows Base16 data to be processed when the input arrives in arbitrary chunks.
-
-The Base16 stream path is exercised by the encoding testcase with deliberately different chunk boundaries.
-
-## Tests
+### Tests
 
 `test/testcase/encode/testcase_base16.cpp`
 
@@ -57,7 +76,17 @@ The testcase covers:
 
 The RFC cases are particularly useful as executable examples of the distinction between the normal Base16 API and the project's RFC-oriented helper.
 
-## Related source
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/encoding/base16.hpp`
 - `sdk/base/encoding/base16.cpp`

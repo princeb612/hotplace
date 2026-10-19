@@ -1,19 +1,27 @@
-# Date and time
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1099
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
+
+# Date and time
+
+## 1. Role
+
+### Introduction
 
 `datetime` provides hotplace's common date/time abstraction around `struct timespec`, with conversion to the time representations used by POSIX and Windows code.
 
 The central design is to keep an absolute timestamp internally and provide explicit conversion to local time, UTC, and platform-oriented structures.
 
-## Core representation
+## 2. Model
+
+### Core representation
 
 ```text
                        datetime
@@ -36,7 +44,7 @@ The auxiliary structures are:
 - `filetime_t`: 64-bit Windows FILETIME split into high/low 32-bit values
 - `timespan_t`: days/seconds/milliseconds used for date arithmetic
 
-## Conversion
+### Conversion
 
 `datetime` can be constructed from or converted to several representations:
 
@@ -51,7 +59,17 @@ Both local-time and UTC conversion are supported. The static conversion function
 
 The Windows FILETIME conversion preserves the sub-second portion of the internal `timespec` rather than reducing the conversion to whole seconds.
 
-## Arithmetic and comparison
+### Implementation
+
+Main files:
+
+- `sdk/base/system/datetime.hpp`
+- `sdk/base/system/datetime.cpp`
+- `sdk/base/system/datetime_api.cpp`
+
+## 3. Important behavior and lifetime
+
+### Arithmetic and comparison
 
 A `datetime` can be compared directly and adjusted by a `timespan_t`.
 
@@ -66,7 +84,7 @@ For raw `timespec` values, `time_diff()` calculates a normalized difference and 
 
 Nanosecond arithmetic is normalized across the one-second boundary. Both positive carry and negative borrow are handled so the resulting `timespec` remains normalized.
 
-## Realtime and monotonic clocks
+### Realtime and monotonic clocks
 
 `system_gettime()` abstracts platform-specific clock access.
 
@@ -76,7 +94,7 @@ The implementation uses the available Linux/POSIX clock APIs while retaining a f
 
 This distinction matters: realtime represents calendar time and can change with system-clock adjustments, while monotonic time is intended for measuring elapsed intervals.
 
-## Formatting
+### Formatting
 
 `datetime::format()` provides a small formatting language built around:
 
@@ -98,21 +116,13 @@ which produces values such as:
 
 The formatter supports both UTC and local-time modes.
 
-## Platform compatibility
+### Platform compatibility
 
 One of the practical purposes of this module is to hide platform differences behind a common interface. In particular, the source contains compatibility handling for older Linux systems where `clock_gettime` may not be directly available, while the Windows implementation maps the same abstraction onto native time APIs.
 
 This is consistent with hotplace's broader goal of keeping the base system layer usable across older environments.
 
-## Implementation
-
-Main files:
-
-- `sdk/base/system/datetime.hpp`
-- `sdk/base/system/datetime.cpp`
-- `sdk/base/system/datetime_api.cpp`
-
-## Tests
+### Tests
 
 Primary test:
 
@@ -122,6 +132,18 @@ The testcase exercises construction/conversion through `timespec`, `datetime_t`,
 
 It also verifies `time_diff()` and `time_sum()` with nanosecond values that require carry/borrow normalization.
 
-## Status
+### Status
 
 `datetime` is a system-level time abstraction rather than a general-purpose date/time framework. Its main role is to provide a stable hotplace interface across platform time representations and clock APIs.
+
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+Implementation and test paths are retained in the sections above or the source tree.

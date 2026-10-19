@@ -203,8 +203,6 @@ void file_stream::truncate(size_t file_pos) {
     if (true == is_open()) {
         int rc = ::ftruncate(_file_handle, file_pos);
         if (rc == 0) {
-            LARGE_INTEGER li;
-            li.QuadPart = file_pos;
             _filesize = file_pos;
         }
     }

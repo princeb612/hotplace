@@ -1,6 +1,18 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # QUIC and TLS integration
 
-## Role
+## 1. Role
+
+### Role
 
 QUIC uses TLS 1.3 for the cryptographic handshake, but QUIC does not use the TLS record layer as its packet format. The hotplace implementation reflects that separation.
 
@@ -22,7 +34,9 @@ QUIC uses TLS 1.3 for the cryptographic handshake, but QUIC does not use the TLS
 
 The TLS implementation supplies handshake/key-schedule concepts, while QUIC owns packet and frame encoding and packet protection.
 
-## QUIC packet layer
+## 2. Model
+
+### QUIC packet layer
 
 `quic/packet/` models packet types and construction/processing, including:
 
@@ -36,7 +50,7 @@ The TLS implementation supplies handshake/key-schedule concepts, while QUIC owns
 
 Packet processing is above individual frame objects and below the session/transport layer.
 
-## QUIC frame layer
+### QUIC frame layer
 
 `quic/frame/` models individual transport/control frames, including:
 
@@ -55,7 +69,7 @@ Packet processing is above individual frame objects and below the session/transp
 
 Frames are deliberately separate from packet assembly so that frame semantics and packet layout can evolve independently.
 
-## TLS-derived secrets
+### TLS-derived secrets
 
 The important boundary is:
 
@@ -74,7 +88,7 @@ QUIC packet protection
 
 QUIC therefore reuses TLS-derived cryptographic state without wrapping QUIC packets inside TLS records.
 
-## Session and stream support
+### Session and stream support
 
 The QUIC session/stream helpers connect packet processing to transport state. HTTP/3 sits above this layer:
 
@@ -91,7 +105,28 @@ QUIC packets
 UDP socket
 ```
 
-## References retained elsewhere
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+### Related areas
+
+- `quic/frame/`
+- `quic/packet/`
+- `session/`
+- `../http/http3/`
+- `../basic/`
+- `sdk/crypto/`
+
+## 6. References
+
+### References retained elsewhere
 
 Detailed protocol notes remain in:
 
@@ -100,12 +135,3 @@ Detailed protocol notes remain in:
 - `quic/rfc9369.md`
 
 The existing RFC documents should be treated as the study/reference layer; this document records the implementation boundary in hotplace.
-
-## Related areas
-
-- `quic/frame/`
-- `quic/packet/`
-- `session/`
-- `../http/http3/`
-- `../basic/`
-- `sdk/crypto/`

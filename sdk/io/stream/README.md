@@ -1,59 +1,73 @@
-# I/O Stream
-
-`sdk/io/stream` provides file-backed stream support on top of the common stream abstraction in `sdk/base/stream`.
-
-The current implementation is intentionally small: the concrete module is `file_stream`, while `stream.hpp` defines file-open flags and the directory keeps platform-specific implementations under `linux/` and `windows/`.
-
-## Implementation map
+## Publication
 
 ```text
-sdk/base/stream
-    │
-    │ stream_t / basic stream facilities
-    ▼
-sdk/io/stream
-    │
-    ├── stream.hpp
-    │     └── filestream_flag_t / FILE_* seek constants
-    │
-    ├── file_stream.hpp
-    │     ├── file open/read/write/seek
-    │     ├── mmap / file mapping
-    │     ├── printf / vprintf
-    │     └── stream_t interface
-    │
-    ├── linux/file_stream.cpp
-    │     └── POSIX fd / flock / mmap
-    │
-    └── windows/file_stream.cpp
-          └── Win32 HANDLE / LockFileEx / file mapping
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1105                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# I/O Stream
+
+## 1. Role
+
+`sdk/io/stream` provides the file-backed implementation of the common stream interface. The substantive feature in this directory is `file_stream`; platform-specific source files hide the differences between POSIX file descriptors and Win32 handles/mappings.
+
+This directory is distinct from `sdk/base/stream`, which provides in-memory streams, buffers, and formatting machinery. `sdk/io/stream` uses that common interface at a file boundary.
+
+## 2. Model
+
+```text
+caller
+  │
+  ▼
+file_stream (common API)
+  ├── open / close
+  ├── read / write / seek / truncate
+  ├── printf / vprintf ──> base stream buffer/formatting
+  └── begin_mmap / data / end_mmap
+          │
+          ├── linux/file_stream.cpp   POSIX fd + mmap + flock
+          └── windows/file_stream.cpp Win32 HANDLE + file mapping + locks
 ```
 
-## Documents
+- `file_stream.hpp` declares the public class and open flags.
+- `stream.hpp` contains file open/seek constants and related flags.
+- `types.hpp` contains shared declarations.
+- `string.hpp` is currently a placeholder rather than an independent concrete stream implementation.
 
-- [File stream](file_stream.md) — concrete `file_stream` implementation and platform split
+The details of mapping, flags, lifecycle, and the platform split are described in [file_stream.md](file_stream.md).
 
-`string.hpp` is currently only a placeholder in this directory; the actual string/stream facilities live under `sdk/io/string/` and `sdk/base/stream/`.
+## 3. Important behavior and lifetime
 
-## Boundary with `sdk/base/stream`
+A `file_stream` owns an open platform file resource and may also own a memory mapping and a platform lock. `close()` is the boundary that releases these resources; mapped access should be treated as valid only while the mapping is active. Ordinary file reads and writes use the stream API, while `data()` is intended for direct access to the mapped view.
 
-This directory should not be confused with `sdk/base/stream`.
+`printf()` and `vprintf()` reuse `bufferio` from `sdk/base/stream`, format into bytes, and then write those bytes to the file. This is a concrete example of the division between base stream facilities and OS-backed I/O.
 
-- `sdk/base/stream` provides the in-memory/string/buffer stream machinery and formatting infrastructure.
-- `sdk/io/stream` adapts that stream abstraction to an operating-system file.
-- `file_stream::printf()` and `vprintf()` reuse `bufferio` from the base stream layer before writing the resulting bytes to the file.
+## 4. Example from the source tests
 
-This distinction matters because many higher-level modules use `basic_stream` directly without involving a file.
+`test/testcase/io/stream/testcase_filestream.cpp` is the direct execution path to read alongside `file_stream.md`. It opens a writable file, truncates it to a known size, begins a mapping, writes through `data()`, ends the mapping, seeks to `FILE_BEGIN`, reads through the ordinary stream API, and verifies the first value. The test deliberately crosses between mapped and stream access, rather than only testing `open()` in isolation.
 
-## Related tests
+Related support files are `test/testcase/io/sample.cpp` and `sample.hpp`; the primary behavior assertions are in `testcase_filestream.cpp`.
 
-- `test/testcase/io/stream/testcase_filestream.cpp`
-- `test/testcase/io/sample.cpp` / `sample.hpp`
+## 5. Relationships
 
-The testcase covers opening/creating a file, truncation, memory mapping, direct memory modification, seeking, and reading back the result.
+- `sdk/base/stream/` — common `stream_t`, buffers, and formatting.
+- `sdk/io/basic/` — binary payload helpers that can use common stream abstractions.
+- `sdk/io/string/` — URL and textual helpers; not the same module as the placeholder `string.hpp` in this directory.
+- `test/testcase/io/stream/` — direct file-stream test.
 
-## Related areas
+## 6. References
 
-- `../../base/stream/` — common stream and formatting implementation
-- `../string/` — higher-level I/O string facilities
-- `../basic/` — binary payload and other I/O helpers that can consume stream abstractions
+### Source
+
+- `sdk/io/stream/file_stream.hpp`
+- `sdk/io/stream/stream.hpp`
+- `sdk/io/stream/linux/file_stream.cpp`
+- `sdk/io/stream/windows/file_stream.cpp`
+
+## 7. Developer Notes
+
+- Keep the boundary with `sdk/base/stream` explicit: do not describe in-memory `basic_stream` behavior as if it were implemented by `file_stream`.
+- If a second concrete stream type is added, give it a separate module document instead of turning this directory README into an exhaustive class reference.

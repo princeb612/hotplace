@@ -1,8 +1,35 @@
-### ASN.1 visitor implementation
+## Publication
 
-This directory contains visitor support for the ASN.1 object/tree structures.
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# Readme
 
-The visitor implementation is used to traverse or inspect ASN.1-related objects without coupling traversal logic to individual node implementations. It belongs to the ASN.1 basic implementation layer rather than the parser/compiler directories.
+## 1. Role
 
+The module identity is described by the implementation notes retained below.
 
-For the current visitor-family overview, see `../asn1-visitor.md`.
+## 2. Model
+
+The existing implementation notes are retained below; see the references for the concrete source files.
+
+## 3. Important behavior and lifetime
+
+No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+
+## 4. Example from the source tests
+
+No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
+
+## 5. Relationships
+
+Related modules and boundaries are recorded below where identified in the existing notes.
+
+## 6. References
+
+Source references and related documents are retained below where available.

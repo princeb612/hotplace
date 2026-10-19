@@ -46,6 +46,8 @@ return_t asn1_bytestream::read_node(const byte_t* stream, size_t size, size_t& p
         }
 
         size_t tpos = pos;
+        size_t typepos = 0;
+        size_t lenpos = 0;
 
         uint8 ident = 0;
         uint64 tag = 0;
@@ -54,11 +56,13 @@ return_t asn1_bytestream::read_node(const byte_t* stream, size_t size, size_t& p
 
         test = asn1_encode::read_identifier(stream, size, tpos, ident, tag);  // T
         if (errorcode_t::success != test) return test;
+        typepos = tpos;
         test = asn1_encode::read_length(stream, size, tpos, len);  // L
         if (errorcode_t::do_nothing == test)
             ;  // case [APPLICATION 31]
         else if (errorcode_t::success != test)
             return test;
+        lenpos = tpos;
 
         if (tpos + len > size) return errorcode_t::bad_data;
         if (parent) {
@@ -84,8 +88,12 @@ return_t asn1_bytestream::read_node(const byte_t* stream, size_t size, size_t& p
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                 auto depth = node->depth();
                 dbs.fill(depth << 1, ' ');
-                dbs << "- [x] " << ANSI_ESCAPE << "1;36m" << "TL" << ANSI_ESCAPE << "0m" << " "
-                    << base16_encode(stream + pos, tpos - pos, encoding_base16_capital | encoding_base16_space);
+                // dbs << "- [x] " << ANSI_ESCAPE << "1;36m" << "TL" << ANSI_ESCAPE << "0m" << " "
+                //     << base16_encode(stream + pos, tpos - pos, encoding_base16_capital | encoding_base16_space);
+                dbs << "- [x] "  //
+                    << ANSI_ESCAPE << "1;36m" << "T" << ANSI_ESCAPE << "0m" << " "
+                    << base16_encode(stream + pos, typepos - pos, encoding_base16_capital | encoding_base16_space) << " " << ANSI_ESCAPE << "1;36m" << "L" << ANSI_ESCAPE
+                    << "0m" << " " << base16_encode(stream + typepos, lenpos - typepos, encoding_base16_capital | encoding_base16_space);
 
                 if (false == is_constructed) {
                     dbs << " " << ANSI_ESCAPE << "1;36m" << "V" << ANSI_ESCAPE << "0m" << " "

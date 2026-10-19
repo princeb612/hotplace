@@ -38,9 +38,10 @@ class asn1_modules {
      */
     return_t add(asn1_module* module);
     /*
-     * @brief   add
+     * @brief   add/set
      */
     asn1_module* add(const std::string& name);
+    asn1_module* set(const std::string& name);
     /*
      * @brief   get
      * @return  module pointer if exists, otherwise nullptr

@@ -88,6 +88,7 @@ void testcase_testvector_floatingpoint();
 void testcase_ieee754();
 void testcase_shared();
 void testcase_signalwait_threads();
+void testcase_process();
 
 void testcase_consolecolor();
 void testcase_loglevel();

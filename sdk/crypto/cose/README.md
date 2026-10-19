@@ -1,10 +1,27 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # COSE
+
+## 1. Role
+
+Directory identity and navigation for COSE message modelling and cryptographic processing built on CBOR.
+
+## 2. Model
 
 `sdk/crypto/cose` implements CBOR Object Signing and Encryption (COSE) on top of the project's CBOR and crypto layers.
 
 The directory is not a general CBOR implementation. It models COSE message structure, protected/unprotected headers, payloads, recipients, signatures, countersignatures, keys, and the cryptographic processing needed to compose/process those messages.
 
-## Implementation map
+### Implementation map
 
 - `cose_data` — COSE data/header/value representation and algorithm/key identifiers.
 - `cose_composer` and related classes — message/layer construction: protected, unprotected, payload, signature/tag, recipients and unsent fields.
@@ -13,7 +30,7 @@ The directory is not a general CBOR implementation. It models COSE message struc
 - `cbor_web_key` — CBOR Web Key integration with the crypto keychain.
 - countersignature classes — RFC 9338-style countersignature representation.
 
-## Message model
+### Message model
 
 The implementation follows the COSE tagged message families:
 
@@ -30,7 +47,9 @@ Sign / Sign1
 
 A `cose_composer` exposes these logical fields through a `cose_layer`; nested recipients/signatures are represented as additional layers rather than being flattened into one byte buffer.
 
-## Processing flow
+## 3. Important behavior and lifetime
+
+### Processing flow
 
 ```text
 COSE message / CBOR
@@ -52,7 +71,13 @@ CBOR serialization
 
 `cbor_object_signing_encryption` has separate send/receive modes and dispatches encryption, signature and MAC processing through the layer tree.
 
-## Related areas
+## 4. Example from the source tests
+
+The relevant test sources are listed below; this document does not invent a standalone example.
+
+## 5. Relationships
+
+### Related areas
 
 - `sdk/io/cbor/` — CBOR object model and encoding used by COSE.
 - `sdk/crypto/basic/` — cryptographic primitives, keys, MAC, signatures and KDF.
@@ -60,7 +85,9 @@ CBOR serialization
 - `sdk/crypto/jose/` — related JSON-based JOSE processing.
 - `sdk/net/http/` — protocol users of COSE-related structures where applicable.
 
-## Tests and references
+## 6. References
+
+### Tests and references
 
 - `test/testcase/cose/testcase_cose.cpp`
 - `test/testcase/cose/testcase_rfc8152.cpp`

@@ -1,77 +1,74 @@
-# URL Utilities
-
-`url.cpp` provides the URL-oriented portion of `sdk/io/string`. It is a small protocol-facing utility rather than a complete URL parser.
-
-## Percent escaping
-
-`escape_url()` writes a percent-encoded representation to a `stream_t`.
-
-The implementation classifies characters using the URI character categories documented in the source and uses the base16 encoder to emit escaped bytes. `unescape_url()` performs the reverse operation by decoding two hexadecimal characters following `%`.
-
-The implementation is intentionally stream-oriented:
+## Publication
 
 ```text
-URL text
-  ↓
-escape_url / unescape_url
-  ↓
-stream_t
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1105                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# URL Utilities
+
+## 1. Role
+
+`url.cpp` implements URL-oriented helpers in `sdk/io/string`: percent escaping/unescaping and decomposition of URL text into `url_info_t`. It is a lightweight utility for the project's protocol code, not a full URL parser with comprehensive standards validation.
+
+## 2. Model
+
+### `url_info_t` and `split_url()`
+
+`url_info_t` carries the fields consumed by higher-level code:
+
+- `scheme` — scheme such as `http` or `https`
+- `host` — host text
+- `port` — explicit port or a default supplied by the implementation
+- `uri` — URI portion retained by the helper, including query/fragment text where present
+- `uripath` — path portion
+- `query` — query text without the leading `?`
+- `fragment` — fragment text without the leading `#`
+
+The implementation first unescapes the input and then uses the project's regex helper to identify components. The source currently supplies default ports for `http` (80), `https` (443), and `ftp` (21) when the port is omitted.
+
+### Percent escaping
+
+`escape_url()` writes escaped output to a `stream_t`; `unescape_url()` decodes percent-escaped byte pairs into a stream. Escaped bytes are represented with hexadecimal digits through the base16 helper.
+
+```text
+text ──escape_url──> percent-escaped bytes
+text ─unescape_url─> decoded bytes
+URL  ──split_url───> url_info_t fields
 ```
 
-## URL decomposition
+## 3. Important behavior and lifetime
 
-`split_url()` fills `url_info_t` with the fields needed by HTTP-oriented code:
+The output is intended for the specific URL forms consumed by this codebase. The function does not claim to normalize every URI form or validate every rule of current URL standards. In particular, preserve this distinction when documenting `uri` versus `uripath`: the testcase expects `uri` to retain query/fragment text while `uripath` contains only the path.
 
-- `scheme`
-- `host`
-- `port`
-- `uri`
-- `uripath`
-- `query`
-- `fragment`
+## 4. Example from the source tests
 
-The function first unescapes the input, then uses the base regex facility to identify the scheme/host/port and path/query/fragment portions. Default ports are supplied for `http` (80), `https` (443), and `ftp` (21) when no explicit port is present.
+`test/testcase/io/string/testcase_string.cpp` calls `split_url()` on several concrete strings and asserts the fields. For example, for `https://test.com:8443/path/test.script?no=1&category=xfile#file`, it checks `scheme == "https"`, `host == "test.com"`, `port == 8443`, `uripath == "/path/test.script"`, `query == "no=1&category=xfile"`, and `fragment == "file"`.
 
-This is therefore best understood as a lightweight URL/URI decomposition helper for the project's protocol code, not as a general standards-complete URL implementation.
+The same test also covers an HTTPS URL without an explicit port (expected default `443`), a URL with a query but no fragment, and a path with no query. This is direct evidence for the fields asserted, not a claim of exhaustive URL conformance.
 
-## Actual usage
+The HTTP layer consumes `url_info_t` for URI/request handling, and Authenticode CRL handling also uses `split_url()`.
 
-The HTTP testcase verifies:
+## 5. Relationships
 
-- HTTPS scheme/host/default port extraction
-- path/query/fragment extraction
-- percent-encoded redirect URI handling
-- relative URI query extraction
-- `unescape_url()` behavior
+- `sdk/base/encoding/base16` — hexadecimal representation used by percent escaping.
+- `sdk/base/pattern/` — regular-expression matching used by URL decomposition.
+- `sdk/base/stream/` — output target for escaped/unescaped text.
+- `sdk/net/http/` — principal consumer of URL decomposition.
+- `sdk/crypto/authenticode/` — CRL URL consumer.
 
-`http_uri`, `http_client`, and HTTP request handling use `split_url()` to turn request/URI text into the fields needed by higher-level HTTP code.
+## 6. References
 
-The Authenticode verifier also uses `split_url()` when processing CRL URLs, so this small utility is shared beyond HTTP.
+- RFC 2396 — URI syntax referenced by implementation comments.
+- RFC 2068 — historical HTTP syntax reference in implementation comments.
 
-## Related areas
+These are historical source references. They should not be presented as evidence that the implementation fully conforms to either document or to later URL/URI standards.
 
-- `sdk/base/encoding/base16` — hexadecimal encoding/decoding used for `%XX`
-- `sdk/base/pattern/regex` — URL component matching
-- `sdk/base/stream` — stream output target
-- `sdk/net/http/` — primary protocol consumer
-- `sdk/crypto/authenticode/` — CRL URL consumer
-
-## Related tests
-
-- `test/testcase/net/http/testcase_http.cpp`
-
-Representative cases include:
-
-- `https://test.com/resource?client_id=12345#part1`
-- percent-encoded `redirect_uri`
-- `/client/cb?code=...&state=xyz`
-- `https://test.com:8080/%7Eb612%2Ftest%2Ehtml`
-
-## Related references
-
-The implementation comments refer to the URI syntax described by RFC 2396 and RFC 2068. These references explain the historical syntax assumptions in the code; the implementation should be treated according to its actual supported behavior rather than as a claim of full modern URI standard coverage.
-
-## Source
+### Source
 
 - `sdk/io/string/url.cpp`
 - `sdk/io/string/string.hpp`
+- `test/testcase/io/string/testcase_string.cpp`

@@ -32,3 +32,10 @@ testvector:
         record: hexstring                   # TLS 1.3 record
         frame: hexstring                    # QUIC frame
 ````
+
+
+## Reading the PCAP fixture schema
+
+`PCAP SIMPLE` is a simplified ordered record format, not a five-tuple packet-flow schema. Each item marks direction and whether the supplied bytes represent a TLS 1.3 record or a QUIC frame; `secrets` supplies the pre-master-secret material used by the fixture. The schema is test-harness input, not a generic PCAP file description.
+
+The Initial packet-number examples are deliberately tied to their cited source/version. Do not generalize the example numbers to every QUIC connection: packet-number spaces and handshake progress affect which packet number is expected.

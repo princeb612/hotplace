@@ -1,6 +1,18 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # TLS protection and session model
 
-## Role
+## 1. Role
+
+### Role
 
 The TLS implementation separates protocol messages from the state that makes those messages secure and usable over a transport.
 
@@ -24,7 +36,9 @@ session / transport integration
 
 This boundary is important when reading the source: a handshake class describes a protocol message, while `tls_protection` calculates or applies the cryptographic state needed to protect that message or record.
 
-## Protection
+## 2. Model
+
+### Protection
 
 The `protection/` implementation contains the calculation and encryption paths for TLS/DTLS protection.
 
@@ -41,7 +55,7 @@ Major components include:
 
 The existing study documents provide detailed notes for the key schedule, transcript hash and MtE/EtM comparison. They should remain as the detailed study layer rather than being duplicated here.
 
-## Session
+### Session
 
 The `session/` layer holds stateful processing above individual protocol objects.
 
@@ -70,18 +84,17 @@ socket / network stream
 records / handshake / protection
 ```
 
-## SSLKEYLOG
+### SSLKEYLOG
 
 The session area also contains SSLKEYLOG import/export helpers. These are useful for external packet-analysis workflows because the key material can be associated with captured traffic without making the packet capture itself part of the TLS object model.
 
-## Related areas
+## 3. Important behavior and lifetime
 
-- `../basic/` — socket and OpenSSL transport adapters
-- `../session/` — stateful TLS/DTLS/QUIC processing
-- `../quic/` — QUIC packet/frame implementation
-- `sdk/crypto/` — underlying HKDF, HMAC, AEAD and signature/key operations
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
 
-## Related tests
+## 4. Example from the source tests
+
+### Related tests
 
 - `testcase_tls12_aead.cpp`
 - `testcase_rfc8448_2.cpp`
@@ -90,3 +103,16 @@ The session area also contains SSLKEYLOG import/export helpers. These are useful
 - `testcase_rfc8448_7.cpp`
 - `testcase_pre_master_secret.cpp`
 - `testcase_dtls_record_arrange.cpp`
+
+## 5. Relationships
+
+### Related areas
+
+- `../basic/` — socket and OpenSSL transport adapters
+- `../session/` — stateful TLS/DTLS/QUIC processing
+- `../quic/` — QUIC packet/frame implementation
+- `sdk/crypto/` — underlying HKDF, HMAC, AEAD and signature/key operations
+
+## 6. References
+
+Source references and related documents are retained here where available.

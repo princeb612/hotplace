@@ -1,115 +1,63 @@
-# Crypto
-
-`sdk/crypto` contains hotplace's cryptographic primitives, key/signature abstractions, protocol-oriented cryptographic formats, and backend adapters.
-
-The implementation is centered on OpenSSL-backed primitives, while higher layers adapt those primitives to protocol formats such as COSE, JOSE, and Windows Authenticode.
-
-## Areas
-
-### basic
-
-The core cryptographic abstraction and primitive layer.
-
-- `crypt.md` — encryption and AEAD processing
-- `digest.md` — digest/hash processing
-- `kdf.md` — key derivation functions
-- `key.md` — key objects, import/export, generation, and exchange
-- `mac.md` — MAC/HMAC/CMAC processing
-- `sign.md` — digital signature processing
-- `backend.md` — OpenSSL/provider-backed support, PRNG, and PQC integration
-
-Existing study/reference documents remain alongside these module records, including cipher, digest/MAC, elliptic-curve, OID, and CBC-HMAC material.
-
-### advisor
-
-Cryptographic identifier and capability metadata used to connect hotplace identifiers with backend and protocol identifiers.
-
-- `crypto_advisor.md`
-
-### authenticode
-
-Windows PE Authenticode verification support. This is focused on PE signature verification rather than a general digital-certificate framework.
-
-- `authenticode_verifier.md`
-- `authenticode-pe-plugin.md`
-
-### cose
-
-CBOR Object Signing and Encryption processing.
-
-- `cose-message-model.md`
-- `cose-cryptographic-processing.md`
-- `cose-key-and-countersign.md`
-- `cose-overview.md` — existing COSE study/reference material
-
-### jose
-
-JSON Object Signing and Encryption processing.
-
-- `jose-object-model.md`
-- `jose-signing-encryption.md`
-- `jose-key-and-algorithms.md`
-- `jose-overview.md` — existing JOSE study/reference material
-
-### oqs
-
-OpenSSL 3 provider integration for post-quantum cryptography. The hotplace layer is an adapter around provider-discovered KEM/signature algorithms rather than an implementation of the PQC algorithms themselves.
-
-- `oqs-provider-adapter.md`
-- `oqs-tests.md`
-- `oqs-overview.md` — existing OQS study/reference material
-
-## Relationship
+## Publication
 
 ```text
-                         sdk/crypto
-                              |
-          +-------------------+-------------------+
-          |                   |                   |
-        basic               advisor          protocol formats
-          |                   |             /       |       \
-    OpenSSL crypto       identifiers      JOSE     COSE   Authenticode
-          |                   |             |        |        |
-          +-------------------+-------------+--------+--------+
-                              |
-                         crypto objects
-                              |
-                     backend/provider layer
-                              |
-                         OpenSSL / OQS
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
-`basic` is the primitive and object layer. `advisor` supplies identifier/capability mapping. JOSE, COSE, and Authenticode consume those facilities for protocol-specific processing. `oqs` extends the backend side through an OpenSSL 3 provider.
+# Crypto
 
-## Related areas
+## 1. Role
 
-- `sdk/io/cbor/` — CBOR object and encoding layer used by COSE
-- `sdk/io/json/` — JSON processing used by JOSE-related paths
-- `sdk/io/string/` — URL/string helpers used by protocol-oriented crypto code
-- `sdk/base/encoding/` — binary/base encoding facilities
-- `sdk/net/` — TLS/HTTP and protocol consumers
+`sdk/crypto/` is hotplace's cryptographic subsystem. It contains reusable cryptographic primitives and key abstractions, identifier/parameter metadata, protocol-oriented formats, and backend/provider integration. The directory-level map is an entry point; implementation details belong in the corresponding subdirectory documents.
 
-## Tests
+## 2. Model
 
-Crypto tests are primarily under `test/testcase/crypto/`, with additional protocol-specific tests under their corresponding testcase directories.
+The source is organized into cooperating layers:
 
-The tests cover primitive operations, key/signature processing, protocol test vectors, and backend/provider integration.
+- [`basic/`](basic/README.md) — primitive operations and key objects, largely backed by OpenSSL.
+- [`advisor/`](advisor/README.md) — metadata and lookup functions that map algorithm, parameter, OID, and protocol identifiers to supported capabilities or backend identifiers.
+- [`cose/`](cose/README.md) — CBOR Object Signing and Encryption structures and processing.
+- [`jose/`](jose/README.md) — JSON Object Signing and Encryption structures and processing.
+- [`authenticode/`](authenticode/README.md) — Windows PE Authenticode verification, a format-specific verifier rather than a general-purpose certificate framework.
+- [`oqs/`](oqs/README.md) — optional OpenSSL 3 provider integration for post-quantum algorithms; the adapter is not itself an implementation of those algorithms.
 
-## References
+Conceptually, `basic` supplies operations and key abstractions; `advisor` supplies lookup metadata; format-specific modules compose those facilities for their own data formats. OQS is an optional backend/provider integration path rather than a peer message format.
 
-### RFC
+## 3. Important behavior and lifetime
 
-- RFC 2104 — HMAC
-- RFC 3394 / RFC 5649 — AES Key Wrap
-- RFC 4226 / RFC 6238 — HOTP / TOTP
-- RFC 4493 — AES-CMAC
-- RFC 6070 / RFC 7914 / RFC 9106 — PBKDF2 / scrypt / Argon2
-- RFC 7515 / RFC 7516 / RFC 7517 / RFC 7518 — JWS / JWE / JWK / JWA
-- RFC 7520 — JOSE examples
-- RFC 8037 — ECDH and signatures for JOSE
-- RFC 8152 — COSE
-- RFC 8017 — PKCS #1
+- The build definition in [`CMakeLists.txt`](CMakeLists.txt) declares dependencies on the base and IO SDK modules and links OpenSSL libraries; the exact library names depend on platform/compiler configuration.
+- OQS source files are added only when `SUPPORT_OQS` is enabled. Availability therefore depends on build configuration and the separately installed provider/runtime, not merely on the presence of the adapter source.
+- A module's presence under `sdk/crypto/` does not imply that every algorithm, provider, format feature, or trust-policy decision is available in every build. Consult the module-specific source and tests before making a capability claim.
+- Authenticode verification and JOSE/COSE message processing have different format and trust semantics; they should not be treated as interchangeable certificate-verification APIs.
 
-### Online resources
+## 4. Example from the source tests
 
-Existing reference links include IANA JOSE/COSE/TLS registries, OpenSSL documentation, COSE examples, OID databases, and standard curve databases. Detailed links remain in the corresponding study/reference documents.
+Use the testcase directories as the source-backed index for behavior rather than treating this overview as proof that a test was executed:
+
+- [`test/testcase/crypto/`](../../test/testcase/crypto/README.md) — primitive operations, key/signature processing, test vectors, and provider/PQC-related cases.
+- [`test/testcase/cose/`](../../test/testcase/cose/) — COSE-focused tests.
+- [`test/testcase/jose/`](../../test/testcase/jose/) — JOSE-focused tests.
+- [`test/applet/authenticode/`](../../test/applet/authenticode/) — Authenticode applet/example.
+
+This document records source-tree relationships only; it does not claim that these tests were run as part of the documentation update.
+
+## 5. Relationships
+
+- [`sdk/base/`](../base/README.md) — foundational types, encoding, strings, and utility support.
+- [`sdk/io/`](../io/README.md) — CBOR, JSON, ASN.1/DER, and other representations consumed by crypto-related paths.
+- [`sdk/net/`](../net/README.md) — protocol consumers such as TLS and related network functionality.
+- [`test/testcase/crypto/`](../../test/testcase/crypto/README.md) — primitive and backend-oriented test entry point.
+- [`crypto-mindmap.md`](crypto-mindmap.md) — compact topic map.
+- [`crypto-references.md`](crypto-references.md) — retained RFC, book, and online-reference list.
+
+## 6. References
+
+- [Cryptographic references](crypto-references.md)
+- [OpenSSL libcrypto introduction](https://docs.openssl.org/master/man7/ossl-guide-libcrypto-introduction/)
+- [IANA JOSE registry](https://www.iana.org/assignments/jose/jose.xhtml)
+- [IANA COSE registry](https://www.iana.org/assignments/cose/cose.xhtml)

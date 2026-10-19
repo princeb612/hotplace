@@ -1,4 +1,19 @@
-# odbc_query
+## Publication
+
+```text
+hotplace source tree
+Edition 1 · Revision 1104
+Documented with GPT-6
+— source structure, implementation & tests
+```
+
+# ODBC statement and result traversal
+
+## 1. Role
+
+Wraps an ODBC statement handle (`HSTMT`) and is the execution/result-set object returned by `odbc_connector`.
+
+## 2. Model
 
 `odbc_query` wraps an ODBC statement handle (`HSTMT`) and is the main execution/result-set object returned by `odbc_connector`.
 
@@ -46,9 +61,22 @@ After execution, `build_fieldinfo()` uses `SQLNumResultCols` and `SQLDescribeCol
 
 `get_resultset()` exposes column/row counts through `SQLNumResultCols` and `SQLRowCount`; `more()` advances through additional result sets with `SQLMoreResults`.
 
-## Related
+## 3. Important behavior and lifetime
+
+Direct execution uses `SQLExecDirect`. Prepared statements use `SQLPrepare`, `SQLBindParameter`, and `SQLExecute`. Result metadata uses `SQLNumResultCols` and `SQLDescribeCol`; fetching uses `SQLFetch` and `SQLGetData`; `more()` advances with `SQLMoreResults`. Asynchronous close can cancel a pending statement with `SQLCancel`.
+
+## 4. Example from the source tests
+
+`sample.cpp` calls `query()`, loops over `fetch(&record)`, reads fields through `get_field(i)` and `as_string()`, and advances additional result sets through `more()`. The example depends on caller-provided database settings.
+
+## 5. Relationships
 
 - `odbc_connector` — creates the query and owns the connection lifecycle
 - `odbc_record` — row container produced by `fetch()`
 - `odbc_field` — individual column value and conversion
 - `odbc_diagnose` — diagnostics for ODBC handles
+
+## 6. References
+
+- `sdk/odbc/basic/odbc_query.hpp`
+- `test/testcase/odbc/sample.cpp`

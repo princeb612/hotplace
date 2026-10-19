@@ -112,6 +112,9 @@ class asn1_parameterized_type : public asn1_type {
     static asn1_parameterized_type* specialize(const std::string& name, asn1_parameterized_type* type, const asn1_paramvalues& values);
     asn1_parameterized_type* specialize(const std::string& name, const asn1_paramvalues& values);
 
+    void set_module(asn1_module* module);
+    asn1_module* get_module() const;
+
     asn1_paramtypes& get_types();
     asn1_paramvalues& get_values();
 
@@ -120,7 +123,6 @@ class asn1_parameterized_type : public asn1_type {
      * add_paramtype("TypeParameter")
      */
     asn1_parameterized_type& add_paramtype(const std::string& paramtype, const std::string& paramname = "");
-    // asn1_parameterized_type& add_param(asn1_parameter*);
 
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
@@ -140,6 +142,7 @@ class asn1_parameterized_type : public asn1_type {
 
    private:
     asn1_parameterized_type* _templ{nullptr};
+    asn1_module* _module{nullptr};
     asn1_paramtypes _types;
     asn1_paramvalues _values;
 };
@@ -164,10 +167,14 @@ class asn1_parameter : public asn1_type {
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
 
+   protected:
+    asn1_parameterized_type* get_parameterized_type() const;
+
    private:
     asn1_parameterized_type* _templ{nullptr};
     std::string _param;
     variant _vt;
+    asn1_object* _instance{nullptr};
 };
 
 }  // namespace io

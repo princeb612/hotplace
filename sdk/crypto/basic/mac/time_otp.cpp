@@ -69,76 +69,50 @@ return_t time_otp::open(otp_context_t** handle, unsigned int digit_length, time_
 }
 
 return_t time_otp::close(otp_context_t* handle) {
-    return_t ret = errorcode_t::success;
     totp_context_t* context = static_cast<totp_context_t*>(handle);
     hmac_otp hotp;
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (TOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
+    if (nullptr == handle) return errorcode_t::invalid_parameter;
+    if (TOTP_CONTEXT_SIGNATURE != context->_signature) return errorcode_t::invalid_context;
 
-        if (nullptr != context->_hotp_handle) {
-            hotp.close(context->_hotp_handle);
-        }
-        delete context;
+    if (nullptr != context->_hotp_handle) {
+        hotp.close(context->_hotp_handle);
     }
-    __finally2 {}
-    return ret;
+    delete context;
+
+    return errorcode_t::success;
 }
 
 return_t time_otp::get(otp_context_t* handle, time64_t time, uint32& code) {
-    return_t ret = errorcode_t::success;
     totp_context_t* context = static_cast<totp_context_t*>(handle);
     hmac_otp hotp;
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (TOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-        }
+    if (nullptr == handle) return errorcode_t::invalid_parameter;
+    if (TOTP_CONTEXT_SIGNATURE != context->_signature) return errorcode_t::invalid_context;
 
-        uint32 c = t_narrow_cast(time / context->_interval);
+    uint32 c = t_narrow_cast(time / context->_interval);
 
-        hotp.get(context->_hotp_handle, c, code);
-    }
-    __finally2 {}
-    return ret;
+    hotp.get(context->_hotp_handle, c, code);
+
+    return errorcode_t::success;
 }
 
 return_t time_otp::verify(otp_context_t* handle, time64_t time, uint32 code) {
     return_t ret = errorcode_t::success;
     totp_context_t* context = static_cast<totp_context_t*>(handle);
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (TOTP_CONTEXT_SIGNATURE != context->_signature) {
-            ret = errorcode_t::invalid_context;
-        }
+    if (nullptr == handle) return errorcode_t::invalid_parameter;
+    if (TOTP_CONTEXT_SIGNATURE != context->_signature) return errorcode_t::invalid_context;
 
-        uint32 result = 0;
-        ret = get(handle, time, result);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+    uint32 result = 0;
+    ret = get(handle, time, result);
+    if (errorcode_t::success == ret) {
         if (code != result) {
-            ret = errorcode_t::mismatch;
-            __leave2;
+            return errorcode_t::mismatch;
         }
     }
-    __finally2 {}
-    return ret;
+
+    return errorcode_t::success;
 }
 
 }  // namespace crypto

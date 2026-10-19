@@ -1,8 +1,29 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Endian and wire-format integers
+
+## 1. Role
+
+### Introduction
 
 `sdk/base/system` contains small integer/byte-order utilities used when a protocol field does not match a native C++ integer width.
 
-## Endianness
+## 2. Model
+
+The component model is described by the implementation and retained subsections below.
+
+## 3. Important behavior and lifetime
+
+### Endianness
 
 `endian.hpp` provides:
 
@@ -13,7 +34,7 @@
 
 The implementation is template based rather than tied only to the platform socket APIs. Multi-byte values are transformed by swapping half-width pieces, while one-byte values are left unchanged.
 
-## Custom-width integers
+### Custom-width integers
 
 `uint.hpp` defines `t_uint_custom_t<TYPE, N>` and concrete types such as `uint24_t` and `uint48_t`.
 
@@ -31,7 +52,19 @@ The conversion helpers are:
 
 Both validate the input buffer and reject values that cannot fit in the target width.
 
-## Protocol relationships
+### Tests
+
+`test/testcase/base/system/testcase_endian.cpp` checks host/network conversion and endian detection, including 64-bit and optional 128-bit values.
+
+The custom-width integer implementations are exercised indirectly by protocol code and should be documented alongside the protocol users when their concrete wire layout matters.
+
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+### Protocol relationships
 
 The source comments explicitly identify protocol uses:
 
@@ -40,8 +73,6 @@ The source comments explicitly identify protocol uses:
 
 This makes the utility particularly useful in the parser/protocol layers where a field is specified as an exact number of network-order octets.
 
-## Tests
+## 6. References
 
-`test/testcase/base/system/testcase_endian.cpp` checks host/network conversion and endian detection, including 64-bit and optional 128-bit values.
-
-The custom-width integer implementations are exercised indirectly by protocol code and should be documented alongside the protocol users when their concrete wire layout matters.
+Implementation and test paths are retained in the sections above or the source tree.

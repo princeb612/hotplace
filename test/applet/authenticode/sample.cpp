@@ -36,7 +36,7 @@ return_t test1() {
     __try2 {
         _test_case.begin("authenticode verification test - file");
         verifier.open(&handle);
-        int opt = 0;
+        int opt = 1;  // set to 0 if in air-gapped network
         verifier.set(handle, authenticode_ctrl_t::set_crl, &opt, sizeof(opt));
         verifier.add_trusted_rootcert(handle, "trust.crt", nullptr);
         ret = verifier.verify(handle, option.infile.c_str(), authenticode_flag_t::flag_separated, result);

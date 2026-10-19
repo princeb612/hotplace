@@ -1,4 +1,20 @@
-### HTTP
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+# HTTP
+
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
 
 ```mermaid
 mindmap
@@ -86,7 +102,9 @@ mindmap
 - [HTTP server/client flow](http-server-client.md) — network integration and application dispatch
 - [HTTP protocol stack](http-protocol-stack.md) — HTTP/1.x and HTTP/2 protocol interpretation and framing boundary
 
-## implementation areas
+## 3. Important behavior and lifetime
+
+### implementation areas
 
 * [auth](auth/README.md)
 * [compression](compression/README.md)
@@ -106,3 +124,15 @@ mindmap
 
 * `sdk/net/tls/` - TLS/QUIC transport used by HTTP/3
 * `sdk/crypto/` - authentication and cryptographic support
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

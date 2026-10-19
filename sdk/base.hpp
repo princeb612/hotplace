@@ -122,6 +122,7 @@
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/decimal_float.hpp>
+#include <hotplace/sdk/base/system/dir.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
 #include <hotplace/sdk/base/system/floating_point.hpp>
@@ -133,6 +134,8 @@
 #include <hotplace/sdk/base/system/windows/debug_trace.hpp>
 #endif
 #include <hotplace/sdk/base/system/ieee754.hpp>
+#include <hotplace/sdk/base/system/process.hpp>
+#include <hotplace/sdk/base/system/redirection.hpp>
 #include <hotplace/sdk/base/system/reference_counter.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>

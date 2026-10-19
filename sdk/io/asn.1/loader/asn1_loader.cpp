@@ -37,27 +37,23 @@ return_t asn1_loader::load(const char* asn1, size_t size, parse_tree* pt) {
 
 return_t asn1_loader::asn1file_to_tokens(asn1_parser* parser, const char* asn1file, std::vector<parser_token>& tokens) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == parser || nullptr == asn1file) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        file_stream fs;
-        ret = fs.open(asn1file);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = fs.begin_mmap();
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        auto stream = fs.data();
-        auto size = fs.size();
-        ret = parser->to_tokens((char*)stream, size, tokens);
+    if (nullptr == parser || nullptr == asn1file) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+
+    file_stream fs;
+    ret = fs.open(asn1file);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+    ret = fs.begin_mmap();
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    auto stream = fs.data();
+    auto size = fs.size();
+    ret = parser->to_tokens((char*)stream, size, tokens);
     return ret;
 }
 

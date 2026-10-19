@@ -21,18 +21,18 @@ void test_yaml_testvector_der() {
             binary_t bin = base16_decode_rfc(text_der);
 
             {
-                asn1_module reader;
+                asn1_module module;
                 size_t pos = 0;
                 auto stream = bin.data();
                 auto size = bin.size();
-                auto test = reader.read_weakly_typed(stream, size, pos);
+                auto test = module.read_weakly_typed(stream, size, pos);
 
                 basic_stream bs_type;
                 basic_stream bs_value;
                 binary_t bin_encoded;
-                reader.represent(&bs_type);
-                reader.publish(&bs_value);
-                reader.publish(&bin_encoded);
+                module.represent(&bs_type);
+                module.publish(&bs_value);
+                module.publish(&bin_encoded);
 
                 _logger->write([&](basic_stream& dbs) -> void {
                     valist va;
@@ -46,8 +46,6 @@ void test_yaml_testvector_der() {
 
                 _test_case.test(test, __FUNCTION__, "read and decode %s", text_item.c_str());
                 _test_case.assert(pos == size, __FUNCTION__, "complete stream consumed %s", text_item.c_str());
-                // TODO
-                // _test_case.assert(bin == bin_encoded, __FUNCTION__, "decode and encode %s", text_item.c_str());
             }
         }
     };

@@ -18,6 +18,7 @@
 /* basic */
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/oid.hpp>
+#include <hotplace/sdk/io/basic/oid_dictionary.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/io/basic/types.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>

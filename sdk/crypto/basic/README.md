@@ -1,10 +1,24 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # Cryptographic Primitives
+
+## 1. Role
 
 `crypto/basic` contains the low-level cryptographic primitives used by higher-level modules such as TLS, JOSE, COSE, and Authenticode. The implementation is largely built around the OpenSSL backend and is organized around encryption, digest/MAC, key handling, KDF, signature, PRNG, and PQC support.
 
 This directory is the implementation layer; protocol-specific use belongs in the higher-level modules.
 
-## Topics
+## 2. Model
+
+### Topics
 
 - [Cipher](cipher.md) — supported cipher families, modes, and tested algorithms
 - [Digest and MAC](digest-and-mac.md) — digest/HMAC/CMAC test coverage and size references
@@ -13,7 +27,9 @@ This directory is the implementation layer; protocol-specific use belongs in the
 - [OID](oid.md) — OID references and examples
 - [CBC-HMAC survey](mac/cbc-hmac-survey.md) — CBC-HMAC / MtE / EtM study material
 
-## Implementation areas
+## 3. Important behavior and lifetime
+
+### Implementation areas
 
 - [`crypt/`](crypt/README.md) — encryption and AEAD primitives
 - [`digest/`](digest/README.md) — digest and transcript-hash implementation
@@ -25,7 +41,9 @@ This directory is the implementation layer; protocol-specific use belongs in the
 - `pqc/` — post-quantum cryptographic support
 - `sdk/` — OpenSSL SDK/backend support
 
-## Verification
+## 4. Example from the source tests
+
+### Verification
 
 The corresponding crypto testcases are collected under [`test/testcase/crypto`](../../../test/testcase/crypto/README.md). They cover encryption, hashes, KDFs, keys/key exchange, signatures, PRNG, and PQC, including RFC and test-vector based cases.
 
@@ -37,9 +55,15 @@ The corresponding crypto testcases are collected under [`test/testcase/crypto`](
 - [`test/testcase/crypto/pqc/`](../../../test/testcase/crypto/pqc/README.md)
 - [`test/testcase/crypto/prng/`](../../../test/testcase/crypto/prng/README.md)
 
-## Related
+## 5. Relationships
+
+### Related
 
 - [`sdk/crypto/README.md`](../README.md) — crypto subsystem overview
 - [`sdk/crypto/advisor/README.md`](../advisor/README.md) — algorithm/parameter lookup
 - [`sdk/net/tls/`](../../net/tls/README.md) — protocol use of crypto primitives
 - [`sdk/io/asn.1/`](../../io/asn.1/README.md) — ASN.1/DER representation used by crypto code
+
+## 6. References
+
+Relevant source paths, sibling documentation, and standards references are retained here where available.

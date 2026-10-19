@@ -1,12 +1,20 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # ASN.1 Compiler
 
-## Role
+## 1. Role
 
 The `sdk/io/asn.1/compiler` directory currently contains the **design/documentation stage of the ASN.1 compiler concept** rather than a completed compiler implementation.
 
 There is no compiler implementation source in this directory at revision 1095. The main artifact is `compiler-flow.md`, which records an `asn1c`-style command-line and C++ source-generation design.
-
-## Intended role
 
 The planned compiler flow is:
 
@@ -29,7 +37,9 @@ ASN.1 module
 
 The design describes generation of C++11 data structures, DER codec interfaces, constraint checks, and build files from an ASN.1 schema.
 
-## Design documented in compiler-flow.md
+## 2. Model
+
+### Design documented in compiler-flow.md
 
 The existing design sketch covers:
 
@@ -47,7 +57,7 @@ The existing design sketch covers:
 
 These are **design notes**, not evidence that the described command-line compiler and generated-code pipeline are already implemented in revision 1095.
 
-## Relation to the current ASN.1 implementation
+### Relation to the current ASN.1 implementation
 
 The compiler concept builds on functionality that already exists elsewhere:
 
@@ -71,21 +81,17 @@ The compiler concept builds on functionality that already exists elsewhere:
 
 The current runtime and parser should therefore be considered the implemented foundation; the compiler is a future generation layer over that foundation.
 
-## Current status
+## 3. Important behavior and lifetime
+
+### Current status
 
 **Design / study stage.**
 
 The directory should not be documented as though `asn1c` is currently a usable compiler binary. The detailed flow document is valuable as a record of the intended architecture and can remain as a design artifact.
 
-## Related source
+## 4. Example from the source tests
 
-- `sdk/io/asn.1/runtime/`
-- `sdk/io/parser/`
-- `sdk/io/asn.1/basic/`
-
-There is currently no compiler `.cpp` implementation under `sdk/io/asn.1/compiler/`.
-
-## Related tests and examples
+### Related tests and examples
 
 The existing ASN.1 testcase tree demonstrates the parser, semantic construction, runtime, and DER paths that the future compiler would eventually build upon:
 
@@ -93,8 +99,20 @@ The existing ASN.1 testcase tree demonstrates the parser, semantic construction,
 - `test/testcase/asn.1/runtime/`
 - `test/testcase/asn.1/loader/`
 
-## Related document
+## 5. Relationships
+
+### Related document
 
 - `compiler-flow.md` — detailed compiler design sketch
 
 When implementation begins, this document should be updated from the current design assumptions to the actual command-line, generated-source, and testcase behavior.
+
+## 6. References
+
+### Related source
+
+- `sdk/io/asn.1/runtime/`
+- `sdk/io/parser/`
+- `sdk/io/asn.1/basic/`
+
+There is currently no compiler `.cpp` implementation under `sdk/io/asn.1/compiler/`.

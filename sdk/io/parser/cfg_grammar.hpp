@@ -66,6 +66,13 @@ class cfg_grammar {
     parser_nonterminals_t _non_terminals;
 };
 
+void compute_first_and_follow_sets(const cfg_grammar& grammar, parser_temporary_context_t& context);
+std::set<LR0_item> closure_lr0(const cfg_grammar& grammar, std::set<LR0_item> items);
+void build_lr0_states(const cfg_grammar& grammar, parser_temporary_context_t& context, parser_goto_table_t& goto_table);
+bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_t& context, const parser_goto_table_t& goto_table,
+                           parser_lalr1_action_table_t& action_table);
+bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t& context, const parser_goto_table_t& goto_table, parser_glr_action_table_t& action_table);
+
 }  // namespace io
 }  // namespace hotplace
 

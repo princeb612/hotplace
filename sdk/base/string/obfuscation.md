@@ -1,25 +1,60 @@
-# String Obfuscation
+## Publication
 
-The string directory contains two related but deliberately separate obfuscation mechanisms.
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 
-## `obfuscate_string`
+# Runtime String Obfuscation
 
-`obfuscate_string` stores each byte after adding a per-instance factor. When the contents are written back to `std::string`, `basic_stream` or `binary_t`, the factor is subtracted again.
+## 1. Role
 
-The object supports assignment/append from common string/stream forms and clears its internal contents during cleanup.
+`obfuscate_string` is a lightweight runtime string-obfuscation wrapper. It is intended to transform how string bytes are stored in the object, not to provide cryptographic confidentiality.
 
-This is a lightweight obfuscation utility, not cryptographic protection.
+## 2. Model
 
-## `constexpr_obfuscate`
+The implementation stores bytes transformed using an instance-specific factor. When converting or writing the value into supported output forms, the data is reconstructed. The testcase exercises output into `binary_t` and `std::string`, equality after construction, and append/equality behavior.
 
-`constexpr_obfuscate.hpp` is guarded for C++14 or later because its compile-time constructor requires the C++14 constexpr model. It stores transformed characters in a fixed array and reconstructs the original string through `load_string()`.
+```text
+source characters
+      |
+      v
+obfuscate_string (transformed internal bytes)
+      |
+      +--> binary_t << obfuscated value --> reconstructed bytes
+      +--> std::string << value ----------> reconstructed text
+```
 
-This is intentionally isolated from the project's normal C++11 target. The regular project compatibility goal remains C++11; the constexpr facility is an experimental C++14+ feature.
+This is obfuscation rather than encryption: it should not be used to protect secrets against an attacker who can inspect the program or its runtime state.
 
-## Tests
+## 3. Important behavior and lifetime
 
-- `test_string_obfuscate_string()`
-- `test_string_constexpr_hide()`
-- `test_string_constexpr_obf()`
+### Tests
 
-All are in `test/testcase/base/string/testcase_string.cpp`.
+- Source: `test/testcase/base/string/testcase_string.cpp`
+- Function: `test_string_obfuscate_string()`
+- Test analysis and execution report: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
+
+## 4. Example from the source tests
+
+### Example from the testcase
+
+`test_string_obfuscate_string()` initializes the wrapper from a character array containing `hello world`, writes it to `binary_t` and `std::string`, and compares the recovered bytes with the original array. It also compares two wrappers and exercises append behavior.
+
+## 5. Relationships
+
+- [Compile-time obfuscation](constexpr-obfuscation.md) documents a separate C++14+ facility.
+- The module remains part of `sdk/base/string`; it is not the project's cryptographic API.
+
+## 6. References
+
+- `sdk/base/string/obfuscate_string.hpp`
+- `sdk/base/string/obfuscate_string.cpp`
+
+### Source basis
+
+Edition 1 · Revision 1104

@@ -1,31 +1,58 @@
-# nostd
-
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 1 · Revision 1104
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
 ```
 
+# nostd
 
-`sdk/base/nostd` is hotplace's C++11-oriented STL-style utility layer. It supplies containers and helpers without making newer standard-library facilities a prerequisite for the project.
+## 1. Role
 
-The directory is intentionally a collection rather than a single abstraction, so the module records group related headers by role instead of creating one document per small header.
+### Introduction
 
-## Documents
-- [containers](containers.md) — vector/list/map/set/tree/container families
-- [binary-and-range](binary-and-range.md) — binary helpers, ranges, bit sets and capacity
-- [set](set.md) — runtime set façade selecting numeric or string backends
-- [range_set](range_set.md) — normalized numeric/ordered range set implementation
-- [string_set](string_set.md) — string values, ranges, FROM and regex operations
-- [traits-and-utility](traits-and-utility.md) — casts, traits, utility helpers and printf/encoding traits
-- [keyvalue-and-exception](keyvalue-and-exception.md) — key/value and exception helpers
-- [value](value.md) — deferred values backed by C++ futures/promises
+`sdk/base/nostd` is hotplace's C++11-oriented STL-style utility layer. It provides project-owned containers, value/range abstractions, binary helpers, traits and utility code used by higher-level SDK modules.
 
-## Related tests
-- `test/testcase/base/nostd/`
+## 2. Model
 
-## Source
+The component model is described by the implementation and retained subsections below.
+
+## 3. Important behavior and lifetime
+
+### Documents
+
+- [Containers](containers.md) — sequence, tree, set and priority-queue structures
+- [Binary utilities](binary.md) — byte sequences and integer/floating-point serialization helpers
+- [Ranges](range.md) — intervals, range operations and range-oriented helpers
+- [Bit set](bit_set.md) — bounded integer membership represented as bits
+- [Runtime set facade](set.md) — runtime selection between numeric range and string set backends
+- [Range set](range_set.md) — normalized numeric/ordered range operations
+- [String set](string_set.md) — literal strings, string ranges, FROM and regex operations
+- [Key/value](keyvalue.md) — lightweight key/value representation
+- [Exceptions](exception.md) — project exception abstraction
+- [Traits](traits.md) — type traits and encoding/formatting adapters
+- [Utility helpers](utility.md) — conversion, casting and miscellaneous helpers
+- [Deferred value](value.md) — value/future/promise-backed deferred values
+
+### Tests
+
+- `test/testcase/base/nostd/` — individual container and utility testcases
+- [Testcase overview](../../../test/testcase/base/nostd/testcase_nostd.md) — coverage and report-based execution evidence
+
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+`nostd` is infrastructure rather than a single subsystem. Its range/set facilities are consumed by ASN.1 constraint evaluation; its binary helpers support byte-oriented code; its traits and utilities support templates across the SDK.
+
+## 6. References
+
+### Source
+
 - `sdk/base/nostd/`

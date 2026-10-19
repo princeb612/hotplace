@@ -1,4 +1,19 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
 # Radix-64
+
+## 1. Role
+
+### Introduction
 
 `radix64` implements the additional processing needed by RFC 4880 Radix-64 representations.
 
@@ -15,7 +30,9 @@ binary data
      Radix-64 armor data
 ```
 
-## CRC-24
+## 2. Model
+
+### CRC-24
 
 `crc24()` calculates the checksum used by the Radix-64 format.
 
@@ -25,13 +42,15 @@ binary data
 
 The basic Radix-64 names such as `radix64_encode()` and `radix64_decode()` are aliases of the corresponding Base64 operations. The armor functions are the part that adds Radix-64-specific behavior.
 
-## RFC examples
+### RFC examples
 
 The main executable reference is RFC 4880 sections 6.5 and 6.6, both covered in `testcase_base64.cpp`.
 
 This is intentionally kept as a separate document because Radix-64 is more than another Base64 alphabet: it adds checksum and ASCII-armor semantics.
 
-## Tests
+## 3. Important behavior and lifetime
+
+### Tests
 
 `test/testcase/encode/testcase_base64.cpp`
 
@@ -42,7 +61,17 @@ The testcase includes:
 - encode/decode round trips
 - RFC 4880 section 6.6 ASCII-armored message decoding
 
-## Related source
+## 4. Example from the source tests
+
+See the source-test references below; do not infer runtime execution from source presence alone.
+
+## 5. Relationships
+
+Related components and cross-module links are listed in References where available.
+
+## 6. References
+
+### Related source
 
 - `sdk/base/encoding/radix64.hpp`
 - `sdk/base/encoding/radix64.cpp`

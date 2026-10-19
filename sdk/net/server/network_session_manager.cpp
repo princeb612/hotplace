@@ -223,30 +223,5 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
     return ret;
 }
 
-// return_t network_session_manager::dgram_find(const sockaddr_storage_t* addr, network_session** ptr_session_object) {
-//     return_t ret = errorcode_t::success;
-//     __try2 {
-//         if (nullptr == addr || nullptr == ptr_session_object) {
-//             ret = errorcode_t::invalid_parameter;
-//             __leave2;
-//         }
-//
-//         binary_t cookie;
-//         generate_cookie_sockaddr(cookie, (sockaddr*)addr, sizeof(sockaddr_storage_t));
-//
-//         auto iter = _dgram_session_map.find(cookie);
-//         if (_dgram_session_map.end() == iter) {
-//             ret = errorcode_t::not_found;
-//             __leave2;
-//         } else {
-//             auto session_object = iter->second;
-//             session_object->addref();
-//             *ptr_session_object = session_object;
-//         }
-//     }
-//     __finally2 {}
-//     return ret;
-// }
-
 }  // namespace net
 }  // namespace hotplace

@@ -1,4 +1,20 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # network server model
+
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
 
 `network_server` is the execution layer that connects the OS/network multiplexer with hotplace's socket, session, stream, protocol and callback layers.
 
@@ -24,7 +40,7 @@ network multiplexer
                                     +-- user callback
 ```
 
-## Multiplexer boundary
+### Multiplexer boundary
 
 The server selects the platform multiplexer at compile time:
 
@@ -34,7 +50,7 @@ The server selects the platform multiplexer at compile time:
 
 `network_server::open()` creates a `network_multiplexer_context_t` containing the server socket, session manager, protocol group, event queue, callback and thread-control objects.
 
-## Processing threads
+### Processing threads
 
 The source separates the work into distinct loops rather than doing protocol interpretation directly inside the multiplexer callback.
 
@@ -59,7 +75,7 @@ consumer_thread / consumer_routine
 
 For TLS server sockets, the accept path is split again so that the TLS handshake can be handled by one or more `tls_accept_thread` workers before the session is attached to the multiplexer.
 
-## Configuration
+### Configuration
 
 `server_conf` stores concurrency and buffer settings through `t_key_value`:
 
@@ -72,13 +88,13 @@ For TLS server sockets, the accept path is split again so that the TLS handshake
 
 The default implementation uses event concurrency `1024`, TLS accept concurrency `1`, producer concurrency `2`, and consumer concurrency `2`.
 
-## Callback boundary
+### Callback boundary
 
 After `network_session::consume()` produces interpreted data, `consumer_routine()` builds the callback array. The important entries are the socket, data pointer, data size, session and UDP peer address. The event type distinguishes stream reads from datagram reads and connection events.
 
 This makes `network_server` a transport/session dispatcher rather than an HTTP implementation. HTTP/1, HTTP/2 and HTTP/3 belong to `sdk/net/http/` and use this layer underneath.
 
-## Lifecycle
+### Lifecycle
 
 The public lifecycle is intentionally split:
 
@@ -94,7 +110,17 @@ open
 
 `close()` is responsible for stopping the worker groups, clearing protocol registrations and closing the multiplexer context.
 
-## Related modules
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+
+## 5. Relationships
+
+### Related modules
 
 - `sdk/net/basic/` — concrete client/server sockets and TLS/DTLS socket adapters
 - `sdk/net/server/network_session.*` — per-connection and datagram session state
@@ -102,3 +128,7 @@ open
 - `sdk/net/server/network_protocol.*` — protocol identification and message framing
 - `sdk/net/http/` — HTTP protocol/server layer
 - `sdk/net/tls/` — TLS/DTLS/QUIC protocol and cryptographic processing
+
+## 6. References
+
+Source references and related documents are retained here where available.

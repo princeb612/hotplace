@@ -1,33 +1,21 @@
-# parsing table (binary)
+# Binary parsing tables
 
-- ASN.1 notation only
-  - suitable for LALR(1)
-- ASN.1 notation, module definition, exports/imports, parameterized, information object class, extension marker (version 1 and 2)
-  - suitable for GLR
+This directory contains generated binary parsing-table artifacts used by the parser. The documented grammar coverage distinguishes two table families:
 
-references
-- [file layout](../../sdk/io/parser/parsing-table-binary-format.md)
+- **LALR(1):** ASN.1 notation.
+- **GLR:** ASN.1 notation plus module definitions, `EXPORTS`/`IMPORTS`, parameterized constructs, information object classes, and extension markers (versions 1 and 2).
 
-generation
+## Generation
 
-- test/tool/makeparsingtable
-```
-  ./makeparsingtable -o asn1notation.ptb
-  ./makeparsingtable -o asn1.ptb -glr
+The generator is `test/tool/makeparsingtable`. From its build/output directory, the documented commands are:
+
+```sh
+./makeparsingtable -o asn1notation.ptb
+./makeparsingtable -o asn1.ptb -glr
 ```
 
-testcase
-- unzip or copy before testing
-```
-  unzip parsingtable.zip -d test/testcase/io
-  unzip parsingtable.zip -d test/testcase/asn.1
-```
+The generated files are binary artifacts, not hand-maintained grammar source. For the on-disk layout, see [Binary parsing-table format](../../sdk/io/parser/parsing-table-binary-format.md).
 
-## Publication
+## Test use
 
-```text
-hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
-```
+The repository's historical test instructions unpack/copy `parsingtable.zip` into `test/testcase/io` and `test/testcase/asn.1`. Check the active test/build setup before assuming these manual copy steps are still required in a given build.

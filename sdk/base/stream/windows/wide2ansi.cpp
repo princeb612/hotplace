@@ -15,24 +15,13 @@ namespace hotplace {
 return_t W2A(ansi_string& target, const wchar_t* source, uint32 codepage) { return W2A(&target, source, codepage); }
 
 return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::vector<char> buffer;
-        int sizeNeed = WideCharToMultiByte(codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
-
-        buffer.resize(sizeNeed);  // including null pad
-        WideCharToMultiByte(codepage, 0, source, -1, buffer.data(), sizeNeed, nullptr, nullptr);
-        if (size_t(sizeNeed) >= sizeof(char)) {
-            stream->write((void*)buffer.data(), (sizeNeed - 1) * sizeof(char));
-        }
-    }
-    __finally2 {}
-    return ret;
+    auto lambda = [](stream_t*& target, void* p, size_t len) -> void { target->write(p, len); };
+    return wide2ansi(stream, lambda, source, codepage);
 }
+
+return_t W2A(std::string& target, const wchar_t* source, uint32 codepage) {
+    auto lambda = [](std::string& target, void* p, size_t len) -> void { target.append(static_cast<char*>(p), len); };
+    return wide2ansi(target, lambda, source, codepage);
+};
 
 }  // namespace hotplace

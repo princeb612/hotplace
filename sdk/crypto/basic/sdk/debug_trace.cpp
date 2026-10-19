@@ -50,38 +50,33 @@ return_t trace_openssl(return_t errorcode) {
 }
 
 return_t debug_trace_openssl(stream_t* stream) {
-    return_t ret = errorcode_t::success;
+    if (nullptr == stream) {
+        return errorcode_t::invalid_parameter;
+    }
 
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    unsigned long l = 0;
+    char buf[256];
 
-        unsigned long l = 0;
-        char buf[256];
+    std::string bio;
+    const char* file = nullptr;
+    const char* data = nullptr;
+    int line = 0;
+    int flags = 0;
 
-        std::string bio;
-        const char* file = nullptr;
-        const char* data = nullptr;
-        int line = 0;
-        int flags = 0;
-
-        constexpr char constexpr_debugline[] = "[%s @ %d] %s\n";
+    constexpr char constexpr_debugline[] = "[%s @ %d] %s\n";
 
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-        while (0 != (l = ERR_get_error_all(&file, &line, nullptr, &data, &flags))) {
+    while (0 != (l = ERR_get_error_all(&file, &line, nullptr, &data, &flags))) {
 #else
-        while (0 != (l = ERR_get_error_line_data(&file, &line, &data, &flags))) {
+    while (0 != (l = ERR_get_error_line_data(&file, &line, &data, &flags))) {
 #endif
-            ERR_error_string_n(l, buf, sizeof(buf));
-            stream->printf(constexpr_debugline, file, line, buf);
-        }
-
-        ERR_clear_error();
+        ERR_error_string_n(l, buf, sizeof(buf));
+        stream->printf(constexpr_debugline, file, line, buf);
     }
-    __finally2 {}
-    return ret;
+
+    ERR_clear_error();
+
+    return errorcode_t::success;
 }
 
 void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t ret) {

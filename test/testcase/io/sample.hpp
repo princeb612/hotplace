@@ -21,10 +21,13 @@ struct OPTION : public CMDLINEOPTION {
 
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+void testcase_oid();
 void testcase_payload();
 void testcase_payload_quic();
 
 void testcase_filestream();
+
+void testcase_string();
 
 void testcase_mlfq();
 void testcase_netlink();

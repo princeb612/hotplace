@@ -7,18 +7,23 @@
  * Revision History
  * Date         Name                Description
  * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
+ * 2026.10.18   Soo Han and Gemini  restored `get_crl` to proper functionality following the addition of `process`
  */
 
 #include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/dir.hpp>
+#include <hotplace/sdk/base/system/process.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <hotplace/sdk/crypto/authenticode/sdk.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/string/string.hpp>  // split_url
 #include <map>
@@ -54,8 +59,9 @@ struct authenticode_context_t {
     std::list<std::string> digicert_path;
     std::string crl_path;
     bool gender;
+    PKCS7* pkcs7;
 
-    authenticode_context_t() : load_root_cert(0), crl_download(1), crl_download_timeout(3), crl_download_retry(1), gender(false) {}
+    authenticode_context_t() : load_root_cert(0), crl_download(1), crl_download_timeout(3), crl_download_retry(1), gender(false), pkcs7(nullptr) {}
 };
 
 typedef std::map<arch_t, authenticode_context_t*> authenticode_contexts_map_t;
@@ -332,6 +338,8 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
                 }
             }
 
+            handle->pkcs7 = pkcs7;  // verify_callback
+
             ret = verify_pkcs7(handle, pkcs7, flags, result);
         }
         __finally2 {
@@ -560,6 +568,107 @@ static unsigned int asn1_simple_hdr_len(const unsigned char* p, unsigned int len
     return ret;
 }
 
+// Gemini
+static bool extract_timestamp_time_from_signer_info(PKCS7_SIGNER_INFO* si, ASN1_TIME** out_time) {
+    bool found = false;
+    __try2 {
+        if (nullptr == si || nullptr == out_time) {
+            __leave2;
+        }
+
+// openssl-3.5 NID_pkcs9_countersignature 53
+#ifndef NID_pkcs9_counterSignature
+#define NID_pkcs9_counterSignature 53
+#endif
+        ASN1_TYPE* asn1type = (ASN1_TYPE*)PKCS7_get_attribute(si, NID_pkcs9_counterSignature);
+        if (nullptr == asn1type) __leave2;
+
+        ASN1_STRING* asn1str = nullptr;
+        int type = ASN1_TYPE_get(asn1type);
+        if (type == V_ASN1_SEQUENCE || type == V_ASN1_OCTET_STRING || type > 0) {
+            asn1str = asn1type->value.asn1_string;
+        }
+        if (nullptr == asn1str) {
+            __leave2;
+        }
+
+        const unsigned char* p = ASN1_STRING_get0_data(asn1str);
+        int len = ASN1_STRING_length(asn1str);
+
+        const PKCS7_SIGNER_INFO* inner_si = d2i_PKCS7_SIGNER_INFO(nullptr, &p, len);
+        if (nullptr == inner_si) {
+            __leave2;
+        }
+
+        const ASN1_TYPE* time_val = PKCS7_get_signed_attribute(inner_si, NID_pkcs9_signingTime);
+        if (nullptr != time_val) {
+            ASN1_TIME* t = nullptr;
+            if (V_ASN1_UTCTIME == time_val->type) {
+                t = time_val->value.utctime;
+            } else if (V_ASN1_GENERALIZEDTIME == time_val->type) {
+                t = time_val->value.generalizedtime;
+            }
+
+            if (nullptr != t) {
+                *out_time = ASN1_STRING_dup(t);
+                found = true;
+            }
+        }
+
+        PKCS7_SIGNER_INFO_free((PKCS7_SIGNER_INFO*)inner_si);
+    }
+    __finally2 {}
+    return found;
+}
+
+bool is_valid_by_timestamp(X509* cert, PKCS7* pkcs7) {
+    bool is_valid = false;
+    ASN1_TIME* tm_time = nullptr;
+
+    __try2 {
+        if (nullptr == cert || nullptr == pkcs7) {
+            __leave2;
+        }
+
+        if (0 == PKCS7_type_is_signed(pkcs7)) {
+            __leave2;
+        }
+
+        STACK_OF(PKCS7_SIGNER_INFO)* si_st = PKCS7_get_signer_info(pkcs7);
+        if (nullptr == si_st) {
+            __leave2;
+        }
+
+        for (int i = 0; i < sk_PKCS7_SIGNER_INFO_num(si_st); i++) {
+            PKCS7_SIGNER_INFO* si = sk_PKCS7_SIGNER_INFO_value(si_st, i);
+            if (true == extract_timestamp_time_from_signer_info(si, &tm_time)) {
+                break;
+            }
+        }
+
+        if (nullptr == tm_time) {
+            __leave2;
+        }
+
+        ASN1_TIME* not_before = X509_get_notBefore(cert);
+        ASN1_TIME* not_after = X509_get_notAfter(cert);
+
+        int cmp_before = ASN1_TIME_compare(not_before, tm_time);
+        int cmp_after = ASN1_TIME_compare(not_after, tm_time);
+
+        if (cmp_before <= 0 && cmp_after >= 0) {
+            is_valid = true;
+        }
+    }
+    __finally2 {
+        if (nullptr != tm_time) {
+            ASN1_TIME_free(tm_time);
+        }
+    }
+
+    return is_valid;
+}
+
 int verify_callback(int ok, X509_STORE_CTX* ctx) {
     char buf[256];
 
@@ -635,9 +744,24 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             }
 #endif
         } break;
+        case X509_V_ERR_CERT_HAS_EXPIRED:  // (10)
+        {
+            authenticode_context_t* context = nullptr;
+            {
+                critical_section_guard guard(_contexts_lock);
+                auto iter = _contexts.find(get_thread_id());
+                context = iter->second;
+            }
+
+            X509* current_cert = X509_STORE_CTX_get_current_cert(ctx);
+
+            if (0 == depth && is_valid_by_timestamp(current_cert, context->pkcs7)) {
+                X509_STORE_CTX_set_error(ctx, X509_V_OK);
+                ok = 1;
+            }
+        } break;
         case X509_V_ERR_UNABLE_TO_GET_CRL:               // (3)
         case X509_V_ERR_CERT_NOT_YET_VALID:              // (9)
-        case X509_V_ERR_CERT_HAS_EXPIRED:                // (10)
         case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:  // (13)
         case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:   // (14)
             // pass through
@@ -651,8 +775,8 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             //      printf("#notAfter=");
             //      ASN1_UTCTIME_print(bio_err,X509_get_notAfter(ctx->current_cert));
             //      printf("\n");
-            X509_STORE_CTX_set_error(ctx, X509_V_OK);
-            ok = 1;
+            // X509_STORE_CTX_set_error(ctx, X509_V_OK);
+            // ok = 1;
             break;
         case X509_V_ERR_CRL_NOT_YET_VALID:  // (11)
         case X509_V_ERR_CRL_HAS_EXPIRED:    // (12)
@@ -818,7 +942,7 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
         // PKCS7_verify use it's own X509_STORE_CTX
         // X509_STORE_CTX_set_ex_data(store_context.get(), 0, handle);
 
-        X509_STORE_set_flags(store.get(), X509_V_FLAG_CRL_CHECK);
+        X509_STORE_set_flags(store.get(), X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
 
         for (auto& pair : crl_map) {
             X509_CRL* crl = pair.second;
@@ -875,6 +999,9 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
         }
 
         std::string context_crl_path = context->crl_path;
+        if (context_crl_path.empty()) {
+            context_crl_path = ".";
+        }
 
         std::set<std::string> crls;
         crl_distribution_point(cert, crls);
@@ -882,10 +1009,8 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
             url_info_t url_info;
 
             split_url(crl_url.c_str(), &url_info);
-            std::string crl_path = format("%s/%s/%s", context_crl_path.c_str(), url_info.host.c_str(), url_info.uripath.c_str());
-            std::string crl_file = format("%s/%s%s", context_crl_path.c_str(), url_info.host.c_str(), url_info.uri.c_str());
-
-            //__vtrace(0, "CRL : %s", crl_url.c_str());
+            std::string crl_path = format("%s/%s/%s", context_crl_path.c_str(), url_info.host.c_str(), dir_name(url_info.uripath).c_str());
+            std::string crl_file = format("%s/%s%s", context_crl_path.c_str(), url_info.host.c_str(), url_info.uripath.c_str());
 
             {
                 critical_section_guard guard(context->crl_lock);
@@ -897,50 +1022,65 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
                     __leave2;
                 }
 
-#if 0
-                Process process;
-                // wget --connect-timeout=3 -t 1
-                std::string cmdline_proxy;
-                if (false == context->proxy_url.empty ()) {
-                    cmdline_proxy += "-e use_proxy=yes ";
-                    if (context->proxy_user.empty ()) {
-                        cmdline_proxy += format ("-e http_proxy=%s ", context->proxy_url.c_str ());
-                    } else {
-                        url_info_t url;
-                        split_url (context->proxy_url.c_str (), &url);
-                        cmdline_proxy += format ("-e http_proxy=%s://%s@%s:%d/ ",
-                                                 url.protocol.c_str (), context->proxy_user.c_str (), url.host.c_str (), url.port);
+                BIO* bio = nullptr;
+                bio = BIO_new_file(crl_file.c_str(), "rb");
+                if (nullptr == bio) {
+#if 1
+                    makedirp(crl_path);
+
+                    process proc;
+                    execparam param;
+                    param.executable = "wget";
+                    param.io_redirection = true;
+                    std::string logfile("temp");
+                    std::string out;
+                    logfile = openssl_prng::nonce(8, encoding_t::encoding_base16);
+                    // wget --connect-timeout=3
+                    //      -t 1
+                    //      http://crl.microsoft.com/pki/crl/products/MicrosoftCodeVerifRoot.crl
+                    //      -O crl/crl.microsoft.com/pki/crl/products/MicrosoftCodeVerifRoot.crl
+                    //      -o tempfile
+                    // std::string cmdline_wget = format ("wget %s --connect-timeout=%d -t %d %s -O %s -o %s",
+                    //                                    cmdline_proxy.c_str (), context->crl_download_timeout, context->crl_download_retry,
+                    //                                    crl_url.c_str (), crl_file.c_str (), logfile.c_str ());
+                    param.add(format("--connect-timeout=%d", context->crl_download_timeout));
+                    param.add("-t").add(context->crl_download_retry);
+                    param.add(crl_url);
+                    param.add("-O").add(crl_file);
+                    param.add("-o").add(logfile);
+                    if (false == context->proxy_url.empty()) {
+                        param.add("-e").add("use_proxy=yes");
+                        if (context->proxy_user.empty()) {
+                            param.add("-e").add(format("http_proxy=%s", context->proxy_url.c_str()));
+                        } else {
+                            url_info_t url;
+                            split_url(context->proxy_url.c_str(), &url);
+                            auto proxy = format("http_proxy=%s://%s@%s:%d/", url.scheme.c_str(), context->proxy_user.c_str(), url.host.c_str(), url.port);
+                            param.add("-e").add(proxy);
+                        }
+                    }
+
+                    auto spawned = proc.spawn(param);
+                    if (spawned) {
+                        proc.wait();
+                        unlink(logfile.c_str());
+
+                        bio = BIO_new_file(crl_file.c_str(), "rb");
                     }
                 }
 
-                std::string nonce ("temp");
-                std::string out;
-                create_nonce (8, nonce);
-                // wget --connect-timeout=3
-                //      -t 1
-                //      http://crl.microsoft.com/pki/crl/products/MicrosoftCodeVerifRoot.crl
-                //      -O crl/crl.microsoft.com/pki/crl/products/MicrosoftCodeVerifRoot.crl
-                //      -o tempfile
-                std::string cmdline_wget = format ("wget %s --connect-timeout=%d -t %d %s -O %s -o %s",
-                                                   cmdline_proxy.c_str (), context->crl_download_timeout, context->crl_download_retry,
-                                                   crl_url.c_str (), crl_file.c_str (), nonce.c_str ());
-
-
-                mkdirp (crl_path.c_str ());
-                process.run (cmdline_wget.c_str (), out);
-                unlink (nonce.c_str ());
-
-                BIO* bio = BIO_new_file (crl_file.c_str (), "r");
-                X509_CRL* crl = d2i_X509_CRL_bio (bio, nullptr);
-                BIO_free (bio);
+                X509_CRL* crl = d2i_X509_CRL_bio(bio, nullptr);
+                if (nullptr == crl) {
+                    ERR_print_errors_fp(stderr);
+                } else {
+                    context->crl_map.insert(std::make_pair(crl_url, crl));
+                    crl_map.insert(std::make_pair(crl_url, crl));
+                }
+                BIO_free(bio);
 
                 if (nullptr == crl) {
-                    unlink (crl_file.c_str ());
+                    // unlink (crl_file.c_str ());
                 }
-
-                // no matter what crl is null or not
-                context->crl_map.insert (std::make_pair (crl_url, crl));
-                crl_map.insert (std::make_pair (crl_url, crl));
 #endif
             }
         }

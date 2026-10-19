@@ -1,6 +1,22 @@
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
 # HTTP server and client flow
 
-## Server
+## 1. Role
+
+This document identifies the module or protocol area represented by this file.
+
+## 2. Model
+
+### Server
 
 `http_server` is the application-facing integration point between `network_server` and the HTTP request/response model.
 
@@ -38,7 +54,7 @@ http_response
 
 The server supports TCP, TLS, and the QUIC-facing service selection used by the HTTP/3 path, although the current HTTP/3 server path remains incomplete in the source's own status map.
 
-## Client
+### Client
 
 `http_client` is intentionally simple. It creates/composes an `http_request`, connects through a client socket, sends the serialized request, reads the response, runs the received bytes through a `network_protocol_group` containing `http_protocol`, and opens the resulting bytes as an `http_response`.
 
@@ -60,7 +76,7 @@ http_response::open()
 
 The current implementation shown here is primarily the HTTP/1.x request/response path. HTTP/2 has its own frame/session machinery rather than being transparently selected by this simple client flow.
 
-## Routing boundary
+### Routing boundary
 
 The server does not embed application handlers inside the protocol parser. `http_router` is the boundary between protocol parsing and application behavior:
 
@@ -80,7 +96,13 @@ http_response
 
 This separation is important when reading the code: `http_protocol` determines whether enough bytes form a message, while the router determines what the message means to the application.
 
-## Source / tests
+## 3. Important behavior and lifetime
+
+Implementation details and behavior are described where the existing source-tree notes provide evidence.
+
+## 4. Example from the source tests
+
+### Source / tests
 
 - `sdk/net/http/http_server.*`
 - `sdk/net/http/http_client.*`
@@ -88,3 +110,11 @@ This separation is important when reading the code: `http_protocol` determines w
 - `test/testcase/net/http/testcase_http.cpp`
 - `test/applet/httpserver1/`
 - `test/applet/httpserver2/`
+
+## 5. Relationships
+
+Related implementation areas and protocol boundaries are recorded here where identified.
+
+## 6. References
+
+Source references and related documents are retained here where available.

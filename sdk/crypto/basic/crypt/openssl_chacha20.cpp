@@ -17,30 +17,25 @@ namespace crypto {
 return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce) { return openssl_chacha20_iv(iv, counter, nonce.data(), nonce.size()); }
 
 return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == nonce) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (nonce_size > 12) {
-            nonce_size = 12;
-        }
-
-        // nonce = constant | iv
-        // constant is little-endian
-
-        if (is_little_endian()) {
-            binary_append(iv, counter);
-        } else {
-            binary_append(iv, convert_endian(counter));
-        }
-        binary_append(iv, nonce, nonce_size);
+    if (nullptr == nonce) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
-    return ret;
+
+    if (nonce_size > 12) {
+        nonce_size = 12;
+    }
+
+    // nonce = constant | iv
+    // constant is little-endian
+
+    if (is_little_endian()) {
+        binary_append(iv, counter);
+    } else {
+        binary_append(iv, convert_endian(counter));
+    }
+    binary_append(iv, nonce, nonce_size);
+
+    return errorcode_t::success;
 }
 
 }  // namespace crypto

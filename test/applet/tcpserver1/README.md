@@ -1,14 +1,10 @@
-### Multiplexer-integrated TCP server applet
+# Multiplexer-integrated TCP server applet
 
-This directory contains the tests/samples for the corresponding hotplace module.
+`tcpserver1` is the first runnable TCP server in the repository's progression toward TLS and HTTP server applets. Its `run_server.cpp` works directly with the multiplexer/socket event path; `sample.cpp` contains shared applet setup.
 
-#### test sources
+## Build and sources
 
-* `run_server.cpp`
-* `sample.cpp`
+- Sources: `run_server.cpp`, `sample.cpp`
+- Build definition: `CMakeLists.txt`
 
-#### test data / build files
-
-* `CMakeLists.txt`
-
-The directory is organized around the concrete testcase sources present here; detailed protocol or implementation notes belong to the corresponding `sdk` documentation.
+The source comments place this applet before `tcpserver2`, `tlsserver`, `httpserver1`, and `httpserver2` as a learning sequence. It is a demonstration of event-driven TCP handling, not an HTTP or TLS server.

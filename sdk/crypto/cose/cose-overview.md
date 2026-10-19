@@ -1,4 +1,23 @@
-#### message
+## Publication
+
+```text
+┌──────────────────────────────────────────────┐
+│ hotplace source tree                         │
+│ Edition 1 · Revision 1104                    │
+│ Documented with GPT-6                        │
+│ — source structure, implementation & tests   │
+└──────────────────────────────────────────────┘
+```
+
+# Cose Overview
+
+## 1. Role
+
+Records the COSE message families and the algorithm/support matrix maintained by the source tree.
+
+## 2. Model
+
+### message
 
 ````
                        protected  unprotected      payload     singleitem/multiitems
@@ -11,7 +30,7 @@
  cbor_tag_t::sign1     protected, unprotected_map, payload,    signature
 ````
 
-#### algorithm
+### algorithm
 
 - party : apu-id/nonce/other, apv-id/nonce/other
 - epk   : ephemeral key
@@ -62,3 +81,20 @@
 | O | ECDH-SS + A128KW    | -32   | ECDH SS w/ HKDF - SHA-256 A128KW                     |   | o | o |   | o | o |                  |
 | O | ECDH-SS + A192KW    | -33   | ECDH SS w/ HKDF - SHA-256 A192KW                     |   | o | o |   | o | o |                  |
 | O | ECDH-SS + A256KW    | -34   | ECDH SS w/ HKDF - SHA-256 A128KW                     |   | o | o |   | o | o |                  |
+
+## 3. Important behavior and lifetime
+
+COSE processing depends on message family, protected/unprotected headers, key and algorithm availability, and the underlying cryptographic implementation.
+
+## 4. Example from the source tests
+
+The relevant test sources are listed below; this document does not invent a standalone example.
+
+## 5. Relationships
+
+- `sdk/io/cbor/` provides CBOR parsing, encoding, and object representation.
+- `sdk/crypto/basic/` provides cryptographic primitives used by COSE.
+
+## 6. References
+
+- Source: this module and its related testcase directory (Revision 1104).

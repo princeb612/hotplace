@@ -144,11 +144,9 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
             temp_key.resize(internal_size_key);
             memcpy(temp_key.data(), key, (size_key > internal_size_key ? internal_size_key : size_key));
 
-            uint32 internal_size_iv = 0;
-            // EVP_CIPHER_get_iv_length { return cipher(nullptr)->iv_len; }
-            internal_size_iv = EVP_MAX_IV_LENGTH;
-            adjust_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
-            temp_iv.resize(internal_size_iv);
+            auto hint = advisor->hintof_blockcipher(context->algorithm);
+            uint32 internal_size_iv = hint ? sizeof_iv(hint) : EVP_MAX_IV_LENGTH;
+            temp_iv.resize(EVP_MAX_IV_LENGTH);
             memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
         })
         /* encrypt and decrypt re-initialize iv */
@@ -637,16 +635,12 @@ return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value
          * [openssl 3.0.3] compatibility problem
          * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
          */
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_blockcipher(context->algorithm);
         if (1 == cmd) {
-            value = EVP_CIPHER_CTX_key_length(context->encrypt_context);
-            adjust_range(value, 0, EVP_MAX_KEY_LENGTH);
+            value = sizeof_key(hint);
         } else if (2 == cmd) {
-#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-            value = EVP_MAX_IV_LENGTH;
-#else
-            value = EVP_CIPHER_CTX_iv_length(context->encrypt_context);
-#endif
-            adjust_range(value, 0, EVP_MAX_IV_LENGTH);
+            value = sizeof_iv(hint);
         } else {
             ret = errorcode_t::bad_request;
         }
