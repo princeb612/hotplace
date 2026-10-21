@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,9 +13,9 @@
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+This document explains the protocol-framing adapters that let the generic network server distinguish HTTP/1.x message boundaries from HTTP/2 connection preface and frame boundaries. It focuses on the transport-to-protocol boundary, not routing or application semantics.
 
-## 2. Model
+## 2. Data Model
 
 ### Protocol interpretation
 
@@ -91,33 +92,33 @@ The source tree contains HTTP/3 frame and QPACK components, but the parent HTTP 
 
 Therefore this directory should not be read as a claim that HTTP/3 is a complete end-to-end server implementation.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 Implementation details and behavior are described where the existing source-tree notes provide evidence.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-### Verification examples
 
-`testcase_http2_frame.cpp` composes frames, compares them with RFC-style hexadecimal vectors, reads them back, and verifies round-trip equivalence.
 
-`testvector_http2.cpp` feeds YAML/pcap-derived HTTP/2 frame data through `network_session`, `network_protocol_group`, and `http2_session`, exercising the same protocol boundaries used by the server path.
-
-### Source / tests
-
-- `sdk/net/http/http1/http_protocol.*`
-- `sdk/net/http/http2/http2_protocol.*`
+- `sdk/net/http/http_protocol.hpp/.cpp`
+- `sdk/net/http/http2/http2_protocol.hpp/.cpp`
 - `sdk/net/http/http2/http2_frame*.*`
 - `sdk/net/http/http2/http2_session.*`
-- `sdk/net/http/hpack/*`
-- `sdk/net/http/qpack/*`
+- `test/testcase/net/http/testcase_http.cpp`
 - `test/testcase/net/http/testcase_http2_frame.cpp`
 - `test/testcase/net/http/testvector_http2.cpp`
+- [HTTP overview](README.md)
+- [HTTP core model](http-core-model.md)
+- [HTTP server/client flow](http-server-client.md)
+- [HTTP/1.x implementation](http1/README.md)
+- [HTTP/2 implementation](http2/README.md)
+- [HTTP/3 implementation](http3/README.md)
+- [TLS/QUIC transport](../tls/README.md)
+- `../http-core-model.md` — shared HTTP request/response objects
+- `../http1/` — HTTP/1.x message framing
+- `../http2/` — HTTP/2 frame/session handling
+- `../../server/` — generic `network_stream` and `network_protocol_group` dispatch
 
-## 5. Relationships
+## 5. References
 
-Related implementation areas and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Source references and related documents are retained here where available.
+No external references are currently listed.

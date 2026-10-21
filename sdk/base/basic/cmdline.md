@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -33,7 +34,7 @@ command-line tokens
         application option object
 ```
 
-## 2. Model
+## 2. Data Model
 
 ### Registration
 
@@ -58,13 +59,13 @@ The implementation checks for:
 
 The implementation is intentionally small and is not a general command-line framework or a thread-safe parser.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Required and optional arguments
 
 The parser keeps mandatory arguments separately and rejects duplicate registrations. An argument can be optional, require a value, or participate in a precedence/relationship rule through `preced()`. `help()` reports registered arguments and their processing state in registration order.
 
-The callback writes to the application-owned option object. The parser's own success does not validate application-specific combinations unless those combinations are encoded by the registered argument rules or checked by the callback/application.
+The callback writes to the application-owned option object. In `testcase_cmdline.cpp`, for example, the input-option callback stores its supplied path in `MYOPTION::infile`, while flag-style callbacks update Boolean or verbosity fields. The parser's own success does not validate application-specific combinations unless those combinations are encoded by the registered argument rules or checked by the callback/application.
 
 ### Input and error cases
 
@@ -76,37 +77,9 @@ The source test vectors cover missing mandatory arguments, optional flags such a
 - `test/testcase/base/basic/testvector_cmdline.cpp`
 - `test/testcase/base/basic/testvector_cmdline.yml`
 
-## 4. Example from the source tests
-
-### Follow a registered option into application state
-
-`test/testcase/base/basic/testcase_cmdline.cpp` defines an application option structure (`MYOPTION`) and registers options by chaining `t_cmdarg_t<MYOPTION>` values into `t_cmdline_t<MYOPTION>`. Each callback updates the option object; for example, the input option stores the supplied path in `infile`, while flag-style options update Boolean or verbosity fields.
-
-```text
-argv tokens
-   │
-   ▼
-t_cmdline_t<MYOPTION>
-   ├── registered token + argument rules
-   └── callback(MYOPTION&, parameter)
-              │
-              ▼
-       application option state
-```
-
-The paired `testvector_cmdline.cpp` / `.yml` files make it easier to inspect the intended accept/reject cases. When changing registration semantics, check both the parser implementation and the vectors, especially for required arguments, missing values, unknown options, and ordering constraints.
-
-## 5. Relationships
+## 4. Relationships
 
 - The callback target type `T` is application-defined; `cmdline` provides token recognition and parameter dispatch rather than defining the application's option structure.
 - Test vectors are part of the behavior contract and should be reviewed with `testcase_cmdline.cpp` when parsing rules change.
+- The implementation is in `cmdline.hpp`; the associated vectors are `testvector_cmdline.cpp` and `testvector_cmdline.yml`, alongside `testcase_cmdline.cpp`. Parsing changes should be checked against both assertions and data-driven cases.
 - This parser is separate from any protocol-level command or configuration parser.
-
-## 6. References
-
-### Related source and vectors
-
-- Implementation: `sdk/base/basic/cmdline.hpp`
-- Test: `test/testcase/base/basic/testcase_cmdline.cpp`
-- Vectors: `test/testcase/base/basic/testvector_cmdline.cpp`, `test/testcase/base/basic/testvector_cmdline.yml`
-

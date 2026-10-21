@@ -4,6 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -38,8 +39,7 @@ LALR(1)             GLR
 
 Both engines implement the common `parser_t` interface.
 
-## 2. Model
-
+## 2. Data Model
 ### Common parser interface
 
 The base parser abstraction provides the common lifecycle:
@@ -163,32 +163,26 @@ Parser actions therefore have two effects:
 
 See [Parse tree](parser-tree.md).
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 - `set_grammar()` associates a grammar with a parser; `learn()` builds the engine's table from that grammar. `build(binary_parsing_table*)` exposes the generated table, while `imported()` distinguishes the imported-table path and `ready()` indicates whether the parser can execute.
 - LALR execution maintains one state stack and chooses one action for each state/lookahead pair. A grammar conflict therefore has to be resolved by the generated table or grammar design; the LALR engine does not preserve alternate parses as separate live paths.
 - GLR execution can keep multiple active GSS heads. During reduction it pops the RHS-length paths, obtains each ancestor, looks up the GOTO state for the reduced LHS, avoids repeating equivalent `(goto_state, ancestor)` work, and adds the reduced head. The next token is shifted after reduction processing.
 - A supplied `parse_tree` is populated from SHIFT/REDUCE callbacks. It is a syntactic output, not a semantic ASN.1 object. The caller controls whether a tree is supplied and how it is consumed.
 - Imported tables are an execution artifact. Their file format, checksum, and revision checks are described in `parsing-table-binary-format.md`.
 
-## 4. Example from the source tests
-
+### Source-level evidence
 In `test/testcase/io/parser/testcase_parser.cpp`, `test_asn1_notation()` obtains four paths from `asn1_advisor`: LALR build, LALR import, GLR build, and GLR import. It first asserts that each parser is ready, then runs a shared notation vector through each parser. Because the input vectors are reused, this test compares parser/table paths against the same examples rather than testing four unrelated grammars.
 
 For a focused serialized-table example, `test_load_parsingtable()` reads `asn1notation.ptb` with `binary_parsing_table::read()` and parses `Type1 ::= VisibleString`. To inspect how parsing results become syntax nodes, follow `test_asn1parser()` in `test/testcase/io/parser/asn1module.hpp` together with `parse_tree.cpp`.
 
-## 5. Relationships
-
+## 4. Relationships
 - `parser-generation.md` — constructs the grammar tables consumed by these engines.
 - `parser-tree.md` — receives parser SHIFT/REDUCE events.
 - `parsing-table-binary-format.md` — defines the imported/exported table artifact.
 - `lalr-vs-glr.md` — compares the execution trade-off.
 - `../../base/graph/gss.md` — GSS data structure used by GLR.
 
-## 6. References
-
-### Related source
-
+### Implementation source navigation
 - `lalr1_parser.hpp`, `lalr1_parser_parse.cpp`
 - `glr_parser.hpp`, `glr_parser_parse.cpp`
 - `types.hpp` (`parser_t`, parser action and token types)

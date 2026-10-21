@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -24,8 +25,7 @@ At revision 1095 the visitor family includes:
 - `asn1_constraint_notation_visitor`
 - `asn1_constraint_evaluator`
 
-## 2. Model
-
+## 2. Data Model
 ### Main visitor paths
 
 The visitors serve different interpretations of the same ASN.1 model.
@@ -81,11 +81,8 @@ outside the core semantic object classes.
 
 That matters because the same `asn1_object` hierarchy is used by runtime construction, schema inspection, encoding, and validation.
 
-## 3. Important behavior and lifetime
-
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
-
-## 4. Example from the source tests
+## 3. Behavior Model
+The visitor family has distinct output and evaluation paths. `asn1_object::publish(stream_t*)` dispatches to notation representation, while `publish(binary_t*)` dispatches to DER encoding. Constraint evaluation uses `asn1_constraint_evaluator` and should not be conflated with either notation rendering or byte encoding.
 
 ### Related tests
 
@@ -94,8 +91,7 @@ No separate lifetime or behavior contract was stated in the existing notes beyon
 - `test/testcase/asn.1/testcase_constraints.cpp`
 - `test/testcase/asn.1/testvector_der.cpp`
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related areas
 
 - `../semantic/` — semantic object hierarchy
@@ -103,10 +99,7 @@ No separate lifetime or behavior contract was stated in the existing notes beyon
 - `../../runtime/` — runtime schema/value handling
 - `../../parser/` — parsed ASN.1 representation
 
-## 6. References
-
-### Related source
-
+### Implementation source navigation
 - `sdk/io/asn.1/basic/visitor/asn1_visitor.hpp`
 - `sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp`
 - `sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp`

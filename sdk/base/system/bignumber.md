@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -13,9 +14,53 @@
 
 ## 1. Role
 
-`bignumber` is an arbitrary-precision integer utility. This file records signed and unsigned fixed-width boundary values, from 8-bit through 4096-bit widths, as a readable reference for comparison with the implementation and tests.
+bignumber is hotplace's arbitrary-precision signed integer type. It represents integers beyond the widths of built-in C++ types and provides arithmetic, bitwise operations, comparisons, shifts, conversion, and serialization. The fixed-width boundary values previously collected in this document are retained as maintainer reference notes at the end; they are not the main description of the class.
 
-## 2. Model
+## 2. Data Model
+
+### Representation
+
+The implementation stores the magnitude in 32-bit limbs and tracks the sign separately. The base is 2^32, represented in the source as base2p32 = 0x100000000. This limb-based representation allows the number of limbs to grow with the value rather than imposing a fixed 64- or 128-bit limit.
+
+The public interface accepts and produces several forms:
+
+- built-in integral values accepted by the is_pure_integral constraint;
+- variant_t values;
+- big-endian byte sequences, with an isunsigned constructor argument;
+- binary_t containing a hexadecimal stream;
+- decimal or hexadecimal text, including values larger than built-in integer types.
+
+The integral constraint deliberately excludes bool, wchar_t, pointers, and non-integral types. Enum handling is separated through bn_underlying_type, so the implementation can reason about an enum's underlying representation rather than treating the enum object as a limb value directly.
+
+### Output forms
+
+The type exposes decimal string conversion through str() and hexadecimal conversion through hex(). Friend stream operators bridge bignumber and binary_t / std::string; the byte-stream interface is documented as big-endian. These forms are useful when comparing numeric values with wire-format or textual representations, but they are distinct conversions with their own representation rules.
+
+## 3. Behavior Model
+
+### Arithmetic and bit operations
+
+The API supplies value-returning and compound-assignment forms for addition, subtraction, multiplication, division, and remainder. Bitwise AND, OR, XOR, and NOT are also provided, together with left/right shifts, comparisons, unary negation, and prefix/postfix increment and decrement.
+
+The source interface separates the public operators from internal representation management. Callers can therefore compose expressions such as (bignumber(1) << bits) - bignumber(1) without manually managing limbs. Signed minimum and maximum values are useful test inputs, but the implementation's range is not limited to those named widths.
+
+### Construction, conversion, and comparison
+
+Constructors and assignment operators accept built-in integral values, variants, byte sequences, hexadecimal binary data, and numeric strings. Comparison operators compare bignumber values, allowing equivalent decimal and hexadecimal inputs to be checked for equality. Explicit conversion operators are provided for bool, uint8, uint16, and uint32; callers should not assume that every built-in width has an implicit conversion.
+
+The byte-stream operators provide the serialization boundary between the internal integer and external byte/string buffers. Use the documented big-endian form when relating these operations to protocol values.
+
+## 4. Relationships
+
+- sdk/base/system/types.hpp — fixed-width integer aliases used by the surrounding implementation.
+- sdk/base/basic/variant.hpp — variant-based construction and assignment.
+- sdk/base/nostd/atoi.hpp and cast.hpp — parsing/conversion helpers used by the implementation.
+- sdk/base/system/endian.hpp — byte-order context for the big-endian stream interface.
+- test/testcase/base/system/testcase_bignumber.cpp — the test_bn3() source checks signed minimum/maximum and unsigned maximum values through 128 bits, using shifts and expected decimal strings. This is source-level coverage, not a claim that a particular build/test run has executed.
+
+## 6. Development Notes (for maintainer review)
+
+The following signed/unsigned boundary-value list is retained as a maintainer reference rather than as the document's primary explanation. It records named fixed-width boundaries through 4096 bits where present in the prior note; it should not be read as a claim that bignumber itself has a 4096-bit maximum.
 
 ### bignumber values
 
@@ -130,18 +175,3 @@
   - uint4096.max 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   - uint4096.max 1044388881413152506691752710716624382579964249047383780384233483283953907971557456848826811934997558340890106714439262837987573438185793607263236087851365277945956976543709998340361590134383718314428070011855946226376318839397712745672334684344586617496807908705803704071284048740118609114467977783598029006686938976881787785946905630190260940599579453432823469303026696443059025015972399867714215541693835559885291486318237914434496734087811872639496475100189041349008417061675093668333850551032972088269550769983616369411933015213796825837188091833656751221318492846368125550225998300412344784862595674492194617023806505913245610825731835380087608622102834270197698202313169017678006675195485079921636419370285375124784014907159135459982790513399611551794271106831134090584272884279791554849782954323534517065223269061394905987693002122963395687782878948440616007412945674919823050571642377154816321380631045902916136926708342856440730447899971901781465763473223850267253059899795996090799469201774624817718449867455659250178329070473119433165550807568221846571746373296884912819520317457002440926616910874148385078411929804522981857338977648103126085903001302413467189726673216491511131602920781738033436090243804708340403154190335
 
-## 3. Important behavior and lifetime
-
-The table describes numeric limits rather than object lifetime. `bignumber` supports values wider than native integer types; implementation behavior should be checked against `bignumber.hpp` and its tests.
-
-## 4. Example from the source tests
-
-`test_bn3()` in `test/testcase/base/system/testcase_bignumber.cpp` constructs the minimum and maximum values with shifts and compares their decimal strings with expected vectors. The testcase checks signed limits and unsigned maxima through 128 bits; the table in this document lists additional wider values.
-
-## 5. Relationships
-
-The implementation is in `sdk/base/system/bignumber.hpp`; arithmetic operators are implemented in the adjacent `bignumber_*` source files. The testcase uses `bignumber` operations to verify both range boundaries and arithmetic results.
-
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.

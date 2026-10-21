@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -38,7 +39,7 @@ It is also the numeric backend selected by `t_set_runtime<T>` for integral and f
 
 The important distinction is that `t_range_set` knows how to represent and manipulate ranges, while the ASN.1 layer gives those operations their constraint semantics.
 
-## 2. Model
+## 2. Data Model
 
 ### Representation
 
@@ -58,7 +59,7 @@ special bounds
 
 For integral types, adjacent values can be merged when the ranges are contiguous. For floating-point values, endpoint openness/closedness matters because there is no discrete `next` integer value.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Core operations
 
@@ -163,19 +164,6 @@ sdk/base/nostd/range_set.hpp
 - integral and floating-point domains
 - `t_range_value<T>` special boundary representation
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
-
-Related components and cross-module links are listed in References where available.
-
-## 6. References
-
-### Related source
-
-- `sdk/base/nostd/range_set.hpp`
-- `sdk/base/nostd/range.hpp`
-- `sdk/base/nostd/set.hpp`
-- `sdk/io/asn.1/basic/semantic/constraints/`
+`range_set.hpp` implements normalized range operations using the range primitives in `range.hpp`; `set.hpp` is the higher-level runtime facade. ASN.1 constraint evaluation consumes this representation under `sdk/io/asn.1/basic/semantic/constraints/`, but the ASN.1 layer owns the meaning of each constraint.

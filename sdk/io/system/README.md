@@ -1,35 +1,61 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 2 · Revision 1105                     │
+│ Source basis: Revision 1105                   │
+│ Documented with GPT-6                         │
+│ — OS-facing APIs and implementation boundaries│
+└───────────────────────────────────────────────┘
 ```
-# Readme
+
+# System integration
 
 ## 1. Role
 
-The module identity is described by the implementation notes retained below.
+`sdk/io/system` contains low-level OS-facing APIs used by the I/O and network layers. Its components do not share one lifecycle or one event model: some wrap socket operations, one dispatches I/O notifications, one schedules queued work, and others integrate directly with Linux or Windows facilities.
 
-## 2. Model
+## 2. Data Model
 
-The existing implementation notes are retained below; see the references for the concrete source files.
+| Component | Main question it answers | Key implementation boundary |
+|---|---|---|
+| [Socket utilities](socket.md) | How are sockets created, connected, waited on, and closed across POSIX/Winsock? | `socket.hpp/.cpp`, `winsock.cpp` |
+| [Event multiplexer](multiplexer.md) | What does a callback receive, and how do epoll and IOCP differ? | Linux epoll vs Windows IOCP |
+| [MLFQ](mlfq.md) | Which queued work item is returned first, and who owns it? | Priority map, FIFO queues, binder and cancellation set |
+| [Netlink](netlink.md) | How do Linux process events reach a consumer callback? | Process connector socket plus producer/consumer threads |
+| [Windows Registry](windows_registry.md) | How are keys/values enumerated, read, written, and deleted? | Win32 Registry APIs and ANSI/Unicode overloads |
+| [PE helpers](winpe.md) | What does the exposed PE checksum calculate, and what does it not verify? | PE checksum helper, distinct from Authenticode |
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+### Similar-looking APIs that solve different problems
 
-## 4. Example from the source tests
+- **Socket readiness vs I/O completion:** epoll tells the caller that an operation can be attempted; IOCP tells the caller that a previously submitted overlapped operation completed. Their callback payloads are not interchangeable.
+- **Event dispatch vs work scheduling:** the multiplexer observes OS I/O events. MLFQ chooses an item from application work queues by priority. A server can compose them, but neither replaces the other.
+- **Generic socket wrapper vs kernel integration:** the socket wrapper creates and manages ordinary sockets; netlink subscribes to a Linux kernel process-event stream and uses its own producer/consumer pipeline.
+- **PE checksum vs file authentication:** the PE checksum is a format-level checksum helper. Authenticode verification in `sdk/crypto/authenticode/` handles signature and digest rules.
 
-No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
+### Resource and thread lifetime
 
-## 5. Relationships
+A common wrapper does not automatically join worker threads or transfer ownership of native resources. Callers must coordinate callback completion before releasing socket/session contexts, wait for MLFQ consumers before freeing their work context, and close Registry handles explicitly. Platform-specific error and access rules still apply.
 
-Related modules and boundaries are recorded below where identified in the existing notes.
+## 4. Relationships
 
-## 6. References
+- `sdk/net/basic/` — higher-level socket/client/server abstractions.
+- `sdk/net/server/` — uses the multiplexer and may compose event dispatch with work scheduling.
+- `sdk/base/system/` — synchronization, thread and process primitives.
+- `sdk/crypto/authenticode/` — signature verification, distinct from the PE checksum utility.
+- [Platform-specific I/O support](platform.md) — POSIX/Linux/Windows implementation boundaries.
 
-Source references and related documents are retained below where available.
+### Source-level evidence
+
+- `test/testcase/io/system/testcase_mlfq.cpp` — producer/consumer queue usage and priority selection.
+- `test/testcase/io/system/testcase_netlink.cpp` — Linux/glibc-guarded process events and `/proc` lookups.
+
+These are source-level examples, not a claim that the tests ran during this documentation update or that they cover every platform branch.
+
+## 5. References
+
+- Linux epoll API: https://man7.org/linux/man-pages/man2/epoll_create.2.html
+- Microsoft Win32 API reference for Winsock, IOCP, Registry, and PE/COFF.

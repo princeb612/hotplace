@@ -1,12 +1,13 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 1 · Revision 1105                     │
+│ Source basis: Revision 1105                   │
+│ Documented with GPT-6                         │
+│ — source structure, implementation & behavior │
+└───────────────────────────────────────────────┘
 ```
 
 # Parser
@@ -20,7 +21,7 @@ The directory contains two related but distinct paths:
 - **Lexical path:** `lexical_analyzer` recognizes source spans and stores `lexical_token` entries in `lexical_context`.
 - **Grammar path:** `cfg_grammar` describes productions; generation code creates ACTION/GOTO tables; `lalr1_parser` or `glr_parser` executes those tables and can report SHIFT/REDUCE operations to `parse_tree`.
 
-## 2. Model
+## 2. Data Model
 
 ### Implementation map
 
@@ -64,13 +65,24 @@ The diagram represents cooperating components, not one mandatory call chain. A c
 
 - [Parser design and implementation notes](parser.md) — retained long-form study record, experiments, traces, and implementation history.
 - [Parser lexer](parser-lexer.md) — source spans, token vocabulary, and lexical context.
-- [Grammar and parsing-table generation](parser-generation.md) — grammar representation and table construction.
-- [LALR/GLR parser engines](parser-engines.md) — deterministic and generalized execution paths.
+- [Grammar and parsing-table generation](parser-generation.md) — converts CFG productions/rules into parser tables.
+- [LALR/GLR parser engines](parser-engines.md) — reconstructs and executes parser actions from the generated or imported tables.
 - [Parse tree](parser-tree.md) — syntax structure created from parser actions.
 - [LALR vs GLR](lalr-vs-glr.md) — the practical trade-off between the two engines in hotplace.
-- [Parsing-table binary format](parsing-table-binary-format.md) — serialized table structure and import checks.
+- [Parsing-table binary format](parsing-table-binary-format.md) — the .ptb artifact layout and import validation.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
+
+### CFG-to-parse-tree flow
+
+The three focused documents describe one lifecycle from different boundaries, not three unrelated features:
+
+1. **CFG and rules** — `cfg_grammar` stores terminals and production rules. Grammar-generation code computes parser states and ACTION/GOTO entries.
+2. **Table artifact** — `binary_parsing_table` holds the generated tables and can serialize them to or reconstruct them from a `.ptb` file. The binary format is a persistence/compatibility contract, not another parsing algorithm.
+3. **Parser execution** — `lalr1_parser` follows a deterministic action path; `glr_parser` can preserve competing paths with a graph-structured stack.
+4. **Tree reconstruction** — SHIFT/REDUCE events can be sent to `parse_tree`, which records syntax structure for the consumer's semantic stage.
+
+See [Grammar and parsing-table generation](parser-generation.md) → [Parsing-table binary format](parsing-table-binary-format.md) → [LALR/GLR parser engines](parser-engines.md) → [Parse tree](parser-tree.md). Keep the format document separate because it defines the actual on-disk structure and import checks.
 
 - **Lexical tokens refer to source text.** `lexical_token` stores positions and lengths; `lexical_context` retains the source pointer and token objects. Keep the source buffer valid while code may materialize token text from those positions.
 - **Lexical token IDs and grammar terminals are separate namespaces.** A consumer must map tokenization results to the terminal names expected by the grammar.
@@ -78,45 +90,15 @@ The diagram represents cooperating components, not one mandatory call chain. A c
 - **LALR and GLR have different execution behavior.** LALR follows one deterministic action path; GLR retains competing paths through a graph-structured stack.
 - **The parse tree records syntax, not domain meaning.** ASN.1 types, references, tags, and constraints are built by higher-level ASN.1 code after parsing.
 
-## 4. Example from the source tests
+### Parser execution paths
 
-### Follow the lexer
+The parser separates lexical analysis, grammar/table construction, table serialization, and execution. Tests in `test/testcase/io/parser/` exercise distinct boundaries: lexer configuration and token spans; LALR/GLR parsing with runtime-built or imported tables; and a YAML-driven Aho–Corasick module-boundary reducer. The last path is a context-aware pre-parser, not the same operation as the grammar parser.
 
-`test/testcase/io/parser/testcase_lexer.cpp::test_lexer()` tokenizes a representative `PersonnelRecord` ASN.1 fragment. It first uses the basic lexer vocabulary, then registers ASN.1 tokens and enables `handle_lvalue_usertype`. The assertions compare token counts (105 and 93 for the two configurations), while the dump callback records token type, line, index, position, length, and source slice. `test_lexer_hexstring()` separately checks the token sequence for a hex-string example such as `'404B5431'H`.
-
-### Follow parser table build and import
-
-`test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation()` obtains four parser instances from `asn1_advisor`: LALR built at runtime, LALR imported from a table, GLR built at runtime, and GLR imported from a table. It checks that each parser is ready, then runs the same notation vectors through all four paths. The vectors cover assignments, tags, constructed types, constraints, and non-assignment type notation. This is a useful way to distinguish grammar behavior from the table's origin.
-
-`test_load_parsingtable()` directly reads `asn1notation.ptb` into a LALR parser and parses `Type1 ::= VisibleString`, making the serialized-table path explicit.
-
-### Follow YAML-driven parser tests
-
-`test/testcase/io/parser/testvector_parser.cpp::test_yaml_testvector_parser()` loads `testvector_parser.yml`, runs the Aho–Corasick module-boundary reducer over ASN.1 text, and compares expected ranges for module header/export/import clauses and level-/edge-trigger behavior. This exercises a context-aware pre-parser path, not the same operation as the LALR/GLR grammar parser; keep that distinction in mind when reading the results.
-
-These descriptions identify source-level test paths and assertions; they do not claim that the tests were executed as part of this documentation update.
-
-## 5. Relationships
+## 4. Relationships
 
 - `../basic/` — payload and stream primitives used by table serialization and other I/O operations.
 - `../asn.1/` — the main higher-level grammar and semantic consumer. Its lexer registration, grammar productions, table revision, and semantic builder must stay coordinated.
 - `../../base/graph/gss.md` — graph-structured stack support used by GLR execution.
 - `../../base/` — common containers, strings, memory, and utility infrastructure.
-- `test/testcase/io/parser/` — direct lexer/parser tests, parser vectors, and the sample ASN.1 module-boundary reducer.
-
-## 6. References
-
-### Implementation sources
-
-- `lexical_analyzer.hpp`, `lexical_analyzer_parse.cpp`, `lexical_token.cpp`, `lexical_context.cpp`
-- `cfg_grammar.hpp`, `cfg_grammar.cpp`, `cfg_grammar_lalr1.cpp`, `cfg_grammar_glr.cpp`, `cfg_grammar_rule.cpp`
-- `lalr1_parser.hpp`, `lalr1_parser_parse.cpp`, `glr_parser.hpp`, `glr_parser_parse.cpp`
-- `binary_parsing_table.hpp`, `binary_parsing_table.cpp`, `binary_parsing_table_read.cpp`, `binary_parsing_table_write.cpp`
-- `parse_tree.hpp`, `parse_tree.cpp`
-
-### Test sources
-
-- `test/testcase/io/parser/testcase_lexer.cpp`
-- `test/testcase/io/parser/testcase_parser.cpp`
-- `test/testcase/io/parser/testvector_parser.cpp`
-- `test/testcase/io/parser/testvector_parser.yml`
+- [Parser testcase sources and vectors](../../../test/testcase/io/parser/) — lexer tests, parser vectors, and the sample ASN.1 module-boundary reducer.
+- Implementation files are grouped by responsibility: `lexical_analyzer*`, `lexical_token*`, and `lexical_context*` implement lexical analysis; `cfg_grammar*` represents and builds grammar/table structures; `lalr1_parser*` and `glr_parser*` execute the parser engines; `binary_parsing_table*` reads/writes serialized tables; and `parse_tree*` records syntax structure. These are source-navigation pointers, not separate public concepts.

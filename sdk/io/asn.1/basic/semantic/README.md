@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -16,8 +17,7 @@
 
 The semantic layer is distinct from `structural/`: semantic objects describe ASN.1 types and their relationships, while structural nodes describe concrete parsed/decoded structure.
 
-## 2. Model
-
+## 2. Data Model
 ### Main implementation areas
 
 - `asn1_object` / `asn1_type` — common semantic object/type model
@@ -30,16 +30,15 @@ The semantic layer is distinct from `structural/`: semantic objects describe ASN
 - `constraints/` — subtype/value constraints
 - `builtin/` — concrete built-in value/type implementations
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
+The semantic model describes ASN.1 type/value relationships rather than the exact syntax tree. Constructed types own or reference child type definitions; references distinguish a named definition from a reference to that definition; tags and constraints alter interpretation/encoding behavior. Constraint and parameterized-type submodules have their own implementation boundaries.
 
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+Do not collapse semantic types into structural nodes: the semantic model is used to understand what a notation element means, while structural nodes preserve parsed/decoded structure for traversal and publication.
 
-## 4. Example from the source tests
+### Source-level evidence
+`test/testcase/asn.1/testcase_basic3.cpp` and the runtime testcase directory contain source-level examples of ASN.1 definitions and references. A useful tracing point is the distinction between a referenced type that names another definition and a definition object that carries the actual semantic type. Follow the individual assertions before claiming full parser-to-runtime coverage.
 
-No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
-
-## 5. Relationships
-
+## 4. Relationships
 ### Related documents
 
 - `../asn1-object-model.md` — semantic object model overview
@@ -47,6 +46,9 @@ No dedicated source-test example was documented in the existing notes. See the l
 - `parameterized/README.md` — parameterized semantic model and current implementation boundary
 - `constraints/subtype-notation.md` — ASN.1 subtype notation study
 
-## 6. References
-
-Source references and related documents are retained below where available.
+### Related implementation and verification sources
+- `asn1_object.hpp`, `asn1_type.hpp`, `asn1_referenced_type.hpp`
+- `asn1_sequence.hpp`, `asn1_set.hpp`, `asn1_choice.hpp`, `asn1_container.hpp`
+- `constraints/`, `parameterized/`, `builtin/`
+- [ASN.1 object model](../asn1-object-model.md)
+- `test/testcase/asn.1/`

@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -17,7 +18,7 @@
 
 `graph.hpp` implements `t_graph<T>`, a generic graph whose vertices contain user-defined values and whose edges carry weight and direction.
 
-## 2. Model
+## 2. Data Model
 
 The graph supports:
 
@@ -29,7 +30,7 @@ The graph supports:
 
 The implementation uses internal vertex/edge/tag structures and hash/set/list containers. Self-edges are normalized to weight zero.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Search algorithms
 
@@ -40,36 +41,13 @@ The implementation uses internal vertex/edge/tag structures and hash/set/list co
 - `build_bfs()` — breadth-first search
 - `build_dijkstra()` — weighted shortest-path search
 
-The search objects use a common `graph_search` flow of `learn()`, `infer()` and `traverse()`. This keeps graph construction separate from the algorithm-specific result state.
+The search objects use a common `graph_search` flow of `learn()`, `infer()` and `traverse()`. This keeps graph construction separate from the algorithm-specific result state. The builder methods return raw pointers to heap-allocated search objects; callers must delete them after use, as shown in `testcase_graph.cpp`.
 
 ### Topological sort
 
-`t_graph::topological_sort()` provides ordering for directed graphs. The implementation computes in-degrees and repeatedly consumes vertices whose in-degree reaches zero. The topological-sort feature is recorded in `CHANGELOG.md` under Revision 1083.
+`t_graph::topological_sort()` provides ordering for directed graphs. The implementation computes in-degrees and repeatedly consumes vertices whose in-degree reaches zero. The topological-sort feature is recorded in `CHANGELOG.md` under Revision 1083. In `testcase_graph.cpp`, `do_test_graph()` exercises the search objects through `learn().infer()` and `traverse(handler)`, then checks topological ordering and a string-valued graph; the callback makes traversal order and path information observable.
 
-## 4. Example from the source tests
-
-### Search construction and traversal
-
-In `test/testcase/base/graph/testcase_graph.cpp`, `do_test_graph()` receives a prepared graph and a start value. It creates an adjacency search, calls `learn().infer()`, traverses the result through a callback, and repeats traversal from the selected start. It then exercises DFS and BFS through the same high-level sequence.
-
-```text
-prepared t_graph<T>
-       │
-       ├── build_adjacent()
-       ├── build_dfs()
-       ├── build_bfs()
-       └── build_dijkstra()
-              │
-              ▼
-       learn().infer()
-              │
-              ▼
-       traverse(handler)
-```
-
-The callback prints the current vertex and the path/list passed by the search object. This makes traversal order and path information visible. The testcase also covers topological ordering and a string-valued graph, so it is useful for checking both algorithm behavior and generic vertex values.
-
-## 5. Relationships
+## 4. Relationships
 
 ### Relationship to the graph-structured stack
 
@@ -87,19 +65,9 @@ See [gss](gss.md).
 
 ### Related
 
-- `sdk/base/stream/basic_stream.hpp` — result formatting in the testcase/examples
-- `test/testcase/base/graph/testcase_graph.cpp`
-- graph visualization reference noted in the source: Graph Online
+- `basic_stream.hpp` formats graph results in examples and tests. `graph.hpp` implements the general graph algorithms; `testcase_graph.cpp` exercises those algorithms, while `testcase_gss.cpp` covers the separate graph-structured stack. Graph Online is retained as a visualization resource for inspecting graph examples.
 
-## 6. References
+## 5. References
 
-### Implementation
-
-- `sdk/base/graph/graph.hpp`
-
-### Direct test and related navigation
-
-- `test/testcase/base/graph/testcase_graph.cpp`
-- `test/testcase/base/graph/testcase_gss.cpp` — the separate graph-structured stack tests
 - Graph visualization resource retained in the original documentation: https://graphonline.ru/en/
 

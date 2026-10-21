@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 The implementation is a small low-level utility in `sdk/base/basic`; it is not a general cryptographic primitive.
 
-## 2. Model
+## 2. Data Model
 
 ### Algorithms
 
@@ -44,36 +45,17 @@ base/basic/crc.cpp
                     base/encoding/radix64
 ```
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Checksum contract
 
 CRC behavior is defined by the algorithm implemented in `crc.cpp` and by the caller's format requirements. When reviewing a change, verify the polynomial and initialization/finalization choices in the code rather than relying on the generic term “CRC-24”.
 
-A CRC detects accidental corruption according to its specified checksum scheme; it does not provide collision resistance or authenticity and must not be used as a cryptographic security primitive.
+A CRC detects accidental corruption according to its specified checksum scheme; it does not provide collision resistance or authenticity and must not be used as a cryptographic security primitive. No dedicated direct CRC testcase was identified in this revision's source tree, so verification should follow the Radix-64 consumer and distinguish end-to-end format coverage from a standalone `crc24()` unit test.
 
-## 4. Example from the source tests
-
-### Trace the format consumer
-
-No dedicated CRC testcase was identified under `test/testcase/base/encoding/` in this revision's source tree. The implementation can still be followed through its direct caller: Radix-64 encoding uses `crc24()` when the format requires the checksum.
-
-For an end-to-end check, compare the produced Radix-64 output with a known vector and verify the checksum portion independently. Do not describe this as a direct unit test of `crc24()` unless a dedicated test is added.
-
-## 5. Relationships
+## 4. Relationships
 
 - `crc24()` is a low-level checksum helper consumed by Radix-64-related encoding code.
 - The encoding layer owns the format-specific decision about when and how to include the checksum.
 - CRC is not a substitute for a cryptographic digest, MAC, or digital signature.
-
-## 6. References
-
-### Related source and consumer tests
-
-- `sdk/base/basic/crc.hpp`
-- `sdk/base/basic/crc.cpp`
-- `sdk/base/encoding/radix64.hpp`
-- Search the Radix-64 encoding testcase under `test/testcase/base/encoding/` when validating the caller-visible checksum representation.
-
-The relevant test should validate the complete format behavior as well as any low-level checksum vector available in the source.
-
+- The implementation is in `crc.hpp/.cpp`; `radix64.hpp` consumes CRC-24 together with Base64 armor. Validate the caller-visible checksum representation through the Radix-64 testcase under `test/testcase/base/encoding/`, rather than treating a checksum-only vector as proof of the full format contract.

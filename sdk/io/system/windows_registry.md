@@ -3,49 +3,63 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — key/value APIs, callback data, deletion    │
 └──────────────────────────────────────────────┘
 ```
-# windows_registry
+
+# Windows Registry wrapper
 
 ## 1. Role
 
-`windows_registry.hpp` / `windows_registry.cpp` provides Windows Registry access through the SDK's system layer, with charset-specific support in `windows_registry_charset.cpp`.
+`windows_registry` wraps Windows Registry operations for code that needs to create/open keys, enumerate subkeys and values, read/write values, and delete keys. It is a Windows-specific utility, not a portable configuration-storage abstraction.
 
-```text
-SDK code
-   |
-   v
-windows_registry
-   |
-   v
-Windows Registry API
-```
+## 2. Data Model
 
-This is a Windows platform utility rather than part of the generic I/O event model.
+The API has ANSI and wide-character overloads. The build's MBCS/Unicode setting selects the implementation signatures and `ENUM_VALUE_CONTEXT` alias.
 
-## 2. Model
+A value-enumeration callback receives the value name plus an `ENUM_VALUE_CONTEXT` containing the name buffer, registry type (`dwType`), data pointer (`pData`) and data size (`dwDataSize`). The bytes must be interpreted according to the returned registry type; not every value is a NUL-terminated string.
 
-The existing implementation notes are retained below; see the references for the concrete source files.
+The main operations are:
 
-## 3. Important behavior and lifetime
+- `create_key` / `open_key` — return an `HKEY` owned by the caller;
+- `close_key` — calls `RegCloseKey`;
+- `enumerate_subkeys` / `enumerate_values` — iterate and invoke the supplied callback;
+- `set_string` / `set_value`, `query_value`, `delete_value`;
+- `delete_key` and `delete_sub_nodes` — key deletion, with optional recursive subkey deletion.
 
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+## 3. Behavior Model
 
-## 4. Example from the source tests
+### Access rights and key lifetime
 
-No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
+The caller chooses `REGSAM` rights when opening/creating a key. Enumeration or querying can fail if the opened handle lacks the relevant access rights. Every successfully opened/created handle must be closed with `close_key`, including early-return/error paths.
 
-## 5. Relationships
+### Enumeration callback contract
 
-Related modules and boundaries are recorded below where identified in the existing notes.
+The wrapper checks that the callback is non-null, then enumerates names and invokes the callback with the caller parameter. Value enumeration passes a context with type and data bytes. The implementation uses fixed-size buffers for names and value data; callers should not assume that arbitrarily large registry values are fully represented by these buffers. The callback should inspect the reported type/size rather than assume string encoding.
 
-## 6. References
+### Recursive deletion
 
-### Related source
+`delete_key(..., registry_option_t::delete_sub_keys)` delegates to `delete_sub_nodes`. The helper attempts direct deletion first, then opens the key, enumerates child keys, recursively deletes them and retries deletion. It uses a bounded retry count for cases where deletion fails. This is destructive Windows Registry behavior; callers should validate the root and subkey path before requesting recursive deletion.
 
-- `sdk/io/system/windows_registry.hpp`
-- `sdk/io/system/windows_registry.cpp`
-- `sdk/io/system/windows_registry_charset.cpp`
+### Source-level example
+
+The header's example opens a key under `HKEY_LOCAL_MACHINE` with enumeration/query rights, enumerates subkeys through a callback, and closes the handle. This documents the API shape, not a runtime test result. No dedicated testcase for this wrapper was identified in the reviewed source paths.
+
+## 4. Relationships
+
+- [Platform-specific I/O support](platform.md) — Windows-only boundary.
+- `sdk/io/system/windows/windows_registry_charset.cpp` — character-set-dependent Win32 calls.
+- `sdk/io/system/windows_registry.hpp` — public wrapper declaration.
+
+### Implementation source navigation
+
+- `sdk/io/system/windows/windows_registry.hpp`
+- `sdk/io/system/windows/windows_registry.cpp`
+- `sdk/io/system/windows/windows_registry_charset.cpp`
+
+## 5. References
+
+- Microsoft Win32 Registry API: `RegCreateKeyEx`, `RegOpenKeyEx`, `RegEnumKeyEx`, `RegEnumValue`, `RegQueryValueEx`, and `RegDeleteKey`.

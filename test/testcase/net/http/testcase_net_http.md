@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ — testcase behavior and verification          │
 └──────────────────────────────────────────────┘
 ```
 # HTTP Testcases
@@ -30,7 +31,7 @@ URI assertions explicitly check scheme, host, port, path, query, and fragment; r
 
 ### 4.2 Documentation and verification status
 
-The supplied `net/report` records 268 pass and 1 expt, with no fail/skip/triv entries. The report does not identify OS/compiler configuration or source revision, and this documentation pass did not execute tests; therefore it cannot prove these sources ran against Revision 1104.
+The latest available parent-group report is linked from [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with 268 pass, 1 expt, 0 fail, 0 skip and 0 triv for the entire `net` group. No separate HTTP result row is available, so these totals must not be presented as HTTP-only counts. The report does not independently identify the tested source commit or exact build configuration. This documentation update did not execute tests.
 
 ## 5. Relationships
 

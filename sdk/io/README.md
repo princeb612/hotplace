@@ -4,82 +4,118 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
+
 # I/O and Data Representation
 
 ## 1. Role
 
-`sdk/io` contains facilities that turn data between representations and provide the parsing or operating-system I/O mechanisms used by higher layers. It is not one single serialization framework: it groups several distinct facilities whose boundaries are visible in the subdirectories.
+`sdk/io` groups facilities that operate at representation, parsing, and operating-system I/O boundaries. It is a collection of related but distinct subsystems, not one universal serialization framework or a mandatory end-to-end pipeline.
 
-- `basic/` — payload field descriptions, OID text/node conversion, compression wrappers, and JSON loading helpers.
-- `stream/` — file-backed implementation of the common stream interface.
-- `string/` — tokenization, URL handling, and platform character conversion.
-- `parser/` — grammar parsing, lexer/parser infrastructure, and parsing-table support.
-- `cbor/` — CBOR data model, reader/encoder, visitor, and RFC examples.
-- `asn.1/` — ASN.1 notation, object model, semantic/structural analysis, loader/compiler, and runtime parsing/encoding.
-- `system/` — operating-system-oriented facilities such as sockets, multiplexing, netlink, and Windows PE/registry access.
+The layer includes:
 
-The directory is therefore best understood as a collection of representation and I/O building blocks. The higher-level protocol modules decide how these facilities are composed for a particular protocol.
+- binary field-layout descriptions and representation helpers;
+- file-backed stream operations and OS-facing I/O facilities;
+- tokenization, URL decomposition, and character conversion;
+- grammar-based lexical and syntactic parsing;
+- CBOR object representation and byte conversion;
+- ASN.1 notation, semantic models, loading/compiler paths, and runtime parsing/encoding.
 
-## 2. Model
+Higher-level modules decide how these facilities are composed for a particular protocol or application. A helper's presence in `sdk/io` does not itself imply protocol-level validation or full conformance to a referenced standard.
 
-### Directory map and conceptual flow
+## 2. Data Model
+
+### Directory map
 
 ```text
-text / bytes / file / grammar
-          │
-          ├── basic/   payload, OID, JSON, compression
-          ├── string/  tokenization, URL decomposition
-          ├── stream/  file-backed stream operations
-          ├── parser/  grammar → parse structure
-          ├── cbor/    CBOR object model ↔ encoded bytes
-          └── asn.1/   notation → model/compiler/runtime → encoded bytes
-                         │
-                         ▼
-                higher-level SDK modules
+sdk/io
+├── basic/
+│   ├── payload field layout and OID conversion
+│   ├── JSON loading and compression wrappers
+├── stream/
+│   └── file-backed implementation of the common stream interface
+├── string/
+│   └── tokenization, URL handling, character conversion
+├── parser/
+│   └── lexical analysis, grammar, parsing tables, LALR/GLR, parse tree
+├── cbor/
+│   └── CBOR object model, reader, encoder, visitors
+├── asn.1/
+│   └── notation, semantic/structural models, loader/compiler, runtime
+└── system/
+    └── sockets, multiplexing, netlink, registry and PE helpers
 ```
 
-This diagram is a map of responsibilities, not a claim that every path passes through every subdirectory. For example, the ASN.1 runtime and CBOR reader/encoder are separate format-specific systems; they share lower-level utilities but do not form one common pipeline.
+### How the directories divide responsibility
 
-## 3. Important behavior and lifetime
+- `basic` contains small representation-boundary utilities. `payload` describes an ordered binary field layout; OID helpers convert between textual notation and integer nodes; JSON and compression components wrap their respective libraries.
+- `stream` adapts the common stream interface to files and platform resources. It is distinct from the in-memory streams and formatting facilities in `sdk/base/stream`.
+- `string` provides lightweight tokenization, URL parsing/escaping, and platform character conversion. Tokenization is not grammar-aware syntax analysis.
+- `parser` separates lexical tokenization, grammar representation, parsing-table generation/import, parser execution, and syntax-tree construction. It does not assign ASN.1 domain semantics to the resulting syntax.
+- `cbor` provides a format-specific object model and conversion between CBOR bytes and values/representations. It is separate from the generic grammar parser.
+- `asn.1` builds ASN.1-specific notation, type and constraint semantics, module/runtime representation, and parsing/encoding behavior on parser-related infrastructure.
+- `system` contains OS-facing facilities whose implementation and lifecycle may depend on the target platform, including socket/event mechanisms and Windows- or Linux-specific helpers.
 
-The subdirectories have different behavioral contracts, so their detailed rules belong in the corresponding component documents. A few cross-directory distinctions are important:
+## 3. Behavior Model
 
-- `sdk/base/stream` provides common in-memory stream and formatting abstractions; `sdk/io/stream` adapts that interface to files and platform APIs.
-- `sdk/io/basic/payload` describes a known binary field layout and can be used in both directions; it is not a grammar parser.
-- `sdk/io/parser` handles grammar/parse structure, while `sdk/io/asn.1` builds ASN.1-specific semantics and runtime facilities on top of parser-related machinery.
-- `sdk/io/basic/oid` converts between dotted OID text and integer nodes; ASN.1 BER/DER OBJECT IDENTIFIER encoding belongs to the ASN.1 encoding implementation.
+### Similar-looking operations have different contracts
 
-## 4. Example from the source tests
+- `payload` describes a known binary field layout and can be used for both writing and reading. It is not a grammar parser.
+- `basic/oid` converts between dotted OID text and integer-node sequences. ASN.1 BER/DER OBJECT IDENTIFIER encoding belongs to the ASN.1 encoding path.
+- `parser` builds syntax structures from tokens and grammar rules. ASN.1-specific types, references, tags, and constraints are interpreted by the ASN.1 layer.
+- `cbor` and `asn.1` are independent format-specific systems. They share lower-level utilities but do not form one common serialization pipeline.
+- `sdk/base/stream` provides in-memory stream/buffer facilities; `sdk/io/stream` adapts the common stream contract to external files and platform APIs.
 
-Use the tests according to the subsystem being investigated rather than treating this directory as having one representative test:
+### Lifetime and platform boundaries
 
-- `test/testcase/io/basic/testcase_payload.cpp` — constructs a payload field sequence, writes it, changes group selection, then reads a known byte sequence using a length reference.
-- `test/testcase/io/basic/testcase_oid.cpp` — loads the OID dictionary, looks up a dotted OID, converts ASN.1-braced notation to node values, and performs a second lookup.
-- `test/testcase/io/stream/testcase_filestream.cpp` — opens/truncates a file, maps it, writes through the mapped bytes, then seeks and reads back.
-- `test/testcase/io/string/testcase_string.cpp` — checks URL decomposition for default and explicit ports, paths, queries, and fragments.
-- `test/testcase/io/cbor/` and `test/testcase/asn.1/` — format-specific tests for CBOR and ASN.1 behavior.
+Resource ownership must be read at the component boundary rather than inferred from the directory name. File streams may own native handles, mappings, or locks; parsed objects and format-specific trees have their own ownership rules. OS-facing components can expose platform-specific behavior even when a common wrapper is present.
 
-These are starting points for tracing the implementation; the relevant module documents describe the call path and what each assertion establishes.
+Likewise, a standards reference documents the intended format or behavior but does not prove complete implementation of every feature in that standard. Use the focused component document and implementation source to establish the actual supported path.
 
-## 5. Relationships
+## 4. Relationships
 
-- `sdk/base/` — shared data types, streams, string/encoding helpers, patterns, and runtime support.
-- `sdk/crypto/` — consumes JSON helpers, compression, OID conversion, and ASN.1 facilities in JOSE/COSE and certificate-related code.
-- `sdk/net/` — uses payload, URL decomposition, compression, streams, and ASN.1-related protocol structures.
-- `test/testcase/io/` and `test/testcase/asn.1/` — concrete executable examples of these facilities.
+### Dependency direction
 
-## 6. References
+```text
+higher-level protocols / crypto / applications
+                    │
+                    ▼
+                 sdk/io
+     ┌────────┬────────┬──────────┐
+     │ fields │ parser │ formats  │
+     │ streams│ strings│ OS I/O   │
+     └────────┴────────┴──────────┘
+                    │
+                    ▼
+       sdk/base and platform libraries
+```
 
-- RFC 8949 — Concise Binary Object Representation (CBOR); see `cbor/rfc8949-examples.md`.
-- RFC 7049 — earlier CBOR specification, relevant to historical compatibility context.
-- ITU-T X.680 — ASN.1 notation; see `asn.1/basic/itu-t_x680.md`.
-- RFCs and standards specific to parser, ASN.1, and protocol behavior are listed in their component documents rather than duplicated here.
+This is an architectural orientation map, not a complete include graph or a claim that every component depends on every other component.
 
-## 7. Developer Notes
+### Cross-module relationships
 
-- The source-tree map is intentionally a responsibility map, not a dependency graph. Some listed modules are independent format implementations and should not be described as a single mandatory pipeline.
-- When documenting a behavior, distinguish what the source currently implements from what the referenced standard defines. A reference does not imply full conformance to every part of that standard.
+- `sdk/base` supplies common types, in-memory streams, containers, string/encoding helpers, and graph-structured-stack storage used by selected I/O components.
+- `sdk/io/parser` provides grammar and parse-tree infrastructure used by the ASN.1 processing path; the ASN.1 layer owns ASN.1-specific semantics.
+- `sdk/io/basic/payload` and URL/string helpers are reused by higher-level network and protocol code where a known field layout or URL representation is appropriate.
+- `sdk/io/cbor` and `sdk/io/asn.1` each implement their own format-specific representation and conversion path.
+- The [CBOR Appendix A examples](cbor/rfc8949-examples.md) and [ASN.1 notation study notes](asn.1/basic/README.md#development-notes) connect the directory overviews to retained component-level study material.
+- Component-level source references and implementation details are maintained in the corresponding directory documents. Test-specific coverage and run evidence belong in the relevant testcase documentation, which is currently being reviewed separately.
+
+## 5. References
+
+### Standards and specifications
+
+- [RFC 8949 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949).
+- [RFC 7049 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc7049), the earlier CBOR specification relevant to historical compatibility.
+- ITU-T X.680 — ASN.1 notation.
+
+
+## 6. Development Notes
+
+- The directory map is intentionally a responsibility map, not a dependency graph. In particular, the ASN.1 and CBOR implementations should not be described as one mandatory pipeline.
+- When documenting behavior, distinguish the source implementation from the behavior defined by a referenced standard. A citation alone does not imply full conformance.
+- Preserve the distinction between general-purpose facilities and protocol-specific interpretation: the former provides representation or mechanics, while higher layers decide what those results mean.

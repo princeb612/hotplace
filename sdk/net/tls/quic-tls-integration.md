@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,7 +13,6 @@
 
 ## 1. Role
 
-### Role
 
 QUIC uses TLS 1.3 for the cryptographic handshake, but QUIC does not use the TLS record layer as its packet format. The hotplace implementation reflects that separation.
 
@@ -34,7 +34,7 @@ QUIC uses TLS 1.3 for the cryptographic handshake, but QUIC does not use the TLS
 
 The TLS implementation supplies handshake/key-schedule concepts, while QUIC owns packet and frame encoding and packet protection.
 
-## 2. Model
+## 2. Data Model
 
 ### QUIC packet layer
 
@@ -105,16 +105,24 @@ QUIC packets
 UDP socket
 ```
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+TLS 1.3 handshake messages are fed into QUIC's CRYPTO transport; QUIC frames and packets carry them over QUIC streams/connection state. TLS supplies handshake semantics and traffic-secret derivation, while QUIC applies its own packet encryption and header protection. The shared cryptographic inputs do not make TLS records and QUIC packets the same wire object.
 
-## 4. Example from the source tests
+Packet types/protection levels change as the handshake progresses (Initial, Handshake, 0-RTT and 1-RTT). 0-RTT has replay-related constraints and should not be described as equivalent to ordinary post-handshake application data.
 
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+## 4. Relationships
 
-## 5. Relationships
 
+
+- `quic/rfc9000.md`
+- `quic/rfc9001.md`
+- `quic/rfc9369.md`
+- [TLS/DTLS/QUIC overview](README.md)
+- [QUIC implementation](quic/README.md)
+- [QUIC packet publisher](quic_packet_publisher.md)
+- [TLS key schedule](protection/tls_key_schedule.md)
+- [TLS session support](session/README.md)
 ### Related areas
 
 - `quic/frame/`
@@ -123,15 +131,11 @@ See the referenced testcase sources for concrete examples. Where no direct test 
 - `../http/http3/`
 - `../basic/`
 - `sdk/crypto/`
+- `session/` — session and packet publisher lifecycle
+- `protection/` — TLS-derived secrets and packet-protection primitives
 
-## 6. References
+## 5. References
 
-### References retained elsewhere
-
-Detailed protocol notes remain in:
-
-- `quic/rfc9000.md`
-- `quic/rfc9001.md`
-- `quic/rfc9369.md`
-
-The existing RFC documents should be treated as the study/reference layer; this document records the implementation boundary in hotplace.
+- [RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446)
+- [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
+- [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

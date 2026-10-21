@@ -1,12 +1,13 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 1 · Revision 1105                     │
+│ Source basis: Revision 1105                   │
+│ Documented with GPT-6                         │
+│ — source structure, implementation & behavior │
+└───────────────────────────────────────────────┘
 ```
 # I/O Basic
 
@@ -16,7 +17,7 @@
 
 The directory does not attempt to provide one universal serialization model. `payload` is a declarative description for a known binary layout; OID conversion is a text/node utility; JSON and zlib are wrappers around existing libraries.
 
-## 2. Model
+## 2. Data Model
 
 ### Components
 
@@ -39,26 +40,18 @@ content bytes ──────────> zlib_deflate / zlib_inflate ──
 
 These paths are related by their use in I/O and protocol code, but they are not interchangeable abstractions.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 - `payload` keeps the field description and field values together so the same description can be used for encoding and decoding. Variable-size fields may use a reference to another field, and groups can enable or suppress optional portions.
 - OID conversion operates on node values. It does not validate or encode every ASN.1 OBJECT IDENTIFIER rule by itself; format-specific encoding is implemented by the ASN.1 subsystem.
 - `json_open_stream()` and `json_open_file()` return a Jansson object through an output pointer. A successful parse creates a reference the caller must eventually release with `json_decref()`.
 - `zlib` format selection matters: zlib wrapper, raw DEFLATE, and gzip are distinct byte-stream framings even though they use DEFLATE internally.
 
-## 4. Example from the source tests
+### Representative flows
 
-### Payload write/read flow
+`payload` maps named members to an ordered binary layout; callers can use that layout to write or read fields through the relevant stream interface. OID dictionary lookup is a separate path: textual identifiers are resolved through the dictionary rather than encoded as ASN.1 BER/DER values here.
 
-`test/testcase/io/basic/testcase_payload.cpp` is the most direct example of this directory's own field-description mechanism. It builds a `payload` with `padlen`, `data`, `value`, and `pad` members. Writing with the `pad` group enabled includes the optional bytes; disabling that group omits them. The read case registers `pad` as having a length referenced from `padlen`, then reads the known byte sequence and checks the recovered values. This demonstrates both group selection and decoding of a variable-size field.
-
-### OID dictionary flow
-
-`test/testcase/io/basic/testcase_oid.cpp` calls `oid_dictionary::get_instance()`, looks up `2.16.840.1.101.3.4.2.1`, then parses ASN.1-braced notation with `asn1str_to_oid()` and looks up the resulting node vector. This tests the dictionary/conversion boundary rather than a standalone round-trip of `str_to_oid()` and `oid_to_str()`.
-
-There is no direct JSON or zlib testcase in `test/testcase/io/basic` in this source tree. Their use can instead be traced through JOSE test-vector loading/composition and HTTP content compression, respectively; those are consumer paths, not direct unit tests for the wrappers.
-
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/basic/` — `variant` and common value representations used by payload members.
 - `sdk/base/system/` — numeric and runtime helpers.
@@ -66,8 +59,9 @@ There is no direct JSON or zlib testcase in `test/testcase/io/basic` in this sou
 - `sdk/io/system/` — shared I/O types, including the `payload_encoded` integration boundary.
 - `sdk/io/asn.1/` — ASN.1 semantic and BER/DER encoding/decoding behavior.
 - `sdk/crypto/jose/` and `sdk/net/http/` — concrete consumers of JSON parsing and compression.
+- Implementation navigation: `payload.hpp/.cpp` and `payload_member.cpp` define the field-layout path; `oid.hpp/.cpp` and `oid_dictionary*` implement OID conversion/dictionary lookup; `zlib.hpp/.cpp` wraps compression; and `json.hpp` plus `types.hpp` provide JSON and shared declarations.
 
-## 6. References
+## 5. References
 
 ### Standards and external libraries
 
@@ -77,9 +71,3 @@ There is no direct JSON or zlib testcase in `test/testcase/io/basic` in this sou
 - RFC 2616 — historical HTTP/1.1 content-coding context used by the source comments.
 - Jansson — JSON parsing library included through `jansson.h`.
 
-### Source map
-
-- `payload.hpp/.cpp`, `payload_member.cpp`
-- `oid.hpp/.cpp`, `oid_dictionary.hpp/.cpp`, `oid_dictionary_load.cpp`
-- `zlib.hpp/.cpp`
-- `json.hpp`, `types.hpp`

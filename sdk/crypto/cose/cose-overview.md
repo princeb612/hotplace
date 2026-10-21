@@ -1,22 +1,10 @@
-## Publication
+# Developer Notes — COSE Algorithm Inventory
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
+## Purpose and current-status boundary
 
-# Cose Overview
+This note preserves the compact COSE message-shape and algorithm-identifier inventory. For the detailed CBOR-to-COSE processing flow and the source/test-based algorithm-family summary, see [COSE README](README.md). The table below is a developer-maintained inventory, not a blanket guarantee of runtime support across OpenSSL/provider builds.
 
-## 1. Role
-
-Records the COSE message families and the algorithm/support matrix maintained by the source tree.
-
-## 2. Model
-
+## Message shapes and historical inventory
 ### message
 
 ````
@@ -77,24 +65,31 @@ Records the COSE message families and the algorithm/support matrix maintained by
 | O | ECDH-SS + HKDF-512  | -28   | ECDH SS w/ HKDF - SHA-512                            |   | o | o |   | o | o |                  |
 | O | ECDH-ES + A128KW    | -29   | ECDH ES w/ HKDF - SHA-256 A128KW                     |   | o | o | o |   |   |                  |
 | O | ECDH-ES + A192KW    | -30   | ECDH ES w/ HKDF - SHA-256 A192KW                     |   | o | o | o |   |   |                  |
-| O | ECDH-ES + A256KW    | -31   | ECDH ES w/ HKDF - SHA-256 A128KW                     |   | o | o | o |   |   |                  |
+| O | ECDH-ES + A256KW    | -31   | ECDH ES w/ HKDF - SHA-256 A256KW                     |   | o | o | o |   |   |                  |
 | O | ECDH-SS + A128KW    | -32   | ECDH SS w/ HKDF - SHA-256 A128KW                     |   | o | o |   | o | o |                  |
 | O | ECDH-SS + A192KW    | -33   | ECDH SS w/ HKDF - SHA-256 A192KW                     |   | o | o |   | o | o |                  |
-| O | ECDH-SS + A256KW    | -34   | ECDH SS w/ HKDF - SHA-256 A128KW                     |   | o | o |   | o | o |                  |
+| O | ECDH-SS + A256KW    | -34   | ECDH SS w/ HKDF - SHA-256 A256KW                     |   | o | o |   | o | o |                  |
 
-## 3. Important behavior and lifetime
+## ChaCha20/Poly1305 implementation status
 
-COSE processing depends on message family, protected/unprotected headers, key and algorithm availability, and the underlying cryptographic implementation.
+COSE ChaCha20/Poly1305 (algorithm ID 24) is currently unsupported by hotplace's COSE encryption path. The implementation attempt exposed differences in ChaCha20 state and counter/nonce layout between the OpenSSL implementation examined and the libsodium APIs, including the original and IETF variants. The current code therefore returns `not_supported`, and an isolated testcase records this expected result.
 
-## 4. Example from the source tests
+This is a limitation of hotplace's current integration, not a statement that OpenSSL itself lacks ChaCha20-Poly1305 support. The libsodium API comparison is implementation research; it does not imply that hotplace currently uses libsodium for this COSE operation.
 
-The relevant test sources are listed below; this document does not invent a standalone example.
+## Interpretation notes
+The X mark for ChaCha20/Poly1305 corresponds to the current resource group's explicit `cose_hint_not_supported` flag. The table's O marks record the inventory's implementation intent; confirm the current resource table, testcase arrays and active backend before treating any algorithm as available. The current source includes algorithm metadata for families beyond this older table, including RSA signature/key-management and ML-DSA entries; the README's inventory summarizes those separately.
 
-## 5. Relationships
+## 4. Relationships
+
+### Source-test evidence
+
+The primary operation-level example is `test/testcase/cose/testcase_cose.cpp`, especially `do_test_cose_encrypt`, `do_test_cose_sign`, `do_test_cose_mac`, and the `test_cose()` group.
 
 - `sdk/io/cbor/` provides CBOR parsing, encoding, and object representation.
 - `sdk/crypto/basic/` provides cryptographic primitives used by COSE.
+- `sdk/crypto/advisor/resource_cose.cpp` holds current algorithm/group metadata and support flags.
+## 5. References
 
-## 6. References
-
-- Source: this module and its related testcase directory (Revision 1104).
+- RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process.
+- RFC 9053 — CBOR Object Signing and Encryption (COSE): Initial Algorithms.
+- IANA COSE registry — https://www.iana.org/assignments/cose/cose.xhtml

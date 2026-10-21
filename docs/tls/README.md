@@ -138,6 +138,39 @@ security-object layers also select keys and algorithms, but they add their own
 message, recipient, and serialization semantics. `crypto` therefore answers the
 operation question; the consuming protocol answers the meaning-and-state question.
 
+### From key share to traffic keys
+
+TLS key establishment is easiest to follow when the values are named by their role rather than all being called a "key":
+
+```text
+negotiated group
+      │
+      ▼
+crypto_keyexchange
+  ├── local private key (retained locally)
+  └── public key share (sent in ClientHello / ServerHello)
+                 │
+                 ▼
+        peer share processing
+                 │
+                 ▼
+           shared secret
+                 │
+                 ▼
+     TLS 1.3 transcript-dependent
+             key schedule
+                 │
+                 ▼
+       handshake / traffic secrets
+                 │
+                 ▼
+        record-protection keys
+```
+
+The key-share extension is a TLS handshake representation of group-specific public material; it is not a serialization of the local private key and is not itself the shared secret. `crypto_keyexchange` performs the group-level key generation, share extraction, exchange, or KEM operation. TLS chooses and negotiates the group, manages the handshake state, and passes the resulting secret into the key schedule. The schedule then derives the secrets and traffic keys used for protection.
+
+The same distinction matters for hybrid groups: the selected group's metadata defines component layout and interpretation. A public share can contain more than one component, so its bytes must be decoded according to the negotiated group rather than treated as an arbitrary public-key blob.
+
 ### TLS 1.2 and TLS 1.3 are different protection models
 
 TLS 1.2 retains the older master-secret/key-block model and supports CBC/HMAC as well as AEAD suites. TLS 1.3 uses a transcript-driven HKDF key schedule and traffic secrets, with AEAD record protection.

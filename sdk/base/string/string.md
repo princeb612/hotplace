@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -15,7 +16,7 @@
 
 The base string module provides small helpers for processing strings and bounded character buffers without requiring a stream object. The public declarations in `string.hpp` cover formatting, replacement, scanning for a character predicate or match string, and finding line boundaries. Related string-wrapper types are implemented in the same directory.
 
-## 2. Model
+## 2. Data Model
 
 The scanning APIs use an explicit buffer pointer and length, a starting offset, and an output break position. This makes the scan boundary part of the call rather than relying on a null terminator. `getline()` follows the same bounded-buffer shape. `format()` returns a `std::string`; `replace()` modifies its source string in place.
 
@@ -29,7 +30,7 @@ format(arguments) -----------------------> std::string
 replace(source, old, new) ---------------> modified source
 ```
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Important behavior
 
@@ -46,24 +47,8 @@ replace(source, old, new) ---------------> modified source
 - Relevant functions: `test_string_format()`, `test_string_gettoken()`, `test_string_getline()`, `test_string_scan()`, `test_string_scan2()`, `test_string_replace()`, `test_string_tokenize()`
 - Test analysis and recorded execution result: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
 
-## 4. Example from the source tests
-
-### Example from the testcase
-
-`test_string_format()` calls `format("%s %d %1.1f", "sample", 1, 1.1f)` and asserts that the result is `sample 1 1.1`. `test_string_gettoken()` calls `gettoken()` four times on `key=item1|value1|link1` with `=|` as delimiters and asserts the four expected tokens.
-
-See [`testcase_string.cpp`](../../../test/testcase/base/string/testcase_string.cpp) for complete setup and calls.
-
-## 5. Relationships
+## 4. Relationships
 
 - [`split.md`](split.md) describes the separate context-based splitting API.
 - [`obfuscation.md`](obfuscation.md) and [`constexpr-obfuscation.md`](constexpr-obfuscation.md) cover string obfuscation, not general scanning.
-- `sdk/base/stream/` provides stream and formatted-output abstractions; `sdk/io/string/` provides I/O-facing string processing.
-
-## 6. References
-
-- Public declarations: `sdk/base/string/string.hpp`
-
-### Source basis
-
-Edition 1 · Revision 1104
+- `sdk/base/stream/` provides stream and formatted-output abstractions; `sdk/io/string/` provides I/O-facing string processing. Public string declarations are in `string.hpp`.

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -13,43 +14,33 @@
 
 ## 1. Role
 
-### Introduction
-
 `sdk/base/string` provides general-purpose string and bounded-buffer helpers used by SDK code. It contains scanning and line/token extraction, formatting and replacement, delimiter splitting, string wrapper types, and two distinct obfuscation facilities.
 
 This is the general base layer. It is separate from `sdk/base/stream` (stream-oriented output and buffering) and `sdk/io/string` (I/O/protocol-facing string handling).
 
-## 2. Model
+## 2. Data Model
 
-The component model is described by the implementation and retained subsections below.
+### Component map
 
-## 3. Important behavior and lifetime
+| Component | Main responsibility | Distinction |
+|---|---|---|
+| [String utilities](string.md) | `format`, `replace`, `scan`, `getline`, token helpers, and string wrappers | General string processing and bounded-buffer operations |
+| [Split context](split.md) | Delimiter splitting with source-relative ranges | Exposes segments/ranges rather than acting as a general tokenizer framework |
+| [String obfuscation](obfuscation.md) | Runtime `obfuscate_string` and output conversions | Runtime transformation path |
+| [Compile-time obfuscation](constexpr-obfuscation.md) | `constexpr_obfuscate` facility | Separate compile-time experiment; requires C++14+ and is not part of the C++11 baseline |
 
-### Documents
+The components share a string-oriented scope, but the two obfuscation facilities have different execution and language-standard requirements. They should not be treated as one interchangeable API.
 
-- [String utilities](string.md) — `format`, `replace`, `scan`, `getline`, token helpers, and string wrappers
-- [Split context](split.md) — delimiter splitting with source-relative ranges
-- [String obfuscation](obfuscation.md) — runtime `obfuscate_string` and its output conversions
-- [Compile-time obfuscation](constexpr-obfuscation.md) — the C++14+ `constexpr_obfuscate` facility
+## 3. Behavior Model
 
-## 4. Example from the source tests
+String wrappers, bounded buffers, and split ranges may have different lifetime and ownership constraints. Check the individual declarations and implementation before retaining references into input buffers or assuming a returned segment owns its characters.
 
-See the source-test references below; do not infer runtime execution from source presence alone.
+The compile-time obfuscation note is intentionally retained as an isolated C++14+ facility. It should not be interpreted as a change to hotplace's overall C++11 support target. Runtime obfuscation is a separate facility and should be reviewed according to its own conversion and output behavior.
 
-## 5. Relationships
+String operations do not automatically provide protocol parsing or validation. For example, splitting text into segments does not establish whether those segments satisfy a URL, HTTP, or other protocol grammar; the higher-level consumer owns that interpretation.
 
-Related components and cross-module links are listed in References where available.
+## 4. Relationships
 
-## 6. References
-
-### Related source and tests
-
-- Implementation: `sdk/base/string/string.hpp`, `split.hpp/.cpp`, `format.cpp`, `string_charset.cpp`, `obfuscate_string.hpp/.cpp`, `constexpr_obfuscate.hpp`
-- Test source: [`testcase_string.cpp`](../../../test/testcase/base/string/testcase_string.cpp)
-- Test notes and report: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
-
-The authoritative API and behavior for this revision are the declarations and implementation in this directory. Test examples below are derived from the listed testcase source; test execution status is documented separately from source-level assertions.
-
-### Source basis
-
-Edition 1 · Revision 1104
+- `sdk/base/stream/` — stream formatting and buffered output, distinct from string algorithms.
+- `sdk/io/string/` — URL, tokenization and platform character-conversion utilities used closer to I/O and protocol boundaries.
+- [String testcase notes](../../../test/testcase/base/string/testcase_string.md) — source examples and verification notes. The principal test source is `testcase_string.cpp`; assertions and report-derived verification belong in the testcase document.

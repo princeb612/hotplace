@@ -3,35 +3,54 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
+
 # QUIC frame implementation
 
 ## 1. Role
 
-This directory contains QUIC frame implementations.
+The frame layer represents individual QUIC transport/control units and their encoding/decoding behavior. Frames are assembled into packets by the packet layer; they do not own packet numbers, packet headers, or packet protection.
 
-The frame layer represents the individual QUIC transport/control frames and their encoding/decoding behavior. It is separated from packet assembly so frame semantics can be handled independently of packet protection and packet layout.
+## 2. Data Model
 
-## 2. Model
+The frame family includes ACK, CRYPTO, STREAM/HTTP3_STREAM, PADDING, PING, RESET_STREAM, STOP_SENDING, CONNECTION_CLOSE, NEW_TOKEN, NEW_CONNECTION_ID, and HANDSHAKE_DONE-related frames.
 
-The source model and retained diagrams or explanatory material are recorded here.
+- **CRYPTO** carries TLS handshake bytes with an offset, not TLS records.
+- **STREAM** carries stream ID, offset/length information, and stream data.
+- **ACK** carries acknowledgement ranges for received QUIC packets.
+- **Control frames** update transport state, flow control, connection IDs, or termination.
 
-## 3. Important behavior and lifetime
+Concrete frame bodies use binary field-layout logic from the I/O layer where applicable. `hotplace::io::payload` describes and serializes declared fields; QUIC frame classes define which fields and conditional portions belong to each frame type.
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+## 3. Behavior Model
 
-## 4. Example from the source tests
+```text
+TLS handshake bytes
+  -> CRYPTO frame: offset + byte range
+  -> frame serialization
+  -> packet frame collection
+  -> QUIC packet header / packet number / protection
+  -> UDP datagram
+```
 
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+On input, packet processing authenticates/decrypts the packet and parses frames; CRYPTO data is delivered to TLS handshake processing according to its offset/reassembly rules. STREAM data is delivered to QUIC stream handling. Frame parsing therefore feeds transport/session state, not directly the HTTP router.
 
-## 5. Relationships
+## 4. Relationships
 
-Related implementation areas and protocol boundaries are recorded here where identified.
+- `quic_frame.hpp/.cpp`, `quic_frame_builder.hpp/.cpp`, `quic_frames.hpp/.cpp`.
+- `quic_frame_ack.*`, `quic_frame_crypto.*`, `quic_frame_stream.*`, `quic_frame_http3_stream.*`.
+- `quic_frame_connection_close.*`, `quic_frame_reset_stream.*`, `quic_frame_stop_sending.*`.
+- [QUIC overview](../README.md) and [packet implementation](../packet/README.md).
+- [QUIC packet publisher](../../quic_packet_publisher.md) and [TLS session support](../../session/README.md).
+- `sdk/io/basic/payload.hpp/.cpp` — reusable binary payload field-layout support.
+- `sdk/net/http/http3/` — HTTP/3-specific stream frames and frame consumers.
 
-## 6. References
+## 5. References
 
-Source references and related documents are retained here where available.
+- [RFC 9000 — QUIC transport](https://www.rfc-editor.org/rfc/rfc9000)
+- [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)

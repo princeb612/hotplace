@@ -1,26 +1,12 @@
-## Publication
+# Developer Notes — Parser Design and Implementation Notes
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
-# Parser Design and Implementation Notes
+## 1. Purpose
 
-## 1. Role
-
-### 1. Purpose
-
-This is the retained long-form study and experiment record for parsing: it progresses from LL(1), LR(0), SLR(1), and LALR(1) to Recursive Descent and Packrat/PEG, then explores an ASN.1-like grammar and C++11 parser designs. Some code in this document is self-contained illustrative or experimental code, not a declaration that a class with the same name exists in the current `sdk/io/parser` implementation. For the current production source path, use the focused companion documents and the concrete source/test references in Sections 3–5.
+The material progresses from basic parsing concepts to LL(1), LR(0), SLR(1), LALR(1), Recursive Descent, and Packrat/PEG parsing. It then applies these techniques to an ASN.1-like grammar and finishes with a dynamically generated LALR(1) parser in C++11.
 
 ---
 
-## 2. Model
-
-### 2. Parser Fundamentals
+## 2. Parser Fundamentals
 
 ### 2.1 Grammar-Driven Syntax Analysis
 
@@ -49,7 +35,7 @@ An NFA allows a transition function that returns a set of states and may include
 
 ---
 
-### 3. LL and LR Parsing
+## 3. LL and LR Parsing
 
 ### 3.1 LL Parsing
 
@@ -79,7 +65,7 @@ The source emphasizes that LR parsers are generally more expressive than simple 
 
 ---
 
-### 4. LL(1) Parsing Table Construction
+## 4. LL(1) Parsing Table Construction
 
 ### 4.1 FIRST Sets
 
@@ -136,7 +122,7 @@ FOLLOW(F)  = { *, +, ), $ }
 
 ---
 
-### 5. LR(0), SLR(1), LALR(1), and LR(1)
+## 5. LR(0), SLR(1), LALR(1), and LR(1)
 
 ### 5.1 LR(0) Items
 
@@ -200,7 +186,34 @@ The critical difference is the placement of Reduce actions. LR(0) reduces broadl
 
 ---
 
-### 7. SLR(1) Implementation
+## 6. Relationship Between LR(0), SLR(1), LALR(1), and LR(1)
+
+The conceptual construction can be summarized as:
+
+```text
+                   Add FOLLOW
+[LR(0) Items] ------------------------> [SLR(1) Table]
+      |
+      | Add individual lookaheads
+      v
+[LR(1) Items] -- Merge identical LR(0) cores --> [LALR(1) Table]
+```
+
+The source's comparison is:
+
+| Property | LR(0) | SLR(1) | LALR(1) | LR(1) |
+|---|---|---|---|---|
+| Table size | Small | Small | Small | Very large |
+| Lookahead | None | FOLLOW set | Merged LR(1) lookaheads | Individual lookaheads |
+| Parsing precision | Lowest | Low | High | Highest |
+| Reduce/Reduce conflicts | Frequent | Possible | Possible after merging | None |
+| Shift/Reduce conflicts | Frequent | Possible | Generally reduced substantially | None |
+
+The important implementation idea is that LALR(1) starts from LR(1) information and merges states whose LR(0) cores are identical.
+
+---
+
+## 7. SLR(1) Implementation
 
 The source's C++11 SLR implementation uses:
 
@@ -503,7 +516,7 @@ Parsing Succeeded!
 
 ---
 
-### 8. LALR(1) Implementation
+## 8. LALR(1) Implementation
 
 The LALR implementation introduces:
 
@@ -908,7 +921,7 @@ LALR(1) Parsing Succeeded!
 
 ---
 
-### 9. Recursive Descent and Packrat/PEG
+## 9. Recursive Descent and Packrat/PEG
 
 ### 9.1 Recursive Descent
 
@@ -960,7 +973,7 @@ This makes repeated evaluation of the same rule at the same input position inexp
 
 ---
 
-### 10. Applying the Parser to an ASN.1-Like Grammar
+## 10. Applying the Parser to an ASN.1-Like Grammar
 
 The document eventually focuses on an ASN.1-style input such as:
 
@@ -2024,7 +2037,7 @@ int main() {
 
 ---
 
-### 11. Parser Strategy for ASN.1
+## 11. Parser Strategy for ASN.1
 
 The source ultimately compares two practical approaches for the ASN.1 project.
 
@@ -2062,7 +2075,7 @@ Disadvantages:
 
 ---
 
-### 12. Final Integrated LALR(1) Design
+## 12. Final Integrated LALR(1) Design
 
 The final implementation combines:
 
@@ -2128,7 +2141,7 @@ struct Token {
 
 ---
 
-### 13. Final C++11 LALR(1) Implementation
+## 13. Final C++11 LALR(1) Implementation
 
 ```cpp
 #include <iomanip>
@@ -2387,7 +2400,7 @@ State Stack              Current Token       Action
 
 ---
 
-### 14. Observed Execution Result
+## 14. Observed Execution Result
 
 The final dynamic-table implementation reports successful table generation and successful parsing of the simplified ASN.1 `Product` grammar.
 
@@ -2417,7 +2430,28 @@ Table Generation Success!
 
 ---
 
-### 16. Recommended Implementation Direction
+## 15. Current TODOs and Discussion Topics
+
+### Implementation TODOs
+
+1. Integrate a complete automated FIRST/FOLLOW calculation algorithm into the LALR(1) implementation.
+2. Investigate operator-precedence mechanisms used by Bison/Yacc to resolve Shift/Reduce conflicts.
+3. Design the interface between an Aho-Corasick-based tokenizer and the Recursive Descent parser.
+4. Refine AST construction and error recovery.
+5. Replace or improve the current `do { 0 }-break` control-flow pattern where appropriate.
+
+### Design Discussions
+
+1. Explain at the item-set level why LALR(1) merging can introduce Reduce/Reduce conflicts.
+2. Analyze the exact conditions under which state merging affects Shift/Reduce behavior.
+3. Review LALR(1)'s limitations for ASN.1.
+4. Compare a table-driven LALR parser with Recursive Descent for the final ASN.1 implementation.
+5. Decide where semantic actions and symbol-table processing should occur.
+6. Define the AST representation independently from the parser engine.
+
+---
+
+## 16. Recommended Implementation Direction
 
 ```text
 +-----------------------+
@@ -2457,125 +2491,24 @@ A useful architectural separation is to keep **tokenization**, **syntactic parsi
 
 ---
 
-### LR(0), SLR(1), LALR(1), and LR(1): comparison summary
+## 17. References
 
-The distinctions below are a conceptual guide from the study notes. They should not be read as a claim that every parser family in this table is implemented as a production engine under `sdk/io/parser`; the current source-tree engines are `lalr1_parser` and `glr_parser`.
-
-| Property | LR(0) | SLR(1) | LALR(1) | Canonical LR(1) |
-|---|---|---|---|---|
-| Lookahead basis | None | One token plus `FOLLOW` sets | LR(1) lookaheads merged for states with identical LR(0) cores | Per-state LR(1) lookahead sets |
-| Typical table size | Small | Small | Usually compact | Often larger |
-| Main trade-off | Broad reduction decisions can conflict | `FOLLOW` narrows reductions but is coarse | Retains more context without canonical LR(1) state growth | Most precise of these four constructions, with greater state/table cost |
-| Conflict possibility | Common | Possible | Possible, including conflicts introduced by merging | Conflicts may still occur for grammars that are not LR(1) |
-
-The key LALR construction idea is to retain LR(1) lookahead information while merging states that share an LR(0) core. This can reduce table size, but merging may combine lookahead contexts in ways that expose conflicts. For hotplace-specific behavior, inspect `cfg_grammar_lalr1.cpp`, `cfg_grammar_glr.cpp`, and the parser tests rather than relying on this theoretical table alone.
-
----
-
-## 3. Important behavior and lifetime
-
-The material above is a long-form study and implementation record, so it includes both general parsing theory and hotplace-specific experiments. The following implementation boundaries are the most useful when moving from that background to the current source tree.
-
-- **Lexer storage is source-backed.** `lexical_token` records token ID, offset, length, line, and index; it does not own the lexeme bytes. `lexical_context` keeps a pointer/size pair and the token objects. Keep the input buffer alive while token text may be read.
-- **Lexer vocabulary is not the grammar.** `lexical_analyzer` recognizes source spans and returns lexer token IDs. The consumer must map those IDs/names to grammar terminals used by `cfg_grammar`.
-- **Grammar and execution are separate phases.** `cfg_grammar` describes productions; generation creates ACTION/GOTO table data; `lalr1_parser` or `glr_parser` executes that data. `binary_parsing_table` can serialize and import the generated representation.
-- **Table files are revisioned artifacts.** The binary reader validates its magic, endian marker, body size, CRC32, and minimum grammar/table revision. A successful file read should still be followed by parser readiness and representative grammar tests.
-- **LALR and GLR differ at runtime.** LALR follows one action path; GLR preserves competing paths with a graph-structured stack. Grammar changes should be tested against the engine(s) used by the consumer.
-- **The parse tree is syntax-only.** SHIFT/REDUCE events create terminal and non-terminal nodes. Domain-specific semantic construction, such as ASN.1 object and constraint handling, belongs to the higher-level consumer.
-
-## 4. Example from the source tests
-
-### Lexer configuration and token spans
-
-Start with `test/testcase/io/parser/testcase_lexer.cpp::test_lexer()`. The test feeds a multi-line ASN.1 `PersonnelRecord` sample to the lexer, first with its basic vocabulary and then with ASN.1 token registration plus `handle_lvalue_usertype`. It asserts token counts of 105 and 93 and dumps token type, line, index, offset, length, and source text. `test_lexer_hexstring()` is a smaller assertion-driven example: it enables `handle_hexstring` and compares the token sequence for a `PACKET-HEADER` containing `'404B5431'H`.
-
-### Runtime-built versus imported parser tables
-
-`test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation()` obtains four parsers from `asn1_advisor`: LALR build, LALR import, GLR build, and GLR import. It asserts readiness, then runs the same notation vectors through all four paths. The vectors cover simple assignments, tags, nested `SEQUENCE`/`SET`/`CHOICE`, constraints, and standalone type notation. `test_load_parsingtable()` isolates the import path by reading `asn1notation.ptb` and parsing `Type1 ::= VisibleString`.
-
-### Context-aware module boundary detection
-
-`test/testcase/io/parser/testvector_parser.cpp::test_yaml_testvector_parser()` loads `testvector_parser.yml`, uses an Aho–Corasick reducer to find ASN.1 module-related ranges, maps selected rule IDs to `end_module`, `header_clause`, `exports_clause`, and `imports_clause`, and compares the results with expected ranges. It separately checks level-trigger and edge-trigger classifications. This is a pre-parsing/context-switching experiment, not the same grammar parse performed by the LALR/GLR engines.
-
-These are source-level descriptions, not claims that the test suite was executed during this documentation pass.
-
-## 5. Relationships
-
-The parser implementation is best understood as a chain of separable responsibilities:
-
-```text
-source bytes
-    ↓
-lexical_analyzer / lexical_context
-    ↓  consumer maps lexer tokens to grammar terminals
-cfg_grammar
-    ↓
-LALR/GLR table generation
-    ↓
-binary_parsing_table (optional persisted artifact)
-    ↓
-lalr1_parser or glr_parser
-    ↓
-parse_tree
-    ↓
-consumer semantic construction
-```
-
-Related source-tree areas:
-
-- `parser-lexer.md` — lexical vocabulary, spans, and context.
-- `parser-generation.md` — grammar productions and ACTION/GOTO generation.
-- `parser-engines.md` — parser runtime paths and GLR reduction mechanics.
-- `parser-tree.md` — SHIFT/REDUCE-to-tree construction.
-- `lalr-vs-glr.md` — runtime trade-offs in hotplace.
-- `parsing-table-binary-format.md` — table persistence and import validation.
-- `../asn.1/` — grammar integration and ASN.1 semantic construction.
-- `../../base/graph/gss.md` — graph-structured stack used by GLR.
-
-## 6. References
-
-### Book
-
-- *Compilers: Principles, Techniques, and Tools* — Alfred V. Aho, Ravi Sethi, and Jeffrey D. Ullman.
-
-### Articles and online resources
-
-- [CFG — Wikipedia](https://en.wikipedia.org/wiki/Context-free_grammar)
-- [Types of parsers in compiler design — GeeksforGeeks](https://www.geeksforgeeks.org/compiler-design/types-of-parsers-in-compiler-design/)
-- [Top-down parsing — Wikipedia](https://en.wikipedia.org/wiki/Top-down_parsing)
-- [Bottom-up parsing — Wikipedia](https://en.wikipedia.org/wiki/Bottom-up_parsing)
-- [LR parser — Wikipedia](https://en.wikipedia.org/wiki/LR_parser)
-- [LR parser examples — GeeksforGeeks](https://www.geeksforgeeks.org/compiler-design/problem-on-lr0-parser/)
-- [SLR parser — Wikipedia](https://en.wikipedia.org/wiki/SLR_parser)
-- [SLR parser with examples — GeeksforGeeks](https://www.geeksforgeeks.org/compiler-design/slr-parser-with-examples/)
-- [LALR parser — Wikipedia](https://en.wikipedia.org/wiki/LALR_parser)
-- [LALR parser with examples — GeeksforGeeks](https://www.geeksforgeeks.org/compiler-design/lalr-parser-with-examples/)
-- [Canonical LR parser — Wikipedia](https://en.wikipedia.org/wiki/Canonical_LR_parser)
-- [CLR parser with examples — GeeksforGeeks](https://www.geeksforgeeks.org/compiler-design/clr-parser-with-examples/)
-- [Parsing Expression Grammar — Wikipedia](https://en.wikipedia.org/wiki/Parsing_expression_grammar)
-- [Recursive descent parser — Wikipedia](https://en.wikipedia.org/wiki/Recursive_descent_parser)
-- [Recursive descent parser — GeeksforGeeks](https://www.geeksforgeeks.org/compiler-design/recursive-descent-parser/)
-- [Packrat parser — Wikipedia](https://en.wikipedia.org/wiki/Packrat_parser)
-
-## 7. Developer Notes (for maintainer review)
-
-The following items are retained from the existing development notes. They are questions and TODOs, not claims that the work remains unimplemented in every current revision; verify against the implementation before acting on them.
-
-### Implementation TODOs recorded in the source note
-
-1. Integrate a complete automated FIRST/FOLLOW calculation algorithm into the LALR(1) implementation.
-2. Investigate operator-precedence mechanisms used by Bison/Yacc to resolve shift/reduce conflicts.
-3. Design the interface between an Aho–Corasick-based tokenizer and the Recursive Descent parser.
-4. Refine AST construction and error recovery.
-5. Replace or improve the current `do { 0 }-break` control-flow pattern where appropriate.
-
-### Design discussions recorded in the source note
-
-1. Explain at the item-set level why LALR(1) merging can introduce reduce/reduce conflicts.
-2. Analyze the exact conditions under which state merging affects shift/reduce behavior.
-3. Review LALR(1)'s limitations for ASN.1.
-4. Compare a table-driven LALR parser with Recursive Descent for the final ASN.1 implementation.
-5. Decide where semantic actions and symbol-table processing should occur.
-6. Define the AST representation independently from the parser engine.
-
----
+- book
+  - Compilers Principles, Techniques, and Tools - Alfred V. Aho, Ravi Sethi, and Jeffrey D. Ullman
+- article
+  - [CFG - Wikipedia](https://en.wikipedia.org/wiki/Context-free_grammar)
+  - [Types of Paarsers in Compiler Design - geeksforgeeks](https://www.geeksforgeeks.org/compiler-design/types-of-parsers-in-compiler-design/)
+  - [Top-down parsing — Wikipedia](https://en.wikipedia.org/wiki/Top-down_parsing)
+  - [Bottom-up parsing — Wikipedia](https://en.wikipedia.org/wiki/Bottom-up_parsing)
+  - [LR parser — Wikipedia](https://en.wikipedia.org/wiki/LR_parser)
+  - [LR parser - geeksforgeeks](https://www.geeksforgeeks.org/compiler-design/problem-on-lr0-parser/)
+  - [SLR parser — Wikipedia](https://en.wikipedia.org/wiki/SLR_parser)
+  - [SLR parser - geeksforgeeks](https://www.geeksforgeeks.org/compiler-design/slr-parser-with-examples/)
+  - [LALR parser — Wikipedia](https://en.wikipedia.org/wiki/LALR_parser)
+  - [LALR parser - geeksforgeeks](https://www.geeksforgeeks.org/compiler-design/lalr-parser-with-examples/)
+  - [Canonical LR parser — Wikipedia](https://en.wikipedia.org/wiki/Canonical_LR_parser)
+  - [Canonical LR parser - geeksforgeeks](https://www.geeksforgeeks.org/compiler-design/clr-parser-with-examples/)
+  - [Parsing Expression Grammar — Wikipedia](https://en.wikipedia.org/wiki/Parsing_expression_grammar)
+  - [Recursive descent parser — Wikipedia](https://en.wikipedia.org/wiki/Recursive_descent_parser)
+  - [Recursive descent parser — geeksforgeeks](https://www.geeksforgeeks.org/compiler-design/recursive-descent-parser/)
+  - [Packrat parser — Wikipedia](https://en.wikipedia.org/wiki/Packrat_parser)

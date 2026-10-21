@@ -1,23 +1,6 @@
-## Publication
+# Developer Notes — RFC 8949 CBOR Appendix A.  Examples of Encoded CBOR Data Items
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
-
-# RFC 8949 CBOR Appendix A.  Examples of Encoded CBOR Data Items
-
-## 1. Role
-
-Records RFC 8949 Appendix A examples as source-tree reference material.
-
-## 2. Model
-
-| Diagnostic                   | Encoded                            |
+   | Diagnostic                   | Encoded                            |
    |--                            |--                                  |
    | 0                            | 0x00                               |
    | 1                            | 0x01                               |
@@ -103,22 +86,7 @@ Records RFC 8949 Appendix A examples as source-tree reference material.
    | ["a", {_ "b": "c"}]          | 0x826161bf61626163ff               |
    | {_ "Fun": true, "Amt": -2}   | 0xbf6346756ef563416d7421ff         |
 
-## 3. Important behavior and lifetime
+#### references
 
-The logical CBOR object model is distinct from its encoded byte layout. Readers construct object values, while encoders and publishers produce output representations.
-
-## 4. Example from the source tests
-
-The relevant test sources are listed below; this document does not invent a standalone example.
-
-## 5. Relationships
-
-- `sdk/crypto/cose/` consumes the CBOR representation.
-- The related testcase directory provides source-level examples.
-
-## 6. References
-
-### references
-
-* RFC 7049 Concise Binary Object Representation (CBOR)
+ * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 8949 Concise Binary Object Representation (CBOR)

@@ -61,7 +61,7 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 
 ## 5. Relationships
 
-- Implementation notes: `sdk/crypto/basic/crypt.md` and `sdk/crypto/basic/cipher.md`
+- Implementation documentation: `sdk/crypto/basic/crypt/README.md`; cipher inventory is preserved in `sdk/crypto/basic/README.md` under Developer Notes
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 

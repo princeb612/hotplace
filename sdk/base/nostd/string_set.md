@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -32,7 +33,7 @@
 
 `t_set_runtime<std::string>` selects `string_set` as its concrete backend. This keeps the ASN.1 evaluator independent of the representation details.
 
-## 2. Model
+## 2. Data Model
 
 ### Representation
 
@@ -54,7 +55,7 @@ range
 
 Endpoint flags allow open and closed string ranges just as they do for numeric ranges.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Operations
 
@@ -83,11 +84,7 @@ The distinction between these operations matters for ASN.1 constraints: a litera
 - regular-expression matching
 - `t_set_runtime<std::string>` integration
 
-## 4. Example from the source tests
-
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
+## 4. Relationships
 
 ### ASN.1 relationship
 
@@ -116,12 +113,3 @@ A INTERSECTION B   → intersect_with()
 A EXCEPT B         → erase_from()
 ALL EXCEPT A       → invert()
 ```
-
-## 6. References
-
-### Related source
-
-- `sdk/base/nostd/string_set.hpp`
-- `sdk/base/nostd/string_set.cpp`
-- `sdk/base/nostd/set.hpp`
-- `sdk/io/asn.1/basic/semantic/constraints/`

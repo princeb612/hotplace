@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -60,7 +61,7 @@ This is an excerpt of the existing testcase, not a standalone program; it relies
 
 ### 4.1 Source-level coverage
 
-The source-level status below comes from inspecting revision 1104. Runtime evidence is recorded separately from the supplied CTest-generated report snapshot; the report does not identify the tested source revision or execution environment.
+The source-level status below is documented against Revision 1105. Runtime evidence is recorded separately from the supplied CTest-generated report snapshot; the report does not identify the tested source revision or execution environment.
 
 Status meanings:
 

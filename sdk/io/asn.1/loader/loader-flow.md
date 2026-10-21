@@ -1,40 +1,4 @@
-## Publication
-
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
-# ASN.1 Loader Flow Sketch - Gemini
-
-## 1. Role
-
-The module identity is described by the implementation notes retained below.
-
-## 2. Model
-
-The existing implementation notes are retained below; see the references for the concrete source files.
-
-## 3. Important behavior and lifetime
-
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
-
-## 4. Example from the source tests
-
-No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
-
-## 5. Relationships
-
-Related modules and boundaries are recorded below where identified in the existing notes.
-
-## 6. References
-
-Source references and related documents are retained below where available.
-
-## 7. Development Notes (for maintainer review)
+# Developer Notes — ASN.1 Loader Flow Sketch - Gemini
 
 > based on Revision 1085
 
@@ -102,7 +66,7 @@ Plaintext
                                                           ▼
                                        ┌─────────────────────────────────────┐
                                        │ 2. Build Symbol Repository          │
-                                       │    (asn1_module_context)           │
+                                       │    (asn1_module_context)            │
                                        └─────────────────────────────────────┘
                                                           │
                                                           ▼
@@ -195,5 +159,3 @@ TBSCertificate ::= SEQUENCE {
     - Automatically generate C++11 struct code for each ASN.1 type (including `has_field` flags for OPTIONAL fields)
   - [ ] Static DER En/Decoder Routine Generation
     - Generate static TLV serialization/deserialization functions for the generated C++11 structs
-
-

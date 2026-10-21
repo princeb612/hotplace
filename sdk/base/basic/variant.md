@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -21,7 +22,7 @@ It represents values of different C++ and protocol-oriented types through a comm
 
 It is used as a bridge between strongly typed C++ code and components that need to handle values generically.
 
-## 2. Model
+## 2. Data Model
 
 ### Two-layer representation
 
@@ -58,11 +59,42 @@ Notable protocol-oriented types include:
 
 The 24-bit and 48-bit integer types are particularly useful for protocol fields whose width is part of the wire format, such as TLS and DTLS fields.
 
+### How the type macros fit together
+
+The large type list is maintained once and expanded into several different C++ declarations. The goal is to avoid writing a separate enum entry, union member, and traits specialization by hand for every supported type.
+
+Each `VARIANT_XGROUP_...` macro is a **group of type-list entries**. The letters describe which generated artifacts that group participates in:
+
+| Group | `vartype_t` enum (E) | `vartype_union` member (M) | Integral conversion cases (I) | `variant_traits` specialization (T) | 128-bit entries (X) |
+|---|---:|---:|---:|---:|---:|
+| `VARIANT_XGROUP_E` | Yes | No | No | No | No |
+| `VARIANT_XGROUP_EM` | Yes | Yes | No | No | No |
+| `VARIANT_XGROUP_EMT` | Yes | Yes | No | Yes | No |
+| `VARIANT_XGROUP_EMIT` | Yes | Yes | Yes | Yes | No |
+| `VARIANT_XGROUP_EMTX` | Yes | Yes | No | Yes | Yes |
+
+The letters are a compact description of macro expansion targets, not different runtime representations. For example, `VARIANT_XGROUP_EMIT` expands into enum values, union members, integral-conversion switch cases, and traits specializations. By contrast, `VARIANT_XGROUP_EM` deliberately omits the traits specialization.
+
+The expansion points make the design easier to follow:
+
+- `EXPAND_VARTYPE_ENUM` generates entries in `vartype_t`.
+- `EXPAND_VARTYPE_MEMBER` generates members of `vartype_union`.
+- `EXPAND_INTEGRAL_CASE` generates cases for converting supported integral values in `t_vtoi()`.
+- `EXPAND_VARTYPE_TAITS` generates `variant_traits<T>` specializations (the macro name is spelled `TAITS` in the source).
+
+In other words, the type list is the source of truth, and each expansion chooses the declarations needed for that particular group. The groups are separated because not every C++ type can safely or usefully receive every generated artifact.
+
+### Why the groups differ across platforms
+
+The `char` / `int8` relationship is the main example of why these groups cannot all be treated alike. On the documented Linux GCC configuration, `int8` is `int8_t` and is distinct from `char`, so both can have separate variant entries and `variant_traits` specializations. On the Windows GCC/MSVC configurations noted in the header, `int8` may alias `char`; generating both specializations would then duplicate the same C++ type specialization. The conditional `VARIANT_XGROUP_EMT_CHAR` / `VARIANT_XGROUP_EM_CHAR` macros therefore place `char` in the traits-generating group on Linux, but in the enum-and-member-only group on Windows.
+
+`byte_t` is another deliberate exception: it aliases `unsigned char`, so it is placed in `VARIANT_XGROUP_EM` and does not get a generated `variant_traits` specialization. The group choice is about avoiding duplicate/conflicting type mappings, not about whether the type can be represented by the union.
+
+Finally, `VARIANT_XGROUP_EMTX` holds the 128-bit integer entries. Their enum values, union members, and traits are generated only when `__SIZEOF_INT128__` is defined; the `X` marks this conditional 128-bit group.
+
 ### Generic type traits
 
-`variant_traits<T>` associates a C++ type with its `vartype_t`, union member, and flags.
-
-The generic setter interface uses these traits together with SFINAE to reduce repetitive overloads while retaining type information at compile time.
+`variant_traits<T>` associates a C++ type with its `vartype_t`, union member pointer, and flags. The generic constructors and setters use these traits with SFINAE to enable the appropriate overloads while retaining type information at compile time.
 
 This is also where platform differences in native type widths are accounted for. For example, the `TYPE_LONG` mapping differs between 32-bit and 64-bit environments.
 
@@ -114,7 +146,7 @@ The implementation provides queries such as:
 
 The relation is directional rather than necessarily symmetric. The implementation recognizes compatible numeric and boundary-value combinations instead of treating all values of the same broad category as interchangeable.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Big numbers
 
@@ -130,46 +162,10 @@ The negative flag is also supported. This is useful when a protocol representati
 
 The testcase covers protocol-oriented integer conversion, endian conversion and truncation, `bignumber` conversion and formatting, and negative-value handling.
 
-These tests are useful examples of how a generic variant value is turned back into a protocol-oriented binary representation.
+One concrete assertion stores `32768` as `uint32`, converts it with `variant_convendian | variant_trunc`, Base16-encodes the resulting `binary_t`, and checks `00008000`. The tests demonstrate how a generic variant value is turned back into a protocol-oriented binary representation.
 
-## 4. Example from the source tests
-
-### Test walkthrough: value to bytes
-
-`test/testcase/base/basic/testcase_variant.cpp` first stores `32768` as a `uint32`, converts it to binary with `variant_convendian | variant_trunc`, Base16-encodes the result, and checks the expected bytes `00008000`. It then repeats the conversion for a 64-bit integer and for a `bignumber`.
-
-```text
-variant.clear().set(value)
-        │
-        ▼
-variant.to_binary(flags)
-        │
-        ▼
-      binary_t
-        │
-        ▼
-   base16_encode
-        │
-        ▼
- expected byte string
-```
-
-This sequence makes the conversion flags part of the behavior under test. When changing type traits or conversion code, check the stored type, the selected flags, the produced bytes, and the expected representation separately.
-
-## 5. Relationships
+## 4. Relationships
 
 - `valist` uses variant values to retain heterogeneous arguments before formatting.
 - `binary_t` is the byte-container used by binary conversion; Base16 encoding is used by the testcase to make the bytes inspectable.
-- Higher-level protocol code defines field meaning and ordering; `variant` supplies value/type conversion primitives.
-
-## 6. References
-
-### Related source and tests
-
-- `sdk/base/basic/variant.hpp/.cpp`
-- `sdk/base/basic/types.hpp`
-- `test/testcase/base/basic/testcase_variant.cpp`
-- Related generic argument use: `sdk/base/basic/valist.hpp/.cpp`
-
-The test is a concrete conversion example, not a universal statement that every `vartype_t` has a defined binary representation for every flag combination.
-
+- Higher-level protocol code defines field meaning and ordering; `variant` supplies value/type conversion primitives. The main implementation is in `variant.hpp/.cpp` with shared declarations in `types.hpp`; `testcase_variant.cpp` provides conversion examples, while `valist.hpp/.cpp` is a consumer of heterogeneous values. The testcase is a concrete conversion example, not a universal statement that every `vartype_t` has a defined binary representation for every flag combination.

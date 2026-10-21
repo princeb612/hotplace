@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -14,7 +15,7 @@
 
 The basic network socket layer separates the common socket contract from concrete transport and security implementations.
 
-## 2. Model
+## 2. Data Model
 
 ### Class hierarchy
 
@@ -55,42 +56,53 @@ TLS + TRIAL + CLIENT
 
 This scheme information is useful to higher layers when they need to distinguish transport, security backend, and endpoint role.
 
-### Source
+## 3. Behavior Model
+
+### Common contract versus backend behavior
+
+The common socket classes expose the caller-facing operations and scheme identity, while concrete implementations decide how native sockets and secure backends are created and driven. A caller should not assume that every operation is meaningful for both stream and datagram sockets; for example, peer-address-oriented `sendto`/`recvfrom` belongs to datagram use, while connected stream operations follow the connected endpoint.
+
+### Resource lifetime
+
+The native socket and any TLS/DTLS backend context have resource lifetimes that must be respected by the wrapper's open/close path. Reference counting allows higher-level code to retain socket objects across callbacks or session handling, but it does not by itself imply that an already-closed native handle remains usable.
+
+### Backend distinction
+
+`naive/` implements direct TCP/UDP operations, `openssl/` integrates secure socket operations with OpenSSL, and `trial/` is an experimental composition area. Keep capability claims tied to the concrete backend and build configuration.
+
+## 4. Relationships
+
+
 
 - `basic_socket.hpp/.cpp`
 - `client_socket.hpp/.cpp`
 - `server_socket.hpp/.cpp`
 - `server_socket_adapter.hpp/.cpp`
 - `server_socket_builder.hpp/.cpp`
-
-## 3. Important behavior and lifetime
-
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
-
-## 4. Example from the source tests
-
-### Tests
-
-The common socket classes are exercised mainly through the concrete network test programs rather than a single exhaustive `basic_socket` unit test. `test/testcase/net/basic/` contains the current basic-network tests.
-
-## 5. Relationships
-
+- [Network basic testcases](../../../test/testcase/net/basic/README.md)
+- [Basic socket overview](README.md)
+- [Naive socket wrappers](naive/README.md)
+- [OpenSSL socket adapter](openssl-socket-adapter.md)
+- [Trial socket composition](trial-socket-composer.md)
+- [Network server](../server/README.md)
 ### Boundary with higher layers
 
-`basic` is intentionally below the protocol/session layers:
-
 ```text
-HTTP / application
-        ↓
-TLS / QUIC / network session
-        ↓
-sdk/net/basic
-        ↓
+HTTP / application protocol
+          ↓
+server session and/or secure transport
+          ↓
+sdk/net/basic socket abstraction
+          ↓
 OS socket API
 ```
 
-The `server` layer builds sessions and network streams above this abstraction; `tls` adds protocol-specific TLS/DTLS/QUIC behavior.
+- `sdk/net/server/` builds session and event-processing behavior above sockets.
+- `sdk/net/tls/` implements TLS/DTLS/QUIC-specific processing and may use secure socket backends.
+- `sdk/net/http/` consumes the appropriate transport/session path for HTTP protocol processing.
 
-## 6. References
+The diagram is a responsibility stack, not a required call sequence for every application.
 
-Source references and related documents are retained here where available.
+## 5. References
+
+No external references are currently listed.

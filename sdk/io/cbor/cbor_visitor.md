@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -15,8 +16,7 @@
 
 Describes visitor-based representations of CBOR objects, including diagnostic and concise output.
 
-## 2. Model
-
+## 2. Data Model
 ### Role
 
 The visitor layer provides alternate representations of an already parsed `cbor_object` tree.
@@ -92,16 +92,14 @@ encoder / concise visitor
 encoded CBOR
 ```
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 The logical CBOR object model is distinct from its encoded byte layout. Readers construct object values, while encoders and publishers produce output representations.
 
-## 4. Example from the source tests
+### Example: compare binary and diagnostic output
 
-The relevant test sources are listed below; this document does not invent a standalone example.
+A useful trace is to read a vector into a `cbor_object` tree, then compare the encoded representation with a diagnostic representation of the same logical value. The concise visitor targets CBOR binary; the diagnostic visitor targets readable notation. They are two views of the object tree, not interchangeable wire formats. Additional RFC-oriented cases are retained as historical reference material; this documentation update did not execute the tests.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related source
 
 - `cbor_visitor.*`
@@ -115,8 +113,5 @@ The relevant test sources are listed below; this document does not invent a stan
 - `test/testcase/cbor/testvector_cbor.cpp`
 - `test/testcase/cbor/sample.cpp`
 
-## 6. References
-
-### Related reference
-
+### Related documents
 - `rfc8949-examples.md` — retained RFC 8949 Appendix A encoded examples

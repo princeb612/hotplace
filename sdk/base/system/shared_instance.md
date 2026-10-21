@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -17,7 +18,7 @@
 
 The system layer contains two closely related ownership helpers: `reference_counter` and the templated `t_shared_reference` / `t_shared_instance` classes.
 
-## 2. Model
+## 2. Data Model
 
 ### Reference counter
 
@@ -35,7 +36,7 @@ It does not own an object and therefore does not perform deletion itself. The co
 
 These classes are reference-counting primitives, not a complete replacement for every smart-pointer ownership model. Copy operations are intentionally disabled; ownership transfer is represented by move operations or explicit `addref`/`delref` calls.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### `t_shared_reference`
 
@@ -51,7 +52,7 @@ object
 
 `make_share()` attaches the object and establishes the first reference. `delref()` deletes the object when the count reaches zero.
 
-The class was written to provide a smart-pointer-like ownership pattern without requiring the project to depend on `std::shared_ptr` for its older compatibility targets.
+The class was written to provide a smart-pointer-like ownership pattern without requiring the project to depend on `std::shared_ptr` for its older compatibility targets. The source testcase covers explicit release for `t_shared_reference<T>` and move transfer between `t_shared_instance<T>` owners, checking that destruction occurs once at the end of the ownership lifetime.
 
 ### `t_shared_instance`
 
@@ -59,19 +60,30 @@ The class was written to provide a smart-pointer-like ownership pattern without 
 
 It is used in hotplace where an owning, reference-counted object needs to be shared through project-specific infrastructure.
 
-## 4. Example from the source tests
+### Composite ownership: CBOR map example
 
-### Test
+The reference-counting primitive itself does **not** automatically discover or release an object's children. A composite type must explicitly propagate ownership operations to its members. `cbor_map` does this: `addref()` calls `addref()` on every stored `cbor_pair` before incrementing the map's own counter, and `release()` calls `release()` on every stored pair before decrementing the map counter. Nested pairs, maps, arrays, and data objects participate through their own implementations.
 
-`test/testcase/base/system/testcase_shared.cpp` covers both forms:
+```cpp
+cbor_map* root = new cbor_map(cbor_flag_t::cbor_indef);
+(*root)
+    .add("a", new cbor_data(1))
+    .add("b", [](cbor_array* obj) -> void {
+        *obj << new cbor_data(2) << new cbor_data(3);
+    }, cbor_flag_t::cbor_indef);
+do_cbor_test(root, "bf61610161629f0203ffff");
+root->release();
+```
 
-- an object containing `t_shared_reference<T>` and explicitly releasing references;
-- a `t_shared_instance<T>` moved between two owners, verifying that destruction occurs once at the end of the ownership lifetime.
+In this pattern, the root map owns the composed CBOR object graph through its pairs. Calling `root->release()` releases the references held through the map and, when the root's reference count reaches zero, deletes the root object; member releases propagate through the nested structure so owned members can be deleted when their own counts reach zero. A call to `addref()` on the map likewise increments the references of all stored pairs as well as the map's own reference count. Each retained root reference must be balanced by a corresponding `release()`.
 
-## 5. Relationships
+This recursive behavior is specific to composite types such as `cbor_map` that implement propagation. Do not assume every class using `t_shared_reference` automatically manages child objects.
 
-Related components and cross-module links are listed in References where available.
+## 4. Relationships
 
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.
+- `sdk/base/nostd/set.hpp` — `t_set_runtime` uses a shared-instance handle for its concrete set object.
+- `sdk/base/nostd/value.hpp` — a separate deferred-value abstraction; it uses future/promise state rather than this ownership counter.
+- `sdk/io/cbor/cbor_map.hpp/.cpp` — concrete composite ownership: map-level `addref()` / `release()` propagate to stored pairs and nested members.
+- `test/testcase/base/system/testcase_shared.cpp` — explicit reference release and move/ownership lifetime checks.
+- `sdk/io/cbor/cbor_map.hpp` — includes the nested-map ownership example; `cbor_map.cpp` implements member-wise reference propagation.
+- This utility is distinct from `std::shared_ptr`; callers must follow its own attach/release contract.

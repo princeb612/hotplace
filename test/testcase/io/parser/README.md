@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ — testcase behavior and verification          │
 └──────────────────────────────────────────────┘
 ```
 
@@ -39,7 +40,7 @@ The listed functions and assertions establish what these sources intend to check
 
 ### 4.2 Documentation and verification status
 
-This README records source-level test intent and paths. The documentation update did not rebuild or execute the test suite, so it makes no new runtime-pass claim. The available report archive does not identify a matching OS/compiler configuration and source revision for these tests.
+The latest available parent-group report is linked from [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with 596 pass, 0 expt, 0 fail, 0 skip and 0 triv for the entire `io` group. There is no separate `io/parser` row, so these totals must not be attributed to the parser tests alone. The report does not independently identify the tested source commit or exact build configuration. The documentation basis is Revision 1105, distinct from the last known report context. This documentation update did not rebuild or execute the test suite.
 
 ## 5. Relationships
 

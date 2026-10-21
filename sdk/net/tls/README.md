@@ -3,109 +3,135 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ Documentation scope: protocol layers         │
 └──────────────────────────────────────────────┘
 ```
-# understanding TLS
+# TLS, DTLS, and QUIC
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+`sdk/net/tls` contains hotplace's TLS, DTLS, and QUIC-related protocol machinery. It includes TLS records, handshake messages and extensions, session/protection state, DTLS record fragmentation and arrangement, and QUIC packets/frames with TLS 1.3 handshake integration.
 
-## 2. Model
+This directory is not just a collection of RFC notes. The implementation represents protocol messages and state, serializes or parses their wire forms, and coordinates security/session operations. Keep protocol requirements from the RFCs distinct from the exact subset and behavior implemented by hotplace.
 
-* RFCs
-  * [RFC 5246](https://datatracker.ietf.org/doc/html/rfc5246) [summary](rfc5246.md)
-  * [RFC 6347](https://datatracker.ietf.org/doc/html/rfc6347) [summary](rfc6347.md)
-  * [RFC 8446](https://datatracker.ietf.org/doc/html/rfc8446) [summary](rfc8446.md)
-  * [RFC 9147](https://datatracker.ietf.org/doc/html/rfc9147) [summary](rfc9147.md)
+## 2. Data Model
 
-* TLS references
-  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-  * RFC 8446 Example Handshake Traces for TLS 1.3
-  * https://tls13.xargs.org/
-  * https://tls12.xargs.org/
-  * https://dtls.xargs.org/
-  * https://quic.xargs.org/
-  * https://ciphersuite.info/cs/
-  * https://wiki.wireshark.org/samplecaptures
+The local implementation is organized around protocol units, session state, and construction helpers. The hierarchy below is a text map of the main object families, not a claim that every class participates in every connection.
 
-* understanding TLS - DTLS - QUIC step by step
-  * https://tls13.xargs.org/
-  * https://tls12.xargs.org/
-  * https://dtls.xargs.org/
-  * RFC 9001
-  * https://quic.xargs.org/
+```text
+TLS / DTLS
+  tls_session
+    ├─ tls_protection
+    ├─ tls_record
+    │    ├─ alert / application_data / change_cipher_spec
+    │    ├─ handshake
+    │    └─ record collections and builders
+    ├─ tls_handshake
+    │    ├─ ClientHello / ServerHello / Finished
+    │    ├─ Certificate / CertificateVerify
+    │    ├─ key exchange and session-ticket messages
+    │    └─ handshake collections and builders
+    └─ tls_extension
+         ├─ key_share / pre_shared_key / supported_versions
+         ├─ signature_algorithms / supported_groups
+         ├─ SNI / ALPN / status_request
+         └─ extension collections and builders
 
-### TLS
-
-```mermaid
-mindmap
-  root((tls))
-    tls_session
-    tls_protection
-    tls_record
-      tls_record_ack
-      tls_record_alert
-      tls_record_application_data
-      tls_record_change_cipher_spec
-      tls_record_handshake
-      tls_records
-      tls_record_bilder
-      dtls13_ciphertext
-    tls_handshake
-      tls_handshake_certificate
-      tls_handshake_certificate_verify
-      tls_handshake_client_hello
-      tls_handshake_client_key_exchange
-      tls_handshake_server_key_exchange
-      tls_handshake_encrypted_extensions
-      tls_handshake_end_of_early_data
-      tls_handshake_finished
-      tls_handshake_new_session_ticket
-      tls_handshake_server_hello
-      tls_handshakes
-      tls_handshake_builder
-    tls_extension
-      tls_extension_alpn
-      tls_extension_alps
-      tls_extension_compress_certificate
-      tls_extension_ec_point_formats
-      tls_extension_encrypted_client_hello
-      tls_extension_key_share
-      tls_extension_pre_shared_key
-      tls_extension_psk_key_exchange_modes
-      tls_extension_quic_transport_parameters
-      tls_extension_signature_algorithms
-      tls_extension_sni
-      tls_extension_status_request
-      tls_extension_supported_groups
-      tls_extension_supported_versions
-      tls_extensions
-      tls_extension_builder
-    quic_packet
-      quic_packet_0rtt
-      quic_packet_1rtt
-      quic_packet_handshake
-      quic_packet_initial
-      quic_packet_retry
-      quic_packet_version_negotiation
-      quic_packet_builder
-    quic_frame
-      quic_frame_ack
-      quic_frame_connection_close
-      quic_frame_crypto
-      quic_frame_handshake_done
-      quic_frame_new_token
-      quic_frame_padding
-      quic_frame_ping
-      quic_frame_reset_stream
-      quic_frame_stop_sending
-      quic_frames
-      quic_frame_builder
+QUIC
+  quic_packet
+    ├─ Initial / Handshake / 0-RTT / 1-RTT
+    ├─ Retry / Version Negotiation
+    └─ packet builder
+  quic_frame
+    ├─ ACK / CRYPTO / PADDING / PING
+    ├─ stream-control and connection-close frames
+    └─ frame collections and builders
 ```
+
+The protocol families share selected session and cryptographic concepts, but QUIC packets/frames are not TLS records. QUIC integrates TLS handshake and key-schedule behavior while carrying handshake bytes through QUIC CRYPTO frames.
+
+## 3. Behavior Model
+
+### Session and protection state
+
+The session/protection layer owns state that spans individual messages: negotiated parameters, handshake progress, transcript/key-schedule material, and record-protection context. A record or handshake object represents a particular protocol unit; it should not be mistaken for the lifetime owner of the entire secure connection. Use the [protection/session model](tls-protection-and-session.md) for the detailed state boundary and [TLS message model](tls-message-model.md) for record/handshake/extension construction.
+
+### DTLS record publication and arrangement
+
+DTLS uses datagrams, so one handshake flight may need fragmentation and received records may arrive out of sequence. The source exposes two complementary responsibilities:
+
+- `dtls_record_publisher` publishes records from a record/handshake representation and supports a fragment-size setting and an option to place multiple handshakes in a record.
+- `dtls_record_arrange` accepts incoming datagram data and maintains packet state grouped by peer cookie/address and epoch/sequence information so records can be consumed in order.
+
+These components solve opposite sides of the datagram boundary: publication adapts outbound protocol data to record/fragment limits; arrangement makes inbound records available in the required order. They are associated with `tls_session`, so they should be explained as session facilities rather than unrelated standalone utilities.
+
+### QUIC packet publication
+
+`quic_packet_publisher` works at a different wire boundary. It combines QUIC packet/frame material with TLS handshake messages through QUIC CRYPTO-related processing, supports payload-size and packet flags, and publishes packet bytes through a callback/container. Its payload-size setting is not equivalent to DTLS record fragment size: the two publishers operate on different protocol units and overhead rules.
+
+### Shared session abstraction, distinct wire units
+
+```text
+TLS session
+  └─ TLS record / handshake / extension
+
+DTLS session
+  ├─ record publisher: handshake/record → datagram-sized output
+  └─ record arranger: datagram input → ordered record data
+
+QUIC session
+  └─ packet publisher: handshake/frame material → QUIC packet output
+```
+
+This diagram shows the shared session association and distinct publication boundaries. It does not mean that QUIC carries ordinary TLS records: QUIC integrates TLS handshake/key-schedule behavior while carrying handshake bytes through QUIC's own packet/frame transport.
+
+### Compatibility and implementation boundary
+
+The directory's topic map includes multiple TLS/DTLS generations and QUIC features. The presence of a class or RFC reference does not establish full conformance to every version or extension. Confirm capability claims against the concrete implementation, build guards, and relevant testcase assertions.
+
+## 4. Relationships
+
+
+
+- [TLS advisor implementation](tls_advisor.md)
+- [DTLS record arrangement](dtls_record_arrange.md)
+- [DTLS record publisher](dtls_record_publisher.md)
+- [QUIC packet publisher](quic_packet_publisher.md)
+- [Protection and session](protection/README.md) and [session model](session/README.md) — connection-spanning state and record protection.
+- [TLS message model](tls-message-model.md) — record, handshake, and extension representations.
+- [QUIC integration](quic/README.md) and [QUIC/TLS integration model](quic-tls-integration.md) — packet/frame transport and TLS 1.3 handshake integration.
+- [TLS advisor](advisor/README.md) — identifier and parameter mapping for protocol choices.
+- `sdk/crypto/` — cryptographic primitives, key operations, signatures, digests and KDF support.
+- `sdk/net/basic/` — socket/secure-socket integration beneath protocol processing.
+- `sdk/net/http/` — HTTP/2 and HTTP/3 consumers above the relevant transport path.
+- `test/testcase/tls/` — source-level test entry points and protocol test vectors.
+
+## 5. References
+
+### Protocol specifications
+
+- [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
+- [RFC 6347 — Datagram Transport Layer Security 1.2](https://www.rfc-editor.org/rfc/rfc6347)
+- [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
+- [RFC 9147 — Datagram Transport Layer Security 1.3](https://www.rfc-editor.org/rfc/rfc9147)
+- [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)
+- [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
+
+### Online resources
+
+- [TLS 1.3 Illustrated](https://tls13.xargs.org/)
+- [TLS 1.2 Illustrated](https://tls12.xargs.org/)
+- [DTLS Illustrated](https://dtls.xargs.org/)
+- [QUIC Illustrated](https://quic.xargs.org/)
+- [Cipher suite information](https://ciphersuite.info/cs/)
+- [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
+
+### RFC figures transcribed as plain text
+
+The following text diagrams are retained as quick-reading aids. The authoritative wording and any corrections should be checked against the linked RFCs.
 
 #### RFC 8446 Figure 1: Message Flow for Full TLS Handshake
 ````
@@ -328,6 +354,10 @@ Auth | {CertificateVerify*}
                      Figure 4: DTLS 1.3 Header Examples
 ````
 
+## 6. Developer Notes
+
+### Key exchange and key-schedule calculation notes
+
 #### summarize the complex calculation process
 
 |                     |         |                           |
@@ -411,46 +441,5 @@ case client_key_exchange
 end
 ```
 
-#### implementation areas
-
-* [protection](protection/README.md) - key schedule, transcript hash and record protection related material
-* [session](session/README.md) - TLS/DTLS/QUIC session support
-* [advisor](advisor/README.md) - algorithm and parameter selection helpers
-* [QUIC](quic/README.md) - QUIC transport and TLS integration
-* `tls/` - TLS record, handshake and extension implementations
-
-#### related tests
-
-* [TLS testcase](../../../test/testcase/tls/README.md)
-* `test/testcase/tls/tls12/`
-* `test/testcase/tls/tls13/`
-* `test/testcase/tls/dtls12/`
-
-#### related areas
-
-* `sdk/crypto/` - cipher, digest, MAC, KDF and key/signature support
-* `sdk/net/http/` - HTTP/2 and HTTP/3 protocol layers above TLS/QUIC
-* `sdk/net/basic/` - secure socket and transport integration
-
-### Module records
-
-- [TLS message model](tls-message-model.md) — record, handshake and extension implementation boundaries
-- [TLS protection and session model](tls-protection-and-session.md) — protection state, key schedule, session and SSLKEYLOG integration
-- [TLS advisor](tls_advisor.md) — TLS/DTLS/QUIC identifier and parameter mapping
-- [QUIC and TLS integration](quic-tls-integration.md) — TLS 1.3 key material and QUIC packet/frame boundary
-
-## 3. Important behavior and lifetime
-
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
-
-## 4. Example from the source tests
-
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
-
-## 5. Relationships
-
-Related implementation areas and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Source references and related documents are retained here where available.
+- These notes are a compact working summary, not a complete or normative description of TLS key scheduling. Verify each version-specific step, label, context hash, and input against the relevant RFC and the implementation before using it to explain code behavior.
+- Local implementation documents belong under [Relationships](#4-relationships), not under external References.

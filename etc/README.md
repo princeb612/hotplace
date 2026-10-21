@@ -1,64 +1,80 @@
-# etc
-
-The `etc/` area contains repository-managed resources that are consumed by the build and test infrastructure. It is part of the hotplace source tree rather than a system `/etc` directory.
-
-## Directory map
-
-```text
-etc/
-├─ cert/
-│  ├─ trust/          — trust certificate used by Authenticode tests
-│  ├─ server-*.crt    — server certificate fixtures
-│  ├─ server-*.key    — server private-key fixtures for test environments
-│  ├─ issue.sh        — generate self-signed certificate sets
-│  └─ crt2der.sh      — convert certificate files from CRT/PEM to DER
-│
-└─ parsingtable/
-   ├─ parsingtable.zip — parser table resources
-   └─ CMakeLists.txt   — copy/install the table resources for tests
-```
-
-## Resource flow
-
-`etc/` resources are prepared at the project level and copied into the appropriate build/test locations by CMake. They are therefore part of the source-side test fixture and parser-resource chain.
-
-```text
-repository resources
-       │
-       ├───────────────┐
-       ▼               ▼
-     cert/       parsingtable/
-       │               │
-       ▼               ▼
- CMake copy       CMake copy
-       │               │
-       ▼               ▼
- test fixtures    parser test resources
-```
-
-### `cert/`
-
-Certificate material is used by TLS, QUIC, DTLS, HTTP server, Authenticode, and ASN.1-related tests. `cert/CMakeLists.txt` copies the appropriate certificate/key or DER files into the corresponding build-time test directories.
-
-The directory also contains scripts for generating self-signed certificate sets and converting certificates to DER for tests that consume binary certificate data.
-
-### `parsingtable/`
-
-Binary parsing-table resources are generated/maintained separately from the parser implementation and are copied into test locations during the build/test setup. See [`parsingtable/README.md`](parsingtable/README.md) for the current table variants and generation commands.
-
-## Related areas
-
-- `sdk/io/parser/` — parser runtime and binary parsing-table format
-- `sdk/io/asn.1/` — ASN.1 parser and runtime consuming ASN.1 parsing tables and DER test data
-- `sdk/net/tls/` — TLS certificate fixtures
-- `sdk/net/quic/` — QUIC certificate fixtures
-- `test/applet/` and `test/testcase/` — consumers of the resources copied from this directory
-
 ## Publication
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+Edition 2 · Revision 1105
+Source basis: Revision 1105
+Documented with GPT-6
+Documentation scope: repository-managed resources and build/test distribution
 ```
+
+# Repository resources
+
+## 1. Role
+
+The `etc/` area contains repository-managed resources consumed by the build and test infrastructure. It is part of the hotplace source tree, not the operating system's `/etc` directory. The main documented resource groups are certificate fixtures and binary parser tables.
+
+## 2. Model
+
+```text
+etc/
+├─ cert/
+│  ├─ trust/trust.crt
+│  ├─ server-*.crt / server-*.key / server-*.der
+│  ├─ issue.sh
+│  ├─ crt2der.sh
+│  └─ CMakeLists.txt
+└─ parsingtable/
+   ├─ parsingtable.zip
+   └─ CMakeLists.txt
+```
+
+The resource groups have separate lifecycles:
+
+- `cert/` contains test certificate/key fixtures and scripts to regenerate or convert them.
+- `parsingtable/` contains generated binary parser tables; the grammar/generator source is maintained under `test/tool/makeparsingtable`, not as hand-edited binary content.
+
+## 3. Important behavior and lifetime
+
+### Certificate distribution
+
+`etc/cert/CMakeLists.txt` copies the trust certificate and server certificate/key fixtures into build-tree test and applet directories. DER certificate fixtures are copied to ASN.1 testcase locations. The copies consumed by tests are build artifacts derived from the repository-managed files, not independent certificate sources.
+
+### Parsing-table distribution
+
+`test/tool/makeparsingtable` generates LALR(1) and GLR table files. Its CMake post-build generation path is guarded for GNU on Windows (MinGW64); `etc/parsingtable/CMakeLists.txt` unpacks the stored `parsingtable.zip` into the build-tree parser and ASN.1 testcase directories. Check the active build setup before assuming manual unpacking is required.
+
+## 4. Example from the source build
+
+A typical resource flow is:
+
+```text
+repository-managed resource
+       │
+       ├── etc/cert/ ── CMake copy ──► build-tree certificate fixtures
+       │
+       └── etc/parsingtable/ ─ unzip ─► parser / ASN.1 testcase tables
+
+grammar + makeparsingtable tool
+       └── generated .ptb files ──► parsingtable.zip (configured build path)
+```
+
+This describes the configured build flow, not a claim that every target has regenerated the tables or executed all consumers.
+
+## 5. Relationships
+
+- `sdk/io/parser/` — parser runtime and binary parsing-table format.
+- `sdk/io/asn.1/` — ASN.1 parser/runtime consuming grammar tables and DER certificate test data.
+- `sdk/net/tls/` and `sdk/net/http/` — certificate fixtures used by secure transport/server test paths.
+- `sdk/crypto/authenticode/` — trust certificate and PE verification example.
+- `test/tool/makeparsingtable/` — parser table generator.
+- `test/applet/` and `test/testcase/` — consumers of copied resources.
+
+## 6. References
+
+- [Certificate fixtures](cert/README.md)
+- [Certificate generation options](cert/help.md)
+- [Binary parsing tables](parsingtable/README.md)
+- `etc/cert/CMakeLists.txt`
+- `etc/parsingtable/CMakeLists.txt`
+- `test/tool/makeparsingtable/CMakeLists.txt`

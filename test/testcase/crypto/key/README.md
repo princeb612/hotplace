@@ -64,7 +64,7 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 
 ## 5. Relationships
 
-- Implementation notes: `sdk/crypto/basic/key.md`, `sdk/crypto/basic/elliptic-curves.md`
+- Implementation documentation: `sdk/crypto/basic/key/README.md`; curve taxonomy is preserved in `sdk/crypto/basic/README.md` under Developer Notes
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 

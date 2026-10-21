@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -17,11 +18,15 @@
 
 `sdk/base/system` contains small integer/byte-order utilities used when a protocol field does not match a native C++ integer width.
 
-## 2. Model
+## 2. Data Model
 
-The component model is described by the implementation and retained subsections below.
+### Data representation
 
-## 3. Important behavior and lifetime
+`endian.hpp` provides host/network conversion helpers for fixed-width integers, including optional compiler-supported `uint128`. `convert_endian<T>()` is the generic transformation entry point; the `hton*` / `ntoh*` functions provide width-specific names.
+
+`uint.hpp` defines the custom-width integer template and aliases. The 24-bit and 48-bit types store exactly three and six bytes respectively; the `.cpp` conversion helpers translate between these byte sequences and native 32-/64-bit values. They are not C++ bit-fields and do not change the host's native integer width.
+
+## 3. Behavior Model
 
 ### Endianness
 
@@ -58,11 +63,7 @@ Both validate the input buffer and reject values that cannot fit in the target w
 
 The custom-width integer implementations are exercised indirectly by protocol code and should be documented alongside the protocol users when their concrete wire layout matters.
 
-## 4. Example from the source tests
-
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
+## 4. Relationships
 
 ### Protocol relationships
 
@@ -71,8 +72,4 @@ The source comments explicitly identify protocol uses:
 - `uint24_t`: TLS handshake length, HTTP/2 frame length, ASN.1 certificate length
 - `uint48_t`: DTLS record sequence
 
-This makes the utility particularly useful in the parser/protocol layers where a field is specified as an exact number of network-order octets.
-
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.
+This makes the utility particularly useful in the parser/protocol layers where a field is specified as an exact number of network-order octets. The implementation is split across `endian.hpp`, `uint.hpp`, `uint24.cpp`, and `uint48.cpp`; `types.hpp` supplies platform/integer aliases. `testcase_endian.cpp` provides source-level coverage for byte order and custom-width integer behavior.

@@ -1,90 +1,91 @@
-# test certificates
+## Publication
 
-The `etc/cert/` area contains certificate and private-key fixtures used by hotplace tests, together with scripts for generating and converting test certificate material. These files are repository-managed test resources; they are not a production certificate store.
+```text
+hotplace source-tree documentation
+Edition 2 · Revision 1105
+Source basis: Revision 1105
+Documented with GPT-6
+Documentation scope: certificate fixtures, generation and distribution
+```
 
-## Directory map
+# Test certificates
+
+## 1. Role
+
+`etc/cert/` contains certificate and private-key fixtures used by hotplace tests, together with scripts for generating and converting test certificate material. These files are repository-managed test resources, not a production certificate store or a trust-policy recommendation.
+
+## 2. Model
 
 ```text
 cert/
 ├─ trust/
-│  └─ trust.crt              — trust certificate for Authenticode tests
-│
-├─ server-*.crt              — server certificate fixtures
-├─ server-*.key              — corresponding server private-key fixtures
-├─ issue.sh                  — generate self-signed certificate sets
-├─ crt2der.sh                — CRT/PEM → DER conversion helper
-└─ CMakeLists.txt            — distribute fixtures to build/test locations
+│  └─ trust.crt
+├─ server-*.crt
+├─ server-*.key
+├─ server-*.der
+├─ issue.sh
+├─ crt2der.sh
+└─ CMakeLists.txt
 ```
 
-## Certificate families
+The certificate generation script supports these families/variants:
 
-The certificate generation script supports the certificate families used by the test environment, including:
+- RSA and RSA-PSS
+- ECDSA P-256, P-384 and P-521
+- EdDSA Ed25519 and Ed448
+- ML-DSA-44, ML-DSA-65 and ML-DSA-87
+- SLH-DSA variants (128s/128f, 192s/192f, 256s/256f)
 
-- RSA / RSA-PSS
-- ECDSA (P-256, P-384, P-521)
-- EdDSA (Ed25519, Ed448)
-- ML-DSA (ML-DSA-44, ML-DSA-65, ML-DSA-87)
-- SLH-DSA variants
+The default variant is ECDSA P-384 when `issue.sh` is run without an argument. The exact supported algorithm names are listed in [help.md](help.md) and in the script's accepted argument handling.
 
-The checked-in server fixtures cover the algorithms required by the current test tree. `issue.sh` is the source-side mechanism for regenerating self-signed test material when a new fixture set is needed.
+## 3. Important behavior and lifetime
 
-## Resource distribution
+### Fixture generation
 
-`cert/CMakeLists.txt` copies the repository resources into the build tree used by tests:
+`issue.sh` generates self-signed root/server test material with OpenSSL and creates the server certificate using the generated root. It configures test-oriented subject alternative names including `test.com`, `localhost`, and `127.0.0.1`. The script's `clean` option removes generated certificate artifacts in the current certificate directory; use it only when that cleanup is intended.
 
-```text
-etc/cert/
-   │
-   ├─ trust/trust.crt
-   │       └──────────────→ test/applet/authenticode/
-   │
-   ├─ server-*.crt / server-*.key
-   │       ├──────────────→ test/testcase/quic/
-   │       ├──────────────→ test/testcase/tls/
-   │       ├──────────────→ test/applet/dtlsserver/
-   │       ├──────────────→ test/applet/httpserver1/
-   │       ├──────────────→ test/applet/httpserver2/
-   │       └──────────────→ test/applet/tlsserver/
-   │
-   └─ server-*.der
-           └──────────────→ test/testcase/asn.1/
-```
+`crt2der.sh` converts a supplied `.crt` file to DER and prints the resulting certificate for inspection. It is a format-conversion helper, not a certificate-validation command.
 
-This distribution step is important when reading the tests: the certificate files in those build/test directories are copies of the repository-managed fixtures rather than independent certificate sources.
+### Build-time distribution
 
-## Generation
+`cert/CMakeLists.txt` copies `trust/trust.crt` into the Authenticode applet's build-tree directory; copies `server-*.crt` and `server-*.key` into QUIC/TLS test and DTLS/HTTP/TLS server applet directories; and copies `server-*.der` into ASN.1 testcase locations.
 
-`issue.sh` accepts a certificate family/variant and creates a self-signed root/server test set. It also provides `clean` to remove generated certificate material.
+This means a test that opens a certificate under its build directory is generally consuming a copy of a repository fixture. Updating a fixture should be done in `etc/cert/`, then verified against the CMake copy destinations.
 
-Examples:
+## 4. Example from the source scripts
 
-```text
+Generate a test certificate set by choosing a supported family/variant:
+
+```sh
 ./issue.sh ecdsa
 ./issue.sh rsa
 ./issue.sh rsapss
 ./issue.sh mldsa65
 ./issue.sh slhdsa128f
 ./issue.sh ed25519
-./issue.sh clean
 ```
 
-`crt2der.sh` converts a `.crt` certificate to DER when a binary certificate representation is required by a test.
+Convert a certificate to DER when a testcase requires binary certificate data:
 
-## Related areas
-
-- `test/applet/authenticode/` — trust certificate consumer
-- `test/applet/dtlsserver/` — DTLS server certificate consumer
-- `test/applet/httpserver1/` and `test/applet/httpserver2/` — HTTP server certificate consumers
-- `test/applet/tlsserver/` — TLS server certificate consumer
-- `test/testcase/tls/` — TLS certificate test fixtures
-- `test/testcase/quic/` — QUIC certificate test fixtures
-- `test/testcase/asn.1/` — DER certificate test data
-
-## Publication
-
-```text
-hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+```sh
+./crt2der.sh server-ecdsa.crt
 ```
+
+These commands describe script usage; they were not executed as part of this documentation update.
+
+## 5. Relationships
+
+- `test/applet/authenticode/` — trust certificate consumer.
+- `test/applet/dtlsserver/` — DTLS server certificate consumer.
+- `test/applet/httpserver1/` and `test/applet/httpserver2/` — HTTP server certificate consumers.
+- `test/applet/tlsserver/` — TLS server certificate consumer.
+- `test/testcase/tls/` and `test/testcase/quic/` — TLS/QUIC test fixtures.
+- `test/testcase/asn.1/` — DER certificate test data.
+
+## 6. References
+
+- [Generation options](help.md)
+- `issue.sh`
+- `crt2der.sh`
+- `CMakeLists.txt`
+- [Repository resource map](../README.md)

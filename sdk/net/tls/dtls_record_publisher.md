@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,9 +13,9 @@
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+This document records the session-level send-side adapter that takes the shared TLS handshake record representation and constructs DTLS-specific records, including handshake fragmentation and record segmentation.
 
-## 2. Model
+## 2. Data Model
 
 ### Identity
 
@@ -47,7 +48,7 @@ binary DTLS records
 callback / output container
 ```
 
-The publisher operates on `tls_record` / `tls_records` and uses the session's DTLS message sequence state when constructing fragmented handshake records.
+The publisher operates on `tls_record` / `tls_records` and uses the session's DTLS message sequence state when constructing fragmented handshake records. For handshake records, `publish()` serializes each handshake, removes the ordinary handshake header, and feeds the body to `splitter` with a descriptor carrying the handshake type and sequence number. The splitter callback uses fragment offsets/lengths and boundary flags to create DTLS records and attach `dtls_handshake_fragmented` objects.
 
 ### Fragmentation and segmentation
 
@@ -58,7 +59,7 @@ Two size controls are intentionally separate:
 
 The default values in the implementation are a 1024-byte fragment size and a 1200-byte segment size.
 
-The `dtls_record_publisher_multi_handshakes` flag controls whether multiple handshake messages may be carried together when publishing.
+The `dtls_record_publisher_multi_handshakes` flag controls whether multiple handshake messages may be carried together when publishing. Without this flag, a new handshake source group is also a record boundary, even when the fragment-size boundary alone would permit sharing a record.
 
 ### Interface
 
@@ -69,16 +70,17 @@ The `dtls_record_publisher_multi_handshakes` flag controls whether multiple hand
 - `set_segment_size()` / `get_max_size()` configure the output segment boundary.
 - `set_flags()` / `get_flags()` control publisher behavior.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+The publisher is retrieved from the active `tls_session`, so its message-sequence and size decisions are tied to session state. Fragment size and output segment size are separate controls: the first divides a handshake body into DTLS fragments through `splitter`; the second bounds later output-record segmentation/grouping. `dtls_handshake_fragmented::prepare_fragment()` retains the original handshake sequence and selects the body slice using fragment offset and length. Publishing output does not perform receive-side reordering, which is handled by `dtls_record_arrange`.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
 
-## 5. Relationships
-
+- [TLS/DTLS/QUIC overview](README.md)
+- [DTLS record arrangement](dtls_record_arrange.md)
+- [TLS session support](session/README.md)
+- [Network session model](../server/network_session.md)
 ### Session relationship
 
 ```text
@@ -98,12 +100,12 @@ tls_session
 
 The publisher is the **send-side construction** counterpart to `dtls_record_arrange`, which performs receive-side ordering.
 
-## 6. References
+### Implementation and source examples
 
-### Related source and tests
+- `dtls_record_publisher.hpp` and `session/dtls_record_publisher.cpp` — public interface and the serialization/splitter callback path.
+- `tls/handshake/dtls_handshake_fragmented.cpp` — writes the fragment header and selected handshake-body bytes.
+- `test/testcase/tls/testcase_construct_dtls12_1.cpp` and `testcase_construct_dtls12_2.cpp` — construction examples; `test/testcase/tls/sample.cpp` contains additional usage examples.
 
-- `dtls_record_publisher.hpp`
-- `session/dtls_record_publisher.cpp`
-- `test/testcase/tls/testcase_construct_dtls12_1.cpp`
-- `test/testcase/tls/testcase_construct_dtls12_2.cpp`
-- `test/testcase/tls/sample.cpp`
+## 5. References
+
+- [RFC 6347 — Datagram Transport Layer Security Version 1.2](https://www.rfc-editor.org/rfc/rfc6347) — protocol context for DTLS handshake and record fragmentation.

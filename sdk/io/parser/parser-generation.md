@@ -4,6 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -30,8 +31,7 @@ LR(0) states
 binary_parsing_table
 ```
 
-## 2. Model
-
+## 2. Data Model
 ### cfg_grammar
 
 `cfg_grammar` is the grammar description used by the parser engines.
@@ -140,22 +140,19 @@ This separates expensive table construction from later parser execution.
 
 See [Parsing table binary format](parsing-table-binary-format.md) for the file representation.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 - Grammar construction is independent of the source text being parsed. A production describes the relationship between a left-hand non-terminal and its RHS symbols; the lexer and parser consumer must agree on terminal names.
 - Table generation is a separate phase from execution. A built table can be copied into a `binary_parsing_table` and serialized so later runs can import it instead of repeating generation.
 - The grammar revision is part of the serialized-table compatibility check. `binary_parsing_table::read()` clears the destination parser/grammar before loading, checks the magic and endian marker, validates the body size and CRC, and compares the table version with the grammar revision required by the receiving parser. Treat table files as generated artifacts tied to the grammar definition, not as timeless data files.
 - LALR and GLR use the same broad grammar/table infrastructure but differ in how conflicts and competing actions are handled during execution. A grammar that is accepted by one path should not be assumed to have identical behavior in the other without exercising both paths.
 - ASN.1 grammar maintenance crosses lexer token registration, production rules, parser table revision, and downstream parse-tree/semantic handling. A local grammar edit can therefore require coordinated updates rather than a change to one production alone.
 
-## 4. Example from the source tests
-
+### Source-level evidence
 `test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation()` is the clearest end-to-end table-generation comparison. It asks `asn1_advisor` for LALR and GLR parser instances in both build and import forms, checks `ready()`, and then feeds the same notation table to all four instances. The test vectors include type assignments, tagging, nested constructed types, constraints, and standalone type notation.
 
 The imported-table path is made explicit by `test_load_parsingtable()`: it calls `binary_parsing_table::read("asn1notation.ptb", parser)` and then parses `Type1 ::= VisibleString`. Read this alongside `binary_parsing_table_read.cpp` and `binary_parsing_table_write.cpp` to follow the artifact lifecycle from file header and blocks to reconstructed grammar/table state.
 
-## 5. Relationships
-
+## 4. Relationships
 ### ASN.1 maintenance relationship
 
 ASN.1 grammar changes typically cross several boundaries:
@@ -186,10 +183,7 @@ The parser testcase README records practical rules for avoiding shift/reduce and
 - `lalr-vs-glr.md`
 - `parsing-table-binary-format.md`
 
-## 6. References
-
-### Related source
-
+### Implementation source navigation
 - `cfg_grammar.hpp`, `cfg_grammar.cpp`, `cfg_grammar_lalr1.cpp`, `cfg_grammar_glr.cpp`, `cfg_grammar_rule.cpp`, `types.hpp`
 - `binary_parsing_table.hpp`, `binary_parsing_table.cpp`, `binary_parsing_table_read.cpp`, `binary_parsing_table_write.cpp`
 - `types.hpp`

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ — testcase assets and verification           │
 └──────────────────────────────────────────────┘
 ```
 
@@ -13,7 +14,7 @@
 
 ## 1. Role
 
-Identifies COSE RFC/example vectors and documents the YAML schema for keys and message cases.
+This directory preserves COSE RFC/example vectors and the YAML schema consumed by COSE testcase sources. It is test material and executable coverage, not the COSE implementation itself.
 
 ## 2. Test model
 
@@ -103,7 +104,7 @@ A COSE vector can reference a key set, message CBOR, shared inputs, crypto input
 
 ### 4.2 Documentation and verification status
 
-The supplied report is identified as **MinGW64, source revision 1104**: **2013 pass, 0 expt, 0 fail, 2 skip, 0 triv**. The documentation task did not rerun the tests.
+The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with 2,013 pass, 0 expt, 0 fail, 2 skip and 0 triv entries for the `cose` group. The report files do not independently identify the tested source commit or exact build configuration. The documentation basis is Revision 1105, distinct from the last known test-run context. This documentation update did not rerun the tests; preserve the snapshot until a newer, revision-associated report is supplied.
 
 ## 5. Relationships
 
@@ -114,4 +115,4 @@ The supplied report is identified as **MinGW64, source revision 1104**: **2013 p
 ## 6. References
 
 - RFC 8152 / RFC 9052; RFC 8392; RFC 8778; RFC 9338.
-- `test/testcase/cose/` sources and vector assets (Revision 1104).
+- `test/testcase/cose/` sources and vector assets (documented against the Revision 1105 working source tree; report snapshot associated with Revision 1104).

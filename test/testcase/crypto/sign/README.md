@@ -59,7 +59,7 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 
 ## 5. Relationships
 
-- Implementation notes: `sdk/crypto/basic/sign.md`, `sdk/crypto/basic/mac.md`
+- Implementation notes: `sdk/crypto/basic/sign/README.md`, `sdk/crypto/basic/mac/README.md`
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 

@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,127 +13,100 @@
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+`sdk/net/http` contains the common HTTP request/response model, URI and header handling, server/client integration, routing, authentication helpers, version-specific protocol framing, and HPACK/QPACK header compression. The parent directory owns shared HTTP concepts; the subdirectories own version-specific wire formats and compression algorithms.
 
-## 2. Model
+HTTP/1.x, HTTP/2, and HTTP/3 are not a single interchangeable path: HTTP/1.x uses textual message framing over TCP, HTTP/2 uses binary frames and streams, and HTTP/3 uses HTTP frames over QUIC streams.
 
-```mermaid
-mindmap
-  root((http))
-    http_server
-    http_server_builder
-    http_uri
-    http_header
-    network_protocol
-      http_protocol
-      http2_protocol
-    http_request
-    http_response
-    http_router
-      html_documents
-      http_authentication_provider
-        basic_authentication_provider
-        digest_access_authentication_provider
-        bearer_authentication_provider
-      http_authentication_resolver
-        basic_credentials
-        digest_credentials
-        bearer_credentials
-        oauth2_credentials
-        custom_credentials
-      oauth2_provider
-        oauth2_grant_provider
-          oauth2_authorization_code_grant_provider
-          oauth2_implicit_grant_provider
-          oauth2_resource_owner_password_credentials_grant_provider
-          oauth2_client_credentials_grant_provider
+## 2. Data Model
+
+```text
+Application-facing layer
+  http_server / http_server_builder / http_client
+  http_router -> registered handler callback
+       └─ optional authentication provider
+
+Shared HTTP message model
+  http_request
+    ├─ method / body
+    ├─ http_uri -> URI / path / query
+    └─ http_header
+  http_response
+    ├─ status / body
+    └─ http_header
+
+Version-specific protocol paths
+  HTTP/1.x -> http_protocol -> request/response framing
+  HTTP/2   -> http2_protocol -> frames -> http2_session -> HPACK
+  HTTP/3   -> HTTP/3 frames over QUIC streams -> QPACK
 ```
 
-- [x] HTTP/1.1
-  - [x] Basic and Digest Access Authentication
-  - [x] HTTP/1.1 simple server
-- [x] HTTP/2
-  - [x] HPACK
-  - [x] HTTP/2 simple server
-    - [x] server push
-- [ ] HTTP/3
-  - [x] QPACK
-  - [ ] QUIC
-  - [ ] HTTP/3 simple server
+The common objects represent HTTP semantics; they do not replace the framing and session state needed by each protocol version. `http_header` also provides parsing support for structured authentication values, while `http_uri` owns URI decomposition and query parameters. Content encoding for a response body is separate from HPACK/QPACK header compression.
 
-### HTTP/1.0
-  - one request per connection
-  - problem of RTT (packet round-trip time)
-    - HTTP/1.1 Persistent Connection
+## 3. Behavior Model
 
-### HTTP/1.1
-  - Persistent Connection
-    - keep-alive option
-  - pipelining
-    - client sends requests sequentially wo waiting for a response to the previous request
-    - server responds in the order in which the requests were received
-  - problem of TCP HOLB (Head of Line Blocking)
-    - if the response to the previous request is delayed, all subsequent requests are blocked and the response is delayed
-    - HTTP/2.0 SPDY, HTTP/3.0 QUIC
+### Server request path
 
-### HTTP/2.0
-  - Multiplexed streams
-    - SPDY (TCP-based)
-    - problem of HOLB still exists
-  - Head Compression
-  - Server Push
+```text
+http_server_builder
+  -> choose server_socket_adapter + configure options
+  -> build http_server
+  -> network_server opens sockets and event/session workers
+  -> network_stream / network_protocol frames incoming bytes
+  -> http_server::consume()
+       ├─ HTTP/1.x -> http_request
+       └─ HTTP/2   -> http2_session -> http_request
+  -> http_router::route()
+       ├─ optional authentication provider/resolver
+       └─ registered URI handler callback
+  -> http_response
+  -> network_session send path
+```
 
-### HTTP/3.0
-  - QUIC (UDP-based)
+`network_server` owns the transport event and session lifecycle; `http_server` configures the HTTP protocols and turns completed protocol data into request/response work. The router selects application handlers, while the handler supplies the response. HTTP/3's QUIC/frame components are present in the source tree, but the HTTP/3 server path is incomplete; the presence of frame and QPACK classes should not be described as complete HTTP/3 service support.
 
-### comments
+### Subdirectory boundaries
 
-| compression      |                       | compression                        |               |
-| --               | --                    | --                                 | --            |
-| deflate          | TLS-level compression | LZ77 + Huffman coding              | CRIME attack  |
-| gzip             | content-encoding      | LZ77 + Huffman coding              | BREACH attack |
-| deflate          | content-encoding      | LZ77 + Huffman coding              | BREACH attack |
-| br               | content-encoding      | LZ77 + Huffman + Context Modeling  | BREACH attack |
-| zstd             | content-encoding      | LZ77 + Finite State Entropy        |               |
-| identity         | content-encoding      | N/A                                |               |
+- `auth/` — credentials and authentication-provider behavior.
+- `compression/` — shared static/dynamic table abstractions and compression-stream support.
+- `http1/` — HTTP/1.x framing adapter.
+- `http2/` — HTTP/2 frame/protocol/session state.
+- `http3/` — HTTP/3 frame representation above QUIC streams.
+- `hpack/` — HTTP/2 header compression.
+- `qpack/` — HTTP/3 field compression.
 
-#### Module records
+## 4. Relationships
 
-- [HTTP core model](http-core-model.md) — request/response, header, URI, router and common object relationships
-- [HTTP server/client flow](http-server-client.md) — network integration and application dispatch
-- [HTTP protocol stack](http-protocol-stack.md) — HTTP/1.x and HTTP/2 protocol interpretation and framing boundary
+- [HTTP core model](http-core-model.md) — request, response, URI, header, routing, and authentication relationships.
+- [HTTP server/client flow](http-server-client.md) — builder options, startup, protocol registration, handler callback and client path.
+- [HTTP protocol stack](http-protocol-stack.md) — the network stream/protocol framing boundary.
+- [Authentication](auth/README.md)
+- [Header compression infrastructure](compression/README.md)
+- [HTTP/1.x](http1/README.md), [HTTP/2](http2/README.md), [HTTP/3](http3/README.md)
+- [HPACK](hpack/README.md), [QPACK](qpack/README.md)
+- [Network server](../server/README.md) — multiplexer, session, stream and protocol dispatch.
+- [Basic socket layer](../basic/README.md) and [TLS/DTLS/QUIC](../tls/README.md) — transport and secure-session integration.
+- [HTTP testcase documentation](../../../test/testcase/net/http/README.md), [HPACK tests](../../../test/testcase/net/hpack/README.md), and [QPACK tests](../../../test/testcase/net/qpack/README.md) — source-level testcase inventory and evidence.
 
-## 3. Important behavior and lifetime
+## 5. References
 
-### implementation areas
+- [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
+- [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)
+- [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)
+- [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)
+- [RFC 7541 — HPACK](https://www.rfc-editor.org/rfc/rfc7541)
+- [RFC 9204 — QPACK](https://www.rfc-editor.org/rfc/rfc9204)
 
-* [auth](auth/README.md)
-* [compression](compression/README.md)
-* [HPACK](hpack/README.md)
-* [HTTP/1.x](http1/README.md)
-* [HTTP/2](http2/README.md)
-* [HTTP/3](http3/README.md)
-* [QPACK](qpack/README.md)
+## 6. Developer Notes
 
-#### related tests
+### Protocol evolution notes
 
-* [HTTP testcase](../../../test/testcase/net/http/README.md)
-* [HPACK testcase](../../../test/testcase/net/hpack/README.md)
-* [QPACK testcase](../../../test/testcase/net/qpack/README.md)
+These notes preserve the original developer-oriented comparison; they are conceptual background, not a claim that every item is implemented by this repository.
 
-#### related areas
+- **HTTP/1.0:** commonly one request per connection; repeated connection setup adds round trips.
+- **HTTP/1.1:** persistent connections reduce connection setup overhead. Pipelining preserves response order and can still cause application-level head-of-line blocking when an earlier response is delayed.
+- **HTTP/2:** multiplexes streams over one TCP connection and compresses header fields with HPACK. TCP loss can still block delivery for all streams sharing that connection.
+- **HTTP/3:** maps HTTP semantics to QUIC streams over UDP and uses QPACK. QUIC changes transport-level loss/multiplexing behavior; it is not simply HTTP/2 frames moved to UDP.
 
-* `sdk/net/tls/` - TLS/QUIC transport used by HTTP/3
-* `sdk/crypto/` - authentication and cryptographic support
+### Compression terminology note
 
-## 4. Example from the source tests
-
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
-
-## 5. Relationships
-
-Related implementation areas and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Source references and related documents are retained here where available.
+Body content encodings such as gzip/deflate and header compression such as HPACK/QPACK are separate mechanisms. Historical notes in this area mention TLS compression and CRIME/BREACH; do not read that legacy table as a recommendation to enable TLS compression. TLS-level compression is not the normal modern HTTPS configuration, and response-body compression risks depend on whether attacker-controlled and secret data share a compressed context.

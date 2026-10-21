@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -49,8 +50,7 @@ asn1_build_resultset
 
 The important distinction is that `asn1_module` is not the ASN.1 grammar parser. `asn1_parser` handles notation → tokens → parse tree, `asn1_publisher` builds semantic/module information, and `asn1_module` stores and resolves that information.
 
-## 2. Model
-
+## 2. Data Model
 ### Module registry: `asn1_modules`
 
 `asn1_modules` is the process-wide singleton registry for named `asn1_module` instances. It provides `add()`, `get()`, `exist()`, and `remove()` operations, plus a default module and temporary-name/sweep helpers. It replaces the earlier `asn1_module_context` naming; it is not a per-module semantic object.
@@ -138,8 +138,7 @@ range_set  string_set
 
 The runtime stores the semantic result; constraint evaluation and generic value-domain operations remain in their respective layers. The ASN.1 provider used by this path is `asn1_advisor`, which supplies the shared publisher and parser providers.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Module representation
 
 `represent()` can now regenerate module notation as well as individual object notation.
@@ -171,8 +170,6 @@ parser -> publisher -> runtime
                  regenerated ASN.1
 ```
 
-## 4. Example from the source tests
-
 ### Related tests
 
 - `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decoding and reference resolution.
@@ -180,12 +177,6 @@ parser -> publisher -> runtime
 - `test/testcase/asn.1/testcase_constraints.cpp` — semantic construction with constraints.
 - `test/testcase/asn.1/runtime/testcase_parser.cpp` — parser/runtime path.
 - `test/testcase/asn.1/runtime/testcase_publish.cpp` — publishing path.
-
-## 5. Relationships
-
-Related modules and boundaries are recorded below where identified in the existing notes.
-
-## 6. References
 
 ### Reference lookup and resolution
 
@@ -233,6 +224,11 @@ resolve()
 reference dependency validation
 ```
 
+## 4. Relationships
+- `asn1_parser` and `asn1_publisher` provide syntax parsing and semantic publication.
+- `asn1_modules` owns the module registry; each `asn1_module` resolves local and imported definitions.
+- `sdk/io/asn.1/basic/semantic/` supplies the semantic objects whose references are linked into modules.
+
 ### Related source
 
 - `sdk/io/asn.1/runtime/asn1_module.hpp`
@@ -243,3 +239,4 @@ reference dependency validation
 - `sdk/io/asn.1/advisor/asn1_advisor.cpp`
 - `sdk/io/asn.1/basic/semantic/`
 - `sdk/base/nostd/`
+

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 The central design is to keep an absolute timestamp internally and provide explicit conversion to local time, UTC, and platform-oriented structures.
 
-## 2. Model
+## 2. Data Model
 
 ### Core representation
 
@@ -67,7 +68,7 @@ Main files:
 - `sdk/base/system/datetime.cpp`
 - `sdk/base/system/datetime_api.cpp`
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Arithmetic and comparison
 
@@ -136,14 +137,9 @@ It also verifies `time_diff()` and `time_sum()` with nanosecond values that requ
 
 `datetime` is a system-level time abstraction rather than a general-purpose date/time framework. Its main role is to provide a stable hotplace interface across platform time representations and clock APIs.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
-
-Related components and cross-module links are listed in References where available.
-
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.
+- `sdk/base/system/linux/` and `sdk/base/system/windows/` — platform-specific clock and system-time adapters.
+- `sdk/base/system/uint.hpp` and endian helpers — separate wire-width conversion facilities; datetime conversion does not itself define protocol timestamp encoding.
+- `test/testcase/base/system/testcase_datetime.cpp` — source-level conversions and nanosecond carry/borrow cases.
+- Higher-level protocols own timestamp meaning and epoch/precision rules when they serialize time values. The common implementation is in `datetime.hpp/.cpp` and `datetime_api.cpp`, with OS-specific adapters under `linux/` and `windows/`; `testcase_datetime.cpp` covers conversions and nanosecond carry/borrow.

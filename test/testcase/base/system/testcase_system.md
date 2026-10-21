@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -21,7 +22,7 @@ The testcase-to-module mapping is summarized by the retained source descriptions
 
 ## 3. Example: representative testcase flow
 
-This document does not duplicate a standalone program. The representative testcase functions and their assertion strength are described under Source-level coverage.
+`testcase_datetime.cpp` checks time conversions and comparisons, including normalized nanosecond results from `time_diff()` and `time_sum()`. `testcase_shared.cpp` checks reference-count transitions and destructor counts. These are distinct test flows: the first checks numeric/time results, while the second observes ownership behavior through object lifetime. The table below maps the remaining source files and notes where assertions are weaker.
 
 ## 4. Test and verification status
 

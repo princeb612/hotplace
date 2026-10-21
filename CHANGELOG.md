@@ -37,6 +37,7 @@
     * CBOR
 
 * details
+  * Revision 1106
   * Revision 1105
     * fixed
       * authenticode_verifier - restored the 'revocation check'

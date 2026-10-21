@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 The implementation can derive codes from sample data or load a pre-trained table.
 
-## 2. Model
+## 2. Data Model
 
 ### Two ways to obtain codes
 
@@ -64,7 +65,7 @@ The decoder supports both direct/manual and stream-oriented paths. The implement
 
 This is important for HTTP/2 Huffman because RFC 7541 defines codes with different bit lengths and an EOS-related padding rule.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### HTTP/2 Huffman
 
@@ -99,22 +100,13 @@ The testcase covers:
 
 The RFC 7541 testcase is the important interoperability reference; the learning path demonstrates the generic algorithm separately.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the source-test references below; do not infer runtime execution from source presence alone.
+- `sdk/base/pattern/trie.hpp` — the generic Huffman decoder indexes bit-string codes in a trie and scans the input bits to identify the longest matching code; the trie does not calculate Huffman code lengths.
+- `http_huffman_coding.*` and `detail/http_huffman_codes.*` — load the fixed RFC 7541 code table on top of the generic implementation.
+- `encoder_stream` / `decoder_stream` — preserve bit-oriented state when encoded data arrives in chunks.
+- `test/testcase/encode/testcase_huffman.cpp` — learning/import/export behavior and RFC 7541 vector coverage.
 
-## 5. Relationships
+## 5. References
 
-Related components and cross-module links are listed in References where available.
-
-## 6. References
-
-### Related source
-
-- `sdk/base/encoding/huffman_coding.hpp`
-- `sdk/base/encoding/huffman_coding.cpp`
-- `sdk/base/encoding/http_huffman_coding.hpp`
-- `sdk/base/encoding/http_huffman_coding.cpp`
-- `sdk/base/encoding/detail/http_huffman_codes.hpp`
-- `sdk/base/encoding/detail/http_huffman_codes.cpp`
-- `test/testcase/encode/testcase_huffman.cpp`
+- [RFC 7541 — HPACK: Header Compression for HTTP/2](https://www.rfc-editor.org/rfc/rfc7541)

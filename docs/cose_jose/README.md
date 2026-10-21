@@ -223,6 +223,8 @@ The key abstraction sits below both COSE and JOSE.
 
 This separation matters because a COSE Key or JWK is not itself the underlying cryptographic key object. It is a standard representation used by the protocol layer.
 
+The conversion boundary is also a policy boundary. `kid`, `alg`, `use`/key operations, key type, curve, and the available public/private parameters are not interchangeable facts. A successful parse only establishes that the representation could be read and mapped; it does not alone establish that the key is suitable for the requested operation or that all protocol-level constraints have been satisfied. The consumer still has to select the key consistently with the protected algorithm and operation.
+
 ### Key exchange
 
 `crypto_keyexchange` is another layer below COSE/JOSE. It provides cryptographic key-establishment operations that a security-object layer may invoke; the COSE/JOSE layer still owns the protocol-specific recipient/key-management structure and algorithm identifiers.
@@ -248,6 +250,10 @@ shared secret   encapsulation
 The current implementation exposes `keygen`, `exchange`, `encaps`, and `decaps`.
 
 The abstraction covers classical ECDH-style agreement and KEM-oriented operations, including ML-KEM. TLS and COSE/JOSE may consume related key-establishment capabilities, but each protocol defines its own wire-level and state-machine semantics.
+
+Do not collapse the outputs into a generic "key" value. In classical agreement, each side retains private material and processes the peer's public share to derive the same shared secret. In a KEM flow, the sender encapsulates to a recipient public key and sends a capsule; the recipient uses its private key to decapsulate it. These are different operation shapes even when both yield secret material for later derivation.
+
+For COSE, the resulting secret belongs to the COSE key-management/recipient processing path, with its own algorithm identifiers, context, and message structure. For TLS, the shared secret is an input to the transcript-dependent TLS key schedule. Reusing `crypto_keyexchange` does not make a COSE recipient structure equivalent to a TLS `key_share` extension.
 
 ## Flow
 

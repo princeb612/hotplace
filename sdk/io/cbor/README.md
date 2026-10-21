@@ -1,32 +1,26 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 1 · Revision 1105                     │
+│ Source basis: Revision 1105                   │
+│ Documented with GPT-6                         │
+│ — source structure, implementation & behavior │
+└───────────────────────────────────────────────┘
 ```
 
 # CBOR
 
 ## 1. Role
 
-Directory identity and navigation for the CBOR representation, reader, encoder, publisher, and visitors.
+The directory provides the CBOR value tree and conversion paths between encoded bytes, object values, and readable representations. It is a format-specific subsystem, not a wrapper around the generic grammar parser.
 
-## 2. Model
+## 2. Data Model
 
 `sdk/io/cbor` implements a compact CBOR object model, reader/parser, encoder, publisher, and diagnostic/concise visitors.
 
 The directory is used as the project's CBOR representation layer rather than as a general CBOR tutorial.
-
-### Documents
-
-- [CBOR object model](cbor-object-model.md)
-- [CBOR reader and encoder](cbor-reader-encoder.md)
-- [CBOR visitors](cbor_visitor.md)
-- [RFC 8949 Appendix A examples](rfc8949-examples.md)
 
 ### Implementation map
 
@@ -55,15 +49,22 @@ cbor_object tree
 
 `cbor_encode` provides the reverse direction from values/objects to CBOR binary.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 The logical CBOR object model is distinct from its encoded byte layout. Readers construct object values, while encoders and publishers produce output representations.
 
-## 4. Example from the source tests
+### Conversion path
 
-The relevant test sources are listed below; this document does not invent a standalone example.
+The main conversion path is encoded bytes → `cbor_reader` → `cbor_object` tree → binary/concise or diagnostic representation. `cbor_encode` provides the reverse direction from values/objects to CBOR bytes. RFC-oriented vectors and sample object construction are located under `test/testcase/cbor/`; this directory overview does not claim those tests were run during the documentation update.
 
-## 5. Relationships
+## 4. Relationships
+
+### Component documents
+
+- [CBOR object model](cbor-object-model.md) — object/value representation.
+- [CBOR reader and encoder](cbor-reader-encoder.md) — conversion between CBOR bytes and objects.
+- [CBOR visitors](cbor_visitor.md) — readable and diagnostic representations.
+- [RFC 8949 Appendix A examples](rfc8949-examples.md) — retained specification-oriented examples.
 
 ### Related areas
 
@@ -73,14 +74,9 @@ The relevant test sources are listed below; this document does not invent a stan
 
 ### Related tests
 
-- `test/testcase/cbor/testcase_rfc7049.cpp`
-- `test/testcase/cbor/testvector_cbor.cpp`
-- `test/testcase/cbor/testvector_cbor.yml`
-- `test/testcase/cbor/sample.cpp`
+- [CBOR testcase sources and vectors](../../../test/testcase/cbor/) — RFC 7049 examples, CBOR vectors, and sample object construction.
 
-## 6. References
+## 5. References
 
-### References
-
-- RFC 7049 — Concise Binary Object Representation
-- RFC 8949 — Concise Binary Object Representation
+- [RFC 7049 — Concise Binary Object Representation](https://www.rfc-editor.org/rfc/rfc7049), the earlier specification used by retained examples.
+- [RFC 8949 — Concise Binary Object Representation](https://www.rfc-editor.org/rfc/rfc8949), the current CBOR specification.

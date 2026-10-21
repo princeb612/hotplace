@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1104
+Edition 1 · Revision 1105
+Source basis: Revision 1105
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -33,13 +34,13 @@ The source flow is `odbc_connector::connect()` → `odbc_query::query()` → rep
 
 ### 4.2 Documentation and verification status
 
-The supplied `test/testcase/odbc/report` contains `pass 0` and no classified case counts. It does not establish that a live database integration run succeeded. The report does not identify the connection configuration, driver, database, OS/compiler, or source revision. No test was executed as part of this documentation update.
+The supplied `test/testcase/odbc/report` contains `pass 0` and no classified case counts; the central [Test Report Snapshot](../test-report-status.md) records this as an empty/unclassified report rather than a successful live integration run. It does not establish that a database connection succeeded. The report does not identify connection configuration, driver, database, OS/compiler, or tested source revision. The documentation basis is Revision 1105, distinct from the unverified report-run revision. No test was executed as part of this documentation update.
 
 ## 5. Relationships
 
 - [`sdk/odbc/README.md`](../../../sdk/odbc/README.md) — module overview
 - [`sdk/odbc/basic/README.md`](../../../sdk/odbc/basic/README.md) — concrete implementation
-- [`sample.cpp`](sample.cpp) — integration sample source
+- [`sample.cpp`](sample.cpp) — testcase source
 - [`CMakeLists.txt`](CMakeLists.txt) — testcase target setup
 
 ## 6. References

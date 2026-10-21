@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 The same API is used for ordinary Base64 (`+` and `/`) and Base64URL (`-` and `_` without padding), selected through `encoding_t`.
 
-## 2. Model
+## 2. Data Model
 
 ### Main operations
 
@@ -57,7 +58,7 @@ input chunks
 
 The tests deliberately vary the chunk size to verify that the result is independent of the input boundaries.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Multiline Base64
 
@@ -86,23 +87,15 @@ The testcase covers:
 - RFC 4880 section 6.5 Radix-64 vectors
 - RFC 4880 section 6.6 ASCII-armored message processing
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the source-test references below; do not infer runtime execution from source presence alone.
+- `lowlevel/base64.*` — byte-level conversion primitives used by the public overloads.
+- `encoder_stream` and `decoder_stream` — preserve incomplete Base64/Base64URL units across chunk boundaries.
+- `radix64.*` — composes Base64 with CRC-24 and ASCII-armored framing; it is not a separate Base64 alphabet.
+- `test/testcase/encode/testcase_base64.cpp` — round-trip, Base64URL, chunked streaming, and Radix-64 vector source coverage.
 
-## 5. Relationships
+- `base64.hpp/.cpp` and `lowlevel/base64.hpp/.cpp` implement the public and byte-level paths; `encoder_stream.*` and `decoder_stream.*` add chunked processing, and `radix64.*` adds CRC-24 armor. `testcase_base64.cpp` covers round trips, URL-safe form, streaming, and Radix-64 behavior.
 
-Related components and cross-module links are listed in References where available.
+## 5. References
 
-## 6. References
-
-### Related source
-
-- `sdk/base/encoding/base64.hpp`
-- `sdk/base/encoding/base64.cpp`
-- `sdk/base/encoding/lowlevel/base64.hpp`
-- `sdk/base/encoding/lowlevel/base64.cpp`
-- `sdk/base/encoding/encoder_stream.*`
-- `sdk/base/encoding/decoder_stream.*`
-- `sdk/base/encoding/radix64.*`
-- `test/testcase/encode/testcase_base64.cpp`
+- [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 1 · Revision 1105                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -17,7 +18,7 @@
 
 This directory is project test infrastructure. It is not the same thing as CTest itself: CTest launches and records test executables, while `test_case` manages the assertions/results inside a hotplace test program.
 
-## 2. Model
+## 2. Data Model
 
 ```text
 test program
@@ -44,7 +45,7 @@ test program
 
 [`logger.md`](logger.md) explains how callers send messages without needing to know whether the configured destination is stdout or a file. Builder configuration controls output destinations and buffering/rotation options; log-level filtering is a separate concern from pass/fail accounting.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 - **Separate responsibilities:** `test_case` determines test outcomes; `logger` makes diagnostic information visible. A message being logged does not itself mark a test as passed or failed.
 - **Result categories:** the test framework distinguishes ordinary success/failure from states such as not-supported and low-security, and offers expected-failure forms. Tests should use the intended category rather than disguising a known limitation as an ordinary pass.
@@ -53,56 +54,9 @@ test program
 - **Concurrency:** the logger has per-thread context and a consumer path. Changes to buffering, shutdown, or shared state should be checked for lifetime and synchronization implications.
 - **Historical material:** older logger sketches in this directory are retained as design/history material. They should not be treated as the current implementation contract without comparison to the active `.hpp/.cpp` files.
 
-## 4. Example from the source tests
-
-### Recording result categories
-
-`test/testcase/base/unittest/testcase_unittest.cpp` opens the `"test_case"` group, records a success, a not-supported result, and a low-security result, then records another success. Optional timing-check logic uses `test_case_notimecheck` around a deliberate wait. The report and final result are handled by the shared test harness.
-
-This example shows that a test record is more than a Boolean: the result category affects how the report describes the outcome.
-
-### Logger filtering
-
-`test/testcase/base/unittest/testcase_loglevel.cpp` exercises explicit and implicit log-level behavior. Read it alongside the filtering section in [`logger.md`](logger.md) to follow the distinction between the configured threshold and the level used when a message does not provide one.
-
-### Trace through the source
-
-```text
-testcase_unittest.cpp
-    ├── _test_case.begin(...)
-    ├── _test_case.test(...) / assert(...)
-    ├── _test_case.report()
-    └── _test_case.result()
-
-testcase_loglevel.cpp
-    └── logger level configuration
-          └── emitted vs. suppressed messages
-```
-
-## 5. Relationships
+## 4. Relationships
 
 - `test_case` may attach a `logger` for diagnostics, but test outcome tracking remains a separate responsibility.
 - The test executable's `main`/test harness uses `test_case::result()` to return a process status; CTest consumes the executable result at a higher level.
 - `logger` uses common formatting and dump facilities, including `basic_stream` and memory-dump helpers from `sdk/base`.
-- Testcase analysis documents under `test/testcase/` explain test intent and report context; this README explains the implementation components that support those tests.
-
-## 6. References
-
-### Implementation
-
-- `sdk/base/unittest/testcase.hpp`
-- `sdk/base/unittest/testcase.cpp`
-- `sdk/base/unittest/logger.hpp`
-- `sdk/base/unittest/logger.cpp`
-- `sdk/base/unittest/logger_builder.cpp`
-- `sdk/base/unittest/logger_write.cpp`
-- `sdk/base/unittest/logger_dump.cpp`
-- `sdk/base/unittest/console_color.hpp`
-- `sdk/base/unittest/types.hpp`
-
-### Tests
-
-- `test/testcase/base/unittest/testcase_unittest.cpp`
-- `test/testcase/base/unittest/testcase_loglevel.cpp`
-- `test/testcase/base/unittest/testcase_consolecolor.cpp`
-- [Testcase analysis](../../../test/testcase/base/unittest/testcase_unittest.md)
+- Testcase analysis documents under [`test/testcase/base/unittest/`](../../../test/testcase/base/unittest/README.md) explain test intent and report context; this README explains the implementation components that support those tests. The focused sources are `testcase_unittest.cpp`, `testcase_loglevel.cpp`, and `testcase_consolecolor.cpp`.

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -17,7 +18,7 @@
 
 `sdk/base/nostd/value.hpp` provides `t_value<T>`, a C++11 utility for holding a typed value that may be populated later. It combines a cached value with `std::promise<T>` / `std::future<T>` state and is used by the ASN.1 parameterized semantic prototype to represent values associated with formal parameters.
 
-## 2. Model
+## 2. Data Model
 
 ### State and flow
 
@@ -43,7 +44,7 @@ t_value<T>
 
 The object tracks whether it is deferred, whether the local value is cached, and an optional name. `value()` returns the cached/current value; if a deferred future is valid, it attempts to obtain the result and cache it. Copying intentionally does not copy the promise/future: the copy captures the source's current value state instead.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Exception behavior
 
@@ -55,19 +56,8 @@ The implementation is intentionally described as **not exception-sensitive**. `v
 
 This is a low-level utility contract, not a claim that ASN.1 notation parsing and parameter substitution are fully integrated.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-### Related tests
-
-- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp`
-
-## 5. Relationships
-
-Related components and cross-module links are listed in References where available.
-
-## 6. References
-
-### Related source
-
-- `sdk/base/nostd/value.hpp`
-- `sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp`
+- `sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp` — creates deferred parameter values that can be referenced before a specialization binds the actual value.
+- `std::promise` / `std::future` — the deferred value mechanism used internally; this class deliberately catches retrieval/fulfillment exceptions rather than exposing a full future error contract.
+- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` — source-level usage in the parameterized ASN.1 prototype.

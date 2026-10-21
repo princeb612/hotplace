@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1104
+Edition 2 · Revision 1105
+Source basis: Revision 1105
 Documented with GPT-6
 — source structure, implementation & tests
 ```

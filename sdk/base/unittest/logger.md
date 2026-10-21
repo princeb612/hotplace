@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 It provides a single interface for console output, file output, formatted messages, stream-based messages, binary dumps, log-level filtering, colors, and buffered/asynchronous flushing.
 
-## 2. Model
+## 2. Data Model
 
 ### Construction
 
@@ -112,7 +113,7 @@ The builder also exposes configuration for:
 
 These settings allow the same logger abstraction to be used for short-lived test programs as well as longer-running diagnostic output.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Log levels
 
@@ -166,43 +167,15 @@ The main logging tests are:
 
 Together they demonstrate log-level filtering, console color support, formatted output, and logger/test-case integration.
 
-## 4. Example from the source tests
-
-### Follow log-level filtering
-
-`test/testcase/base/unittest/testcase_loglevel.cpp` exercises explicit and implicit log levels. The important trace is not simply “call logger and see text”; it is to compare the configured threshold with the effective level of each message and confirm which messages are emitted.
-
-```text
-configured logger threshold
-          │
-          ▼
-message with explicit level ──┐
-message with implicit level ───┼──► compare effective level ──► emit / suppress
-                              ┘
-```
-
-`testcase_consolecolor.cpp` covers console color handling separately, while `testcase_unittest.cpp` demonstrates logger use alongside test result recording. These tests are separate because filtering, terminal presentation, and test pass/fail semantics are distinct behaviors.
-
-## 5. Relationships
+## 4. Relationships
 
 - `test_case` can attach a logger for diagnostic output, but the test-case object owns the pass/fail/result accounting.
 - `basic_stream` and the project's formatting helpers provide message construction; logger routes and flushes the resulting output.
 - `dump_memory` provides the common byte-to-hex/ASCII formatting primitive; logger dump APIs expose that capability through the configured output path.
 - `console_color.hpp` handles terminal styling, which is independent of file output and log-level filtering.
-- The consumer/buffering path means logger lifetime and shutdown/flush behavior matter when output must be complete before process exit.
+- The consumer/buffering path means logger lifetime and shutdown/flush behavior matter when output must be complete before process exit. `logger.hpp/.cpp`, `logger_builder.cpp`, `logger_write.cpp`, and `logger_dump.cpp` implement the builder, write, and dump paths; `console_color.hpp` supplies terminal styling.
 
-## 6. References
-
-### Related source
-
-- `sdk/base/unittest/logger.hpp`
-- `sdk/base/unittest/logger.cpp`
-- `sdk/base/unittest/logger_builder.cpp`
-- `sdk/base/unittest/logger_write.cpp`
-- `sdk/base/unittest/logger_dump.cpp`
-- `sdk/base/unittest/console_color.hpp`
-
-## 7. Development Notes (for maintainer review)
+## 6. Development Notes (for maintainer review)
 
 Pre-existing notes or development-oriented material retained for the maintainer to review and reorganize.
 

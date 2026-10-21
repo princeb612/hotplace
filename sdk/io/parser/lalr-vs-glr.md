@@ -1,85 +1,45 @@
-## Publication
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
+### Developer Notes — LALR(1) vs GLR Parser Performance & Feature Comparison
 
-# LALR vs GLR in hotplace
+#### 1. Core Performance Comparison
 
-## 1. Role
+| Feature | LALR(1) Parser | GLR (Generalized LR) Parser |
+| -- | -- | -- |
+| Time Complexity (Worst) | $O(N)$ (Linear Time) | $O(N^3)$ (Tomita's Algorithm) |
+| Time Complexity (Average) | $O(N)$ | $O(N)$ (Deterministic) ~ $O(N^2)$ |
+| Space Complexity | $O(N)$ (Single Deterministic Stack) | $O(N^2)$ (Graph-Structured Stack, GSS) |
+| Grammar Support | LR(1) Restricted (No LR Conflicts) | All Context-Free Grammars (CFG, Ambiguous) |
+| Conflict Handling | Rejected at Table Generation | Multi-actions allowed (GSS Fork/Branching) |
+| Target Use Cases | C/C++, Java, SQL, JSON | ASN.1, C++ Micro-parsers, NLP, Complex DSLs |
 
-This document compares the two parser execution paths present in `sdk/io/parser`. It is not a general claim that one parser family is universally better: the practical distinction is how hotplace represents and executes competing parse actions for a grammar.
+#### 2. Detailed Performance Analysis
+① Time Complexity
+- LALR(1)
+  - Guarantees a strict O(N) linear execution time for N input tokens since only a single action is chosen per state transition.
+  - Extremely low overhead due to simple table lookups and standard stack push/pop operations.
+- GLR
+  - Operates at O(N) speed in deterministic sections where no conflicts exist.
+  - When encountering ambiguity or lookahead conflicts, the Graph-Structured Stack (GSS) forks into multiple paths to explore alternatives in parallel.
+  - In the worst-case scenario (highly ambiguous grammars), time complexity can degrade to $O(N^3)$.
 
-## 2. Model
+② Space and Memory Complexity
+- LALR(1)
+  - Maintains a single std::stack<uint32>, resulting in $O(N)$ space complexity with virtually no dynamic reallocation overhead.
+- GLR
+  - Involves heavy dynamic memory allocation (std::shared_ptr<gss_node>) to maintain graph-structured stacks.
+  - Graph traversal, node duplication, merging, and visited_states lookup incur higher memory footprint and CPU cache misses compared to LALR(1).
 
-### Shared preparation, different execution
-
-```text
-                  cfg_grammar
-                      │
-               table generation
-                      │
-             binary_parsing_table
-                      │
-             ┌────────┴────────┐
-             ▼                 ▼
-        lalr1_parser        glr_parser
-             │                 │
-      one active path    multiple GSS paths
-             │                 │
-             └────────┬────────┘
-                      ▼
-                  parse_tree
-```
-
-Both engines use grammar productions and ACTION/GOTO-style table data. They differ in runtime handling of competing actions:
-
-- **LALR(1):** executes one state/action path. It is suitable when the grammar and generated table provide the deterministic action needed at each step.
-- **GLR:** can preserve multiple active paths in a graph-structured stack. Reductions explore ancestor paths, compute GOTO transitions, and keep alternative stack histories without copying a full independent stack for every branch.
-
-### Why the distinction matters in this repository
-
-The ASN.1 integration exposes both forms through `asn1_advisor`: notation-only LALR parsers and broader GLR parsers that cover notation, module, parameterized notation, and information-object-class grammar paths. The test suite explicitly obtains both built and imported instances, allowing the same notation vectors to be run through each route.
-
-## 3. Important behavior and lifetime
-
-- GLR does not mean that all ambiguity is automatically resolved into a single semantic interpretation. It preserves viable syntactic paths; later tree handling and consumer semantics still need to interpret the result.
-- The graph-structured stack depends on `gss` path operations, especially popping a requested RHS depth and retracing parent paths. Changes to reduction order, duplicate suppression, or GOTO lookup can affect parser behavior and deserve targeted regression tests.
-- LALR and GLR share grammar concepts but should not be assumed to produce equivalent behavior for every grammar. Compare them with the same input vectors when modifying productions or token mapping.
-- Build-time and imported-table execution should also be tested separately: parser behavior depends on the table artifact matching the intended grammar revision.
-
-## 4. Example from the source tests
-
-In `test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation()`, the test obtains four parser objects:
-
-1. LALR table built at runtime;
-2. LALR table imported from a file;
-3. GLR table built at runtime;
-4. GLR table imported from a file.
-
-It asserts that each is ready, then applies the same notation vector table to all four. The inputs include simple assignments (`Type1 ::= VisibleString`), explicit/implicit tags, nested `SEQUENCE`, `SET`, `CHOICE`, and constraint expressions. This is the most useful source-level comparison point because it varies parser engine and table origin while holding the notation examples constant.
-
-For a closer look at the GLR-specific branch/reduction mechanics, read `glr_parser_parse.cpp` alongside `gss.hpp` and `parser-engines.md`.
-
-## 5. Relationships
-
-- `parser-generation.md` — grammar and table construction.
-- `parser-engines.md` — engine implementation details.
-- `parser-tree.md` — syntax output generated by parser actions.
-- `parsing-table-binary-format.md` — serialization/import behavior.
-- `../../base/graph/gss.md` — graph-structured stack dependency.
-- `test/testcase/io/parser/testcase_parser.cpp` — shared notation vectors across parser paths.
-
-## 6. References
-
-### Related source
-
-- `lalr1_parser.hpp`, `lalr1_parser_parse.cpp`
-- `glr_parser.hpp`, `glr_parser_parse.cpp`
-- `cfg_grammar_lalr1.cpp`, `cfg_grammar_glr.cpp`
-- `test/testcase/io/parser/testcase_parser.cpp`
+③ Expressiveness & Grammar Power
+- LALR(1)
+  - If a Shift/Reduce or Reduce/Reduce conflict occurs during table generation, the parser cannot be built.
+  - Requires restructuring the grammar or applying explicit operator precedence rules to resolve ambiguities manually.
+- GLR
+  - Natively handles ambiguous grammars (e.g., ASN.1 Tagging, C++ Type/Variable ambiguities) without modifying the original grammar rules.
+  - Explores all valid parse trees in parallel at runtime and resolves ambiguity at the final reduction step or AST construction phase.
+#### 3. Summary & Recommendation
+- Choose LALR(1) when:
+  - Parsing deterministic, well-defined formal languages like C, Java, JSON, or SQL.
+  - Maximum parsing speed and minimal memory consumption are top priorities.
+- Choose GLR when:
+  - Dealing with complex grammars like ASN.1, C++ language subsets, or custom DSLs that are difficult to express in strict LALR(1) form.
+  - Maintaining grammar readability and direct specification mapping is more important than eliminating table conflicts manually.

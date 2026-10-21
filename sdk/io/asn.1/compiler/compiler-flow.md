@@ -1,40 +1,4 @@
-## Publication
-
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
-# ASN.1 Compiler (asn1c) Flow Sketch - Gemini
-
-## 1. Role
-
-The module identity is described by the implementation notes retained below.
-
-## 2. Model
-
-The existing implementation notes are retained below; see the references for the concrete source files.
-
-## 3. Important behavior and lifetime
-
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
-
-## 4. Example from the source tests
-
-No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
-
-## 5. Relationships
-
-Related modules and boundaries are recorded below where identified in the existing notes.
-
-## 6. References
-
-Source references and related documents are retained below where available.
-
-## 7. Development Notes (for maintainer review)
+# Developer Notes — ASN.1 Compiler (asn1c) Flow Sketch - Gemini
 
 > based on Revision 1083
 
@@ -250,5 +214,3 @@ The asn1c compiler takes a .asn1 schema file as input and generates C++11-based 
 - C. Source File Implementation (user_profile.cpp)
   - Constraint Checking: Range checks for 1 <= id <= 4294967295 and 3 <= username.length() <= 20
   - Error Handling: C++11 standard practices and safe cleanup handling
-
-

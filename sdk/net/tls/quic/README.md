@@ -3,24 +3,86 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
-# References
+
+# QUIC transport and TLS integration
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+`sdk/net/tls/quic` implements QUIC packet/frame representations and the integration between QUIC transport state and TLS 1.3 handshake/key material. Frame encoding, packet construction, session/stream state, packet-number tracking, and TLS handshake processing are separate responsibilities.
 
-## 2. Model
+## 2. Data Model
 
-* [RFC 9000](https://datatracker.ietf.org/doc/html/rfc9000) [summary](rfc9000.md)
-* [RFC 9001](https://datatracker.ietf.org/doc/html/rfc9001) [summary](rfc9001.md)
-* [RFC 9369](https://datatracker.ietf.org/doc/html/rfc9369) [summary](rfc9369.md)
+### Packet-number spaces and protection
 
-#### RFC 9000
+QUIC packet numbers are tracked by QUIC packet-number space, not by TLS record sequence numbers or DTLS record epoch/sequence numbers.
+
+- **Initial space:** Initial packets and their packet numbers.
+- **Handshake space:** Handshake packets and their packet numbers.
+- **Application Data space:** 0-RTT and 1-RTT packet-number handling belongs to QUIC's application-data space, although the two packet types have different protection/acceptance rules.
+
+TLS record sequence numbers are implicit record-layer state; DTLS uses epoch plus record sequence number; QUIC carries a truncated packet number in its packet header and reconstructs it within the applicable packet-number space. These numbering schemes are not interchangeable.
+
+### Frame and packet
+
+A frame is a unit inside a QUIC packet. A packet adds packet type, connection IDs, packet-number encoding, and protection context around one or more frames. The packet publisher combines handshake/frame material with packet layout; packet/session code handles packet numbers and packet protection.
+
+### CRYPTO and TLS handshake
+
+QUIC's CRYPTO frame carries a byte range of TLS handshake data at a CRYPTO offset. It does not carry a TLS record. The TLS handshake parser consumes the reassembled CRYPTO byte stream as handshake messages, and the TLS key schedule supplies secrets that QUIC uses for packet protection.
+
+```text
+TLS handshake message bytes
+  -> QUIC CRYPTO frame (offset + data)
+  -> QUIC packet publisher
+  -> Initial / Handshake / 1-RTT packet
+  -> QUIC packet protection and UDP datagram
+
+incoming packet
+  -> packet protection / frame parsing
+  -> CRYPTO frame data and offset
+  -> reassembled TLS handshake bytes
+  -> TLS handshake/session state
+  -> key schedule updates QUIC protection keys
+```
+
+## 3. Behavior Model
+
+QUIC handshake processing coordinates two state machines: TLS determines handshake-message and key-schedule progress; QUIC determines packet-number space, packet protection, CRYPTO offsets, transport parameters, connection IDs, and stream state. A TLS status transition can make new keys available, but QUIC must install/use them in the correct packet-number space and packet type.
+
+The `quic_packet_publisher` constructs packets from handshake/frame material and is distinct from the UDP send operation. Its payload-size setting is a packet-construction limit informed by QUIC transport parameters, not the DTLS record publisher's fragment-size setting.
+
+## 4. Relationships
+
+- [Packet implementation](packet/README.md) — packet variants, headers, number and protection boundaries.
+- [Frame implementation](frame/README.md) — CRYPTO, STREAM, ACK and control frames.
+- `quic_packet_publisher.hpp/.cpp`, `quic_session.cpp`, `quic_streams.cpp`.
+- [QUIC packet publisher](../quic_packet_publisher.md) and [TLS session support](../session/README.md).
+- [TLS protection](../protection/README.md) — TLS 1.3 secrets and cryptographic operations.
+- `sdk/net/http/http3/` — HTTP/3 above QUIC streams.
+
+## 5. References
+
+- [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)
+- [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
+- [RFC 9369 — QUIC Version 2](https://www.rfc-editor.org/rfc/rfc9369)
+
+## 6. Developer Notes
+
+These notes retain the RFC handshake examples and TLS/QUIC interaction diagrams used while developing this area. They complement the implementation model above rather than defining another source-tree module.
+
+### RFC summaries
+
+- [RFC 9000](https://datatracker.ietf.org/doc/html/rfc9000) — [local summary](rfc9000.md)
+- [RFC 9001](https://datatracker.ietf.org/doc/html/rfc9001) — [local summary](rfc9001.md)
+- [RFC 9369](https://datatracker.ietf.org/doc/html/rfc9369) — [local summary](rfc9369.md)
+
+### RFC 9000
 
 ```
    Client                                                  Server
@@ -87,14 +149,14 @@ This document identifies the module or protocol area represented by this file.
          Figure 8: Use of Connection IDs in a Handshake with Retry
 ```
 
-#### RFC 9001
+### RFC 9001
 
 ```
    +------------+                               +------------+
    |            |<---- Handshake Messages ----->|            |
    |            |<- Validate 0-RTT Parameters ->|            |
    |            |<--------- 0-RTT Keys ---------|            |
-   |    QUIC    |<------- Handshake Keys -------|    TLS     |
+   |            |<------- Handshake Keys -------|            |
    |            |<--------- 1-RTT Keys ---------|            |
    |            |<------- Handshake Done -------|            |
    +------------+                               +------------+
@@ -140,7 +202,7 @@ This document identifies the module or protocol area represented by this file.
 
                                                  Handshake Received
                                                  Handshake Complete
-                                                Handshake Confirmed
+                                                 Handshake Confirmed
                                               Install rx 1-RTT keys
                         <--------------- 1-RTT
                               (HANDSHAKE_DONE)
@@ -149,30 +211,14 @@ This document identifies the module or protocol area represented by this file.
              Figure 5: Interaction Summary between QUIC and TLS
 ```
 
-#### implementation areas
+### Implementation areas
 
-* [frame](frame/README.md)
-* [packet](packet/README.md)
-* [TLS integration](../README.md)
+- [frame](frame/README.md)
+- [packet](packet/README.md)
+- [TLS integration](../README.md)
 
-#### related areas
+### Related areas
 
-* `sdk/net/http/http3/` - HTTP/3 above QUIC
-* `sdk/net/tls/` - TLS 1.3 handshake and key schedule used by QUIC
-* `sdk/crypto/` - packet protection cryptography
-
-## 3. Important behavior and lifetime
-
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
-
-## 4. Example from the source tests
-
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
-
-## 5. Relationships
-
-Related implementation areas and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Source references and related documents are retained here where available.
+- `sdk/net/http/http3/` — HTTP/3 above QUIC
+- `sdk/net/tls/` — TLS 1.3 handshake and key schedule used by QUIC
+- `sdk/crypto/` — packet-protection cryptography

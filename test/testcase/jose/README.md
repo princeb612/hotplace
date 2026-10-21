@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ — testcase assets and verification           │
 └──────────────────────────────────────────────┘
 ```
 
@@ -51,13 +52,13 @@ The `testcase_akp.cpp` implementation explicitly requires OpenSSL 3.5 for its ML
 
 ### 4.2 Documentation and verification status
 
-The supplied `testcase-reports.zip` records the JOSE suite in **MinGW64**, for **source revision 1104** as clarified by the maintainer. Its summary is:
+The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md). The associated run context supplied in the conversation is **Revision 1104 · MinGW64/GCC · CTest**; the report payload does not independently identify the tested source commit or exact build configuration. This is distinct from the current documentation basis, Revision 1105. Its JOSE summary is:
 
 | Report group | pass | expt | fail | skip | triv |
 |---|---:|---:|---:|---:|---:|
 | JOSE total | 295 | 0 | 0 | 0 | 2 |
 
-The report's RFC 7515 group records `success 34, triv 2`; RFC 7520 records `success 164`, and RFC 8037 records `success 30`. The terms `expt` and `triv` are reproduced without inferring framework semantics. These are supplied report results, not a new test run performed during documentation work.
+The report's RFC 7515 group records `success 34, triv 2`; RFC 7520 records `success 164`, and RFC 8037 records `success 30`. The terms `expt` and `triv` are reproduced without inferring framework semantics. These are supplied report results, not a new test run performed during documentation work. Preserve this snapshot until a newer, revision-associated report is supplied.
 
 ## 5. Relationships
 

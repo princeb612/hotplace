@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -15,8 +16,7 @@
 
 Describes conversion between encoded CBOR data and the project’s object representation.
 
-## 2. Model
-
+## 2. Data Model
 ### Role
 
 `cbor_reader` and `cbor_encode` provide the binary boundary of the CBOR implementation.
@@ -104,8 +104,7 @@ cbor_object / reader context
 
 This keeps callers from having to operate the low-level encoder directly for common object-tree publication.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Definite and indefinite lengths
 
 The implementation recognizes the indefinite-length forms for:
@@ -119,12 +118,11 @@ These use the CBOR break marker to terminate the logical sequence.
 
 The reader therefore has to maintain container context while processing nested data.
 
-## 4. Example from the source tests
+### Example: vector input through the reader
 
-The relevant test sources are listed below; this document does not invent a standalone example.
+A vector-driven round trip is the clearest trace: encoded bytes become an object tree and are then published back to bytes. Keep byte-level decoding/encoding separate from logical value assertions and diagnostic rendering. This documentation update did not execute the tests.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Test relationship
 
 The main implementation evidence is under:
@@ -142,6 +140,3 @@ The test vectors provide encoded/decoded CBOR examples while the RFC-oriented te
 - `cbor_publisher.*`
 - `cbor.hpp`
 
-## 6. References
-
-- Source: this module and its related testcase directory (Revision 1104).

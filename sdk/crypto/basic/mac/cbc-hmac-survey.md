@@ -1,21 +1,9 @@
-## Publication
+# Developer Notes — CBC-HMAC Construction Survey
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
-```
-# CBC-HMAC survey
+## Purpose and scope
+This is a developer study note, not a module reference. Its value is the side-by-side comparison of TLS MAC-then-encrypt (MtE), TLS encrypt-then-MAC (EtM), and JOSE AES-CBC-HMAC processing. It records why the authenticated bytes, tag placement, and composition order differ even when the broad ingredients are CBC and HMAC. Use it to understand the legacy construction and its test vectors, not as a generic recipe for designing a new protocol.
 
-## 1. Role
-
-This document identifies the module or reference topic represented by this file.
-
-## 2. Model
-
+## Comparison retained for implementation study
 #### CBC-HMAC survey
 
 | specification            | type | tag              | example                                                  |
@@ -117,18 +105,22 @@ This document identifies the module or reference topic represented by this file.
     * EtM protected
       * ciphertext := CBC-ENCRYPT(enckey, IV, 16bytes || content || pad1)
 
-## 3. Important behavior and lifetime
+## Interpretation notes
+The main comparison is the placement and authentication boundary: JOSE's AES-CBC-HMAC construction authenticates associated data, IV and ciphertext with a separated tag; TLS MtE authenticates the sequence/header/plaintext context before encrypting the combined plaintext/tag/padding; TLS EtM authenticates the encrypted record representation before decryption. Exact length encoding, sequence-number inputs, padding, and tag truncation depend on the protocol specification.
 
-Implementation behavior is documented only to the extent supported by the retained notes and source references.
+## Related implementation and test sources
+### Source-test evidence
 
-## 4. Example from the source tests
+`test/testcase/crypto/crypt/testvector_cbc_hmac_jose.cpp` and `testvector_cbc_hmac_tls.cpp` are the corresponding vector-driven source paths. Compare their expected MAC input, ciphertext, and tag values with the table above; the study table itself is not an assertion that every listed combination passed.
 
-See the referenced testcase source files for concrete examples. A source reference alone does not prove runtime execution.
+- `crypto_cbc_hmac.cpp` — hotplace's combined CBC-HMAC operation
+- `../crypt/` — cipher/AEAD primitives
+- `sdk/crypto/jose/` — JOSE AES-CBC-HMAC content encryption
+- `sdk/net/tls/protection/` — TLS record protection and EtM behavior
 
-## 5. Relationships
-
-Related implementation modules and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Relevant source paths, sibling documentation, and standards references are retained here where available.
+- `sdk/crypto/basic/mac/crypto_cbc_hmac.cpp`
+- `test/testcase/crypto/crypt/testvector_cbc_hmac_jose.cpp`
+- `test/testcase/crypto/crypt/testvector_cbc_hmac_tls.cpp`
+## External references
+- RFC 7516 Appendix B — JOSE AES-CBC-HMAC example
+- RFC 7366 — Encrypt-then-MAC for TLS and DTLS

@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,9 +13,9 @@
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+This document records the session-level receive-side ordering adapter that turns possibly reordered UDP datagrams into the next expected DTLS record for the shared TLS/DTLS session path.
 
-## 2. Model
+## 2. Data Model
 
 ### Identity
 
@@ -58,7 +59,7 @@ The internal pool is keyed by a cookie derived from the peer address. Each peer 
 - `consume(addr, addrlen, epoch, seq, bin)` additionally exposes the record position.
 - `make_epoch_seq()` and `get_epoch_seq()` encode/decode the 16-bit epoch and 48-bit sequence into an ordered key.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Reordering behavior
 
@@ -82,12 +83,19 @@ Records older than the current `(epoch, sequence)` are treated as retransmission
 
 When a ChangeCipherSpec record is consumed, the expected epoch advances and the sequence number is reset. Otherwise the next expected sequence is incremented.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
 
-## 5. Relationships
 
+- `dtls_record_arrange.hpp`
+- `session/dtls_record_arrange.cpp`
+- `test/testcase/tls/testcase_dtls_record_arrange.cpp`
+- `test/testcase/tls/testcase_construct_dtls12_1.cpp`
+- `test/testcase/tls/testcase_construct_dtls12_2.cpp`
+- [TLS/DTLS/QUIC overview](README.md)
+- [TLS session support](session/README.md)
+- [DTLS record publisher](dtls_record_publisher.md)
+- [Network session model](../server/network_session.md)
 ### Session relationship
 
 ```text
@@ -105,12 +113,7 @@ tls_session
 
 The class is concerned with **receive-side ordering**. It does not construct DTLS handshake fragments; that responsibility belongs to `dtls_record_publisher`.
 
-## 6. References
+## 5. References
 
-### Related source and tests
-
-- `dtls_record_arrange.hpp`
-- `session/dtls_record_arrange.cpp`
-- `test/testcase/tls/testcase_dtls_record_arrange.cpp`
-- `test/testcase/tls/testcase_construct_dtls12_1.cpp`
-- `test/testcase/tls/testcase_construct_dtls12_2.cpp`
+- [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
+- [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)

@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,7 +13,6 @@
 
 ## 1. Role
 
-### Role
 
 The TLS implementation separates protocol messages from the state that makes those messages secure and usable over a transport.
 
@@ -36,7 +36,7 @@ session / transport integration
 
 This boundary is important when reading the source: a handshake class describes a protocol message, while `tls_protection` calculates or applies the cryptographic state needed to protect that message or record.
 
-## 2. Model
+## 2. Data Model
 
 ### Protection
 
@@ -76,8 +76,8 @@ socket / network stream
         ▼
       session
         │
-   ┌────┼───────────────┐
-   ▼    ▼               ▼
+   ┌────┼────────────────┐
+   ▼    ▼                ▼
  TLS   DTLS            QUIC
    │    │                │
    ▼    ▼                ▼
@@ -88,24 +88,26 @@ records / handshake / protection
 
 The session area also contains SSLKEYLOG import/export helpers. These are useful for external packet-analysis workflows because the key material can be associated with captured traffic without making the packet capture itself part of the TLS object model.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+Protection and session state span multiple messages. Transcript hashes evolve as handshake messages are processed; key schedule outputs depend on protocol version and handshake branch; record/packet encryption consumes the resulting protection context. Do not treat a test of one TLS 1.2 AEAD record as evidence of TLS 1.3 key-schedule coverage, or vice versa.
 
-## 4. Example from the source tests
+Session-owned DTLS/QUIC helpers are transport-specific. DTLS record publishing/arrangement addresses record fragmentation/order, while QUIC packet publication operates on QUIC packets and frames. SSLKEYLOG data is sensitive traffic-secret material and should be handled as a secret, even when used only for packet analysis.
 
-### Related tests
+## 4. Relationships
 
-- `testcase_tls12_aead.cpp`
-- `testcase_rfc8448_2.cpp`
-- `testcase_rfc8448_5.cpp`
-- `testcase_rfc8448_6.cpp`
-- `testcase_rfc8448_7.cpp`
-- `testcase_pre_master_secret.cpp`
-- `testcase_dtls_record_arrange.cpp`
 
-## 5. Relationships
 
+- `protection/tls_protection*.cpp`
+- `session/tls_session.cpp`, `session/dtls_record_arrange.cpp`, `session/dtls_record_publisher.cpp`
+- `session/quic_packet_publisher.cpp`, `session/quic_session.cpp`, `session/quic_streams.cpp`
+- `session/sslkeylog_exporter.cpp`, `session/sslkeylog_importer.cpp`
+- [TLS protection overview](protection/README.md)
+- [TLS session overview](session/README.md)
+- [TLS/DTLS/QUIC overview](README.md)
+- [TLS message model](tls-message-model.md)
+- [TLS advisor](tls_advisor.md)
+- [QUIC/TLS integration](quic-tls-integration.md)
 ### Related areas
 
 - `../basic/` — socket and OpenSSL transport adapters
@@ -113,6 +115,8 @@ Implementation details and behavior are described where the existing source-tree
 - `../quic/` — QUIC packet/frame implementation
 - `sdk/crypto/` — underlying HKDF, HMAC, AEAD and signature/key operations
 
-## 6. References
+## 5. References
 
-Source references and related documents are retained here where available.
+- [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
+- [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
+- [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

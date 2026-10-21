@@ -3,33 +3,61 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — visitor responsibilities and selection     │
 └──────────────────────────────────────────────┘
 ```
-# Readme
+
+# ASN.1 Visitors
 
 ## 1. Role
 
-The module identity is described by the implementation notes retained below.
+The visitors separate operations on ASN.1 objects from the semantic classes themselves. They are not interchangeable traversal strategies: each has a different output or purpose. Choose one based on whether you need to walk objects, inspect their structure, render notation, encode DER, or evaluate constraints.
 
-## 2. Model
+## 2. Data Model
 
-The existing implementation notes are retained below; see the references for the concrete source files.
+| Visitor | Input / context | Result or purpose | Use it when |
+|---|---|---|---|
+| `asn1_visitor` | An `asn1_object*` and optional `asn1_module` | Calls a supplied callback while recursively visiting tagged types, referenced definitions, constructed components, and `SEQUENCE OF` / `SET OF` element types | You need a callback-driven walk over a schema, including resolving references through a module |
+| `asn1_ast_visitor` | A `const asn1_object*` | Builds a `t_tree<asn1_ast_descriptor>` containing descriptive syntax/detail/constraint fields | You need a separate inspectable tree for debugging or AST-style display |
+| `asn1_notation_visitor` | An output `stream_t*`, optionally with a value | Emits ASN.1 notation-style text from semantic objects | You need to represent or inspect the schema as notation |
+| `asn1_der_visitor` | Output `binary_t*`, module context, optionally a value | Produces DER bytes from semantic objects and their values | You need the binary encoding path; this is not a notation renderer |
+| `asn1_constraint_visitor` | An `asn1_constraint_t*` | Abstract dispatch interface for constraint-specific operations | You are implementing a new operation over constraint nodes |
+| `asn1_constraint_notation_visitor` | Constraint, owning ASN.1 object, output stream, optional value | Renders constraint notation | You need to print constraint expressions rather than evaluate them |
+| `asn1_constraint_evaluator<T>` | Constraint nodes of type `T` | Evaluates constraints into a `t_set_runtime<T>` allowed-value set | You need a runtime set for membership/constraint validation |
 
-## 3. Important behavior and lifetime
+The first four operate on ASN.1 semantic objects or produce representations of them. The constraint visitor family operates on constraint expressions and should not be confused with general schema traversal.
 
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+## 3. Behavior Model
 
-## 4. Example from the source tests
+The practical selection rule is:
 
-No dedicated source-test example was documented in the existing notes. See the linked test sources, where present.
+- **Walk and run a callback:** use `asn1_visitor`. A referenced type may be resolved through the supplied `asn1_module`; without the module, that resolution step is unavailable.
+- **Build a separate descriptive tree:** use `asn1_ast_visitor`. It describes the existing object graph; it is not the parser's `parse_tree`.
+- **Render schema notation:** use `asn1_notation_visitor`.
+- **Encode a value:** use `asn1_der_visitor`, which has binary output and module/value context.
+- **Render a constraint:** use `asn1_constraint_notation_visitor`.
+- **Evaluate a constraint:** use `asn1_constraint_evaluator<T>` and inspect its runtime result set.
 
-## 5. Relationships
+`asn1_object::publish(stream_t*)` and `publish(binary_t*)` select the notation and DER paths respectively. The constraint evaluator is a different operation; it produces an allowed-value set rather than encoded output.
 
-Related modules and boundaries are recorded below where identified in the existing notes.
+## 4. Relationships
 
-## 6. References
+- [ASN.1 visitor architecture](../asn1-visitor.md) — visitor family in the context of the semantic model.
+- [ASN.1 object model](../asn1-object-model.md) — objects visited and published.
+- [Structural node model](../asn1-node.md) — structural TLV tree, distinct from semantic-object visitors.
+- `../semantic/constraints/` — constraint representation and evaluation.
+- `../../runtime/` — module lookup and publisher/runtime integration.
+- `test/testcase/asn.1/testcase_basic2.cpp`, `testcase_basic3.cpp`, `testcase_constraints.cpp`, and `testvector_der.cpp` — source-level examples for semantic construction, constraints, and DER paths.
 
-Source references and related documents are retained below where available.
+### Implementation source navigation
+
+- `asn1_visitor.hpp/.cpp`
+- `asn1_ast_visitor.hpp/.cpp`
+- `asn1_notation_visitor.hpp/.cpp`
+- `asn1_der_visitor.hpp/.cpp`
+- `asn1_constraint_visitor.hpp`
+- `asn1_constraint_notation_visitor.hpp/.cpp`
+- `asn1_constraint_evaluator.hpp`

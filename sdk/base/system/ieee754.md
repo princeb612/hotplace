@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -29,7 +30,9 @@ The implementation deals with the following representation widths:
 
 It can classify values and expose the sign, exponent, and mantissa information used by IEEE 754 representations.
 
-## 2. Model
+`long double` is not currently handled by the conversion/classification API. C++ does not require `long double` to use one universal storage format: its width, precision, and representation vary across compiler, runtime/library, ABI, and platform combinations. Treating it as a fixed IEEE binary format would require an explicit platform-specific contract; the current implementation limits concrete conversion support to the formats listed below.
+
+## 2. Data Model
 
 ### Value classification
 
@@ -58,6 +61,8 @@ IEEE 754 values are interpreted through their fundamental fields:
 
 The exact field widths depend on the selected format. The implementation exposes exponent/significand-related information through its IEEE 754 helper functions.
 
+## 3. Behavior Model
+
 ### Format conversion
 
 The implementation provides conversions including:
@@ -68,21 +73,7 @@ fp32  <-> fp16
 fp64  <-> fp16 / related native conversions
 ```
 
-The source also provides helpers for converting values when a smaller representation is sufficient.
-
-`ieee754_as_small_as_possible()` examines a native floating-point value and selects the smallest supported representation that can represent the value according to the implementation's conversion rules.
-
-### Implementation
-
-Main files:
-
-- `sdk/base/system/ieee754.hpp`
-- `sdk/base/system/ieee754.cpp`
-
-The implementation is concerned with binary representation and conversion, not arbitrary-precision arithmetic.
-
-## 3. Important behavior and lifetime
-
+The source also provides helpers for converting values when a smaller representation is sufficient. `ieee754_as_small_as_possible()` examines a native floating-point value and selects the smallest supported representation according to the implementation's conversion rules.
 ### Tests
 
 Primary test:
@@ -95,11 +86,7 @@ The testcase covers fp16/fp32/fp64 conversion as well as representation classifi
 
 This is a low-level system utility supporting representation inspection and floating-point format conversion. It is not intended to replace the exact arithmetic types documented in `floating_point.md`.
 
-## 4. Example from the source tests
-
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
+## 4. Relationships
 
 ### Relationship to `floating_point`
 
@@ -117,8 +104,4 @@ The two facilities solve different problems:
         bignumber                  fp16/fp32/fp64
 ```
 
-Use `floating_point` when exact decimal/rational arithmetic is the concern. Use `ieee754` when the binary representation or IEEE 754 classification of a native floating-point value is the concern.
-
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.
+Use `floating_point` when exact decimal/rational arithmetic is the concern. Use `ieee754` when the binary representation or IEEE 754 classification of a native floating-point value is the concern. The implementation is in `ieee754.hpp/.cpp`; `nostd/binary.hpp` uses its representation conversion, and `testcase_ieee754.cpp` covers classification/conversion cases.

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -15,7 +16,7 @@
 
 `obfuscate_string` is a lightweight runtime string-obfuscation wrapper. It is intended to transform how string bytes are stored in the object, not to provide cryptographic confidentiality.
 
-## 2. Model
+## 2. Data Model
 
 The implementation stores bytes transformed using an instance-specific factor. When converting or writing the value into supported output forms, the data is reconstructed. The testcase exercises output into `binary_t` and `std::string`, equality after construction, and append/equality behavior.
 
@@ -31,7 +32,9 @@ obfuscate_string (transformed internal bytes)
 
 This is obfuscation rather than encryption: it should not be used to protect secrets against an attacker who can inspect the program or its runtime state.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
+
+The runtime wrapper supports conversion to `binary_t` and `std::string`, comparison, and append operations. The testcase initializes it with `hello world` and compares the recovered output bytes with the original character array.
 
 ### Tests
 
@@ -39,22 +42,7 @@ This is obfuscation rather than encryption: it should not be used to protect sec
 - Function: `test_string_obfuscate_string()`
 - Test analysis and execution report: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
 
-## 4. Example from the source tests
-
-### Example from the testcase
-
-`test_string_obfuscate_string()` initializes the wrapper from a character array containing `hello world`, writes it to `binary_t` and `std::string`, and compares the recovered bytes with the original array. It also compares two wrappers and exercises append behavior.
-
-## 5. Relationships
+## 4. Relationships
 
 - [Compile-time obfuscation](constexpr-obfuscation.md) documents a separate C++14+ facility.
-- The module remains part of `sdk/base/string`; it is not the project's cryptographic API.
-
-## 6. References
-
-- `sdk/base/string/obfuscate_string.hpp`
-- `sdk/base/string/obfuscate_string.cpp`
-
-### Source basis
-
-Edition 1 · Revision 1104
+- The module remains part of `sdk/base/string`; it is not the project's cryptographic API. The runtime implementation is in `obfuscate_string.hpp/.cpp`.

@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 Its important role in hotplace is not to implement a third kind of set. It selects the appropriate concrete set implementation and exposes one common operation surface to callers such as the ASN.1 constraint evaluator.
 
-## 2. Model
+## 2. Data Model
 
 ### Concrete representation
 
@@ -44,7 +45,7 @@ The selection is made at compile time with `std::conditional`:
 
 The public interface therefore lets the evaluator work with `insert`, `insert_range`, `erase`, `union_with`, `intersect_with`, `erase_from`, `invert`, and membership queries without knowing which concrete set is underneath.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Why this layer exists
 
@@ -123,11 +124,7 @@ The common runtime façade is exercised together with both concrete implementati
 
 The test covers `t_set_runtime<int>`, `t_set_runtime<double>`, and `t_set_runtime<std::string>`, including union, subtraction, intersection, range operations, and membership.
 
-## 4. Example from the source tests
-
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
+## 4. Relationships
 
 ### Relationship with the lower-level sets
 
@@ -142,8 +139,6 @@ See [range_set](range_set.md).
 Used for `std::string`. In addition to literal membership and string ranges, it supports `FROM`-style substring checks and regular-expression matching.
 
 See [string_set](string_set.md).
-
-## 6. References
 
 ### Source-level evaluator boundary
 
@@ -165,9 +160,5 @@ range_set  string_set
 
 The `nostd` layer knows how to construct and combine sets. The ASN.1 visitor layer decides what a `UNION`, `INTERSECTION`, `EXCEPT`, `ALL EXCEPT`, `SIZE`, `FROM` or other supported constraint means.
 
-### Related source
 
-- `sdk/base/nostd/set.hpp`
-- `sdk/base/nostd/range_set.hpp`
-- `sdk/base/nostd/string_set.hpp`
-- `sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.hpp`
+The facade is implemented in `set.hpp`; its numeric backend is `range_set.hpp`, and its string backend is `string_set.hpp`. The ASN.1 visitor connects to the facade through `asn1_constraint_evaluator.hpp`.

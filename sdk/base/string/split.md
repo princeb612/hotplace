@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -15,7 +16,7 @@
 
 `split.hpp/.cpp` implements delimiter-based splitting into fragments that can be retrieved individually or visited through callbacks. The API is a context-based alternative to repeatedly writing delimiter scans at each call site.
 
-## 2. Model
+## 2. Data Model
 
 `split_context_t` owns a copy of the input in `source` and records each fragment as a `{begin, length}` pair in `info`. It does not store a separate `std::string` for every fragment at initialization; `split_get()` or callback iteration materializes fragment strings/data when requested.
 
@@ -35,7 +36,7 @@ split_context_t
      split_end()
 ```
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### API flow
 
@@ -47,25 +48,8 @@ split_context_t
 
 The callback templates check for a null context and return `invalid_parameter`. Callers should still follow the API's begin/use/end lifecycle.
 
-## 4. Example from the source tests
-
-### Example from the testcase
-
-`test_string_split()` splits a colon-delimited list of TLS cipher-suite names, obtains the count, retrieves each fragment into a `binary_t`, prints each fragment, and calls `split_end()`.
-
-The current testcase ends with `assert(true, ...)`; that assertion records execution of the case but does not independently compare the resulting fragments with an expected list. See [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md).
-
-## 5. Relationships
+## 4. Relationships
 
 - General scanning and token helpers are documented in [string.md](string.md).
 - `sdk/base/stream/splitter.hpp` is a different API: it segments byte inputs into groups/segments and supports descriptor callbacks.
-- The test source is `test/testcase/base/string/testcase_string.cpp`, function `test_string_split()`.
-
-## 6. References
-
-- API and context structure: `sdk/base/string/split.hpp`
-- Implementation: `sdk/base/string/split.cpp`
-
-### Source basis
-
-Edition 1 · Revision 1104
+- The API/context is declared in `split.hpp` and implemented in `split.cpp`. The test source is `test/testcase/base/string/testcase_string.cpp`, function `test_string_split()`.

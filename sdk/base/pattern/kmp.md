@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -13,42 +14,43 @@
 
 ## 1. Role
 
-`kmp.hpp` implements single-pattern searching using the Knuth–Morris–Pratt algorithm. Unlike Aho-Corasick, it searches for one pattern per invocation rather than matching a set of patterns through one automaton.
+`t_kmp` searches for one pattern in a sequence. It avoids restarting the text scan at every mismatch by retaining how much of the pattern can still match.
 
-## 2. Model
+## 2. Data Model
 
-```text
-text + pattern
-      |
-      v
-prefix/failure information
-      |
-      v
-scan without restarting from the beginning after each mismatch
-      |
-      v
-match position or no-match result
-```
+- `T` is the source/pattern element type.
+- `comparator_t` determines whether two elements are equivalent. A custom comparator is useful when input elements are objects or pointers and comparison should use a field rather than pointer identity.
+- `_pattern` stores the learned pattern.
+- `_failure` stores the prefix/failure table used to reuse a matching prefix after a mismatch.
+- `npos` is `size_t(-1)`, the not-found result.
 
-The precise return convention and type-specific behavior should be read from the overload used by the caller.
+The comparator is retained by the matcher and used both when building the failure table and when scanning the source.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-No additional behavior or lifetime note was separately identified in the existing document.
+**`learn(pattern)`**
 
-## 4. Example from the source tests
+Copies the pattern into the matcher and builds `_failure`. Each entry records how much of the already-matched prefix can be reused when the next comparison fails. The table is reusable across multiple searches for the same pattern.
 
-### Example from source tests
+**`search(data)`**
 
-`testcase_kmp.cpp` checks byte-oriented matching and generic element types, including a custom struct and a pointer type with a comparator. The expected match position in these cases is asserted to be `0xa`.
+Scans the source while tracking the current pattern position. On a match, both positions advance. On a mismatch with a nonzero pattern position, the matcher jumps to the reusable prefix specified by `_failure`; it does not move the source position backward. If the mismatch occurs at pattern position zero, the source position advances.
 
-## 5. Relationships
+Returns the starting index of the first occurrence, or `npos` when no occurrence is found.
 
-- `sdk/base/pattern/kmp.hpp`
-- `test/testcase/base/pattern/testcase_kmp.cpp`
-- `test/testcase/base/pattern/testvector_kmp.cpp`
-- `test/testcase/base/pattern/testvector_kmp.yml`
+**`search(data, pattern, pos)`**
 
-## 6. References
+Learns the supplied pattern and searches the source beginning at `pos`. The `pos` value is a source offset, not a pattern offset.
 
-Implementation and test paths are retained in the sections above or the source tree.
+The intended time complexity is (O(n+m)) for source length (n) and pattern length (m), including failure-table construction. Callers should provide a non-empty pattern rather than relying on unspecified empty-pattern behavior.
+
+## 4. Relationships
+
+- `pattern.hpp` — shared element-access conventions; KMP's equality comparator is specific to `t_kmp`. The implementation is in `kmp.hpp`.
+- `test/testcase/base/pattern/testcase_kmp.cpp` — asserts match index `0xa` for byte vectors, contiguous memory, value objects and pointer objects with a custom comparator.
+- `test/testcase/base/pattern/testvector_kmp.cpp` and `testvector_kmp.yml` — additional vector-driven cases.
+- `sdk/io/parser/` — related parser pattern-search APIs, but not the same class as `t_kmp`.
+
+## 5. References
+
+- *Data Structures & Algorithms*, Section 12.3.3, “The Knuth–Morris–Pratt Algorithm” — the source header cites this section for the failure-function and linear-time matching algorithm.

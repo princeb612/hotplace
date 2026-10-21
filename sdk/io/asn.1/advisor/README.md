@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,10 +13,9 @@
 
 ## 1. Role
 
-The module identity is described by the implementation notes retained below.
+`sdk/io/asn.1/advisor` is the shared ASN.1 lookup/provider layer. It owns entity/class/tagging-mode dictionaries and prepares the parser/publisher providers used by the ASN.1 notation and runtime paths; it does not itself perform all parsing or semantic publication.
 
-## 2. Model
-
+## 2. Data Model
 ### Responsibilities
 
 ```text
@@ -115,11 +115,8 @@ load_resource()
 
 The naming `load_resource()` is retained internally because the advisor still materializes static ASN.1 resource tables. The externally visible component identity is nevertheless `asn1_advisor`.
 
-## 3. Important behavior and lifetime
-
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
-
-## 4. Example from the source tests
+## 3. Behavior Model
+`get_instance()` calls `load_resource()`, which populates the dictionaries and prepares provider objects under a lock. The advisor retains these resources through its singleton lifetime. The current `asn1_parser` path selects the imported GLR parser, while other prepared parser instances remain available through the advisor; do not assume every prepared provider is selected by every caller.
 
 ### Related tests
 
@@ -130,15 +127,15 @@ No separate lifetime or behavior contract was stated in the existing notes beyon
 
 The tests normally reach advisor functionality through parser, publisher, runtime, and loader operations rather than treating the advisor as an independent application-level API.
 
-## 5. Relationships
+## 4. Relationships
+- `../runtime/asn1_parser.*` — parser entry point that uses advisor-provided parser providers.
+- `../runtime/asn1_publisher.*` — publication/semantic reconstruction.
+- `../../parser/` — LALR(1)/GLR parser implementations.
+- `../basic/` — ASN.1 entity/type and tagging model.
+- `test/testcase/asn.1/` — parser, loader and publisher tests that indirectly exercise the advisor.
 
-Related modules and boundaries are recorded below where identified in the existing notes.
-
-## 6. References
-
-### Related source
-
-- `sdk/io/asn.1/asn1_advisor.hpp`
+### Implementation source navigation
+- `asn1_advisor.hpp`
 - `sdk/io/asn.1/advisor/asn1_advisor.cpp`
 - `sdk/io/asn.1/runtime/asn1_publisher.*`
 - `sdk/io/asn.1/runtime/asn1_parser.*`

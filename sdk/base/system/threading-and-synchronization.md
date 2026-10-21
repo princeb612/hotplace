@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -17,7 +18,7 @@
 
 `sdk/base/system` provides a small cross-platform abstraction over the thread and synchronization primitives used by hotplace.
 
-## 2. Model
+## 2. Data Model
 
 ### Platform abstraction
 
@@ -49,7 +50,7 @@ critical_section_t
 
 This is deliberately narrow: it is a compatibility utility for the project's C++11/older-platform target, not a general atomic programming framework.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Signal-and-wait thread group
 
@@ -78,14 +79,10 @@ The corresponding test creates four workers, verifies the maximum-concurrency fa
 
 The higher-level `signalwait_threads` behavior is the main project-specific part; the platform classes are primarily compatibility layers.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
-
-Related components and cross-module links are listed in References where available.
-
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.
+- `sdk/base/system/atomic.hpp` — compiler-specific increment/decrement primitives used by reference-counting code.
+- `sdk/base/system/shared_instance.hpp` — project-specific shared ownership and reference-count lifetime.
+- `sdk/base/system/signalwait_threads.hpp/.cpp` — worker-group orchestration built on threads and semaphores.
+- `sdk/base/system/linux/` and `sdk/base/system/windows/` — platform implementations selected by the public headers.
+- `test/testcase/base/system/testcase_signalwait_threads.cpp` — source-level test for worker capacity, signaling, waiting, and termination.

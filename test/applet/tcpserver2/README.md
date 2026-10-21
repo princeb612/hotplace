@@ -1,11 +1,74 @@
+## Publication
+
+```text
+hotplace source tree
+Edition 2 · Revision 1105
+Source basis: working source tree aligned to Revision 1105
+Documented with GPT-6
+Scope: runnable TCP server applet
+```
+
 # Network-server-integrated TCP server applet
 
-`tcpserver2` demonstrates TCP handling through the higher-level `network_server` path rather than the direct multiplexer-oriented pattern in `tcpserver1`.
+## 1. Role
 
-## Behavior and sources
+`tcpserver2` is the TCP echo-server example built on hotplace's higher-level `network_server` abstraction. Compared with `tcpserver1`, it delegates socket event-loop and session coordination to the network-server layer and demonstrates an accept-policy callback through `ipaddr_acl`.
 
-- `run_server.cpp` defines an `ipaddr_acl` and checks the accepted peer address through `acl.determine()` in the accept handler.
-- `sample.cpp` provides shared applet setup.
-- `CMakeLists.txt` defines the build target.
+It remains a plain TCP applet: it does not implement TLS or HTTP.
 
-This applet is useful for comparing the low-level event-loop example (`tcpserver1`) with a network-server integration and address-policy hook. It is not itself the TLS/HTTP applet; those follow later in the repository's example progression.
+## 2. Model
+
+### Server setup and callback flow
+
+```text
+echo_server()
+    ├── configure ipaddr_acl whitelist
+    │     ├── 127.0.0.1
+    │     └── ::1
+    ├── open network_server for AF_INET and AF_INET6
+    ├── register accept_handler on both contexts
+    ├── start consumer loops and event loops
+    │
+    ▼
+consumer_routine
+    ├── mux_connect    → log connection
+    ├── mux_read       → log and send bytes to peer socket
+    └── mux_disconnect → log disconnect
+    │
+    ▼
+remove .run marker → break loops → close contexts
+```
+
+The accept handler calls `acl.determine(client_addr, result)` and sets `CONTINUE_CONTROL` or `STOP_CONTROL` based on the whitelist decision. The example registers loopback addresses, so the policy is deliberately restrictive for local testing.
+
+## 3. Important behavior and lifetime
+
+- The server opens IPv4 and IPv6 listener contexts on the configured port and registers the same accept-control policy for both.
+- `server_conf` controls event/network/consumer concurrency; the source comments note that the concurrent-event setting is relevant to Linux epoll concerns and ignored on Windows.
+- The callback receives a `netsocket_t` event object and the data buffer. In the read case it writes the bytes back through the event socket; the code is a simple echo path, not a framed application protocol.
+- The `.run` marker controls the lifetime of the applet. On shutdown the event and consumer loops are broken and both network contexts are closed.
+
+The loopback whitelist is an example access policy, not a general firewall or a complete address-ACL test. A successful echo does not establish behavior for every IPv4/IPv6 address or backend.
+
+## 4. Example from the source
+
+Start the applet with the configured port, then connect from loopback and send a short payload. The source path to follow is `echo_server` → ACL setup → `network_server.open` for each address family → `accept_handler` → `consumer_routine(mux_read)`. The read callback logs and sends the received bytes back to the socket.
+
+The exact executable and command-line defaults come from `sample.cpp` and the active build. This documentation update did not run a live client/server test.
+
+## 5. Relationships
+
+- [Low-level TCP server](../tcpserver1/README.md) — direct multiplexer/event-context handling.
+- [TLS server](../tlsserver/README.md) — secure stream integration.
+- [Network-server implementation](../../../sdk/net/server/README.md) — event loops, accept control and session management.
+- [IP address ACL](../../../sdk/net/basic/README.md) — address-policy implementation.
+
+## 6. References
+
+- `run_server.cpp` — ACL callback, event callback, listener setup and loop shutdown.
+- `sample.cpp`, `sample.hpp` — applet options and shared setup.
+- `CMakeLists.txt` — executable target.
+
+## 7. Developer Notes
+
+The source's whitelist currently permits `127.0.0.1` and `::1`. If this applet is adapted for non-loopback tests, update the rule set intentionally and test both address families; do not quietly treat the local-only policy as a production access-control default.

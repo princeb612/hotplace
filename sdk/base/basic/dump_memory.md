@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 The formatter writes to `stream_t` and normally produces a 16-byte-per-line view containing an address, hexadecimal bytes, and printable ASCII characters.
 
-## 2. Model
+## 2. Data Model
 
 ### Input types
 
@@ -34,7 +35,7 @@ Overloads cover raw memory as well as common hotplace data types, including:
 
 This makes the function a common diagnostic entry point rather than a formatter limited to one buffer class.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Formatting controls
 
@@ -57,37 +58,11 @@ Memory dumps appear throughout protocol, TLS, QUIC, DTLS, crypto, certificate, a
 
 `test/testcase/base/basic/testcase_dumpmemory.cpp`
 
-The testcase exercises the formatter and its supported representations. Logger and buffer-I/O code also use the same dump facility.
+The testcase holds the text input constant while varying hexadecimal width, indentation, and displayed base address, then exercises `hdump()` with a label and string input. Logger and buffer-I/O code also use the same dump facility.
 
-## 4. Example from the source tests
-
-### Test walkthrough
-
-`test/testcase/base/basic/testcase_dumpmemory.cpp` calls a small helper with the same text buffer and varies the hexadecimal width, indentation, and displayed base address. It then exercises `hdump()` with a label and string input.
-
-```text
-same input bytes
-   ├── dump(..., hex_part=16)
-   ├── dump(..., hex_part=32)
-   ├── dump(..., indent=4)
-   └── dump(..., rebase=0x1000)
-```
-
-This test is valuable because the input remains constant while formatting parameters change. It isolates presentation behavior from byte-content changes. For binary protocol debugging, compare the dump with the original buffer and remember that `rebase` changes the displayed address, not the memory pointer.
-
-## 5. Relationships
+## 4. Relationships
 
 - `logger_dump.cpp` connects the formatter to the logger's configured output path.
 - `binary_t`, `basic_stream`, and `variant` provide supported input representations; the dump utility renders their bytes for inspection.
 - Formatting output is diagnostic text, not a canonical serialization format.
-
-## 6. References
-
-### Related source and consumers
-
-- `sdk/base/basic/dump_memory.hpp/.cpp`
-- Test: `test/testcase/base/basic/testcase_dumpmemory.cpp`
-- Related output path: `sdk/base/unittest/logger_dump.cpp`
-
-`dump_memory` performs the formatting; logger APIs decide where the formatted diagnostic output is sent.
-
+- `dump_memory.hpp/.cpp` implement the formatter; `logger_dump.cpp` connects it to the logger's configured output path. `testcase_dumpmemory.cpp` covers the formatter, while logger APIs decide where the rendered diagnostic text is sent.

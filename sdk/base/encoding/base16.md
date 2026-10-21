@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -19,7 +20,7 @@
 
 The public API accepts common hotplace data types such as `std::string`, `binary_t`, `basic_stream`, and raw byte buffers. It can also write through `encoder_stream_traits`, allowing the same implementation to target different stream-like containers.
 
-## 2. Model
+## 2. Data Model
 
 ### Main operations
 
@@ -41,7 +42,7 @@ The low-level implementation lives under `lowlevel/base16.*`; `base16.*` provide
 
 The Base16 stream path is exercised by the encoding testcase with deliberately different chunk boundaries.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### RFC-style helper
 
@@ -76,21 +77,15 @@ The testcase covers:
 
 The RFC cases are particularly useful as executable examples of the distinction between the normal Base16 API and the project's RFC-oriented helper.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the source-test references below; do not infer runtime execution from source presence alone.
+- `lowlevel/base16.*` implements the byte-level conversion; `base16.*` exposes overloads for strings, byte buffers, and streams.
+- `base16rfc.cpp` contains the RFC-oriented human-readable byte parser/formatter. It accepts separator-oriented forms and is distinct from the ordinary two-hex-digits-per-byte API.
+- `encoder_stream` and `decoder_stream` reuse the Base16 implementation while retaining incomplete units across chunk boundaries.
+- `sdk/base/basic/dump_memory.*` formats diagnostic hex dumps; it is not an alternative Base16 encoder.
 
-## 5. Relationships
+- `base16.hpp/.cpp` and `base16rfc.cpp` provide the public/RFC-oriented paths, while `lowlevel/base16.hpp/.cpp` implements byte conversion. `testcase_base16.cpp` exercises the caller-visible behavior.
 
-Related components and cross-module links are listed in References where available.
+## 5. References
 
-## 6. References
-
-### Related source
-
-- `sdk/base/encoding/base16.hpp`
-- `sdk/base/encoding/base16.cpp`
-- `sdk/base/encoding/base16rfc.cpp`
-- `sdk/base/encoding/lowlevel/base16.hpp`
-- `sdk/base/encoding/lowlevel/base16.cpp`
-- `test/testcase/encode/testcase_base16.cpp`
+- [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)

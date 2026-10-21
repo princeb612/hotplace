@@ -3,123 +3,70 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
-# network stream and protocol interpretation
+
+# Network stream and protocol interpretation
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+`network_stream`, `network_protocol_group`, and `network_protocol` convert arbitrary transport reads into protocol-framed messages. This is the middle stage of the [network server pipeline](README.md): the socket supplies bytes, the session buffers them, and a protocol interpreter establishes message boundaries before the consumer callback receives completed data.
 
-## 2. Model
+## 2. Data Model
 
-`network_stream` and `network_protocol` form the framing boundary between arbitrary network reads and application-level messages.
+### Raw input buffer
 
-### Raw stream
-
-`network_stream::produce()` copies received bytes into a `network_stream_data` node and appends it to a protected queue. A node contains:
-
-- byte buffer and size
-- optional UDP peer address
-- priority
-- linked-list next pointer
-- reference counting
-
-`consume()` detaches the queued nodes as a chain, allowing the producer side to continue without keeping the consumer's traversal lock.
+`network_stream::produce()` copies received bytes into a `network_stream_data` node and appends it to a protected queue. Nodes carry a byte buffer/size, optional UDP peer address, priority, linked-list pointer, and reference count. `consume()` detaches queued nodes so producer work can continue while consumer traversal proceeds.
 
 ```text
-socket read
-   ↓
-network_stream::produce
-   ↓
-network_stream_data -> network_stream_data -> ...
-   ↓
-network_stream::consume
+socket read / datagram
+  -> network_session::produce()
+  -> network_stream::produce()
+  -> queued network_stream_data nodes
+  -> protocol framing
 ```
 
-### Protocol group
+### Protocol registry and interpreter
 
-`network_protocol_group` owns a map from `protocol_id()` to `network_protocol`. It provides three useful operations:
+`network_protocol_group` maps `protocol_id()` values to registered interpreters. It can register/remove/find protocols and inspect buffered bytes to choose a protocol whose `is_kind_of()` accepts the prefix. `more_data` means that the available prefix is not yet sufficient to identify the protocol.
 
-- register/remove protocol interpreters
-- find a protocol by identifier
-- inspect buffered bytes and select the protocol whose `is_kind_of()` accepts them
+A `network_protocol` supplies the framing decision through `is_kind_of(bytes)` and `read_stream(bytes)`. Its state distinguishes complete data from conditions such as `more_data`, `forged`, `crash`, or `large`. Protocols may also assign priority and expose packet-size constraints. The generic `use_alpn()` implementation returns false; protocol-specific paths may use ALPN information.
 
-Protocol objects are reference-counted while registered or temporarily selected.
+## 3. Behavior Model
 
-`is_kind_of()` may return `more_data`, which is important when the current network buffer does not contain enough bytes to identify a protocol yet.
-
-### Protocol interpreter
-
-A `network_protocol` supplies the protocol-specific framing decision:
+### From transport bytes to one or more messages
 
 ```text
-is_kind_of(bytes)
-      ↓
-protocol selected
-      ↓
-read_stream(bytes)
-      ↓
-protocol_state_t
+network_session::_stream
+  -> network_stream framing loop
+  -> concatenate queued nodes into temporary stream
+  -> network_protocol_group selects interpreter
+  -> network_protocol::read_stream()
+       complete  -> move one message to target (_request)
+       more_data -> retain bytes and wait for additional input
+       invalid / oversized -> discard invalid queued input
+  -> consumer callback receives completed data
 ```
 
-The state can describe a completed message or a rejected/invalid/oversized input (`forged`, `crash`, `large`). A protocol may also assign a priority to the resulting message and expose a packet-size constraint.
+The framing loop can emit multiple messages from one read and retain an incomplete message across reads. A TCP read boundary is not an HTTP message boundary. For datagrams, the peer address must remain associated with the data while the relevant protocol/session handles it.
 
-`use_alpn()` is available for protocols whose selection is associated with ALPN; the generic base implementation returns false. HTTP/3 is one example of a higher-level protocol where ALPN information matters.
+With an empty protocol group, `network_stream::write()` can copy data directly. With interpreters registered, the write path performs protocol framing and can emit one or more complete messages.
 
-### Framing across multiple reads
+## 4. Relationships
 
-`network_stream::do_writep()` is the central framing loop. It concatenates queued `network_stream_data` into a temporary `basic_stream`, asks the protocol group to identify a protocol, and calls `read_stream()`.
+- `network_stream.hpp/.cpp` — byte queues, data nodes, framing loop.
+- `network_protocol.hpp/.cpp` and `network_protocol_group.hpp/.cpp` — protocol contract and registry.
+- [Network server overview](README.md) — complete worker path.
+- [Network server model](network-server-model.md) — producer/consumer orchestration.
+- [Network session](network_session.md) — owns raw stream and drives consume.
+- [HTTP protocol stack](../http/http-protocol-stack.md) — concrete protocol layers.
+- `sdk/net/http/http1/` and `sdk/net/http/http2/` — TCP-stream protocol implementations; HTTP/3 additionally depends on QUIC and ALPN.
+- `test/testcase/net/http/testvector_http2.cpp` and `testcase_http.cpp` — source-level framing examples.
 
-When the protocol reports `complete`, only the identified message is moved into the target stream. Any remaining bytes stay queued and cause `more_data` processing to repeat.
+## 5. References
 
-Conceptually:
-
-```text
-read #1        read #2
-  |              |
-  +---- raw stream queue ----+
-                             ↓
-                     protocol grouping
-                             ↓
-                       read_stream()
-                       /           \
-                  complete       more_data
-                     |                |
-                target stream     keep bytes
-                     |                |
-                     +-------<--------+
-```
-
-This is why the network server can treat TCP reads as arbitrary byte chunks rather than assuming one read equals one request.
-
-### Invalid input handling
-
-For `forged`, `crash` and `large`, the current implementation discards the queued stream data instead of leaving an invalid message in the processing path. A protocol implementation therefore controls both message boundaries and the basic failure state used by the generic stream layer.
-
-## 3. Important behavior and lifetime
-
-### Write/copy behavior
-
-`network_stream::write()` copies queued data into another stream. With an empty protocol group it performs a direct copy. With protocol interpreters it performs framing and may emit one or more complete messages.
-
-This same mechanism is useful outside the full `network_server`: the HTTP/2 test vector directly feeds bytes to a session stream and invokes `session.consume()` with an `http2_protocol`.
-
-## 4. Example from the source tests
-
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
-
-## 5. Relationships
-
-### Related modules
-
-- `sdk/net/http/http1/` and `sdk/net/http/http2/` — concrete protocol interpreters using this boundary
-- `sdk/net/http/http3/` — HTTP/3 processing and QUIC/ALPN integration
-- `sdk/net/basic/` — byte transport and socket lifecycle below this layer
-
-## 6. References
-
-Source references and related documents are retained here where available.
+No external references are currently listed.

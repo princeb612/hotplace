@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -15,7 +16,7 @@
 
 `exception.hpp` and `exception.cpp` define hotplace's project exception abstraction and error-code integration. The type is used by low-level utilities to report exceptional conditions, including size/range constraints in utility classes.
 
-## 2. Model
+## 2. Data Model
 
 ```text
 operation detects error
@@ -29,23 +30,17 @@ caller handles or propagates it
 
 Do not infer that every API throws: several utility methods return `return_t` error codes, while other paths explicitly construct or throw `exception` objects. The call site determines which contract applies.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-No additional behavior or lifetime note was separately identified in the existing document.
+### Stored error and message
 
-## 4. Example from the source tests
+The exception stores an errorcode_t and an optional description string. get_errorcode() returns the code, get_description() returns the caller-supplied description, and get_error_message() asks error_advisor to map the code to a human-readable message.
 
-### Example and tests
+This class does not derive from std::exception and does not expose a what() method. Catching it therefore requires the project exception type (or an appropriate catch-all), not a std::exception reference.
 
-`testcase_exception.cpp` is the direct testcase file. `testcase_bitset.cpp` also exercises a bounded allocation path indirectly through the bit-set API, but its presence alone does not establish coverage of every exception code.
+Copy/move operations preserve the error code and copy or move the description. Throwing the object is a caller decision; APIs that return return_t remain a separate error path.
 
-## 5. Relationships
+## 4. Relationships
 
-- `sdk/base/nostd/exception.hpp`
-- `sdk/base/nostd/exception.cpp`
-- `test/testcase/base/nostd/testcase_exception.cpp`
-- `sdk/base/nostd/bit_set.hpp` — throws for oversized storage allocation
-
-## 6. References
-
-Implementation and test paths are retained in the sections above or the source tree.
+- `sdk/base/nostd/bit_set.hpp` — throws this exception for oversized storage allocation.
+- `sdk/base/system/error.hpp` — supplies error-advisor message lookup for exception diagnostics. The implementation is in `exception.hpp/.cpp`, and `testcase_exception.cpp` covers the exception behavior.

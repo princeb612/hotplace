@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -16,8 +17,7 @@ The semantic layer under `sdk/io/asn.1/basic/semantic` is the main in-memory rep
 
 At revision 1095 it contains the bulk of the ASN.1 type model: built-in types, constructed types, tagging, references, constraints, object classes, and container forms.
 
-## 2. Model
-
+## 2. Data Model
 ### Central abstraction: `asn1_object`
 
 `asn1_object` is the common base of the semantic model.
@@ -124,8 +124,7 @@ The semantic objects are consumed by visitor implementations:
 
 The same object model therefore serves both the human-readable ASN.1 representation and binary encoding paths.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Constraints
 
 Constraints are owned by `asn1_object` and exposed through `asn1_constraints`.
@@ -144,8 +143,6 @@ constraints
 
 rather than treating constraints as a separate post-processing feature.
 
-## 4. Example from the source tests
-
 ### Related tests
 
 - `test/testcase/asn.1/testcase_basic2.cpp`
@@ -155,8 +152,7 @@ rather than treating constraints as a separate post-processing feature.
 
 These tests demonstrate the transition from manually constructed/parsed schema objects to runtime values and strongly typed use.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Runtime relationship
 
 The current high-level relationship is:
@@ -181,10 +177,7 @@ asn1_value / strongly typed use
 
 The semantic layer is consequently the central model between parsing and runtime use.
 
-## 6. References
-
-### Related source
-
+### Implementation source navigation
 - `sdk/io/asn.1/basic/semantic/asn1_object.hpp`
 - `sdk/io/asn.1/basic/semantic/asn1_type.hpp`
 - `sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp`

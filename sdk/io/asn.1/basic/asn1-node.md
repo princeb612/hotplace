@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -16,8 +17,7 @@
 
 It is intentionally simpler than `asn1_object`.
 
-## 2. Model
-
+## 2. Data Model
 ### Structural model
 
 The node stores:
@@ -70,8 +70,7 @@ asn1_object
 
 Keeping these representations separate allows a decoded TLV tree to exist before schema-specific interpretation is applied.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Operations
 
 `asn1_node` supports:
@@ -86,8 +85,6 @@ Keeping these representations separate allows a decoded TLV tree to exist before
 
 The node therefore acts as a generic tree container rather than a full ASN.1 schema object.
 
-## 4. Example from the source tests
-
 ### Related tests
 
 Structural parsing is exercised as part of the ASN.1 parser/DER testcase set under:
@@ -95,17 +92,13 @@ Structural parsing is exercised as part of the ASN.1 parser/DER testcase set und
 - `test/testcase/asn.1/`
 - `test/testcase/asn.1/runtime/`
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related documents
 
-- `structural/structural.md` — earlier structural design notes
+- `structural/README.md` — distinction between the structural TLV tree and schema-driven semantic objects, including tagging examples
 - `../asn1-object-model.md` — semantic representation
 
-## 6. References
-
-### Related source
-
+### Implementation source navigation
 - `sdk/io/asn.1/basic/structural/asn1_node.hpp`
 - `sdk/io/asn.1/basic/structural/asn1_node.cpp`
 - `sdk/io/asn.1/basic/structural/asn1_primitive_node.*`

@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -31,8 +32,7 @@ accept / reject a value
 
 The constraint layer therefore sits between ASN.1 notation and runtime value validation.
 
-## 2. Model
-
+## 2. Data Model
 ### Constraint model
 
 The implementation is organized around `asn1_constraint`.
@@ -77,8 +77,7 @@ The constraint implementation covers the major forms needed by the ASN.1 subtype
 
 The exact class hierarchy should be read from the implementation when extending the supported grammar; the important architectural point is that constraints are represented as objects and traversed by the visitor/evaluator layer.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Notation versus semantic representation
 
 The existing `subtype-notation.md` is a study/reference document for ASN.1 subtype notation.
@@ -184,8 +183,7 @@ notation / evaluator visitor
 testcase
 ```
 
-## 4. Example from the source tests
-
+### Source-level evidence
 ### Tests
 
 The main constraint-oriented test entry point is:
@@ -200,8 +198,7 @@ Related ASN.1 tests include:
 - `testcase_basic3.cpp`
 - DER test vectors under `test/testcase/asn.1/`
 
-## 5. Relationships
-
+## 4. Relationships
 ### Visitor relationship
 
 Constraint traversal is separated from evaluation.
@@ -259,10 +256,7 @@ This is why constraint handling belongs to the semantic model rather than only t
 - `../../asn1-visitor.md` — general visitor architecture
 - `../../../runtime/` — runtime schema/value processing
 
-## 6. References
-
-### Related source
-
+### Related implementation sources
 - `sdk/io/asn.1/basic/semantic/constraints/`
 - `sdk/io/asn.1/basic/visitor/asn1_constraint_visitor.*`
 - `sdk/io/asn.1/basic/visitor/asn1_constraint_notation_visitor.*`

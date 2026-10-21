@@ -3,48 +3,62 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
+
 # TLS protection
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+`sdk/net/tls/protection` implements TLS/DTLS cryptographic protection and key-schedule operations: transcript hashing, Finished verification inputs, key-block/PSK calculations, and record encryption/decryption. Its behavior spans the handshake and record lifecycle; it is not owned conceptually by a single record object.
 
-## 2. Model
+## 2. Data Model
 
-- [TLS key schedule](tls_key_schedule.md)
-- [MtE vs. EtM](tls_mte_etm.md)
-- [Transcript Hash](tls_transcript_hash.md)
+Three related but distinct kinds of state cooperate:
 
-#### related tests
+- **Transcript state:** a running hash over protocol-defined handshake-message bytes, excluding record framing.
+- **Derived secrets and traffic parameters:** TLS 1.2 master secret/key block versus TLS 1.3 staged secrets, traffic keys, and IVs.
+- **Record protection inputs:** negotiated cipher/AEAD parameters, directional key/IV, record sequence context, header/AAD, plaintext or ciphertext, and authentication tag.
 
-* `test/testcase/tls/testcase_tls12_aead.cpp`
-* `test/testcase/tls/testcase_rfc8448_2.cpp`
-* `test/testcase/tls/testcase_rfc8448_5.cpp`
-* `test/testcase/tls/testcase_understand_tls12.cpp`
+TLS 1.2 and TLS 1.3 must remain distinct: TLS 1.2 commonly derives a contiguous key block and supports legacy CBC/MAC constructions; TLS 1.3 uses HKDF-based staged derivation and AEAD. QUIC consumes TLS 1.3-derived secrets but applies QUIC packet protection, not TLS record protection.
 
-#### related areas
+## 3. Behavior Model
 
-* `../session/` - handshake/session state
-* `../quic/` - QUIC packet protection using TLS-derived secrets
-* `sdk/crypto/` - HKDF, HMAC and AEAD primitives
+### Transcript → key schedule → protection
 
-## 3. Important behavior and lifetime
+```text
+handshake parser/session
+  -> append protocol-defined handshake messages to transcript
+  -> transcript checkpoint for the current handshake stage
+  -> TLS 1.2 PRF/key-block OR TLS 1.3 HKDF key schedule
+  -> directional traffic secret / key / IV
+  -> record protection
+       TLS/DTLS: record header + sequence/epoch context + protected content
+       QUIC: packet number/header protection + packet AEAD
+  -> peer verifies/decrypts and updates its corresponding state
+```
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+The transcript hash is an input to stage-specific TLS 1.3 derivations and Finished verification; the key schedule produces the material used by protection; AEAD consumes keys/IVs and protocol-defined associated data to authenticate ciphertext and context. These stages are connected, but they are not one function and do not advance at the same time. The handshake/session code decides when messages enter the transcript and when newly derived keys become active.
 
-## 4. Example from the source tests
+TLS 1.2 MtE and EtM describe legacy CBC authentication ordering; TLS 1.3 uses AEAD and does not use those legacy CBC suites. QUIC's packet number and header protection belong to the QUIC packet layer, even when the traffic secrets originate from TLS.
 
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
+## 4. Relationships
 
-## 5. Relationships
+- [TLS key schedule](tls_key_schedule.md) — TLS 1.2 key block and TLS 1.3 staged derivation.
+- [Transcript hash](tls_transcript_hash.md) — transcript input and stage checkpoints.
+- [MtE vs EtM](tls_mte_etm.md) — legacy CBC authentication order and AEAD distinction.
+- `tls_protection_calc.cpp`, `tls_protection_calc_finished.cpp`, `tls_protection_calc_keyblock.cpp`, `tls_protection_calc_psk.cpp`.
+- `tls_protection_context.cpp`, `tls_protection_encryption_aead.cpp`, `tls_protection_encryption_cbchmac.cpp`, `tls_protection_hash.cpp`, `tls_protection_hp.cpp`.
+- `sdk/crypto/basic/kdf/`, `digest/`, `crypt/`, and `mac/` — lower-level derivation and cryptographic primitives.
+- [TLS session support](../session/README.md) — decides handshake stage and state transition.
+- [QUIC integration](../quic/README.md) — TLS-derived secrets used by packet protection.
 
-Related implementation areas and protocol boundaries are recorded here where identified.
+## 5. References
 
-## 6. References
-
-Source references and related documents are retained here where available.
+- [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
+- [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
+- [RFC 7366 — Encrypt-then-MAC for TLS and DTLS](https://www.rfc-editor.org/rfc/rfc7366)

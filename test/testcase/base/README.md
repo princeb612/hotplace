@@ -3,26 +3,68 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ Documentation scope: testcase inventory      │
+│ and verification                             │
 └──────────────────────────────────────────────┘
 ```
 
-# Readme
+# Base testcase suite
 
 ## 1. Role
 
-### Introduction
+This directory contains testcases for the reusable `sdk/base` facilities: general utilities and value types, encoding, in-memory streams/strings, algorithms and data structures, platform-adjacent helpers, and the project's own unittest/logging infrastructure. The testcase groups are source-level checks; their presence does not imply that every assertion has run on every target.
 
-##### reference
+## 2. Test model
 
-* test vector
-  * modpow
-    * https://en.wikipedia.org/wiki/Modular_exponentiation
-* reference
-  * https://www.calculator.net/big-number-calculator.html
-  * https://bigcalculator.org/
+The base tests combine focused C++ testcase functions with data-driven test vectors. The retained YAML schemas cover big-number operations, capacity calculations, command-line parsing, `valist` formatting, regular expressions, floating-point arithmetic, Aho-Corasick and KMP matching. The source files determine which schema is loaded and which expected values are actually asserted.
+
+| Test area | Representative behavior | Example source |
+|---|---|---|
+| Basic values/utilities | Variant conversion, command-line options, formatting and memory dumps | `test/testcase/base/basic/` |
+| Numeric operations | Big-number arithmetic and floating-point cases | `test/testcase/base/basic/` and vector consumers |
+| Pattern matching | Regex, KMP, Aho-Corasick and wildcard cases | `test/testcase/base/pattern/` |
+| Data structures/graphs | Container operations, graph traversal and path algorithms | `test/testcase/base/graph/` |
+| Streams/strings/system | In-memory stream, string, synchronization and helper behavior | Corresponding sibling directories |
+
+## 3. Example: typed value to binary expectation
+
+`test/testcase/base/basic/testcase_variant.cpp` sets a typed integer in `variant`, converts it to binary with the selected endian/truncation flags, encodes the bytes as Base16, and compares the result with an expected hexadecimal string. This is a concrete assertion path from a typed value through binary representation to a readable expected value.
+
+`test/testcase/base/basic/testcase_valist.cpp` assembles formatting arguments, passes them through the project's formatting interface, and compares the produced text. The test exercises the wrapper integration; it does not make native `va_list` layouts portable.
+
+## 4. Test and verification status
+
+### 4.1 Source-level coverage
+
+The source-level claims above identify representative test paths, not exhaustive coverage of all algorithms or platform branches. Check the actual assertions and feature guards in each testcase.
+
+### 4.2 Documentation and verification status
+
+The latest available aggregate report is recorded in [Test Report Snapshot](../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with 1,718 pass, 13 expt, 0 fail, 1 skip and 1 triv for the `base` group. The report notes 27 pass entries for `stream` and 30 pass entries for `bufferio`; these are report subgroups and should not be added again to the parent totals.
+
+The report payload does not independently identify the tested source commit, exact GCC version, or full build configuration. This README describes source-level coverage and does not claim that the current working tree was re-tested. Preserve the snapshot until a newer, revision-associated report is available.
+
+Runtime verification must be tied to a report with a known source revision and environment. This README does not claim that the current working tree was executed in any particular environment.
+
+## 5. Relationships
+
+- [`sdk/base/README.md`](../../../sdk/base/README.md) — implementation map and module responsibilities.
+- [`test/testcase/CMakeLists.txt`](../../CMakeLists.txt) and [`test/testcase/base/CMakeLists.txt`](CMakeLists.txt) — testcase target registration and source/data collection.
+- [`sample.cpp`](sample.cpp) — entry point and explicit invocation order for the base testcase functions.
+- `basic/`, `graph/`, `pattern/`, `stream/`, `string/`, `system/`, and the other sibling directories — concrete testcase groups. The entry point should be consulted alongside these directories to distinguish registered source files from functions actually called by `main()`.
+
+## 6. References
+
+- [Modular exponentiation — Wikipedia](https://en.wikipedia.org/wiki/Modular_exponentiation) — background for the modular-exponentiation cases in the big-number test vectors.
+- [Big Number Calculator](https://www.calculator.net/big-number-calculator.html) — an external calculator that can be used as a spot-check reference for selected big-number examples; it is not the test oracle for the whole suite.
+- [BigCalculator](https://bigcalculator.org/) — an additional external comparison tool for selected arithmetic examples, not proof of full test coverage.
+
+## 7. Developer Notes (for maintainer review)
+
+The YAML schemas below are retained from the previous README to preserve the documented shapes consumed by older and current vector-driven tests. They describe test data formats; they are not runtime reports.
 
 ##### YAML schema
 
@@ -182,29 +224,3 @@ testvector:
         match: string                       # [mandatory]
           words: array of occurrence        # [mandatory] ex. "words": [pos1, pos2, ...]
 ````
-
-## 2. Test model
-
-The testcase-to-module mapping is summarized by the retained source descriptions below.
-
-## 3. Example: representative testcase flow
-
-No standalone example was identified in the existing material; see source-level coverage for representative testcase functions.
-
-## 4. Test and verification status
-
-### 4.1 Source-level coverage
-
-Inspect the named testcase source and its assertions; this document alone does not establish coverage.
-
-### 4.2 Documentation and verification status
-
-Documentation completeness, assertion strength, and recorded runtime execution are separate claims. State each only when supported by source or report evidence.
-
-## 5. Relationships
-
-Related implementation modules and testcase documents are listed in References where available.
-
-## 6. References
-
-Source paths and report provenance are recorded where available.

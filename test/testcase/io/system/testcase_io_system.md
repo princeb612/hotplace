@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ — testcase behavior and verification          │
 └──────────────────────────────────────────────┘
 ```
 # System I/O Testcases
@@ -20,7 +21,7 @@ Documents the available system-I/O testcase sources under `test/testcase/io/syst
 
 ## 3. Example: system I/O testcase entry points
 
-Use `test_mlfq()` and `test_netlink()` as the source entry points; inspect their assertions and platform guards before interpreting a report as broad cross-platform evidence.
+`test_mlfq()` creates a scenario thread, then producer/consumer workers; the producer posts 100 integers at randomized priorities, and the consumer dequeues and deletes values until it signals completion. The source logs a priority-grouped summary but does not assert a deterministic priority order or every payload. `test_netlink()` subscribes to Linux process events and waits for SIGINT; it is guarded by Linux/glibc conditions and is not a short, unattended default testcase.
 
 ## 4. Test and verification status
 
@@ -30,7 +31,7 @@ The presence of these test sources does not imply that netlink cases execute on 
 
 ### 4.2 Documentation and verification status
 
-The source assertions described here are source-level evidence, not a new runtime run. The supplied report archive does not record the exact OS/compiler configuration or source revision; it therefore cannot establish that these cases ran against Revision 1104.
+The latest available parent-group report is linked from [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with 596 pass, 0 expt, 0 fail, 0 skip and 0 triv for the entire `io` group. There is no separate `io/system` row, and the MinGW64 report does not establish that the Linux-only netlink branch ran. The report does not independently identify the tested source commit or exact build configuration. This documentation update did not rerun tests.
 
 ## 5. Relationships
 

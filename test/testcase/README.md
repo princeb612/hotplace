@@ -4,9 +4,10 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1097
-Documented with GPT-5.6 Luna
-— source identity, implementation detail & relationships
+Edition 2 · Revision 1105
+Source basis: Revision 1105
+Documented with GPT-6
+— testcase organization, execution & verification
 ```
 
 `test/testcase` is the automated verification layer for the SDK. Test groups are organized primarily by the feature/protocol boundary they verify, and each group is built as a `test-<module>` executable.
@@ -55,7 +56,17 @@ CMake configure/build
                  └── CTest registration
 ```
 
-CTest is the normal automated test entry point in the MinGW64/GCC development environment and the MSVC/Windows environment. It is also used on the CentOS 7 Sanitizer environment.
+CTest is the normal automated test entry point in the MinGW64/GCC, Windows/MSVC, CentOS 7 (gcc 4.8.5), and Rocky 8 environments. Ubuntu 20 uses CTest together with Sanitizer; CentOS 7 and Rocky 8 use `test.sh` as an optional additional Valgrind pass.
+
+## Latest recorded test snapshot
+
+The latest report summary is retained in [Test Report Snapshot](test-report-status.md). It must be read separately from this README's source/documentation basis:
+
+- Report package: `ttestcase-reports-revision1105-working.zip.zip` (uploaded 2026-10-18; report snapshot received 2026-10-17).
+- Last-run context supplied in the conversation: **Revision 1104 · MinGW64/GCC · CTest**.
+- Provenance limit: the report files do not independently identify a source commit/revision, exact GCC version, build flags, or full CTest command line.
+- Result summary: 29,103 pass, 336 expt, 0 fail, 93 skip, 5 triv categorized entries; the ODBC report has no categorized rows and is excluded from that total.
+- Maintenance rule: keep this last known result visible until a newer report snapshot supersedes it. A newer source/documentation revision is not itself a new test run.
 
 ## Environment-specific verification
 

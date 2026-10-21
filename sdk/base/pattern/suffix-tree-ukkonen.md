@@ -3,55 +3,79 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
-# Suffix tree and Ukkonen construction
+# Suffix trie and Ukkonen construction
 
 ## 1. Role
 
-`suffixtree.hpp` and `ukkonen.hpp` provide suffix-tree-oriented indexing. The suffix tree represents suffixes of a text so that substring-oriented queries can use the index; Ukkonen's algorithm is the construction method represented by the companion implementation.
+This page covers two related but structurally different substring indexes. `t_suffixtree` inserts every suffix explicitly into a trie. `t_ukkonen` constructs a compressed suffix tree using Ukkonen's online construction technique. Both return source positions for a matching substring, but they use different construction and storage strategies.
 
-## 2. Model
+## 2. Data Model
 
-```text
-input text
-    |
-    v
-suffix-tree construction
-    |
-    v
-suffix-oriented index
-    |
-    v
-substring / suffix queries
-```
+### `t_suffixtree`: explicit suffix trie
 
-This page keeps the data structure and its construction algorithm together because the source tree places them side by side, but they remain distinct concepts: a suffix tree is the resulting index, while Ukkonen describes how it is built.
+Each node maps a symbol to a child and carries a set of source indices. The index set records which suffix starts pass through that node. The source sequence is retained in `_source`.
 
-## 3. Important behavior and lifetime
+### `t_ukkonen`: compressed suffix tree
 
-No additional behavior or lifetime note was separately identified in the existing document.
+Each node stores child transitions, an edge interval `start..end` into `_source`, a leaf `suffix_index`, and a `suffix_link`. Construction state is held in `_active_node`, `_active_edge`, `_active_length` and `_remaining_suffix_count`. Edge labels refer to ranges in the source rather than copied strings.
 
-## 4. Example from the source tests
+## 3. Behavior Model
 
-### Example from source tests
+### Explicit suffix trie
 
-- `testcase_suffixtree.cpp` tests suffix-tree behavior.
-- `testcase_ukkonen.cpp` tests the construction algorithm.
+**`add()`**
 
-The base report lists 9 pass entries for `suffix tree` and 11 pass entries for `ukkonen algorithm`.
+Appends normalized symbols to `_source`, then inserts a suffix starting at each source position. Every suffix is represented as a path, so the implementation is straightforward but can require quadratic space.
 
-## 5. Relationships
+**`search()`**
 
-- `sdk/base/pattern/suffixtree.hpp`
-- `sdk/base/pattern/ukkonen.hpp`
-- `test/testcase/base/pattern/testcase_suffixtree.cpp`
-- `test/testcase/base/pattern/testcase_ukkonen.cpp`
+Follows the query symbols from the root. If the path exists, returns the stored set of source indices associated with that node; otherwise returns an empty set.
 
-## 6. References
+**`reset()`**
 
-Implementation and test paths are retained in the sections above or the source tree.
+Replaces the root and clears the source sequence.
+
+### Ukkonen compressed suffix tree
+
+**`add()`**
+
+Resets the previous index, stores the normalized source, initializes the active point and remaining-suffix count, and calls `extend()` for each source position. After construction it assigns suffix indices to leaves.
+
+**`extend(pos)`**
+
+Adds the current source position to the online construction. Depending on the active point, it either creates a leaf, walks down a complete edge, extends an existing match, or splits an edge. New internal nodes are connected by suffix links so the next pending suffix can reuse prior work.
+
+**`set_suffixindex()`**
+
+Traverses the finished tree and assigns each leaf the starting index of the suffix represented by that leaf.
+
+**`search()`**
+
+Walks edge intervals while matching the query. Once the query is exhausted, collects suffix indices beneath the matched locus into a sorted set.
+
+**`reset()`**
+
+Deletes the old tree and initializes an empty root and construction state.
+
+The key trade-off is explicit suffix paths versus compressed edge intervals. The former is easier to follow as a reference implementation; the latter is designed to avoid rebuilding every suffix path independently.
+
+## 4. Relationships
+
+- `pattern.hpp` — shared element extraction for source sequences.
+- `test/testcase/base/pattern/testcase_suffixtree.cpp` — explicit suffix-trie queries.
+- `test/testcase/base/pattern/testcase_ukkonen.cpp` — Ukkonen construction and substring queries.
+- `README.md` — places both indexes among the other pattern-matching choices.
+
+## 5. References
+
+- [Pattern searching using Trie of all suffixes](https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/)
+- [Ukkonen's suffix-tree construction — Part 1](https://www.geeksforgeeks.org/ukkonens-suffix-tree-construction-part-1/)
+- [Ukkonen algorithm animation](https://brenden.github.io/ukkonen-animation/)
+- [Ukkonen's suffix-tree algorithm](https://programmerspatch.blogspot.com/2013/02/ukkonens-suffix-tree-algorithm.html)

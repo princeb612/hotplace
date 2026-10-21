@@ -1,12 +1,13 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 1 · Revision 1105                     │
+│ Source basis: Revision 1105                   │
+│ Documented with GPT-6                         │
+│ — source structure, implementation & behavior │
+└───────────────────────────────────────────────┘
 ```
 # I/O Stream
 
@@ -16,7 +17,7 @@
 
 This directory is distinct from `sdk/base/stream`, which provides in-memory streams, buffers, and formatting machinery. `sdk/io/stream` uses that common interface at a file boundary.
 
-## 2. Model
+## 2. Data Model
 
 ```text
 caller
@@ -39,35 +40,26 @@ file_stream (common API)
 
 The details of mapping, flags, lifecycle, and the platform split are described in [file_stream.md](file_stream.md).
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 A `file_stream` owns an open platform file resource and may also own a memory mapping and a platform lock. `close()` is the boundary that releases these resources; mapped access should be treated as valid only while the mapping is active. Ordinary file reads and writes use the stream API, while `data()` is intended for direct access to the mapped view.
 
 `printf()` and `vprintf()` reuse `bufferio` from `sdk/base/stream`, format into bytes, and then write those bytes to the file. This is a concrete example of the division between base stream facilities and OS-backed I/O.
 
-## 4. Example from the source tests
+### File and mapping access
 
-`test/testcase/io/stream/testcase_filestream.cpp` is the direct execution path to read alongside `file_stream.md`. It opens a writable file, truncates it to a known size, begins a mapping, writes through `data()`, ends the mapping, seeks to `FILE_BEGIN`, reads through the ordinary stream API, and verifies the first value. The test deliberately crosses between mapped and stream access, rather than only testing `open()` in isolation.
+The important boundary is external resource access: the file-stream implementation adapts the common stream interface to platform file operations and, where supported, mapped access. A caller may cross between mapped access and ordinary stream reads, so the file handle, mapping, seek position, and close path must be understood from the concrete implementation.
 
-Related support files are `test/testcase/io/sample.cpp` and `sample.hpp`; the primary behavior assertions are in `testcase_filestream.cpp`.
-
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/stream/` — common `stream_t`, buffers, and formatting.
 - `sdk/io/basic/` — binary payload helpers that can use common stream abstractions.
 - `sdk/io/string/` — URL and textual helpers; not the same module as the placeholder `string.hpp` in this directory.
 - `test/testcase/io/stream/` — direct file-stream test.
 
-## 6. References
+The implementation is split across `file_stream.hpp`, `stream.hpp`, `linux/file_stream.cpp`, and `windows/file_stream.cpp`; these files are linked from the [stream directory](./) and should be read when checking platform-specific lifecycle details.
 
-### Source
-
-- `sdk/io/stream/file_stream.hpp`
-- `sdk/io/stream/stream.hpp`
-- `sdk/io/stream/linux/file_stream.cpp`
-- `sdk/io/stream/windows/file_stream.cpp`
-
-## 7. Developer Notes
+## 5. Development Notes
 
 - Keep the boundary with `sdk/base/stream` explicit: do not describe in-memory `basic_stream` behavior as if it were implemented by `file_stream`.
 - If a second concrete stream type is added, give it a separate module document instead of turning this directory README into an exhaustive class reference.

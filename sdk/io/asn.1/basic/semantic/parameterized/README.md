@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,10 +13,9 @@
 
 ## 1. Role
 
-The module identity is described by the implementation notes retained below.
+`basic/semantic/parameterized` contains a direct semantic prototype for parameterized ASN.1 types, parameter declarations/values and specialization. It should be read as a bounded implementation area, not as a claim that the full parser → loader → publisher path supports all parameterized notation.
 
-## 2. Model
-
+## 2. Data Model
 ### Main types
 
 - `asn1_parameterized_type` — stores parameter descriptors and values, defines a parameterized object, and creates a specialized copy through `specialize()`.
@@ -40,7 +40,7 @@ asn1_parameterized_type::define()
 
 `define()` accepts either an explicit parameter/type list and object, or a callback that builds the object with access to the template descriptor. `specialize()` clones the underlying semantic object and associates actual parameter values with the specialization.
 
-### Revision 1104 implementation boundary
+### Current implementation boundary
 
 The direct semantic testcase includes examples such as `FRAME`, `TLV-BUFFER`, `COMMAND-ENVELOPE`, and parameterized values used in constraints/defaults. The active `test_parameterized1()` path exercises these object-model prototypes.
 
@@ -54,20 +54,15 @@ This does **not** establish complete end-to-end parameterized ASN.1 support. The
 - `asn1_paramvalue.cpp`
 - `sdk/io/asn.1/runtime/asn1_publisher_parameterized.cpp`
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-No separate lifetime or behavior contract was stated in the existing notes beyond the material retained below.
+`define()` establishes the reusable semantic prototype; `specialize()` clones that prototype and associates actual parameter values. This page describes that direct object-model path only. The integrated parser/loader/publisher boundary remains incomplete as noted above, so the prototype should not be presented as end-to-end parameterized ASN.1 support.
 
-## 4. Example from the source tests
+## 4. Relationships
+The prototype depends on the shared ASN.1 semantic object model and the publisher's parameterized handlers, but the end-to-end loader/publisher path remains incomplete.
 
-### Related tests
-
+### Related implementation and verification sources
+- `asn1_parameterized_type.hpp/.cpp`
+- `asn1_parameter.cpp`, `asn1_paramtype.cpp`, `asn1_paramvalue.cpp`
+- `sdk/io/asn.1/runtime/asn1_publisher_parameterized.cpp`
 - `test/testcase/asn.1/parameterized/testcase_parameterized.cpp`
-
-## 5. Relationships
-
-Related modules and boundaries are recorded below where identified in the existing notes.
-
-## 6. References
-
-Source references and related documents are retained below where available.

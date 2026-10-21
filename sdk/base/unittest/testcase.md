@@ -4,8 +4,9 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -13,191 +14,62 @@
 
 ## 1. Role
 
-### Introduction
+test_case is the common test execution and result-reporting class used by hotplace test programs. It groups checks, records result codes and elapsed time, aggregates outcomes, prints reports, and returns process-level success/failure. It does not define the semantic meaning of each return_t value by itself: error_advisor supplies the category and presentation hint used by the reporting path.
 
-`test_case` is the common test execution and result-reporting class used by hotplace test programs.
-
-It provides more than a simple assertion macro: a test program can create named test groups, record individual results, measure execution time, classify failures, print a report, and return a process-level success/failure result.
-
-## 2. Model
+## 2. Data Model
 
 ### Test lifecycle
 
-```text
-begin(group)
-   │
-   ├── test(return_t, ...)
-   ├── assert(condition, ...)
-   ├── ntest / nassert (expected-failure path)
-   └── timing controls
-          │
-          ▼
-       report()
-          │
-          ▼
-       result()
-```
+    begin(group)
+       │
+       ├── test(return_t, ...)
+       ├── assert(condition, ...)
+       ├── ntest / nassert (expected-failure path)
+       └── timing controls
+              │
+              ▼
+           report()
+              │
+              ▼
+           result()
 
-`test_case` accumulates individual records and statistics within a named group. The public API includes ordinary checks and variants for expected failures or other result categories. `report()` presents the recorded state; `result()` converts it to the process-level status used by the executable.
+test_case accumulates individual records and statistics within a named group. A record retains the submitted result, function name, description, and elapsed time. The reporting code uses error_category_hint metadata—category, console color, compact testcase label, and long label—to interpret and present each result.
 
-### Record and report data
+### The role of error_advisor
 
-A recorded check can include the outcome/error code, function name, description, and elapsed time. The report can summarize the group and list failed or slow tests. These are reporting semantics: the class records what the testcase tells it, so a weak assertion can still be recorded as a pass.
+The relationship is a division of responsibility:
 
-### Variadic API pairs
+- error_advisor::error_code() and error_message() translate a result code into its symbolic name and human-readable message when a description exists.
+- error_advisor::categoryof() classifies the result; hintof() returns the associated display/reporting hint.
+- test_case::vtest() stores the result and calls hintof(result) to select the aggregation and display path.
+- The logger and console-color layer present the result; they do not replace the advisor's classification.
 
-The ordinary formatting-oriented calls have `v*` counterparts (`assert`/`vassert`, `test`/`vtest`, `nassert`/`vnassert`, `ntest`/`vntest`). The source documents these pairs as a workaround for Microsoft compiler variable-argument ambiguity. Preserve this distinction when changing overloads or cross-compiler behavior.
+Typical categories include success (reported as pass), expected failure (reported as an expected outcome), severe error (fail), not supported and low security (skip), and trivial/warning outcomes. Consequently, the same reporting machinery can represent unsupported platform features and deliberately expected failures without treating every nonzero code as an unexpected test failure.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-### Basic flow
+### Recording checks
 
-The intended usage is centered on `begin()`, `test()` or `assert()`, `report()`, and `result()`.
+begin() establishes the current named test group and resets the timing state. test(return_t, ...) records a supplied result code. assert(condition, ...) converts a false condition into errorcode_t::assert_failed and then uses the same result-recording path. ntest() and nassert() represent expected-failure behavior rather than simply reversing ordinary assertions.
 
-```text
- test_case
-     │
-     ├── begin("group")
-     │     ├── test(...)
-     │     ├── assert(...)
-     │     └── ntest / nassert
-     │
-     ├── report()
-     └── result()
-```
+The variadic APIs have v* counterparts (assert/vassert, test/vtest, nassert/vnassert, ntest/vntest) for the va_list path. The source notes this split as a workaround for Microsoft compiler variable-argument ambiguity.
 
-A typical test program therefore has the shape:
+### Timing and aggregation
 
-```cpp
-test_case tc;
-tc.begin("example");
-tc.test(errorcode_t::success, __FUNCTION__, "basic case");
-tc.assert(condition, __FUNCTION__, "condition");
-tc.report();
-return tc.result();
-```
+Timing controls include reset_time(), pause_time(), and resume_time(). The implementation keeps stopwatch state per thread and protects shared state with a critical section. test_case_notimecheck provides an RAII pause/resume scope for setup or waits that should not dominate a measured test.
 
-### Timing
+During result recording, the advisor's hint selects the category-specific counters and console style. report() presents the accumulated group and individual outcomes; report(top_count) can additionally list the slowest tests. result() converts the accumulated state to EXIT_SUCCESS when no unexpected failure was recorded and EXIT_FAILURE otherwise.
 
-`test_case` measures test execution time as part of the test record.
+### Source testcase connecting the two layers
 
-Timing can be controlled with:
+test/testcase/base/unittest/testcase_unittest.cpp contains test_error(): it obtains error_advisor::get_instance(), asks for the symbolic code and message of errorcode_t::invalid_parameter, and writes both to the logger. The same file's test_testcase() submits success, not-supported, and low-security results to exercise representative report categories; test_fail(), test_trace(), and test_try_leave() cover error-flow and leave-trace paths.
 
-- `reset_time()`
-- `pause_time()`
-- `resume_time()`
+These statements describe what the source testcase contains. They do not assert that the testcase was executed in this documentation pass.
 
-`test_case_notimecheck` wraps the common pause/resume pattern with RAII:
+## 4. Relationships
 
-```cpp
-{
-    test_case_notimecheck block(tc);
-    // work here is excluded from the test-time measurement
-}
-```
-
-This is useful when a test deliberately waits or performs setup that should not dominate the measured operation.
-
-The timing state is maintained per thread, which allows test code running on multiple threads to retain separate timing information.
-
-### Reports
-
-`report()` produces the accumulated test report.
-
-The report can include:
-
-- test-group status
-- individual test result and error code
-- function and description
-- elapsed time
-- failed tests
-- timing information
-
-`report(top_count)` can additionally list the slowest tests, making the test framework useful for identifying unexpectedly expensive cases as well as functional failures.
-
-### Final result
-
-`result()` converts the accumulated test state into a process-level result:
-
-```text
-EXIT_SUCCESS  → all required tests passed
-EXIT_FAILURE  → an unexpected failure was recorded
-```
-
-This allows the same test object to drive both the human-readable report and the return value consumed by the test executable/CTest environment.
-
-### Variadic interface
-
-The formatted test APIs have both ordinary and `va_list` forms:
-
-```text
-assert()   → vassert()
-test()     → vtest()
-nassert()  → vnassert()
-ntest()    → vntest()
-```
-
-The source documents this distinction as a workaround for Microsoft compiler variable-argument ambiguity. The `v*` forms therefore form part of the implementation interface rather than being redundant convenience functions.
-
-## 4. Example from the source tests
-
-### Test groups and results
-
-`begin()` starts a named test group and resets the timing state for the current thread.
-
-Individual checks are recorded with either:
-
-- `test(return_t, ...)`
-- `assert(bool, ...)`
-- `ntest(return_t, ...)`
-- `nassert(bool, ...)`
-
-The `n*` forms are for **expected failure** cases. They allow a test to document behavior that is intentionally expected to fail without treating that result as an unexpected regression.
-
-The internal statistics distinguish successful, expected-failure, failed, not-supported, low-security, and trivial cases.
-
-### Test examples
-
-The direct testcase is:
-
-`test/testcase/base/unittest/testcase_unittest.cpp`
-
-It demonstrates:
-
-- successful and skipped tests
-- low-security results
-- intentional failure paths
-- `assert()` usage
-- formatted messages
-- `test_case_notimecheck`
-- failure/trace helpers used around the test framework
-- error-code reporting
-
-`testcase_loglevel.cpp` exercises the logger side of the framework and verifies the filtering rules used by attached logging.
-
-## 5. Relationships
-
-### Logger integration
-
-A `test_case` can attach a `logger` instance.
-
-```text
- test_case
-     │
-     ├── test result / statistics
-     ├── report
-     └── logger
-          └── diagnostic output
-```
-
-This keeps test semantics separate from output formatting while allowing the report and diagnostic messages to use the project's common logging infrastructure.
-
-## 6. References
-
-### Related source
-
-- `sdk/base/unittest/testcase.hpp`
-- `sdk/base/unittest/testcase.cpp`
-- `sdk/base/unittest/logger.hpp`
-- `test/testcase/base/unittest/testcase_unittest.cpp`
-- `test/testcase/base/unittest/testcase_loglevel.cpp`
+- [Error handling and error advice](../system/error-handling.md) — result-code descriptions, category classification, and report hints.
+- [Trace and debug events](../system/trace.md) — leave-trace paths and debug diagnostics.
+- sdk/base/unittest/logger.hpp — output destination used by testcase reporting.
+- sdk/base/unittest/console_color.hpp — console color presentation.
+- `testcase.hpp/.cpp` implement result recording and reporting; `logger.hpp` and `console_color.hpp` provide output integration. `error.hpp` and `error_advisor.cpp` provide result/category interpretation. `testcase_unittest.cpp` exercises direct advisor lookup and representative result-category use.

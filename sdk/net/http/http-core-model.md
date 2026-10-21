@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,98 +13,100 @@
 
 ## 1. Role
 
-### Role
+`sdk/net/http` provides the common HTTP message objects and application-facing server/client/router model. HTTP/1.x and HTTP/2 reuse `http_request`, `http_response`, `http_header`, and `http_uri`; their framing and compression mechanisms remain version-specific. HTTP/3 has its own frame and QPACK path above QUIC, and the current source should not be read as a complete HTTP/3 server implementation.
 
-`sdk/net/http` contains the common HTTP model used by the HTTP/1.x and HTTP/2 implementations, together with the server/client, routing, URI, header, and authentication layers.
+## 2. Data Model
 
-The central objects are:
+### Request, response, headers, and URI
 
 ```text
-http_server / http_client
-        │
-        ├── http_request
-        ├── http_response
-        └── http_router
+HTTP wire bytes / HTTP/2 stream frames
+              │ protocol-specific parser
+              ▼
+         http_request
+         ├─ method
+         ├─ http_uri
+         │    ├─ original URI
+         │    ├─ path
+         │    └─ query string / query key-values
+         ├─ http_header
+         ├─ body/content
+         └─ HTTP version / HTTP/2 stream id
+
+application handler
+       │ fills status, headers and body
+       ▼
+   http_response
+       ├─ http_header
+       ├─ status / content type
+       └─ composed response representation
               │
-              └── authentication / resource handling
-
-http_request / http_response
-        │
-        ├── http_header
-        └── http_uri
+              ▼
+      network_session send path
 ```
 
-`http_request` and `http_response` are deliberately shared by HTTP/1.x and HTTP/2. HTTP/2 additionally carries a stream id and HPACK dynamic-table state.
+These objects have related but distinct responsibilities:
 
-## 2. Model
+- `http_request` represents a parsed incoming request or a request being composed by a client. It exposes the method, URI, headers, body/content, HTTP version, and HTTP/2 stream metadata.
+- `http_response` represents the response status, headers, and body. It can compose response output and `respond(network_session*)` is the network-session send boundary.
+- `http_header` is the common header collection. Its conversion helper can parse structured authentication header parameters into `skey_value`; authentication providers then interpret scheme-specific values.
+- `http_uri` parses and retains the URI representation, path, and query string, with query parameters exposed as key/value data. It is not a substitute for the request method or headers.
 
-### Request and response
+For HTTP/1.x, the protocol framing layer identifies a complete message before `http_request::open()` parses its request line, headers, and body. For HTTP/2, `http2_session` accumulates frames and per-stream header state; a request may not be available until the relevant HEADERS/CONTINUATION and END_HEADERS/END_STREAM conditions are met. Do not treat one HTTP/2 frame as one request.
 
-`http_request` can parse an incoming HTTP/1.x request, compose a request, expose its method/URI/header/content, and carry HTTP version and stream information. It has separate HTTP/1 and HTTP/2 parsing paths.
+### Routing and authentication
 
-`http_response` represents the server response and can compose either an HTTP/1.x byte stream or an HTTP/2 response representation. `respond(network_session*)` is the boundary where the response is sent through the active network session.
-
-### Header and URI
-
-`http_header` is the common header container. It also provides conversion of structured authentication header values into `skey_value`, which is used by the authentication layer.
-
-`http_uri` separates the original URI, path, and query string and can expose query parameters through `skey_value`.
-
-### Routing
-
-`http_router` maps URI paths and status codes to handlers. The routing path is approximately:
+`http_router` maps URI paths and status codes to a registered function pointer or `std::function` handler. An optional `http_authentication_provider` can be registered alongside a path.
 
 ```text
-network/session
-    ↓
-http request
-    ↓
-http_router::route()
-    ├── authentication provider / resolver
-    ├── URI handler
-    ├── html_documents
-    └── 404/status handler
-    ↓
-http_response
+network_session + completed HTTP request
+                  │
+                  ▼
+        http_router::route()
+                  │
+                  ├─ path/status handler lookup
+                  ├─ optional authentication provider
+                  │      ├─ parse scheme credentials
+                  │      ├─ provider try_auth()
+                  │      ├─ resolver / credential verification
+                  │      └─ request_auth() on challenge/failure path
+                  └─ invoke registered request handler
+                             │
+                             ▼
+                        http_response
 ```
 
-Authentication is therefore part of request dispatch rather than a separate transport layer.
+The router dispatches a request; the handler supplies application behavior and response content. Authentication is distinct from authorization: a successful provider check does not by itself define which resources the application permits the principal to access.
 
-### Compression and content encoding
+### Body encoding versus header compression
 
-HTTP content encoding (`identity`, `deflate`, `gzip`, etc.) is handled while composing responses. This is different from HTTP/2 HPACK and HTTP/3 QPACK, which compress header fields rather than response bodies.
+Response content encoding (for example, identity, deflate, or gzip) transforms the message body. HPACK and QPACK instead encode header fields for HTTP/2 and HTTP/3. These are separate mechanisms with different inputs and state.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+### Parsing and composing
 
-## 4. Example from the source tests
+The request/response objects are the shared semantic model; protocol-specific code decides how they become or are reconstructed from wire bytes. HTTP/1.x uses textual message framing over a TCP byte stream. HTTP/2 uses binary frames and stream identifiers, with HPACK field compression. HTTP/3 carries HTTP frames over QUIC streams and uses QPACK. A common `http_request` API does not make the wire formats interchangeable.
 
-### Source / tests
+The HTTP/1.x framing layer must wait for sufficient bytes according to the framing information, rather than assuming that a socket read ends at the message boundary. HTTP/2 session processing must combine frames belonging to a stream before dispatching a completed request. The request parser and router should receive completed semantic messages, not raw multiplexer events.
 
-Primary source:
+### Handler and response lifecycle
 
-- `sdk/net/http/http_request.*`
-- `sdk/net/http/http_response.*`
-- `sdk/net/http/http_header.*`
-- `sdk/net/http/http_uri.*`
-- `sdk/net/http/http_router.*`
+The server's consume path creates/parses an `http_request`, associates the router, and prepares an `http_response`. The router selects an optional authentication provider and then a route handler. The handler populates the response, which is serialized for the active protocol and sent through the associated `network_session`. HTTP/2 additionally needs stream-aware response handling; a response is not merely an unqualified TCP write.
 
-Direct tests:
+## 4. Relationships
 
-- `test/testcase/net/http/testcase_http.cpp`
-
-Related records:
-
-- [HTTP server/client flow](http-server-client.md)
+- `http_request.hpp/.cpp`, `http_response.hpp/.cpp`
+- `http_header.hpp/.cpp`, `http_uri.hpp/.cpp`
+- `http_router.hpp/.cpp`, `http_server.hpp/.cpp`, `http_server_builder.hpp/.cpp`, `http_client.hpp/.cpp`
+- [HTTP overview](README.md)
+- [HTTP server/client and router flow](http-server-client.md)
 - [HTTP protocol stack](http-protocol-stack.md)
-- [Authentication](auth/README.md)
-- [Compression infrastructure](compression/README.md)
+- [Authentication providers and credentials](auth/README.md)
+- [Header compression infrastructure](compression/README.md)
+- [HTTP/1.x](http1/README.md), [HTTP/2](http2/README.md), [HTTP/3](http3/README.md)
+- `test/testcase/net/http/testcase_http.cpp` — source-level request/response/router coverage.
 
-## 5. Relationships
+## 5. References
 
-Related implementation areas and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Source references and related documents are retained here where available.
+No external references are currently listed.

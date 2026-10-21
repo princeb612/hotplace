@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Source basis: Revision 1105                  │
+│ — testcase behavior and verification          │
 └──────────────────────────────────────────────┘
 ```
 # Basic I/O Testcases
@@ -20,7 +21,7 @@ Documents the source-level tests for `sdk/io/basic`, primarily the declarative `
 
 ## 3. Example: payload write/read round trip
 
-The test constructs named payload members, writes a binary representation, and checks expected field values and encoded bytes. A representative assertion compares the serialized output against an expected byte sequence.
+For a detailed source walkthrough, see [Basic I/O testcase README](README.md): it follows the field layout through group-enabled and group-disabled serialization, uses `set_reference_value` to infer a variable field length while reading, and describes the QUIC varint known-answer/round-trip cases. This file remains the concise testcase index; the README carries the full flow so the explanation is not duplicated here.
 
 ## 4. Test and verification status
 
@@ -30,7 +31,7 @@ Assertions compare expected payload values and byte buffers in several paths. Th
 
 ### 4.2 Documentation and verification status
 
-The source assertions described here are source-level evidence, not a new runtime run. The supplied report archive does not record the exact OS/compiler configuration or source revision; it therefore cannot establish that these cases ran against Revision 1104.
+The latest available parent-group report is linked from [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with 596 pass, 0 expt, 0 fail, 0 skip and 0 triv for the entire `io` group. There is no separate `io/basic` row, so the parent count must not be attributed to these cases alone. The report does not independently identify the tested source commit or exact build configuration. This documentation update did not rerun tests.
 
 ## 5. Relationships
 

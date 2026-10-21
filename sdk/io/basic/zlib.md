@@ -4,6 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -14,8 +15,7 @@
 
 `sdk/io/basic/zlib.*` wraps zlib's compression and decompression API in hotplace overloads that accept byte buffers, `binary_t`, and `stream_t`. It is a primitive wrapper: HTTP or JOSE code chooses when compression applies and which framing is required.
 
-## 2. Model
-
+## 2. Data Model
 ### Framing selection
 
 `zlib_windowbits_t` selects the format passed to zlib:
@@ -39,34 +39,26 @@ The distinction is observable on the wire: raw DEFLATE, zlib-wrapped data, and g
 
 The memory/stream overloads clear the destination before producing a new result and append chunks from a fixed 1 KiB working buffer as zlib reports output.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 The wrappers initialize a `z_stream`, choose `windowBits` from the requested mode, run `deflate()` or `inflate()`, and release zlib state with `deflateEnd()` / `inflateEnd()`. Raw pointer overloads reject a null input pointer; stream-output overloads also reject a null output stream.
 
 These functions are intentionally lower-level than content negotiation. A caller must select a mode compatible with the data being decoded and handle the returned status. The implementation should not be read as a promise that every malformed input or every zlib terminal condition receives exhaustive protocol-level diagnostics; those semantics belong to the actual wrapper implementation and its callers.
 
-## 4. Example from the source tests
+### Source-level evidence
+No dedicated zlib testcase is present under `test/testcase/io/basic` in this source tree. The integration paths select a mode at the call site: HTTP response compression can use raw DEFLATE or gzip framing, while JOSE `zip: DEF` uses raw DEFLATE. Trace the caller's content/algorithm decision, then follow the selected `zlib_windowbits_t` into `zlib.cpp`. These are integration paths, not direct unit tests for every wrapper overload.
 
-No dedicated zlib testcase is present under `test/testcase/io/basic` in this source tree. The implementation is nevertheless used by concrete consumers:
-
-- `sdk/net/http/http_response.cpp` calls `zlib_deflate()` with `windowbits_deflate` or `windowbits_gzip` when producing compressed HTTP response content.
-- `sdk/crypto/jose/json_object_encryption.cpp` calls `zlib_deflate()` with `windowbits_deflate` for JOSE compressed content (`zip: DEF`).
-
-To follow the code, start at the consumer's content/algorithm decision, note the selected `zlib_windowbits_t`, then follow the overload into `zlib.cpp` to see how the chosen window bits affect the zlib stream. These are integration paths, not direct unit tests for every wrapper overload.
-
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/base/stream/` — stream abstraction used by stream-oriented overloads.
 - `sdk/net/http/http_response.cpp` — HTTP content compression consumer.
 - `sdk/crypto/jose/json_object_encryption.cpp` — JOSE `DEF` compression consumer.
 
-## 6. References
+### Implementation source navigation
+
+- `sdk/io/basic/zlib.hpp/.cpp`
+
+## 5. References
 
 - RFC 1951 — DEFLATE Compressed Data Format Specification.
 - RFC 1952 — gzip file format.
 - RFC 7520 §5.9 — JOSE compressed content example (`zip: DEF`).
 - RFC 2616 §3.5 — historical HTTP/1.1 content-coding context cited by the source.
-
-### Source
-
-- `sdk/io/basic/zlib.hpp/.cpp`

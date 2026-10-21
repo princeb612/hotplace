@@ -3,25 +3,23 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
 
-# JSON Object Signing and Encryption (JOSE) implementation status
+# Developer Note: Historical JOSE Implementation Status
 
-## 1. Role
+## Purpose and status boundary
 
-This page preserves the module's pre-existing algorithm-status reference. Unlike the other JOSE records, it is a status-table/history document; the check marks are retained as written and have not been independently re-audited during this documentation pass.
+This is a preserved developer-maintenance note, not a current support guarantee. Its tables and TODOs record an older status snapshot and have not all been re-audited. For the current source-based mapping inventory and the distinction between metadata, test coverage and runtime availability, use the [JOSE README](README.md).
 
-## 2. Model
-
+## Historical algorithm-status tables
 The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE key management, JWE content encryption, and JWK key types. Use the focused records for the architectural model: [object model](jose-object-model.md), [JWS/JWE flow](jose-signing-encryption.md), and [JWK/algorithm mapping](jose-key-and-algorithms.md).
 
-# JSON Object Signing and Encryption (JOSE) implementation status
-
-## Cryptographic Algorithms for Digital Signatures and MACs
+# Cryptographic Algorithms for Digital Signatures and MACs
 
 | Implemented  | "alg" Param Value | Digital Signature or MAC Algorithm | Implementation Requirements |
 |-- |--     |--                                              |--            |
@@ -82,27 +80,35 @@ The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE k
 | O | EC    | JWK/PEM                | crv "P-256","P-384","P-521" |
 | O | OKP   | JWK/PEM                | crv "Ed25519","Ed448","X25519","X448" |
 
-## 3. Important behavior and lifetime
-
+## Interpretation notes
 These tables are a snapshot from the existing document, not a normative declaration of current backend support. Actual behavior also depends on provider/build configuration and key availability. The presence of source tests is useful evidence but does not by itself establish support in every build environment.
 
-## 4. Example from the source tests
+## 4. Relationships
+
+### Implementation and test sources
+
+
+### Source-test evidence
 
 The direct source-level examples are mapped in [`testcase_jose.md`](../../../test/testcase/jose/testcase_jose.md). In particular, RFC 7515 tests exercise signature/MAC operations, RFC 7516 and RFC 7520 tests exercise encryption and key management, and RFC 7638/8037/AKP sources cover thumbprints and additional key/algorithm families.
-
-## 5. Relationships
 
 - [JWS signing and JWE encryption](jose-signing-encryption.md)
 - [JWK and algorithm mapping](jose-key-and-algorithms.md)
 - [JOSE object model and context](jose-object-model.md)
 
-## 6. References
+## 5. References
 
-- RFC 7515, RFC 7516, RFC 7517, RFC 7518, RFC 7520, RFC 7638, RFC 8037
-- Existing JSON parser benchmark links retained from the source note.
+- RFC 7515 — JSON Web Signature (JWS).
+- RFC 7516 — JSON Web Encryption (JWE).
+- RFC 7517 — JSON Web Key (JWK).
+- RFC 7518 — JSON Web Algorithms (JWA).
+- RFC 7520 — Examples of Protecting Content Using JOSE.
+- RFC 7638 — JSON Web Key (JWK) Thumbprint.
+- RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE.
+
 ## Development Notes (for maintainer review)
 
-The source document's explicit TODO checklist and the older status matrix are preserved below. They are historical maintainer notes, not a verified statement that each item is still outstanding. For example, RFC 7638 test coverage and AKP/ML-DSA test vectors are present in this source tree even though the older checklist still mentions JWK thumbprints and post-quantum work.
+The explicit TODO checklist and older status matrix are preserved below as historical notes, not as a verified statement that each item remains outstanding. The current source includes an RFC 7638 thumbprint testcase and an AKP/ML-DSA testcase, despite TODO entries mentioning thumbprints and post-quantum work. Conversely, presence of a testcase does not establish broad interoperability or runtime availability in every build.
 
 ## TODO
 

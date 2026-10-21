@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -32,8 +33,7 @@ payload
 
 This is intended for protocol fields whose binary layout is known from the surrounding message structure, without introducing a separate schema language.
 
-## 2. Model
-
+## 2. Data Model
 ### payload_member
 
 `payload_member` stores one field's value and metadata.
@@ -116,8 +116,7 @@ Its purpose is to let a specialized encoder calculate and write the field repres
 
 This is particularly relevant to protocol-specific variable-length encodings. QUIC uses this mechanism through its own encoded payload implementation.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Encoding and decoding
 
 A payload is built in field order:
@@ -138,8 +137,6 @@ pl.read(binary);
 ```
 
 The important design point is that the field description is reused for both directions.
-
-## 4. Example from the source tests
 
 ### Protocol examples
 
@@ -170,8 +167,7 @@ The payload layer is therefore generic, while protocol-specific encodings remain
   - QUIC integer encoding
   - `payload_encoded` integration
 
-## 5. Relationships
-
+## 4. Relationships
 ### Relationship with higher layers
 
 ```text
@@ -188,9 +184,7 @@ protocol implementation
 
 It is used by higher-level protocol implementations such as HTTP/2, TLS-related structures, DTLS-related structures and QUIC code.
 
-## 6. References
-
-### Related source
+### Implementation source navigation
 
 - `sdk/io/basic/payload.hpp`
 - `sdk/io/basic/payload.cpp`

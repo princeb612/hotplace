@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -13,38 +14,39 @@
 
 ## 1. Role
 
-The tests under this directory exercise the `test_case` reporting/assertion infrastructure and the logger's console color and log-level behavior. They test the test framework itself, so report categories and assertion semantics are especially important.
+The tests under this directory exercise the `test_case` reporting/assertion infrastructure and the logger's console-color and log-level behavior. They test the test framework itself, so result categories and assertion semantics are especially important.
 
 ## 2. Test model
 
 ```text
 testcase_unittest.cpp ──► test_case result categories / assertions
-testcase_loglevel.cpp ─► logger filtering and level behavior
-testcase_consolecolor.cpp ► console color output
+testcase_loglevel.cpp ──► logger filtering and level behavior
+testcase_consolecolor.cpp ──► console color output
              │
              ▼
          base/report
 ```
 
-## 3. Example: representative testcase flow
+The first testcase covers result recording and selected control-flow helpers; the other two isolate logger filtering and terminal presentation.
 
-This document does not duplicate a standalone program. The representative testcase functions and their assertion strength are described under Source-level coverage.
+## 3. Example: result category and failure flow
+
+In `testcase_unittest.cpp`, the harness opens the `test_case` group and records success, unsupported/skip, and low-security categories. The report preserves these as distinct outcomes; they should not be normalized into a single Boolean pass/fail label.
+
+The `test_fail()` path exercises `__leave2_if_fail` and checks that execution did not continue past the failure point. By contrast, `test_trace()` and `test_try_leave()` end with constant-true assertions, which do not validate the emitted trace text. The shown `test_except()` code dereferences a null pointer; source presence alone does not establish that this path is safely handled or even reached in the reported run.
+
+`testcase_loglevel.cpp` checks explicit and implicit logger levels against the configured threshold. `testcase_consolecolor.cpp` separately exercises console styling, a presentation concern independent of pass/fail accounting.
 
 ## 4. Test and verification status
 
 ### 4.1 Source-level coverage
 
-#### Source-level findings
-
-- `testcase_unittest.cpp` deliberately demonstrates pass, unsupported/skip, and low-security categories. Some intentionally failing examples are commented out and therefore are not active failing checks.
-- `test_fail()` exercises the `__leave2_if_fail` path and checks that execution did not continue past the failure.
-- `test_trace()` and `test_try_leave()` exercise trace paths but end with constant-true assertions; those assertions do not validate the trace text itself.
-- `test_except()` dereferences a null pointer in the shown source. Its actual reachability and handling depend on the surrounding harness/build path; do not interpret this source fragment alone as evidence of a successful exception-safety test.
-- `testcase_loglevel.cpp` and `testcase_consolecolor.cpp` are separate test sources for logger behavior.
+- `testcase_unittest.cpp`: result categories, selected failure-control flow, trace/leave helpers, and exception-related sample code.
+- `testcase_loglevel.cpp`: explicit/implicit level behavior and filtering.
+- `testcase_consolecolor.cpp`: console color behavior.
+- Limitation: constant-true assertions after trace-oriented calls do not verify the trace text or logger output. Commented-out failing examples are not active checks.
 
 ### 4.2 Documentation and verification status
-
-#### Report-backed runtime status
 
 The supplied base report records:
 
@@ -54,19 +56,13 @@ The supplied base report records:
 | `loglevel` | `success 98` |
 | `console_color` | `success 3` |
 
-The report categories are preserved verbatim. In particular, `skip` and `triv` are not silently converted to `pass`.
-
-#### Documentation and verification status
+The report categories are preserved verbatim: `skip` and `triv` are not silently converted to `pass`. These are report-backed execution records, but the report does not independently identify the OS/compiler/build configuration or tested source revision. This document's source basis is Revision 1105; that does not prove the supplied report was produced from that exact revision.
 
 | Axis | Status | Basis |
 |---|---|---|
-| Documentation completeness | Partial | Primary testcase files and result categories are described; every logger configuration and platform path is not enumerated. |
-| Verification completeness | Partial | The source contains meaningful control-flow checks, but some trace/log demonstrations use constant-true assertions and do not verify output content. |
-| Runtime execution | Report recorded | Three corresponding report groups are present in the supplied base report. Environment and source revision are not identified by the report itself. |
-
-#### Source basis
-
-Source and testcase structure reviewed against hotplace revision 1104. Runtime status is based on the supplied report archive, whose metadata does not independently prove the tested source revision.
+| Documentation completeness | Partial | Main testcase sources and report categories are mapped; not every logger configuration or platform path is enumerated. |
+| Verification completeness | Partial | Selected control-flow paths have meaningful checks; some trace/log demonstrations do not compare output content. |
+| Runtime execution | Report recorded | Three corresponding report groups appear in the supplied base report; environment and source revision remain unverified. |
 
 ## 5. Relationships
 
@@ -76,4 +72,7 @@ Source and testcase structure reviewed against hotplace revision 1104. Runtime s
 
 ## 6. References
 
-Source paths and report provenance are recorded where available.
+- `test/testcase/base/unittest/testcase_unittest.cpp`
+- `test/testcase/base/unittest/testcase_loglevel.cpp`
+- `test/testcase/base/unittest/testcase_consolecolor.cpp`
+- `test/testcase/base/report`

@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,7 +13,6 @@
 
 ## 1. Role
 
-### Role
 
 `sdk/net/tls/tls` is the wire-message model for TLS and DTLS. It separates the three major protocol objects used by the implementation:
 
@@ -31,7 +31,7 @@ TLS / DTLS
 
 The classes are primarily responsible for representing, encoding and decoding protocol messages. Cryptographic state is handled by `protection/`, while session-level sequencing and transport integration are handled by `session/` and the surrounding network layer.
 
-## 2. Model
+## 2. Data Model
 
 ### Record layer
 
@@ -115,35 +115,35 @@ Implemented examples include:
 
 The extension builder/collection classes form the common dispatch boundary.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+The record, handshake and extension objects are different representation layers. A record carries a content type and version/length framing; a handshake record can contain a sequence of handshake messages; each handshake message has its own type-specific fields, some of which contain an extension collection. Builders/collections provide the construction and dispatch boundary, while message-specific classes own field encoding/decoding.
 
-## 4. Example from the source tests
+Do not confuse the message object model with handshake state: whether a message is expected, which keys protect it, and what state transition follows are session/protection concerns. DTLS fragmentation/reordering is also a session/transport concern even though it carries the same handshake message family.
 
-### Related tests
+## 4. Relationships
 
-Representative tests include:
 
-- `testcase_construct_tls.cpp`
-- `testcase_construct_dtls12_1.cpp`
-- `testcase_construct_dtls12_2.cpp`
-- `testcase_construct_dtls13.cpp`
-- `testcase_helloretryrequest.cpp`
-- `testcase_alert.cpp`
-- `testcase_understand_tls12.cpp`
-- `testcase_understand_tls13.cpp`
-
-## 5. Relationships
-
-Related implementation areas and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-### Related source
 
 - `sdk/net/tls/tls/record/`
 - `sdk/net/tls/tls/handshake/`
 - `sdk/net/tls/tls/extension/`
 - `sdk/net/tls/protection/`
 - `sdk/net/tls/session/`
+- [TLS/DTLS/QUIC overview](README.md)
+- [TLS protection/session model](tls-protection-and-session.md)
+- [TLS 1.2 summary](rfc5246.md)
+- [TLS 1.3 summary](rfc8446.md)
+- [DTLS 1.3 summary](rfc9147.md)
+- `tls/record/`, `tls/handshake/`, and `tls/extension/` — concrete message representations.
+- `protection/` — transcript hash, key schedule and record protection.
+- `session/` — session state and DTLS/QUIC publication/arrangement.
+- `advisor/` — protocol identifier and parameter lookup.
+- `test/testcase/tls/` — construction, alert, HelloRetryRequest and TLS 1.2/1.3 source examples.
+
+## 5. References
+
+- [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
+- [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
+- [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
+- [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)

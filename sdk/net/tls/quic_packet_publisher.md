@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,9 +13,9 @@
 
 ## 1. Role
 
-This document identifies the module or protocol area represented by this file.
+This document records the session-level QUIC send-side adapter that composes TLS handshake data and application/HTTP/3 stream content into protected QUIC packets.
 
-## 2. Model
+## 2. Data Model
 
 ### Identity
 
@@ -88,16 +89,25 @@ The publisher can queue:
 
 `consume(quic_packet*, paid, callback)` provides the corresponding packet-payload segmentation path. It determines the protection space from the packet type, calculates available payload capacity, and exposes segments through the callback.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-Implementation details and behavior are described where the existing source-tree notes provide evidence.
+The publisher's pending items can originate from different protocol layers, but each output packet is constrained by its QUIC packet type and protection space. TLS handshake data is carried in CRYPTO frames; application and HTTP/3/QPACK stream bytes are carried in STREAM frames. The publisher coordinates this packing step but does not replace the underlying frame/packet serializers or TLS protection state.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-See the referenced testcase sources for concrete examples. Where no direct test is identified, this is not evidence of runtime verification.
 
-## 5. Relationships
 
+- `quic_packet_publisher.hpp`
+- `session/quic_packet_publisher.cpp`
+- `quic/packet/README.md`
+- `quic/README.md`
+- `quic-tls-integration.md`
+- `tls-session` / QUIC session handling
+- [TLS/DTLS/QUIC overview](README.md)
+- [QUIC implementation](quic/README.md)
+- [TLS/QUIC integration](quic-tls-integration.md)
+- [TLS session support](session/README.md)
+- [Network session model](../server/network_session.md)
 ### Session relationship
 
 ```text
@@ -118,13 +128,7 @@ tls_session
 
 The publisher does not replace QUIC packet/frame classes. It orchestrates their construction and packing for a session.
 
-## 6. References
+## 5. References
 
-### Related source
-
-- `quic_packet_publisher.hpp`
-- `session/quic_packet_publisher.cpp`
-- `quic/packet/README.md`
-- `quic/README.md`
-- `quic-tls-integration.md`
-- `tls-session` / QUIC session handling
+- [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
+- [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

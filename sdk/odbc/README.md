@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1104
+Edition 2 · Revision 1105
+Source basis: Revision 1105
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -35,11 +36,19 @@ odbc_sinker    — readiness / timeout bridge for async query
 
 ## 3. Important behavior and lifetime
 
-The implementation uses native ODBC handles and depends on the platform ODBC library. The build includes ANSI sources generally and Windows Unicode-specific source files when building on Windows. The connector enables connection pooling and configures ODBC 3 during startup.
+### Native handle lifecycle
+
+The implementation uses native ODBC environment, connection, and statement handles and depends on the platform ODBC driver manager. During startup, `odbc_connector` requests connection pooling and allocates an environment configured for ODBC 3. The exact behavior still depends on the installed driver manager and the supplied connection string.
+
+`odbc_query` is associated with a connection handle and owns a statement handle. It builds result-field metadata from `SQLNumResultCols` and `SQLDescribeCol`, and binds statement parameters through `SQLBindParameter`. Its close/destruction path closes the statement and disconnects/frees the associated connection handle; callers should not assume a query object is independent of its connection lifetime.
+
+The build includes ANSI sources generally and Windows Unicode-specific source files on Windows. Platform-specific ODBC type widths and text types are handled in the implementation, so portability claims should be checked against the target compiler and ODBC headers.
 
 ## 4. Example from the source tests
 
-The source testcase in `test/testcase/odbc/sample.cpp` accepts a connection string (`--c`) and table name (`--t`), connects, issues `select * from <table>`, fetches rows, and prints each field name and string value. This is a configurable integration sample, not a self-contained test against a bundled database.
+The source sample in `test/testcase/odbc/sample.cpp` accepts a connection string (`--c`) and table name (`--t`). The flow is: parse command-line inputs, create/connect through `odbc_connector`, create a query for `select * from <table>`, execute the statement, fetch rows, and print each field name and string value. Column metadata is built from the result set before row values are read.
+
+This is a configurable integration sample, not a self-contained test against a bundled database. Its successful execution depends on an external ODBC driver, a valid connection string, and a table accessible to that connection; the source sample alone does not establish that a live database was available during documentation.
 
 ## 5. Relationships
 
@@ -49,5 +58,9 @@ The source testcase in `test/testcase/odbc/sample.cpp` accepts a connection stri
 
 - `types.hpp`
 - `basic/README.md`
+- `basic/odbc_connector.hpp/.cpp`
+- `basic/odbc_query.hpp/.cpp`
+- `basic/odbc_record.hpp/.cpp`
+- `basic/odbc_field.hpp/.cpp`
 - `test/testcase/odbc/sample.cpp`
 - `CMakeLists.txt`

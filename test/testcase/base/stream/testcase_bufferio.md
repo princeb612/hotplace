@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 2 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -63,7 +64,7 @@ This excerpt is taken from the test's flow and depends on setup in `test_bufferi
 
 ### 4.1 Source-level coverage
 
-The source-level status is based on inspection of revision 1104. Runtime status is recorded separately from the supplied CTest-generated report snapshot; that report does not identify the tested source revision or execution environment.
+The source-level status is documented against Revision 1105. Runtime status is recorded separately from the supplied CTest-generated report snapshot; that report does not identify the tested source revision or execution environment.
 
 - **O** — an explicit check supports the stated claim: either an expected-value assertion or a checked operation result, as described in the evidence column.
 - **△** — the operation is exercised or diagnostic output is produced, but the stated content/behavior is not directly compared with an expected value.

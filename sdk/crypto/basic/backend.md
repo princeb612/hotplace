@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -14,8 +15,7 @@
 
 Three smaller areas complete the `crypto/basic` implementation layer: OpenSSL SDK support, random generation and post-quantum cryptography.
 
-## 2. Model
-
+## 2. Data Model
 ### OpenSSL SDK support
 
 `sdk/` contains the hotplace-side OpenSSL support layer.  It includes SDK initialization/debug support and OpenSSL tuning/helpers used by the primitive implementations.
@@ -34,18 +34,22 @@ The corresponding testcase is `test/testcase/crypto/prng/testcase_random.cpp`.
 
 PQC support should be understood as backend integration rather than a separate protocol implementation.  Higher-level TLS/COSE/other modules decide where these algorithms are used.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
+The backend layer is where hotplace's generic crypto interfaces meet OpenSSL-specific initialization, EVP operations, PRNG behavior and provider integration. Availability of an algorithm depends on the linked OpenSSL version/provider configuration; the presence of a wrapper or an algorithm name in a reference table is not sufficient evidence that the backend can instantiate it.
 
-Implementation behavior is documented only to the extent supported by the retained notes and source references.
+## 4. Relationships
 
-## 4. Example from the source tests
+### Source-test evidence
 
-See the referenced testcase source files for concrete examples. A source reference alone does not prove runtime execution.
+`test/testcase/crypto/prng/testcase_random.cpp` is the direct random-generation source path. PQC behavior is exercised by the key/signature tests under `test/testcase/crypto/key/`, `test/testcase/crypto/sign/`, and `test/testcase/crypto/pqc/` where present. These cover specific backend configurations and are not proof of universal provider availability.
 
-## 5. Relationships
+- `sdk/crypto/basic/` — common crypto operation and key interfaces
+- `sdk/crypto/oqs/` — OpenSSL 3 OQS provider adapter
+- `sdk/crypto/advisor/` — algorithm and backend metadata
+- `sdk/net/tls/` and `sdk/crypto/cose/` / `jose/` — higher-level consumers that choose when algorithms are used
 
-Related implementation modules and protocol boundaries are recorded here where identified.
-
-## 6. References
-
-Relevant source paths, sibling documentation, and standards references are retained here where available.
+- `sdk/crypto/basic/sdk.cpp` and OpenSSL support sources under `sdk/crypto/basic/sdk/`
+- `sdk/crypto/basic/prng/openssl_prng.cpp`
+- `sdk/crypto/basic/pqc/openssl_pqc.cpp`
+- `test/testcase/crypto/prng/testcase_random.cpp`
+- `sdk/crypto/oqs/` and `test/testcase/crypto/pqc/`

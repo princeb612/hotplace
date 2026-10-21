@@ -3,9 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -27,7 +28,7 @@ Supported encodings include:
 - RFC-style Base16
 - HTTP/2 Huffman
 
-## 2. Model
+## 2. Data Model
 
 ### Input types
 
@@ -37,7 +38,7 @@ Integral values can optionally be written in big-endian form. The default is big
 
 The maximum internal output buffer is 32 KiB by default and can be changed with `set_maxsize()`.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
 ### Stateful processing
 
@@ -72,11 +73,7 @@ The streaming behavior is exercised by:
 
 These tests deliberately change chunk boundaries and compare the streaming result with the ordinary encoder result.
 
-## 4. Example from the source tests
-
-See the source-test references below; do not infer runtime execution from source presence alone.
-
-## 5. Relationships
+## 4. Relationships
 
 ### Relationship with encoders
 
@@ -94,15 +91,4 @@ encoder_stream
 
 This keeps the encoding rules in one place while adding chunked processing.
 
-## 6. References
-
-### Related source
-
-- `sdk/base/encoding/encoder_stream.hpp`
-- `sdk/base/encoding/encoder_stream.cpp`
-- `sdk/base/encoding/base16.*`
-- `sdk/base/encoding/base64.*`
-- `sdk/base/encoding/huffman_coding.*`
-- `test/testcase/encode/testcase_base16.cpp`
-- `test/testcase/encode/testcase_base64.cpp`
-- `test/testcase/encode/testcase_huffman.cpp`
+- The implementation is in `encoder_stream.hpp/.cpp`; it delegates to `base16.*`, `base64.*`, and `huffman_coding.*`. `testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide consumer-facing coverage for those encoders.

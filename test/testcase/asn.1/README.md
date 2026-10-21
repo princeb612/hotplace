@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1104
+Edition 2 · Revision 1105
+Source basis: Revision 1105
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -19,7 +20,7 @@ The suite is split across `testcase_basic*.cpp`, `testcase_constraints.cpp`, `te
 
 ### Preserved source material
 
-The ASN.1 runtime representation is now `asn1_module`; the singleton registry for named modules is `asn1_modules`. The former `asn1_module_context` name is not current in Revision 1104.
+The ASN.1 runtime representation is now `asn1_module`; the singleton registry for named modules is `asn1_modules`. The former `asn1_module_context` name is not current in Revision 1105.
 
 Parameterized ASN.1 has two distinct workstreams in this revision. The LALR/GLR grammar and binary parsing tables are at revision 3, while `parameterized/testcase_parameterized.cpp` actively exercises direct semantic prototypes through `test_parameterized1()` (`define()`, `specialize()`, and parameter values). The parser → loader → publisher probe (`test_parameterized2()`) remains disabled in `testcase_parameterized()`. This is progress beyond grammar-only work, but it is not complete end-to-end parameterized ASN.1 support.
 
@@ -374,11 +375,11 @@ SEQUENCE {
 - **O** — parser test source supplies a broad table of ASN.1 type notation and constraints.
 - **O** — object-model, module/publisher, loader, and constraints paths have dedicated testcase sources.
 - **△** — parameterized direct semantic prototype coverage does not imply full parser → loader → publisher integration; the `test_parameterized2()` probe is disabled in the current dispatcher.
-- **△** — source coverage alone does not establish successful execution on Revision 1104.
+- **△** — source coverage alone does not establish successful execution on Revision 1105.
 
 ### 4.2 Documentation and verification status
 
-The supplied `asn.1/report` records pass 1628, expt 40, fail 0, skip 0, triv 0. The report does not define `expt` here, and does not identify OS/compiler/build configuration or source revision. No test was executed as part of this documentation update.
+The supplied `asn.1/report` records 1,628 pass, 40 expt, 0 fail, 0 skip and 0 triv. The shared [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on conversation context; the report itself does not independently identify the tested source revision, exact OS/compiler build details, or configuration. This is distinct from the current documentation basis, Revision 1105. The report does not define `expt`, so the label is preserved without interpretation. No test was executed as part of this documentation update.
 
 ## 5. Relationships
 

@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -15,8 +16,7 @@
 
 Describes the CBOR object tree and its concrete value, array, map, pair, string, and simple-value types.
 
-## 2. Model
-
+## 2. Data Model
 ### Role
 
 The CBOR implementation represents one CBOR data item as a tree of `cbor_object` instances.
@@ -113,8 +113,7 @@ Every object can be represented through:
 
 Higher-level publication is provided by `cbor_publisher`.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Indefinite-length data
 
 CBOR supports both definite and indefinite-length forms.
@@ -129,22 +128,13 @@ logical CBOR object
 one specific binary layout
 ```
 
-## 4. Example from the source tests
+### Example: nested array and map
 
-### Tests
+The object tree models a map as `cbor_map` containing `cbor_pair` instances; each pair holds a key object and a value object. An array is represented by `cbor_array`, so a nested array/map input remains a hierarchy rather than a flattened value. The reader builds this hierarchy from encoded bytes and visitors traverse it later.
 
-Primary tests:
+The object hierarchy is illustrated by vector-driven cases and sample object construction; this documentation update did not execute those tests.
 
-- `test/testcase/cbor/testvector_cbor.cpp`
-- `test/testcase/cbor/testcase_rfc7049.cpp`
-- `test/testcase/cbor/sample.cpp`
-
-The YAML vector file is:
-
-- `test/testcase/cbor/testvector_cbor.yml`
-
-## 5. Relationships
-
+## 4. Relationships
 ### Related source
 
 - `cbor_object.*`
@@ -157,6 +147,12 @@ The YAML vector file is:
 - `cbor_simple.*`
 - `cbor_publisher.*`
 
-## 6. References
+### Related tests
 
-- Source: this module and its related testcase directory (Revision 1104).
+- `test/testcase/cbor/testvector_cbor.cpp` and `testvector_cbor.yml` — vector-driven encoded/decoded cases.
+- `test/testcase/cbor/testcase_rfc7049.cpp` — RFC-oriented examples.
+- `test/testcase/cbor/sample.cpp` — sample object construction and representation.
+
+## 5. References
+
+- RFC 8949, Appendix A — encoded data-item examples

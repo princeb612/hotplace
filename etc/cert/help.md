@@ -1,24 +1,34 @@
-# self-signed certificate
+## Publication
 
-- ./issue.sh param
-  - RSA        - RSA certificate (RSA 3072)
-  - RSAPSS     - RSAPSS certificate (RSAPSS 3072)
-  - ECDSA      - ECDSA certificate (P-384)
-  - P-256      - ECDSA certificate (P-256)
-  - P-384      - ECDSA certificate (P-384)
-  - P-521      - ECDSA certificate (P-521)
-  - MLDSA      - MLDSA certificate (ML-DSA-65)
-  - MLDSA44    - MLDSA certificate (ML-DSA-44)
-  - MLDSA65    - MLDSA certificate (ML-DSA-65)
-  - MLDSA87    - MLDSA certificate (ML-DSA-87)
-  - SLHDSA     - SLHDSA certificate (SLH-DSA-SHA2-128f)
-  - SLHDSA128S - SLHDSA certificate (SLH-DSA-SHA2-128s)
-  - SLHDSA128F - SLHDSA certificate (SLH-DSA-SHA2-128f)
-  - SLHDSA192S - SLHDSA certificate (SLH-DSA-SHA2-192s)
-  - SLHDSA192F - SLHDSA certificate (SLH-DSA-SHA2-192f)
-  - SLHDSA256S - SLHDSA certificate (SLH-DSA-SHA2-256s)
-  - SLHDSA256F - SLHDSA certificate (SLH-DSA-SHA2-256f)
-  - EDDSA      - EDDSA Certificate (ED25519)
-  - ED25519    - EDDSA Certificate (ED25519)
-  - ED448      - EDDSA Certificate (ED448)
-  - clean      - delete certificate files (and then exit)
+```text
+hotplace source-tree documentation
+Edition 2 · Revision 1105
+Source basis: Revision 1105
+Documented with GPT-6
+Documentation scope: certificate script arguments
+```
+
+# Test certificate generation options
+
+This helper note documents the accepted arguments for `issue.sh`. Run the script from `etc/cert/`; generated files are written in the current directory.
+
+| Argument | Generated test key/certificate family |
+|---|---|
+| `rsa` | RSA 3072 |
+| `rsapss` | RSA-PSS 3072 |
+| `ecdsa` | ECDSA P-384 (default) |
+| `p-256` | ECDSA P-256 |
+| `p-384` | ECDSA P-384 |
+| `p-521` | ECDSA P-521 |
+| `mldsa`, `mldsa65` | ML-DSA-65 |
+| `mldsa44` | ML-DSA-44 |
+| `mldsa87` | ML-DSA-87 |
+| `slhdsa`, `slhdsa128f` | SLH-DSA-SHA2-128f |
+| `slhdsa128s` | SLH-DSA-SHA2-128s |
+| `slhdsa192f` / `slhdsa192s` | SLH-DSA-SHA2-192f / 192s |
+| `slhdsa256f` / `slhdsa256s` | SLH-DSA-SHA2-256f / 256s |
+| `eddsa`, `ed25519` | EdDSA Ed25519 |
+| `ed448` | EdDSA Ed448 |
+| `clean` | Remove generated `root-*`, `server-*`, `*.ext`, `*.pem`, and `*.srl` files |
+
+The script normalizes arguments to lowercase. The generated material is for local tests only; do not use these self-signed keys/certificates as production credentials or trust anchors.

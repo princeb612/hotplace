@@ -219,6 +219,19 @@ The key area is broader than simply storing a private key.
 
 `keydesc` carries selection metadata such as `kid`, algorithm, use, and group. `crypto_key` acts as a key collection/selection boundary, while `crypto_keychain` supplies concrete representations and conversion paths for RSA, EC/OKP, DH, DSA, symmetric keys, and the PQC key families represented by the project.
 
+The important lifecycle is not simply **load a key and use it**. It separates four different concerns:
+
+```text
+external representation       key material              operation
+JWK / COSE_Key / PEM / DER → crypto_key / EVP_PKEY → sign / verify / agree
+                                      │
+                                      └── select by kid, alg, use, type, group
+```
+
+A `kid` is an identifier for lookup, not proof that the key is appropriate. Algorithm, key type, usage, and (where applicable) group must agree with the operation. Similarly, a public-only key can be sufficient for verification or as a peer key-agreement input, while signing or decapsulation requires private material. Serialization format, key identity, and cryptographic capability are related but distinct.
+
+`crypto_key` also exposes selection overloads for JOSE and COSE algorithm identifiers as well as TLS groups. `crypto_advisor` bridges those protocol vocabularies to internal key/operation metadata; it does not replace the protocol's validation or state machine.
+
 ### Operation layer
 
 The operation classes form the reusable substrate consumed by higher layers:
@@ -303,6 +316,15 @@ TLS session
 ```
 
 The crypto layer does not own TLS handshake state. It supplies the operations and key material that TLS orchestrates.
+
+For key establishment, keep these values separate:
+
+- **Private key:** local secret material retained by the endpoint.
+- **Public key share:** group-specific bytes sent in a handshake; it is not the private key object.
+- **Shared secret:** output of classical agreement or KEM processing, consumed by the protocol's key schedule.
+- **Traffic keys:** later outputs derived by TLS from the shared secret and transcript-dependent key schedule.
+
+`crypto_keyexchange` handles group-level key generation/share extraction and the exchange or KEM operation. TLS chooses the group, carries the share in its handshake, processes the peer's message, and feeds the resulting secret into the TLS 1.3 key schedule. This separation is also useful for COSE key management: both consumers can reuse cryptographic key-establishment mechanisms without sharing the same wire format or protocol state.
 
 ## PQC and the cryptographic layer
 

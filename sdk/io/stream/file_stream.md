@@ -3,7 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1105                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -31,8 +32,7 @@ file_stream
        └── Windows: HANDLE + CreateFileMapping/MapViewOfFile
 ```
 
-## 2. Model
-
+## 2. Data Model
 ### Memory mapping
 
 Memory mapping is an explicit operation rather than an automatic property of `file_stream`.
@@ -113,8 +113,7 @@ The stream type is reported as `stream_type_t::file`.
 
 `data()` is meaningful for the active memory-mapped view; ordinary file access should use `read()`/`write()`.
 
-## 3. Important behavior and lifetime
-
+## 3. Behavior Model
 ### Open flags
 
 `filestream_flag_t` describes the file-open policy.
@@ -206,8 +205,7 @@ There is currently one substantive concrete implementation in this directory: `f
 
 If additional concrete stream types are introduced later, they should get their own module records rather than expanding this document indefinitely.
 
-## 4. Example from the source tests
-
+### Source-level evidence
 ### Test coverage
 
 `test/testcase/io/stream/testcase_filestream.cpp` currently exercises:
@@ -230,18 +228,14 @@ The test is therefore also a compact example of the intended mmap/read workflow.
 - `test/testcase/io/sample.cpp`
 - `test/testcase/io/sample.hpp`
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related modules
 
 - `sdk/base/stream/` — common stream, buffer and formatting layer
 - `sdk/io/string/` — I/O string facilities
 - `sdk/io/basic/` — protocol-oriented binary I/O helpers
 
-## 6. References
-
-### Related source
-
+### Implementation source navigation
 - `sdk/io/stream/file_stream.hpp`
 - `sdk/io/stream/linux/file_stream.cpp`
 - `sdk/io/stream/windows/file_stream.cpp`

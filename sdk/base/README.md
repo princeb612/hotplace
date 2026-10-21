@@ -3,11 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 1 · Revision 1105                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
-│ Documentation scope: directory identity and  │
-│ implementation navigation                    │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -15,161 +14,87 @@
 
 ## 1. Role
 
-`sdk/base` contains reusable low-level facilities shared by higher-level hotplace modules. Its contents include value and byte representations, encoders, data structures and algorithms, in-memory streams and strings, operating-system-adjacent helpers, and the test/logging support used by the project's own test programs.
+`sdk/base` contains reusable low-level facilities shared by higher-level hotplace modules. Its scope includes value and byte representations, encoders, data structures and algorithms, in-memory streams and strings, operating-system-adjacent helpers, and the logging/test infrastructure used by the project's own test programs.
 
-The directory is a foundation layer rather than a protocol implementation. TLS, QUIC, ASN.1, HTTP, and other higher-level modules may use its primitives, but protocol rules and wire-message sequencing belong to those higher layers.
+This is a foundation layer, not a protocol implementation. TLS, QUIC, ASN.1, HTTP, and other higher-level modules may use base primitives, but protocol rules, wire-message sequencing, and protocol-specific validation belong to those higher layers.
 
-The directory map below preserves the original topic map as a navigation aid. It is a conceptual inventory, not a claim that every item has the same dependency direction or is implemented in one common framework.
+The directory is not one unified runtime framework. Its components have different responsibilities and ownership rules: a `variant`, an in-memory stream, a graph, a string helper, and a synchronization primitive should be understood through their own interfaces and implementations.
 
-## 2. Model
+## 2. Data Model
 
 ### Directory map
 
-```mermaid
-mindmap
-  root((base))
-    utilities
-      command line
-      customized printf
-      customized stream
-      dump memory
-      function pipeline
-      variant
-      valist
-      CRC
-    encoding
-      base16
-      base64
-      Huffman coding
-    types and numeric values
-      binary
-      endian
-      variant
-      IEEE 754
-        half-precision
-        single-precision
-        double-precision
-      bignumber
-      floating point
-        decimal float
-        rational float
-    unittest
-      testcase
-      logger
-      trace
-    stream
-      ANSI string
-      wide string
-      binary stream
-      splitter
-    string
-      string helpers
-      constexpr obfuscation
-      runtime obfuscation
-    system
-      critical section
-      semaphore
-      datetime
-      signalwait_threads
-        thread
-    algorithms
-      data structures
-        AVL tree
-        B-tree
-        list
-        priority queue
-        vector
-      pattern
-        Knuth-Morris-Pratt
-        trie
-        suffix tree
-        Ukkonen
-        Aho-Corasick
-          wildcard feature
-        regular expression
-      graph
-        BFS
-        DFS
-        Dijkstra
-        topological sort
-        graph-structured stack
+```text
+sdk/base
+├── basic
+│   ├── command line, customized printf/stream, memory dump
+│   ├── function pipeline, variant, valist, CRC
+├── encoding
+│   └── Base16, Base64, Huffman coding
+├── types and numeric values
+│   └── binary, endian, IEEE 754, bignumber, decimal/rational floating point
+├── unittest
+│   └── testcase, logger, trace
+├── nostd
+│   └── containers, binary/value helpers, ranges/sets, traits/utilities
+├── stream
+│   └── ANSI/wide strings, binary stream, splitter
+├── string
+│   └── string helpers, compile-time/runtime obfuscation
+├── system
+│   └── time, process, redirection, directory, synchronization/thread helpers
+├── data structures
+│   └── AVL tree, B-tree, list, priority queue, vector
+├── pattern
+│   └── KMP, trie, suffix structures, Aho-Corasick, wildcard, regex
+└── graph
+    └── BFS, DFS, Dijkstra, topological sort, graph-structured stack
 ```
 
-### How to read this map
+### How the directories divide responsibility
 
-The map groups facilities by their primary topic; the concrete implementation is distributed across subdirectories and individual headers/sources.
+- `basic` contains general-purpose helpers such as `variant`, `valist`, `function_pipeline`, command-line handling, memory dumps, and CRC support. These utilities provide reusable representations or operations; they do not assign protocol meaning to their inputs.
+- `encoding` contains byte/text encoding facilities such as Base16, Base64, and Huffman coding. These transform representations and are distinct from generic value containers in `basic`.
+- `nostd` contains project-owned C++11-oriented STL-style utilities, including containers, byte/value helpers, range/set abstractions, traits, and conversion helpers. The name does not imply that every component is a drop-in replacement for a standard-library type.
+- `stream` and `string` provide in-memory buffering, formatting, string manipulation, and obfuscation utilities. They should not be conflated with the external-I/O adapters under `sdk/io`.
+- `system` contains time/date helpers, synchronization, process and standard-I/O redirection interfaces, directory helpers, thread-related utilities, and platform-sensitive implementations.
+- Data structures, pattern matching, and graph algorithms are separate algorithm families. The graph-structured stack is a specialized consumer of graph-shaped storage for parser implementation, not a protocol-independent parser by itself.
+- `unittest` supplies infrastructure for hotplace's own test programs. Its presence does not mean that every SDK consumer must adopt it as an application testing framework.
+- Root-level headers define shared contracts and conventions: [shared types](types.md), [error codes](error.md), [callbacks](callback.md), [character-set compatibility](charset.md), [inline helpers](inline.md), [control-flow macros](syntax.md), and the abstract [stream interface](stream.md).
+- Root-level [trace controls](trace.md) define event/option identifiers; they are distinct from the [system trace implementation](system/trace.md).
+- The [C++14 entry point](c++14.md) is a narrow wrapper for the isolated compile-time string-obfuscation experiment, not a project-wide change in language baseline.
 
-- `basic` contains general helpers such as `variant`, `valist`, `function_pipeline`, `cmdline`, `dump_memory`, and CRC support.
-- `encoding` contains byte/text encoding facilities. These are distinct from the generic value representation in `basic`.
-- `stream` and `string` provide in-memory formatting, buffering, and string-oriented operations. They are not interchangeable with the OS-backed adapters in `sdk/io`.
-- `system` contains synchronization, time, and thread-related helpers whose implementation may depend on the target platform.
-- data structures, pattern matching, and graph algorithms provide reusable algorithms; the GLR parser's graph-structured stack is a specialized consumer of graph-shaped storage.
-- `unittest` is infrastructure for hotplace's own tests, not an application-level testing framework dependency imposed on every SDK consumer.
+## 3. Behavior Model
 
-### Topic documents retained from the original README
+### Representation and interpretation are separate
 
-- [Compile-time string obfuscation](string/constexpr-obfuscation.md)
-- [Big-number notes](system/bignumber.md)
+Base facilities store, transform, format, or organize data. Higher-level components decide what that data means in a protocol or application.
 
-These links are retained as topic-specific documents; the README does not replace their implementation-level explanations.
+- `dump_memory` formats bytes for diagnostics; it does not validate a protocol message.
+- `variant` represents values and supports conversions; it does not define the wire format or negotiation rules for a protocol.
+- An encoding routine transforms an input representation into an output representation; it does not by itself establish that the input is semantically valid for a higher-level protocol.
+- A graph algorithm computes traversal, ordering, or path results; the consuming parser or application determines how those results are interpreted.
+- A base stream manages in-memory data; external I/O, buffering policy, and transport lifecycle are owned by the relevant adapter or higher layer.
 
-## 3. Important behavior and lifetime
+These distinctions are useful when following an implementation call: identify the base operation, then identify the caller that gives the result protocol- or application-specific meaning.
 
-### Layer boundaries
+### Lifetime and platform sensitivity
 
-`base` provides primitives and reusable mechanisms. It should not be read as a single unified runtime object model: a `variant`, a `basic_stream`, a graph, and a synchronization helper have different ownership and lifetime rules.
+There is no single lifetime rule for all of `sdk/base`. The ownership contract must be checked at the specific type or function boundary. Value containers, stream buffers, graph nodes, and OS synchronization/process objects do not necessarily share the same ownership model.
 
-When following a call from a higher-level module, distinguish among:
-1. the base primitive that stores or transforms data;
-2. the higher-level component that assigns protocol or application meaning to it; and
-3. the test harness that records the expected result.
+Some facilities are ABI- or platform-sensitive. For example, `valist` reconstructs argument representations used by the project's formatting interface; native `va_list` layout is not portable across all compilers and ABIs. Synchronization, thread, console, process, and standard-I/O redirection code likewise requires attention to the target OS and compiler implementation.
 
-For example, `dump_memory` formats bytes for diagnostics; it does not validate a protocol message. `variant` can represent protocol-width integers; it does not itself define the wire protocol. A graph algorithm computes traversal/order results; the consuming parser decides what those results mean.
+### Language baseline
 
-### Compatibility and platform-sensitive areas
-
-The project targets C++11 as its general baseline. Some isolated experiments, such as compile-time string obfuscation, may use newer language features and should not be interpreted as a promise of broad C++14-or-later support.
-
-Platform-sensitive code deserves direct inspection rather than assumptions based on the directory name. `valist` reconstructs ABI-specific argument representations, and synchronization, thread, and console facilities can vary by compiler/OS.
+The project's general compatibility target is C++11. Isolated experiments, including compile-time string obfuscation, may use newer language features; those exceptions must not be interpreted as broad C++14-or-later support for the SDK.
 
 ### Verification boundary
 
-Source examples and testcase reports answer different questions. A source-level test explains what the test attempts to check; a report records an execution result for a particular report snapshot. Unless a report explicitly identifies the source revision and environment, it should not be used as proof that the exact current working tree passed on a particular platform.
+Test source and execution reports answer different questions. Source code reveals what a testcase attempts to assert; a report records results for a particular run and environment. The existence of a testcase is not proof that it was executed, and a report without a matching source revision and environment should not be treated as evidence that the exact current tree passed on that platform.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-### Follow one value through the base utilities
-
-The `variant` and `valist` tests show how a typed value can move through several base-level representations without introducing protocol semantics:
-
-```text
-testcase_variant.cpp
-    │
-    ├── variant::set(...)
-    ├── variant::to_binary(...)
-    └── base16_encode(...) ──► expected hexadecimal bytes
-
-testcase_valist.cpp
-    │
-    ├── valist::operator<<(...)
-    ├── sprintf(..., valist)
-    └── basic_stream ─────────► expected formatted text
-```
-
-In `test/testcase/base/basic/testcase_variant.cpp`, the test sets a `uint32` value, converts it to binary with the selected endian/truncation flags, and compares the Base16 result with `"00008000"`. The same testcase checks a 64-bit value and a `bignumber` conversion. This is a concrete path from typed value to bytes to a readable test expectation.
-
-In `test/testcase/base/basic/testcase_valist.cpp`, values are appended to a `valist` and passed to the project's formatting interface. The test compares the resulting `basic_stream` text with an expected string. This demonstrates the integration path; it does not make native `va_list` layouts portable.
-
-### Where to continue
-
-- [`variant` testcase](../../test/testcase/base/basic/testcase_variant.cpp) — typed values, binary conversion, and conversion expectations.
-- [`valist` testcase](../../test/testcase/base/basic/testcase_valist.cpp) — dynamically assembled formatting arguments.
-- [`dump_memory` testcase](../../test/testcase/base/basic/testcase_dumpmemory.cpp) — formatting raw bytes with different widths, indentation, and display-base options.
-- [`graph` testcase](../../test/testcase/base/graph/testcase_graph.cpp) — graph traversal and shortest-path algorithms.
-
-The test sources are executable examples to inspect; their presence alone is not a statement that they were run in every supported environment.
-
-## 5. Relationships
+### Dependency direction
 
 ```text
              higher-level hotplace modules
@@ -178,8 +103,8 @@ The test sources are executable examples to inspect; their presence alone is not
                          ▼
                  reusable sdk/base
        ┌──────────┬───────────┬───────────┐
-       │ values   │ algorithms│ I/O-like  │
-       │ encoding │ data      │ in-memory │
+       │ values   │ algorithms│ in-memory │
+       │ encoding │ data      │ streams   │
        │ types    │ structures│ helpers   │
        └──────────┴───────────┴───────────┘
                          │
@@ -187,14 +112,19 @@ The test sources are executable examples to inspect; their presence alone is not
              platform / standard library
 ```
 
-This is a conceptual dependency direction, not a complete include graph. Individual dependencies should be confirmed in the relevant source files.
+This diagram shows the intended architectural direction, not a complete include graph. Individual dependencies and ownership relationships must be confirmed in the relevant source files.
 
-- `sdk/base/stream` is for in-memory stream and buffer operations; `sdk/io/stream` adapts stream behavior to external I/O.
-- `sdk/base/unittest` uses logging to make test execution and diagnostic output observable.
-- `sdk/base/graph/gss.hpp` is a graph-shaped stack used by `sdk/io/parser/glr_parser.cpp`; parser semantics remain in the parser layer.
-- `sdk/base/basic/variant.hpp` supplies generic value representation used by facilities such as `valist`.
+### Concrete cross-module relationships
 
-## 6. References
+- `sdk/base/stream` provides in-memory stream and buffer operations; `sdk/io/stream` adapts stream behavior to external I/O. The two layers are related but not interchangeable.
+- `sdk/base/unittest` uses logging and trace facilities to make the project's testcase execution and diagnostic output observable.
+- `sdk/base/basic/variant.hpp` provides generic value representation used by facilities such as `valist`.
+- `sdk/base/graph/gss.hpp` provides graph-shaped stack storage used by `sdk/io/parser/glr_parser.cpp`. The parser owns grammar and parsing semantics; the base graph component supplies a reusable storage mechanism.
+- Pattern-matching facilities under `sdk/base/pattern` are consumed by higher-level string/parser paths where appropriate. Their individual documents describe algorithm-specific state and behavior rather than treating all matchers as one interchangeable engine.
+- Source-level test coverage for this layer is organized under [`test/testcase/base/`](../../test/testcase/base/); testcase documentation owns detailed coverage and verification status so those claims do not need to be duplicated in every SDK module document.
+- The [compile-time string-obfuscation](string/constexpr-obfuscation.md) and [big-number](system/bignumber.md) pages retain focused details that do not belong in a directory map. The [pattern overview](pattern/README.md) compares algorithm families and their selection criteria.
+
+## 5. References
 
 ### Books
 
@@ -205,9 +135,10 @@ This is a conceptual dependency direction, not a complete include graph. Individ
   - Priority queues: Chapter 6, “Priority Queues (Heaps)”
 - *Data Structures and Algorithms in C++*
 
-### RFC
+### Standards and specifications
 
 - [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)
+- [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754)
 
 ### Articles and online resources
 
@@ -229,7 +160,6 @@ This is a conceptual dependency direction, not a complete include graph. Individ
 - Wildcard matching: https://www.geeksforgeeks.org/wildcard-pattern-matching/
 - Big-number calculator: https://www.calculator.net/big-number-calculator.html
 - IEEE 754 and floating-point:
-  - https://en.wikipedia.org/wiki/IEEE_754
   - https://en.wikipedia.org/wiki/Floating-point_arithmetic
   - https://en.wikipedia.org/wiki/Half-precision_floating-point_format
   - https://en.wikipedia.org/wiki/Single-precision_floating-point_format
@@ -243,7 +173,7 @@ This is a conceptual dependency direction, not a complete include graph. Individ
   - https://baseconvert.com/ieee-754-floating-point
   - https://www.omnicalculator.com/other/floating-point
 
-## 7. Developer Notes (for maintainer review)
+## 6. Development Notes (for maintainer review)
 
 ### C++ Standard and GCC notes retained from the original README
 

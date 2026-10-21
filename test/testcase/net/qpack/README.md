@@ -1,63 +1,65 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+hotplace source tree
+Edition 2 · Revision 1105
+Source basis: working source tree aligned to Revision 1105
+Documented with GPT-6
+Documentation scope: QPACK testcase behavior and verification
 ```
+
 # QPACK testcases
 
 ## 1. Role
 
-This directory contains QPACK testcase sources for RFC 9204 examples, dynamic-table capacity, and encoder/decoder stream behavior.
+This directory contains tests for QPACK, the header-compression format used by HTTP/3. The source covers RFC 9204 examples, dynamic-table capacity and eviction, encoder/decoder instruction streams, and header-block decoding. It tests QPACK encoding/decoding and state transitions; it is not itself a live HTTP/3 client/server test.
 
 ## 2. Test model
 
-Test source files in this directory: `test.cpp`, `testcase_capacity.cpp`, `testcase_qpack_stream.cpp`, `testcase_rfc9204.cpp`
+| Source | Main responsibility |
+|---|---|
+| `testcase_capacity.cpp` | Zero/tiny capacity, table state and eviction behavior |
+| `testcase_qpack_stream.cpp` | Decode captured encoder instructions and HEADERS payload examples |
+| `testcase_rfc9204.cpp` | RFC 9204 examples and encoded-byte expectations |
+| `test.cpp` | Testcase registration/entry point |
 
-This directory contains the tests/samples for the corresponding hotplace module.
+The capacity tests create a `qpack_encoder` and `qpack_dynamic_table`, insert fields, then assert the expected encoded bytes and table capacity/entry/size state. Debug hooks count table-eviction events, making eviction behavior an explicit part of the assertion set.
 
-#### test sources
+The stream test includes captured examples of QPACK encoder-stream instructions and HEADERS payloads. These are byte-vector/parser examples; they should not be described as complete QUIC stream scheduling or HTTP/3 transaction tests.
 
-* `test.cpp`
-* `testcase_capacity.cpp`
-* `testcase_qpack_stream.cpp`
-* `testcase_rfc9204.cpp`
+## 3. Example: zero-capacity dynamic table
 
-The directory is organized around the concrete testcase sources present here; detailed protocol or implementation notes belong to the corresponding `sdk` documentation.
+`test_zero_capacity()` leaves the dynamic table at capacity zero, inserts several fields, then checks an encoded field against a known hexadecimal expectation. It asserts that capacity, entry count and table size remain zero and that no eviction callback fired. This verifies the no-dynamic-table case directly.
 
-## 3. Example: testcase entry points
-
-The concrete test entry points and test-vector schema are retained below. Source-level assertions, rather than the existence of a source file, determine what is actually checked.
-
-Source files:
-- `test.cpp`
-- `testcase_capacity.cpp`
-- `testcase_qpack_stream.cpp`
-- `testcase_rfc9204.cpp`
+The tiny-capacity tests extend the same idea to bounded table state and eviction. The RFC example tests use explicit expected byte sequences, so the encoding output—not merely a successful return code—is checked.
 
 ## 4. Test and verification status
 
 ### 4.1 Source-level coverage
 
-Coverage must be inferred from the actual testcase functions and assertions. The directory README and the presence of test sources do not prove that every protocol path is meaningfully checked.
+The source includes capacity/eviction behavior, RFC 9204 examples and captured encoder/header stream examples. It does not by itself verify packet protection, QUIC loss recovery, HTTP/3 request semantics or live client/server interoperability.
 
 ### 4.2 Documentation and verification status
 
-This README documents the directory and source inventory. It does not itself prove a successful runtime execution. The available report archive does not identify the exact OS, compiler configuration, or source revision for its results.
+The latest available aggregate report for the parent `net` testcase group is recorded in [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied context)**, with 268 pass, 1 expt, 0 fail, 0 skip and 0 triv for the whole `net` group. The report does not separate QPACK from other network tests and does not independently identify the tested source commit.
+
+This documentation update did not execute the test. Do not treat the aggregate network result as a QPACK-only count or as proof of end-to-end HTTP/3 behavior.
 
 ## 5. Relationships
 
-- Corresponding implementation documentation is under `sdk/net/`.
-- HTTP compression testcases are maintained in the sibling `hpack/` and `qpack/` directories.
-- Shared test registration is defined by the surrounding testcase CMake configuration.
+- [HTTP/3 implementation](../../../../sdk/net/http/README.md) — HTTP/3 uses QPACK for header compression.
+- [QUIC testcase material](../../quic/README.md) — packet/frame and capture-vector material; distinct from QPACK codec assertions.
+- [HPACK testcases](../hpack/README.md) — HTTP/2 counterpart with a different compression synchronization model.
+- [Parent network testcase report](../README.md) — aggregate runtime result.
 
 ## 6. References
 
-- `test/testcase/net/qpack/test.cpp`
-- `test/testcase/net/qpack/testcase_capacity.cpp`
-- `test/testcase/net/qpack/testcase_qpack_stream.cpp`
-- `test/testcase/net/qpack/testcase_rfc9204.cpp`
+- RFC 9204 — QPACK: Field Compression for HTTP/3.
+- `testcase_capacity.cpp`
+- `testcase_qpack_stream.cpp`
+- `testcase_rfc9204.cpp`
+- [Test Report Snapshot](../../test-report-status.md)
+
+## 7. Developer Notes
+
+Keep QPACK codec tests, QUIC packet parsing, and HTTP/3 end-to-end behavior as separate verification claims. Report counts should remain tied to the granularity the report actually provides; the current known report has a parent `net` row, not separate HPACK or QPACK rows.
