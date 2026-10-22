@@ -16,7 +16,7 @@
 
 ## Documentation
 
-GPT-5.6 and GPT-6
+GPT-6
 * [/docs](docs/README.md)
 * [/review](review/README.md)
 * [Project Review](review/project-review.md)
