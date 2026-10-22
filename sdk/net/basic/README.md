@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1106                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
@@ -52,6 +52,8 @@ The server layer selects a socket through the adapter/builder path and then pass
 - **OpenSSL:** TCP is paired with TLS, while UDP is paired with DTLS.
 - **trial:** transport I/O and handshake/session state are composed through prosumer and composer helpers. QUIC uses UDP datagrams but has QUIC packet/frame handling and TLS 1.3 handshake integration; it is not DTLS.
 - **ACL:** evaluate the peer address at the relevant admission boundary and act on the result. The ACL does not install itself as a socket filter.
+
+The applet sources show the selection point: `tlsserver` and `dtlsserver` add either `socket_scheme_openssl` or `socket_scheme_trial` to the secure-socket scheme; `httpserver1` and `httpserver2` build the corresponding server adapter and pass it to `http_server_builder`. `netclient` exposes its own `-T` selection for the trial client path. These are separate backend-selection paths behind the socket contracts; they do not imply that every protocol/certificate combination is interchangeable.
 
 ## 4. Relationships
 

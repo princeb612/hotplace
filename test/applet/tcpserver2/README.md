@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1105
-Source basis: working source tree aligned to Revision 1105
+Edition 1 · Revision 1106
+Source basis: Revision 1105
 Documented with GPT-6
 Scope: runnable TCP server applet
 ```

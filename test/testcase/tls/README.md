@@ -1,65 +1,216 @@
 ## Publication
 
 ```text
-hotplace source-tree documentation
-Edition 2 · Revision 1105
+hotplace source tree
+Edition 2 · Revision 1106
 Source basis: Revision 1105
 Documented with GPT-6
-Documentation scope: TLS/DTLS test inventory and verification boundaries
+— testcase inputs, procedures & verification
 ```
 
-# TLS and DTLS testcase suite
+# TLS and DTLS Testcases
 
-## 1. Role
+## 1. What
 
-This directory contains TLS/DTLS testcase sources, packet-capture references, test-vector schemas, and handshake construction notes. It covers protocol message construction and selected TLS 1.2/1.3 and DTLS behavior; the directory is not by itself a claim of complete protocol conformance.
+`test/testcase/tls/` is the TLS/DTLS testcase group. Its entry point, `sample.cpp`, registers tests for TLS 1.2 and TLS 1.3 processing, DTLS construction and fragmentation, selected RFC 8448 handshake traces, pre-master/traffic-secret handling, TLS 1.2 AEAD record protection, ML-KEM encoding, alerts, HelloRetryRequest, and YAML-driven record replay.
 
-## 2. Test model
+This directory is not one end-to-end network interoperability test. Most executable cases drive implementation APIs with constructed or captured record bytes; separate subdirectories preserve packet captures and client/server debug logs from particular experiments.
 
-| Area | Source material |
-|---|---|
-| TLS handshake/protection | RFC 8448 trace testcases, TLS 1.2 AEAD, premaster-secret and handshake construction tests |
-| TLS 1.2 | [TLS 1.2 tests](tls12/README.md) |
-| TLS 1.3 | [TLS 1.3 tests](tls13/README.md) |
-| DTLS 1.2 | [DTLS 1.2 tests](dtls12/README.md) |
-| HTTP integration | [TLS/HTTP tests](http/README.md) |
-| Linux-specific paths | [Linux tests](linux/README.md) |
-| Captured traffic and vectors | [Packet captures](packet-capture.md), [test-vector schema](testvector-schema.md) |
+The YAML-backed path uses the `PCAP SIMPLE` schema:
 
-The surrounding testcase CMake configuration builds the TLS group as part of the automated testcase tree. QUIC tests are maintained under the sibling `test/testcase/quic/` directory rather than being implied by the TLS directory name.
+- **Input:** each vector chooses `TLS` or `DTLS`, may provide SSL key-log-style secrets, and supplies an ordered list of records with a peer direction and hexadecimal bytes.
+- **Processing:** the consumer creates a new `tls_session` for each vector and feeds the listed records through `dump_record`.
+- **Checks:** malformed `protocol` or `dir` values cause an assertion; fatal alerts normally cause a failed testcase, with an explicit exception for `certificate_unknown`. Empty or undecodable record bytes are skipped by the current implementation.
 
-## 3. Example: RFC 8448 handshake trace
+The group also includes tests that do not use YAML, such as constructed handshake flows, explicit secret/transcript-hash comparisons, RFC 8448 traces, and DTLS fragmentation-oriented construction.
 
-`testcase_rfc8448_2.cpp`, `testcase_rfc8448_5.cpp`, and related trace testcases provide source examples for TLS 1.3 handshake messages and protection transitions. The useful distinction is between the captured/example message sequence, the implementation operation under test, and the assertions that compare expected bytes or state. Read the specific testcase before asserting which handshake branch or extension is covered.
+PCAP files and their associated Markdown client/server logs are supporting experiment inventories, not separate CTest targets. The child READMEs are intentionally maintained as inventories of these artifacts. QUIC tests are separate under `test/testcase/quic/`.
 
-## 4. Test and verification status
+## 2. How
 
-### 4.1 Source-level coverage
+### 2.1 Test dispatch and build inputs
 
-The directory includes TLS 1.2/1.3 and DTLS-focused sources, but the existence of a trace or packet capture does not prove that every version, extension, error path, or transport behavior is tested. The dedicated QUIC packet/frame test inventory is separate.
+1. The testcase entry point in `sample.cpp` initializes the shared testcase harness, logger, command-line options, and OpenSSL support.
+2. In the normal test mode, it runs resource validation; TLS 1.3, TLS 1.2, and DTLS walkthroughs; selected RFC 8448 examples; pre-master-secret processing; TLS 1.2 AEAD and ML-KEM encoding; YAML record replay; HelloRetryRequest and alert cases; and TLS/DTLS record-construction tests.
+3. The TLS directory's `CMakeLists.txt` collects top-level `.cpp` files into the `tls` testcase target and copies top-level `.yml` files into the build tree's TLS testcase directory.
+4. `testvector_pcap.cpp` opens the copied YAML files by their configured filenames. The ML-KEM TLS 1.3 vector is included only when `OPENSSL_VERSION_NUMBER >= 0x30500000L`.
+5. The PCAP and peer-log files in the version-specific subdirectories document recorded experiments; they are not added as individual CTest targets by this directory's CMake configuration.
 
-### 4.2 Documentation and verification status
+### 2.2 TLS and DTLS handshake construction
 
-This README indexes source and study material. It does not claim that tests were executed during this documentation pass. Use a report that identifies the source revision and environment before asserting runtime success.
+1. In `testcase_construct_tls.cpp`, helper routines create a `tls_record_handshake` and ask `tls_composer` to construct messages such as `ClientHello` and `ServerHello`.
+2. The constructed handshake is added to the record, then serialized with `record.write(direction, bytes)`. The testcase harness records the returned status for the named construction step.
+3. Other construction paths build records such as ChangeCipherSpec, EncryptedExtensions, and Certificate under the session's applicable state/protection conditions.
+4. The DTLS 1.2 cases use `construct_record_fragmented`, which delegates publishing to the session's DTLS record publisher. The resulting fragments are sent through the supplied callback/traffic path.
+5. Read these as selected construction and state-transition examples, not as proof that every legal handshake sequence or malformed-message case is covered.
 
-## 5. Relationships
+### 2.3 RFC 8448 and selected TLS protocol paths
 
-- `sdk/net/tls/` — TLS/DTLS/QUIC implementation.
-- `sdk/net/basic/openssl/` — OpenSSL-backed secure socket adapters.
-- `sdk/crypto/` — cryptographic primitives and keys.
-- `test/testcase/quic/` — QUIC-specific test material.
-- `test/testcase/net/http/` — HTTP integration and framing tests.
+1. `sample.cpp` invokes the selected `testcase_rfc8448_*` routines for RFC 8448 TLS 1.3 examples.
+2. The examples feed fixed handshake/record data through the relevant TLS processing functions and check selected decoded results, key-schedule values, transcript hashes, or status/state values where the source explicitly asserts them.
+3. `testcase_pre_master_secret.cpp` attaches the SSL key-log importer to a TLS session, imports fixed traffic-secret lines, then processes a fixed sequence of client and server records, including handshake and application-data records.
+4. `testcase_helloretryrequest.cpp` exercises a constructed ClientHello/ServerHello exchange with an enforced key-share group, then checks selected session-status bits and the expected HelloRetryRequest flow before continuing with the second ClientHello.
+5. `testcase_alert.cpp` exercises selected alert processing. The precise assertion strength depends on each individual case; diagnostic output alone is not an expected-value check.
 
-## 6. References
+### 2.4 TLS 1.2 record protection and ML-KEM encoding
 
-- [Test checklist](test.md)
-- [Packet captures](packet-capture.md)
-- [Cipher suites](cipher-suites.md)
-- [Test-vector YAML schema](testvector-schema.md)
-- [TLS handshake construction](test-construct-tls-routine.md)
-- [TLS 1.3 flow](tls13-flow.md)
-- `testcase_tls12_aead.cpp`, `testcase_rfc8448_*.cpp`, `testcase_understand_tls12.cpp`
+1. `testcase_tls12_aead.cpp` exercises selected TLS 1.2 record-protection cases using the test inputs and session state prepared by the source.
+2. The TLS test entry point also calls the ML-KEM encoding testcase. This is a separate encoding path from the YAML PCAP replay.
+3. Check the individual source assertions before interpreting a case as a known-answer comparison, a state/status check, or a diagnostic demonstration. The cipher-suite inventory is not a substitute for inspecting which inputs and assertions each testcase actually uses.
 
-## Latest recorded runtime report
+### 2.5 PCAP SIMPLE YAML vectors
 
-The latest shared report snapshot is indexed in [Test Report Snapshot](../test-report-status.md). It records 17,664 pass, 1 expt, 0 fail, 0 skip and 0 triv entries for the `tls` group. The associated run context supplied in the conversation is Revision 1104 on MinGW64/GCC with CTest; the report payload does not independently identify the tested source commit or exact build configuration. Preserve this snapshot until newer reports are supplied; this group result should not be generalized to QUIC, which has its own report row and testcase directory.
+The authoritative schema example is kept here because `testvector_pcap.cpp` is the consumer for this format. The following is valid YAML-shaped input; `string` and `hexstring` are explanatory placeholders, not literal values.
+
+```yaml
+testvector:
+  - example: string
+    schema: PCAP SIMPLE
+    protocol: TLS
+    secrets:
+      - item: string
+    items:
+      - item: string
+        dir: from_client
+        record: hexstring
+```
+
+1. The YAML runner dispatches each vector to the handler registered as `PCAP SIMPLE`.
+2. The handler reads `protocol`. `TLS` creates a TLS session; `DTLS` creates a DTLS session. Any other value causes an assertion and stops processing that vector.
+3. The handler clears the shared SSL key-log importer, attaches it to the new session, and imports each `secrets[].item` line when a secrets sequence is present.
+4. It processes `items` in their listed order. Each item's `dir` must be `from_client` or `from_server`; an invalid value causes an assertion and ends that item's loop. `record` is Base16-decoded; an empty decoded record is skipped.
+5. Each non-empty record is passed to `dump_record` with the selected direction. After processing, the handler checks for fatal alerts; `certificate_unknown` is explicitly exempted, while another fatal alert marks the testcase failed and stops the vector.
+6. The runner currently loads `testvector_pcap_tls13.yml`, `testvector_pcap_tls12.yml`, `testvector_pcap_http.yml`, and `testvector_pcap_dtls12.yml`. It conditionally loads `testvector_pcap_tls13_mlkem.yml` with the OpenSSL version guard noted above.
+
+Field meanings:
+
+- `example` identifies the vector/testcase.
+- `schema` selects the `PCAP SIMPLE` handler.
+- `protocol` selects `TLS` or `DTLS`.
+- `secrets` is an optional sequence of key-log-style secret lines.
+- `items` is an ordered sequence of records; each record has a label (`item`), peer direction (`dir`), and hexadecimal bytes (`record`).
+
+The handler does not enforce a separate full schema contract beyond the checks described above. In particular, an empty decoded record is skipped, and a vector's successful completion is not a byte-for-byte comparison of a full PCAP file against a newly captured network run.
+
+### 2.6 Recorded experiment inventories
+
+The following subdirectories retain their original inventory role: each README maps captures to the corresponding client/server logs and records useful experiment conditions. These are not rewritten as executable testcase procedures.
+
+- [Developer Notes - TLS 1.2](tls12/README.md) — TLS 1.2 captures, peer logs, and selected record-protection/renegotiation experiments.
+- [Developer Notes - TLS 1.3](tls13/README.md) — TLS 1.3 captures, selected AEAD and key-exchange variants, and a handshake-failure capture.
+- [Developer Notes - DTLS 1.2](dtls12/README.md) — DTLS 1.2 captures, peer logs, and MTU-related experiments.
+- [Developer Notes - HTTP over TLS](http/README.md) — HTTP/1.1, HTTP/2, trial-server, and curl capture inventory.
+- [Developer Notes - Linux TLS](linux/README.md) — Linux loopback experiment conditions, commands, and peer diagnostics.
+
+Where supplied, `sslkeylog` data contains session secrets used to decrypt the corresponding controlled captures. It is sensitive test material, not a general-purpose fixture to publish or reuse outside its intended test context. A capture and its associated peer logs document that recorded run only.
+
+## 3. Evidence
+
+### 3.1 Source-level verification paths
+
+The diagrams below distinguish explicit expected-value comparisons from return-status checks and diagnostic output. They summarize the paths present in the source; they do not claim exhaustive coverage.
+
+#### TLS/DTLS record construction
+
+```text
+testcase_construct_tls.cpp / DTLS construction sources
+  -> create tls_session and record
+  -> tls_composer constructs handshake message
+  -> append handshake to record
+  -> record.write(direction, bytes)
+  -> testcase status check
+```
+
+**Assertion strength:** construction helpers record the returned status. Only cases with additional explicit assertions on bytes, state, secrets, or transcript hashes support those stronger claims; a successful write status alone does not prove the serialized bytes match a protocol known-answer vector.
+
+#### RFC 8448, secret and transcript checks
+
+```text
+fixed RFC trace / key-log secret inputs
+  -> feed record or handshake bytes into TLS session
+  -> selected session/key-schedule processing
+  -> where asserted:
+       secret == Base16-decoded expected secret
+       transcript hash == expected digest
+       decoded values / flow / status == expected value
+  -> testcase assertion
+```
+
+**Assertion strength:** the source includes exact comparisons for selected secrets and transcript hashes, plus selected state/status checks. These assertions apply only to the particular traces and values checked by each testcase.
+
+#### HelloRetryRequest flow
+
+```text
+ClientHello with enforced initial key-share group
+  -> server-side session consumes ClientHello
+  -> assert selected ClientHello status
+  -> server constructs retry response
+  -> assert HelloRetryRequest flow and ServerHello status
+  -> client sends second ClientHello with requested group
+  -> assert subsequent server status and expected flow
+```
+
+**Assertion strength:** the testcase checks selected session-status bits and the expected flow transition for this constructed scenario. It does not prove every HelloRetryRequest negotiation combination.
+
+#### PCAP SIMPLE vector replay
+
+```text
+testvector_pcap_*.yml
+  -> yaml_testcase dispatch: schema "PCAP SIMPLE"
+  -> protocol -> create TLS/DTLS session
+  -> import optional SSL key-log secrets
+  -> each item: direction + Base16 record bytes
+  -> dump_record(session, direction, record)
+  -> inspect session alerts
+  -> fatal alert other than certificate_unknown -> failed testcase
+```
+
+**Assertion strength:** protocol/direction validation and fatal-alert handling are explicit checks. The handler skips empty decoded records and does not compare the entire PCAP with a separately generated capture. Do not interpret a vector's presence as proof that every contained handshake property is independently asserted.
+
+### 3.2 Runtime report and verification path
+
+The supplied [Test Report Snapshot](../test-report-status.md) records the `tls` group as **17,664 pass, 1 expt, 0 fail, 0 skip, 0 triv**. The associated run context is Revision 1104 on MinGW64/GCC using CTest. The report files do not independently identify the tested source commit, exact GCC version, or complete build configuration; treat this as group-level evidence for the supplied snapshot, not as a verified result for every individual testcase or the current source revision.
+
+The documentation change did not execute tests. The source diagrams above describe inspected execution and assertion paths; they are not a new runtime result. When recording a new run, retain the source revision/commit, OS/compiler, build configuration, CTest command, date, and report archive context.
+
+### 3.3 Verification boundaries
+
+- The [Developer Notes - TLS study checklist and historical TODOs](test.md) records study history and TODOs; a checked item is not a current automated assertion or execution result.
+- The [Developer Notes - TLS cipher-suite inventory](cipher-suites.md) is an inventory, not proof that every listed suite has a dedicated known-answer test.
+- The [Developer Notes - TLS and DTLS packet-capture index](packet-capture.md) and version-specific capture inventories document selected observed runs; they do not establish universal interoperability.
+- The [Developer Notes - TLS 1.3 handshake-flow sketch](tls13-flow.md) is a message-order study aid, not verification evidence.
+- TLS/DTLS source coverage does not imply QUIC coverage; QUIC is tracked separately.
+
+## 4. Relationships
+
+- [Network testcase group](../net/README.md) — sibling protocol-test documentation pattern and related HTTP components.
+- [TLS SDK implementation](../../../sdk/net/tls/README.md) — TLS/DTLS session, record, and handshake implementation.
+- [OpenSSL-backed network adapters](../../../sdk/net/basic/openssl/README.md) — adapters used in some recorded peer experiments.
+- [Cryptographic SDK](../../../sdk/crypto/README.md) — cryptographic primitives and key operations used by TLS paths.
+- [QUIC testcases](../quic/README.md) — separate transport and packet verification.
+- [HTTP testcases](../net/http/README.md) — HTTP framing and protocol components related to HTTP-over-TLS captures.
+- [Test Report Snapshot](../test-report-status.md) — aggregate results and provenance limits.
+
+## 5. References
+
+- RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.
+- RFC 5246 — The Transport Layer Security (TLS) Protocol Version 1.2.
+- RFC 9147 — The Datagram Transport Layer Security (DTLS) Protocol Version 1.3.
+- [TLS 1.3 walkthrough](https://tls13.xargs.org/)
+- [TLS 1.2 walkthrough](https://tls12.xargs.org/)
+- [DTLS walkthrough](https://dtls.xargs.org/)
+- [RFC 8448 — Example Handshake Traces for TLS 1.3](https://www.rfc-editor.org/rfc/rfc8448)
+- `sample.cpp`, `testcase_construct_tls.cpp`, `testcase_construct_dtls12_1.cpp`, `testcase_construct_dtls12_2.cpp`, `testcase_construct_dtls13.cpp`, `testcase_rfc8448_*.cpp`, `testcase_pre_master_secret.cpp`, `testcase_tls12_aead.cpp`, `testvector_pcap.cpp`
+
+
+## 6. Developer Notes
+
+These pages preserve study notes, historical checklists, capture inventories, and protocol-flow aids. They are intentionally separate from the executable testcase description above: use them when investigating a particular suite, recorded experiment, handshake sequence, or historical TODO. Their contents are supporting context, not standalone evidence that a current testcase passes.
+
+- [Developer Notes - TLS cipher-suite inventory](cipher-suites.md) — cipher-suite identifiers and caveats about interpreting inventory as test coverage.
+- [Developer Notes - TLS and DTLS packet-capture index](packet-capture.md) — capture locations, peer logs, inspection workflow, and key-log handling cautions.
+- [Developer Notes - TLS study checklist and historical TODOs](test.md) — historical study progress and TODOs, including items that need current verification.
+- [Developer Notes - TLS handshake construction and observation notes](test-construct-tls-routine.md) — reference message sequences and historical OpenSSL experiment commands.
+- [Developer Notes - TLS 1.3 handshake-flow sketch](tls13-flow.md) — compact 1-RTT and 0-RTT message-order orientation.
+
+The version-specific subdirectory inventories remain under their own `Developer Notes - ...` READMEs and are linked in [How §2.6](#26-recorded-experiment-inventories).

@@ -1,4 +1,4 @@
-#### TLS 1.3
+# Developer Notes - TLS 1.3
 
 > [!NOTE]
 > MLKEM512, MLKEM768, MLKEM1024 - openssl 3.5 required
@@ -43,10 +43,3 @@
 - handshake_failure.pcapng
   - [server](handshake_failure-server.md)
   - [client](handshake_failure-client.md)
-
-
-## Capture organization and backend requirements
-
-The captures cover several TLS 1.3 AEAD suites and key-exchange variants, with a matching client/server note for each named scenario. The existing note states that ML-KEM 512/768/1024 cases require OpenSSL 3.5; availability is therefore dependent on the crypto backend version, not solely on hotplace's test source.
-
-The `sslkeylog` file is intended for packet decryption in a controlled test. These captures document selected handshakes and negotiated suites, not every TLS 1.3 extension or a complete interoperability matrix.

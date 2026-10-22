@@ -1,51 +1,71 @@
 ## Publication
 
-Edition 2 · Revision 1105  
-Source basis: Revision 1105  
-Documented with GPT-6  
-Scope: source structure, implementation and applet usage
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1106
+Source basis: Revision 1105
+Documented with GPT-6
+Scope: HTTP/2 server integration applet
+```
 
 # HTTP/2 server applet
 
 ## 1. Role
 
-`httpserver2` is a runnable HTTPS server configured for HTTP/2. It uses the higher-level `http_server` builder and selects either the OpenSSL-backed socket adapter or the trial adapter. It is intended for local browser/client integration and protocol tracing, not as a complete HTTP/2 conformance suite.
+`httpserver2` is the HTTP/2 server integration example. It uses the `http_server_builder` to configure the HTTP server, select a socket adapter, enable HTTP/2, and register request handlers. It follows `httpserver1`, which uses the same higher-level server abstraction with HTTP/1.1.
 
-## 2. Model
+## 2. Integration path
 
-The setup in `run_server.cpp` builds a socket adapter, then configures `http_server_builder` to disable the plain HTTP scheme, enable HTTPS, IPv4 and IPv6, enable HTTP/2, register `consumer_routine`, and set the TLS cipher list and certificate material.
+```text
+OpenSSL or trial socket adapter
+             │
+             ▼
+      http_server_builder
+             │
+             ├─ configure HTTPS and certificate
+             ├─ enable HTTP/2
+             └─ build/start http_server
+                       │
+                       ▼
+              HTTP/2 request handling
+                       │
+                       ├─ http_router
+                       └─ http_response
+```
 
-On a read event, the callback obtains the parsed `http_request`, creates an `http_response`, calls the shared router's `route(session, request, &response)`, and sends the response through `response.respond(session)`. The source also defines small HTML and JSON handlers as examples.
+In `run_server.cpp`, the builder enables HTTP/2 and configures the HTTP and HTTP/2 protocol packet-size constraints. The request callback routes requests through `http_router` and sends the composed response through the HTTP server/session path. The source also registers HTML, JSON, and default API handlers and HTTP/2 server-push resources.
 
-## 3. Important behavior and lifetime
+The shared server/session layer is described in [`sdk/net/server`](../../../sdk/net/server/README.md); HTTP framing, HTTP/2 sessions, and HPACK are described in [`sdk/net/http`](../../../sdk/net/http/README.md).
 
-The adapter and HTTP server builder are separate setup stages. If adapter creation fails, the applet returns an internal error rather than starting the listener. The command-line options select ports, the trial adapter, key logging, cipher suite and certificate family; `sample.cpp` is the source of truth for the available options.
+## 3. Execution
 
-ALPN matters when verifying HTTP/2 over TLS. An HTTPS connection alone does not establish that HTTP/2 was negotiated; use an HTTP/2-capable client and inspect the negotiated protocol. The source's prior-knowledge command is a separate diagnostic mode, not the normal TLS-plus-ALPN path.
+The command-line options are defined in `sample.cpp`. They include `-r` to run the server, `-T` to select the trial adapter, `-cert` to select certificate material, and `-k` for TLS key logging. The applet uses a `.run` marker for its run-loop lifetime.
 
-Key-log output contains traffic-secret material and must be handled as sensitive diagnostic data. Packet captures in `pcap/` help inspect selected cases but do not establish broad browser or protocol conformance.
+An HTTPS connection by itself does not identify the HTTP version selected. The recorded client configuration and protocol negotiation are the relevant facts for each interoperability scenario.
 
-## 4. Example from the applet instructions
+## 4. Existing evidence
 
-The documented sequence is to start the server with either the default OpenSSL adapter or the trial adapter, then request the HTTPS endpoint with an HTTP/2-capable client. The curl example uses `--http2`; its `-k` option disables certificate verification and should be restricted to a local diagnostic environment.
+The `pcap/` directory contains an HTTP/2 capture and associated client/server trace notes:
 
-This demonstrates an integration path through TLS negotiation, HTTP/2 selection, request routing and response composition. It is not a deterministic unit test and was not executed as part of this documentation update.
+- [Capture index](pcap/README.md)
+- `httpserver2-mldsa.pcapng`
+- [Client-side trace](pcap/httpserver2-mldsa-client.md)
+- [Server-side trace](pcap/httpserver2-mldsa-server.md)
+- `sslkeylog`
+
+These files describe the captured scenario only; they do not establish compatibility for every browser, adapter, certificate family, or source revision. TLS key-log material contains session secrets and should be treated as sensitive diagnostic data.
 
 ## 5. Relationships
 
-- [HTTP implementation](../../../sdk/net/http/README.md) — request/response, routing and HTTP/2 handling.
-- [TLS/DTLS/QUIC implementation](../../../sdk/net/tls/README.md) — secure transport and session state.
-- [Network server](../../../sdk/net/server/README.md) — event processing and session management.
-- [HTTP/1.1 server](../httpserver1/README.md) — comparison with the lower-level HTTP/1.1 applet.
-- [Network client](../netclient/README.md) — client-side protocol selection.
+- [HTTP/1.1 server](../httpserver1/README.md) — related applet using `http_server` with HTTP/1.1.
+- [TLS server](../tlsserver/README.md) — secure transport integration before HTTP.
+- [Network client](../netclient/README.md) — project-local peer.
+- [Network server](../../../sdk/net/server/README.md), [HTTP](../../../sdk/net/http/README.md), and [TLS/DTLS/QUIC](../../../sdk/net/tls/README.md) — underlying implementation layers.
 
-## 6. References
+## 6. Source map
 
-- `run_server.cpp` — adapter setup, builder configuration, request callback and response routing.
-- `sample.cpp`, `sample.hpp` — options, logging and applet lifecycle.
-- `CMakeLists.txt` — build target and static-file staging.
-- `index.html` and `pcap/` — static content and captured HTTP/2 examples.
-
-## 7. Developer Notes
-
-The original checklist records `network_server`, HTTP/2, OpenSSL, trial and ALPN integration as completed. Preserve this as historical maintainer context, not as a current compatibility claim for every browser, TLS backend or build. Re-run the exact client/server combination and record its source revision and tool versions before updating that status.
+- `sample.cpp`, `sample.hpp` — command-line options and applet setup.
+- `run_server.cpp` — adapter selection, builder configuration, request routing, and response handling.
+- `index.html` — sample web resource.
+- `pcap/` — recorded HTTP/2 scenario and trace notes.
+- `CMakeLists.txt` — executable target and resource staging.

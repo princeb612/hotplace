@@ -17,11 +17,11 @@ Documents the source-level tests for `sdk/io/basic`, primarily the declarative `
 
 ## 2. Test model
 
-`testcase_payload.cpp` exercises field-order serialization/deserialization, reference-sized binary fields, optional groups, condition-controlled groups, 24-bit/48-bit values, and bignumber values. `testcase_payload_quic.cpp` covers QUIC integer/payload integration.
+1. `testcase_payload.cpp` exercises field-order serialization/deserialization, reference-sized binary fields, optional groups, condition-controlled groups, 24-bit/48-bit values, and bignumber values. `testcase_payload_quic.cpp` covers QUIC integer/payload integration.
 
 ## 3. Example: payload write/read round trip
 
-For a detailed source walkthrough, see [Basic I/O testcase README](README.md): it follows the field layout through group-enabled and group-disabled serialization, uses `set_reference_value` to infer a variable field length while reading, and describes the QUIC varint known-answer/round-trip cases. This file remains the concise testcase index; the README carries the full flow so the explanation is not duplicated here.
+1. For a detailed source walkthrough, see [Basic I/O testcase README](README.md): it follows the field layout through group-enabled and group-disabled serialization, uses `set_reference_value` to infer a variable field length while reading, and describes the QUIC varint known-answer/round-trip cases. This file remains the concise testcase index; the README carries the full flow so the explanation is not duplicated here.
 
 ## 4. Test and verification status
 

@@ -454,6 +454,19 @@ TLS ClientHello / ServerHello
 
 For QUIC, the same TLS handshake cryptography is consumed by the QUIC packet layer, but QUIC packet protection and TLS record framing remain distinct responsibilities.
 
+### Authenticode verification boundary
+
+Authenticode is an application-level signature-verification path built on the crypto layer, not another primitive algorithm. The verifier extracts the embedded PKCS#7 data from a supported file, compares the signed digest with the file digest, and verifies the signer/certificate path. Revocation checking reads CRL distribution points from certificates and uses the verifier's CRL retrieval/cache path. Revision 1105 restores this revocation-check path; it should be documented as part of certificate verification, not as proof that every certificate is automatically trusted.
+
+```text
+PE file
+  -> extract Authenticode PKCS#7
+  -> compare signed digest with file digest
+  -> verify signer / certificate chain
+  -> retrieve and check CRL when enabled
+  -> verification result
+```
+
 ### JOSE / COSE example
 
 ```text
@@ -515,7 +528,7 @@ A failure at a higher layer therefore does not automatically imply a primitive f
 
 ## Status
 
-At Revision 1090, `sdk/crypto` is a substantial shared cryptographic substrate rather than an isolated algorithm collection. The later ASN.1/parser work does not change this ownership boundary; ASN.1 schema semantics remain outside the crypto layer.
+At Revision 1105, `sdk/crypto` is a substantial shared cryptographic substrate rather than an isolated algorithm collection. The later ASN.1/parser work does not change this ownership boundary; ASN.1 schema semantics remain outside the crypto layer.
 
 Implemented/used areas include:
 
@@ -527,7 +540,8 @@ Implemented/used areas include:
 - RSA/ECDSA/EdDSA and PQC signatures including ML-DSA and SLH-DSA support paths;
 - ML-KEM and hybrid KEM integration paths;
 - JOSE JWS/JWE/JWK/JWA integration;
-- COSE signing, MAC, encryption, recipients, keys, and countersignatures;
+- COSE signing, MAC, encryption, recipients, keys, and countersignatures, including the Revision 1105 Partial IV fix;
+- Authenticode PE signature verification, including certificate revocation checking through CRL retrieval/cache processing;
 - TLS/DTLS/QUIC cryptographic integration through the higher-level protocol layers;
 - OQS/OpenSSL provider-backed PQC integration.
 

@@ -19,7 +19,7 @@ This document records testcase organization, test-vector schema, or reference ma
 #### crypto
 
 * test vector
-  * CAVP
+1.   * CAVP
     * Block Ciphers
       * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers
       * https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/KAT_AES.zip
@@ -54,13 +54,13 @@ This document records testcase organization, test-vector schema, or reference ma
       * 6.1.  Curve25519
       * 6.2.  Curve448
 * reference
-  * Hybrid Public Key Encryption
+2.   * Hybrid Public Key Encryption
     * RFC 9180 Hybrid Public Key Encryption
     * [Hybrid Public Key Encryption (HPKE)](https://cryptosys.net/pki/hpke.html)
 
 ## 3. Example: Source inventory and test-vector use
 
-The retained material is a schema/reference or directory-level record. Consult the listed testcase source files to determine which functions consume these inputs and what assertions they make.
+1. The retained material is a schema/reference or directory-level record. Consult the listed testcase source files to determine which functions consume these inputs and what assertions they make.
 
 ## 4. Test and verification status
 

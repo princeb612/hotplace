@@ -40,7 +40,7 @@ The runtime wrapper supports conversion to `binary_t` and `std::string`, compari
 
 - Source: `test/testcase/base/string/testcase_string.cpp`
 - Function: `test_string_obfuscate_string()`
-- Test analysis and execution report: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
+- Test analysis and execution report: [`README.md`](../../../test/testcase/base/string/README.md)
 
 ## 4. Relationships
 

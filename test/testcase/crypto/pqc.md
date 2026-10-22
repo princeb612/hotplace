@@ -18,7 +18,7 @@ This document records testcase organization, test-vector schema, or reference ma
 
 #### PQC
 
-[Post-Quantum Cryptography](https://seed.kisa.or.kr/kisa/ngc/pqc.do)
+1. [Post-Quantum Cryptography](https://seed.kisa.or.kr/kisa/ngc/pqc.do)
 NIST 2022
 |                    |               |                                                            |
 | --                 | --            | --                                                         |
@@ -29,7 +29,7 @@ NIST 2022
 
 ## 3. Example: Source inventory and test-vector use
 
-The retained material is a schema/reference or directory-level record. Consult the listed testcase source files to determine which functions consume these inputs and what assertions they make.
+1. The retained material is a schema/reference or directory-level record. Consult the listed testcase source files to determine which functions consume these inputs and what assertions they make.
 
 ## 4. Test and verification status
 

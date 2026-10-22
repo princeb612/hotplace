@@ -3,64 +3,87 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ Edition 1 · Revision 1106                    │
+│ Documented with GPT-6                         │
+│ Source basis: Revision 1106                   │
+│ — COSE testcase source map                    │
 └──────────────────────────────────────────────┘
 ```
 
-# COSE testcase analysis
+# COSE testcase source map
 
-## 1. Role
+## 1. What
 
-Records source-level evidence for COSE message parsing/composition, cryptographic processing, resource metadata, and RFC test vectors.
+This file is a navigation map from the COSE testcase entry point to the source-level case families. The directory [README](README.md) is the primary procedure document: it contains the per-case flows, assertions and known limits. This map keeps the source-to-purpose relationship visible without duplicating every procedure.
 
-## 2. Test model
+## 2. How
+
+1. Start from `sample.cpp` and follow the dispatcher in execution order:
 
 ```text
-RFC / COSE example assets
-          │
-          ▼
- CBOR parse and message/layer model
-          │
-          ├── compose / serialize comparisons
-          └── sign / verify / encrypt / decrypt / MAC paths
-                         │
-                         ▼
-                  test_case result
+sample.cpp
+  ├─ testcase_resources()
+  │    └─ testcase_resource.cpp
+  │         algorithm metadata → expected key-size assertions
+  ├─ testcase_rfc8152()
+  │    └─ testcase_rfc8152.cpp
+  │         .cbor fixtures → CBOR round-trip
+  │         RFC B / C.1–C.7 message construction
+  │         tagged Sign / Encrypt / MAC → verify/decrypt status
+  │         COSE_Key import and key selection
+  ├─ testcase_testvector_cose_examples()
+  │    └─ testvector_cose_examples.cpp + testvector_cose_examples.yml
+  │         YAML keys/shared parameters/CBOR → cose.process status
+  │         optional -v parse/compose byte equality
+  ├─ testcase_cose()
+  │    └─ testcase_cose.cpp
+  │         generated key inventory
+  │         sign/verify × algorithm list
+  │         encrypt/decrypt × content/key-management matrix
+  │         MAC/verify × algorithm matrix
+  ├─ testcase_rfc8392()
+  │    └─ testcase_rfc8392.cpp
+  │         fixed CWT hex inputs → verify/decrypt/process status
+  └─ testcase_akp() + testcase_testvector_akp()
+       └─ testcase_akp.cpp + testvector_akp.cpp + JSON vectors
+            OpenSSL >= 3.5 → ML-DSA sign/verify
+            import COSE key → compare raw public key → verify Sign1
 ```
 
-The main sources include `testcase_cose.cpp`, `testcase_rfc8152.cpp`, `testcase_rfc8392.cpp`, `testcase_resource.cpp`, `testcase_akp.cpp`, and `testvector_cose_examples.cpp`. Assets include paired `.cbor` and `.diag` files and YAML/JSON test vectors.
+2. The important execution switches are `-b` (skip the RFC 8152 basic fixture round-trip) and `-g` (skip generated-key COSE matrices). `-v` is also coverage-affecting: RFC 8152 fixture byte comparisons and YAML parse/compose equality are inside verbose-only branches. See the main README for exact case flows and assertion limits.
 
-## 3. Example: RFC vectors and cryptographic processing
+## 3. Evidence
 
-`testcase_rfc8152.cpp` contains byte comparisons for CBOR composition/parsing and uses RFC example cases for verification/decryption paths. `testcase_cose.cpp` has explicit sign/verify, encrypt/decrypt, and MAC/verify calls. `testcase_resource.cpp` checks selected algorithm/resource metadata. `testcase_akp.cpp` exercises asymmetric-key-package signing/verification paths when supported; its source also records a not-supported result for the OpenSSL 3.5 requirement.
+### Source-level coverage map
 
-## 4. Test and verification status
+| Case family | Primary source | Inputs | What the source actually checks |
+|---|---|---|---|
+| RFC 8152 basic CBOR | `testcase_rfc8152.cpp` | Paired `.cbor` fixtures | Parsed/published bytes equal original fixture |
+| RFC 8152 message examples | `testcase_rfc8152.cpp` | Source-built CBOR trees and paired RFC fixtures | Cryptographic return status always; source-vs-fixture and several parse/publish comparisons only with `-v` |
+| COSE_Key import / selection | `testcase_rfc8152.cpp` | Public/private COSE_Key CBOR | Selected key/kid assertions and sign/verify operation status |
+| COSE Examples | `testvector_cose_examples.cpp` | `testvector_cose_examples.yml`, mapped key sets and CBOR hex | `cose.process` return status; parse/compose equality only with `-v`; `skip` entries are not executed |
+| Generated algorithm matrices | `testcase_cose.cpp` | Generated keys, fixed payload `hello world` and algorithm arrays | Sign/encrypt/MAC and corresponding process/decrypt/verify return statuses; no plaintext equality or verification-result boolean assertion |
+| Resource metadata | `testcase_resource.cpp` | Fixed algorithm/key-size table | `hint->enc.ksize` equals expected key length |
+| CWT | `testcase_rfc8392.cpp` | Embedded RFC 8392 CBOR hex | Verify/decrypt/process return statuses; no independent claim/payload equality |
+| AKP / ML-DSA | `testcase_akp.cpp`, `testvector_akp.cpp` | Generated keys and three JSON vectors | Sign/verify status and exact raw public-key equality; OpenSSL 3.5+ required |
 
-### 4.1 Source-level coverage
+The main README documents the concrete call and comparison sequence for each family. In particular, successful cryptographic API status is not automatically evidence of expected plaintext equality or a true verification-result boolean.
 
-- RFC vector cases compare composed or parsed CBOR bytes against expected data.
-- Cryptographic test paths call sign/verify, encrypt/decrypt, and MAC/verify operations.
-- Resource tests compare selected metadata fields with expected values.
-- AKP tests include a runtime capability gate; the source path does not imply support in every OpenSSL build.
-- The supplied vectors exercise specific cases and do not establish exhaustive algorithm or malformed-input coverage.
+### Documentation and verification status
 
-### 4.2 Documentation and verification status
+The shared [Test Report Snapshot](../test-report-status.md) records the supplied COSE run as **Revision 1104 · MinGW64/GCC · CTest**: **2,013 pass, 0 expt, 0 fail, 2 skip, 0 triv**. The source/documentation basis here is Revision 1106; the report does not independently identify the tested source commit or exact build configuration. No tests were rerun during this documentation update.
 
-The supplied report is identified as **MinGW64, source revision 1104**: **2013 pass, 0 expt, 0 fail, 2 skip, 0 triv**. The two skips remain skips; they are not counted as passes. This documentation task did not rerun the tests.
+## 4. Relationships
 
-## 5. Relationships
+- [COSE testcase procedures and detailed flows](README.md)
+- `sdk/crypto/cose/` — COSE processing implementation.
+- `sdk/io/cbor/` — CBOR parsing, object representation and serialization.
+- `sdk/crypto/basic/` — cryptographic keys and primitives.
 
-- `sdk/crypto/cose/` — COSE message model, composer, recipients, keys, countersignatures, and crypto processing.
-- `sdk/io/cbor/` — CBOR representation and serialization.
-- `sdk/crypto/basic/` — keys, signatures, MAC, AEAD, and KDF implementations.
-- `test/testcase/cose/` — RFC vectors, diagnostic examples, COSE YAML examples, and AKP JSON vectors.
+## 5. References
 
-## 6. References
-
-- RFC 8152 / RFC 9052 — COSE message definitions.
+- RFC 8152 / RFC 9052 — COSE structures and processing.
 - RFC 8392 — CBOR Web Token.
 - RFC 8778 — HSS/LMS with COSE.
 - RFC 9338 — COSE Countersignatures.
-- `test/testcase/cose/` source and vector files (Revision 1104).
+- [COSE working-group Examples](https://github.com/cose-wg/Examples).

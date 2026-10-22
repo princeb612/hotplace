@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1106                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
@@ -16,6 +16,8 @@
 `sdk/net/http` contains the common HTTP request/response model, URI and header handling, server/client integration, routing, authentication helpers, version-specific protocol framing, and HPACK/QPACK header compression. The parent directory owns shared HTTP concepts; the subdirectories own version-specific wire formats and compression algorithms.
 
 HTTP/1.x, HTTP/2, and HTTP/3 are not a single interchangeable path: HTTP/1.x uses textual message framing over TCP, HTTP/2 uses binary frames and streams, and HTTP/3 uses HTTP frames over QUIC streams.
+
+The server applets provide concrete integration points for the first two paths: `test/applet/httpserver1` configures `http_server` for HTTP/1.1, while `test/applet/httpserver2` enables HTTP/2 on the same higher-level server abstraction. The change is in the HTTP protocol path selected and handled by the server, not a replacement of the shared socket/session layer. HTTP/3 classes in this directory should not be inferred to provide an equivalent complete server applet.
 
 ## 2. Data Model
 

@@ -1,13 +1,11 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
-│ Documented with GPT-6                        │
-│ Documentation scope: runnable client applet │
-└──────────────────────────────────────────────┘
+hotplace source tree
+Edition 1 · Revision 1106
+Source basis: Revision 1105
+Documented with GPT-6
+Scope: runnable network client applet
 ```
 
 # Network client applet

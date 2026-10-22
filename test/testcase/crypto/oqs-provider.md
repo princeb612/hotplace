@@ -20,7 +20,7 @@ This document records testcase organization, test-vector schema, or reference ma
 
 * [oqs-provider](https://github.com/open-quantum-safe/oqs-provider/)
 - [ ] study
-  - [x] encode/decode
+1.   - [x] encode/decode
     - [x] DER, PEM
     - [x] public, private, encrypted private
   - [x] KEM
@@ -37,7 +37,7 @@ This document records testcase organization, test-vector schema, or reference ma
 
 ## 3. Example: Source inventory and test-vector use
 
-The retained material is a schema/reference or directory-level record. Consult the listed testcase source files to determine which functions consume these inputs and what assertions they make.
+1. The retained material is a schema/reference or directory-level record. Consult the listed testcase source files to determine which functions consume these inputs and what assertions they make.
 
 ## 4. Test and verification status
 

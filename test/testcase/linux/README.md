@@ -2,46 +2,54 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1105
+Edition 2 · Revision 1106
 Source basis: Revision 1105
 Documented with GPT-6
-Documentation scope: Linux-specific testcase entry point
+— Linux-specific test behavior & evidence
 ```
 
 # Linux-specific testcases
 
-## 1. Role
+## 1. What
 
-This directory contains Linux-specific diagnostics and their shared testcase harness. It is a narrow platform test area, not a general suite for all Linux system APIs.
+This directory contains the Linux-specific `test-linux` executable. Its current source exercises the `debug_trace()` diagnostic path; it is a narrow platform testcase, not a general suite for Linux system APIs.
 
-## 2. Test model
+## 2. How
 
-- `sample.cpp` — entry point for Linux-specific test functions.
-- `CMakeLists.txt` — target/build registration.
+### 2.1 Build and entry point
 
-The current documented function is `test_trace()`, which calls `debug_trace()` and emits the resulting trace text.
+- `CMakeLists.txt` defines the `linux` module and passes it to the shared `maketest(...)` helper.
+- `test/testcase/CMakeLists.txt` adds this directory only when `UNIX` is true.
+- `sample.cpp` configures the testcase/logger harness, parses optional verbosity, logging, and debug flags, calls `test_trace()`, reports the accumulated testcase result, and returns that result from `main`.
 
-## 3. Example: trace diagnostic
+### 2.2 Generate a trace
 
-The source path is `test_trace()` → `debug_trace()` → emitted trace output. This checks that the Linux-specific diagnostic path can be invoked and observed; it is not a comprehensive test of epoll, netlink, or all OS integration APIs.
+1. `test_trace()` creates an `ansi_string` to receive the trace text.
+2. It calls `debug_trace(&stream)`.
+3. The resulting text is written to the logger.
+4. The return code from `debug_trace()` is passed to `_test_case.test(...)`.
 
-## 4. Test and verification status
+## 3. Evidence
 
-### 4.1 Source-level coverage
+### 3.1 Source-level coverage
 
-The current source inventory is limited to the trace diagnostic. Broader Linux integrations are tested/documented with their implementation modules and testcase groups.
+- **O** — the return code from `debug_trace()` is checked.
+- **O** — generated trace text is emitted for inspection.
+- **△** — the test does not compare the trace against expected frames or assert its exact contents.
+- **—** — no Linux runtime report is asserted by this documentation update.
 
-### 4.2 Documentation and verification status
+### 3.2 Runtime verification
 
-The source example does not prove execution in the current environment. Use the report for the matching source revision and Linux/compiler configuration when claiming a runtime result.
+A passing `test-linux` run demonstrates successful completion of the trace call in that build environment. It does not establish comprehensive coverage of epoll, netlink, multiplexer behavior, or all OS integration APIs. Associate runtime claims with the report for the matching source revision and Linux/compiler configuration; no test was rerun for this documentation change.
 
-## 5. Relationships
+## 4. Relationships
 
-- `sdk/io/system/` — OS-facing utilities including multiplexer and netlink support.
-- `test/testcase/io/system/` — I/O-system-specific tests.
-- `test/testcase/CMakeLists.txt` — shared target registration.
+- `sdk/io/system/` — OS-facing utilities, including multiplexer and netlink support.
+- `test/testcase/io/system/` — tests for I/O-system-specific facilities.
+- `test/testcase/CMakeLists.txt` — platform-gated testcase registration.
+- `test/README.md` — environment-specific verification matrix.
 
-## 6. References
+## 5. References
 
 - `sample.cpp`
 - `CMakeLists.txt`

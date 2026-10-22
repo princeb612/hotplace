@@ -5,7 +5,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
+│ Edition 1 · Revision 1106                    │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘

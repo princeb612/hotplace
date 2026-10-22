@@ -17,11 +17,11 @@ Documents tests for the file-backed `file_stream` implementation in `sdk/io/stre
 
 ## 2. Test model
 
-`testcase_filestream.cpp` exercises file creation/opening, truncation, memory mapping, direct mapped-data modification, seeking, and reading values back.
+1. `testcase_filestream.cpp` exercises file creation/opening, truncation, memory mapping, direct mapped-data modification, seeking, and reading values back.
 
 ## 3. Example: file mapping and read-back
 
-The concrete flow is documented in [Stream testcase README](README.md): open `testfile`, truncate to 1024 bytes, begin memory mapping, write `0x12345678` at four-byte intervals, end mapping, seek to the start, and read back the first 32-bit value. The source asserts file size and that first value, not the entire 1024-byte contents.
+1. The concrete flow is documented in [Stream testcase README](README.md): open `testfile`, truncate to 1024 bytes, begin memory mapping, write `0x12345678` at four-byte intervals, end mapping, seek to the start, and read back the first 32-bit value. The source asserts file size and that first value, not the entire 1024-byte contents.
 
 ## 4. Test and verification status
 

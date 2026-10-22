@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1105
-Source basis: working source tree aligned to Revision 1105
+Edition 1 · Revision 1106
+Source basis: Revision 1105
 Documented with GPT-6
 Scope: runnable TCP server applet
 ```
@@ -48,7 +48,7 @@ The per-client `netsocket_event_t` stores the client socket and peer address; on
 
 ## 4. Example from the source
 
-Follow `run_server.cpp` from `accept_thread_routine` / the Linux `mux_connect` branch to `client_connected_handler`. The accepted socket receives a `netsocket_event_t`, is bound to the multiplexer, and then reaches the read path. Received data is logged and echoed to the same socket. On disconnect, the context is unbound and freed.
+Follow `run_server.cpp` through the platform-specific paths. On Linux, the multiplexer callback handles `mux_connect` by accepting and binding the client socket directly; `mux_read` receives and echoes bytes, while close/disconnect paths unbind and close the socket. On Windows, `accept_thread_routine` accepts clients, `client_connected_handler` creates a per-client `netsocket_event_t`, and IOCP completion drives the read/echo path; disconnect unbinds, closes and frees that context. The two paths share the example's purpose, but not an identical callback/context implementation.
 
 This example is useful when investigating event registration, platform-specific I/O, and per-connection context lifetime. It is not a deterministic unit test; the applet requires a client connection to exercise the data path.
 

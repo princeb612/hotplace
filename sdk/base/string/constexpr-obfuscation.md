@@ -40,7 +40,7 @@ The runtime wrapper supports conversion to `binary_t` and `std::string`, compari
 
 - Source: `test/testcase/base/string/testcase_string.cpp`
 - Functions: `test_string_constexpr_hide()`, `test_string_constexpr_obf()`
-- Test analysis and execution report: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
+- Test analysis and execution report: [`testcase_string.cpp` testcase guide](../../../test/testcase/base/string/README.md)
 
 ## 4. Relationships
 

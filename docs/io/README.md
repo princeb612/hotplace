@@ -56,7 +56,7 @@ The current IO layer reflects several major development lines that accumulated o
 
 The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
 
-Revisions 1091–1096 extend ASN.1 grammar coverage and parser infrastructure, including information object classes, extension markers, external parsing-table import, GSS-based GLR parsing, and parse-tree fixes. Revision 1097 connects loader input to parsing; 1099 adds exercised IMPORTS/EXPORTS and reference resolution; 1100 consolidates shared parser/publisher providers under `asn1_advisor`; 1102 renames `asn1_module`/`asn1_module_context` to `asn1_module`/`asn1_module_context` and extends parameterized-assignment grammar; 1103 fixes `TypeAssignment` semantic publication. The current `asn1_module::add_schema()` path selects GLR, while parameterized semantic instantiation remains incomplete.
+Revisions 1091–1096 extend ASN.1 grammar coverage and parser infrastructure, including information object classes, extension markers, external parsing-table import, GSS-based GLR parsing, and parse-tree fixes. Revision 1097 connects loader input to parsing; 1099 adds exercised IMPORTS/EXPORTS and reference resolution; 1100 consolidates shared parser/publisher providers under `asn1_advisor`; 1102 renames `asn1_runtime`/`asn1_runtime_context` to `asn1_module`/`asn1_module_context` and extends parameterized-assignment grammar; 1103 fixes `TypeAssignment` semantic publication. Revision 1104 renames the module registry to `asn1_modules`, advances binary parsing tables to revision 3, and prototypes parameterized type/value semantic support. The current `asn1_module::add_schema()` path selects GLR, while LALR remains available for the notation-oriented path and parameterized semantic instantiation remains incomplete.
 
 Therefore the IO history should be read as several converging processing paths rather than as one subsystem designed at once.
 
@@ -342,7 +342,7 @@ AST / structural node
 semantic ASN.1 object/type
 ```
 
-At Revision 1097 the loader has taken its first working step: `asn1_loader::load_file()` and `load()` now feed ASN.1 input into the existing parser and produce a `parse_tree`. The loader still does not own Module construction or parser-to-runtime orchestration; semantic construction remains a separate publisher step and `asn1_module` remains on the LALR path.
+At Revision 1097 the loader took its first working step: `asn1_loader::load_file()` and `load()` feed ASN.1 input into the parser and produce a `parse_tree`. The loader does not itself own semantic construction; that remains a separate publisher step. In the current integrated flow, `asn1_module::add_schema()` selects GLR, while LALR remains available as a distinct parser path.
 
 ### CBOR
 
@@ -388,7 +388,7 @@ zlib
 decompressed representation
 ```
 
-The same principle applies to OID handling in ASN.1-related processing.
+The same principle applies to OID handling in ASN.1-related processing. `oid` converts between dotted-decimal notation and numeric arcs; `asn1str_to_oid()` extracts arcs from ASN.1-style labeled notation. The `oid_dictionary` then looks up metadata using the numeric arc sequence (implemented with a trie), rather than doing textual prefix matching. It is a reusable identifier/metadata utility, not the owner of ASN.1 schema semantics.
 
 These facilities should not be promoted to independent architectural layers unless their own semantics become large enough to justify it.
 
@@ -504,7 +504,7 @@ protocol state
 application
 ```
 
-### ASN.1 path at Revision 1103
+### ASN.1 path at Revision 1105
 
 ```text
 ASN.1 notation
@@ -522,7 +522,7 @@ ASN.1 publisher / semantic construction
 asn1_module
 ```
 
-This is deliberately different from saying that GLR has replaced LALR or that the broader grammar has already been integrated into the production loader/runtime path.
+This is deliberately different from saying that GLR has replaced LALR. The integrated `asn1_module::add_schema()` path selects GLR, while LALR remains available for the notation-only grammar. Revision 1104 advances the binary parsing-table format to revision 3; the parameterized type/value semantic work is still prototyping.
 
 ### CBOR path
 
@@ -602,13 +602,14 @@ This is why IO changes can affect apparently unrelated TLS/QUIC/network tests.
 
 ## Status
 
-At Revision 1103:
+At Revision 1105:
 
 - `sdk/io` is established as the common structured-data and representation layer below crypto/network.
 - Stream and platform abstractions provide reusable input/output mechanisms.
 - `payload` provides a reusable binary layout mechanism for protocol structures.
 - Parser infrastructure supports lexical analysis, CFG, LALR, GLR experimentation, graph-structured-stack support, and parse-tree construction. The ASN.1 loader now provides the first working file/memory-to-parse-tree entry point.
-- ASN.1 provides a substantial syntax → semantic-object pipeline. The integrated CFG now spans notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2; the production runtime path remains LALR-based.
+- ASN.1 provides a substantial syntax → semantic-object pipeline. The integrated CFG spans notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2; the module/schema path selects GLR, while LALR remains available. Revision 1104 adds parameterized type/value prototypes and parsing-table format revision 3, but does not complete parameterized semantic instantiation.
+- `oid_dictionary` maps numeric OID arc sequences to metadata and supports ASN.1-related lookup without owning ASN.1 semantic construction.
 - CBOR provides a separate structured-data representation used by higher security/data layers.
 - Compression and other representation utilities remain supporting facilities within IO.
 - Platform-specific source realization remains below the common IO abstraction.

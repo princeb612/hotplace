@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -11,46 +12,35 @@ Documented with GPT-6
 
 ## 1. Role
 
-Represents one column of an ODBC result row, retaining column metadata and retrieved data in forms convertible to common hotplace types.
+`odbc_field` represents one column in a fetched row. It retains the column index, data/SQL type information, column size, optional field metadata, and the retrieved value used by the public conversion methods.
 
-## 2. Model
-
-`odbc_field` represents one column of an ODBC result row. It retains column metadata and the retrieved value in a form that can be converted to common hotplace types.
-
-## Role
+## 2. Data Model
 
 ```text
-ODBC column
-   |
-   +--> name / SQL type / size
-   |
-   +--> retrieved data
-          |
-          +--> as_string()
-          +--> as_integer()
-          +--> as_double()
+column description + retrieved data
+                 |
+                 v
+             odbc_field
+                 |
+       +---------+----------+
+       |         |          |
+  get_field_name()  as_string()  as_integer() / as_double()
 ```
 
-The field is constructed by the query/result processing path with the column index, data/column type information, column size and retrieved data. A field may also refer to the corresponding field-information object created while describing the result set.
+The implementation stores scalar values in a small union and uses a pointer for string, binary, and other buffer-backed values. Timestamp values use the internal datetime representation. A field may refer to the corresponding field-information object produced while the query describes the result set.
 
-## Conversion
+## 3. Behavior Model
 
-The implementation exposes conversion helpers for string, integer and floating-point use. The conversion layer hides the ODBC C-type selection performed during `SQLGetData` while keeping the result accessible through a small hotplace API.
+The query chooses an ODBC C type for `SQLGetData` based on the SQL column type and constructs a field from the returned bytes and the metadata. `get_field_name()` converts the stored column name to the requested string representation. `as_string()` converts or copies the value into an ANSI string and, in Unicode builds, a wide string. `as_integer()` and `as_double()` use the stored scalar value for selected numeric types and conversion helpers for other representations.
 
-## 3. Important behavior and lifetime
+These methods are convenience conversions, not a lossless representation of every SQL type. In particular, binary and date/time values have type-specific storage paths, so callers should choose a conversion that matches the column's semantics rather than assume every value can be safely represented as an integer or double.
 
-The conversion helpers include string, integer and floating-point access. The query/result path chooses ODBC C types for `SQLGetData` and constructs fields from column metadata and retrieved values.
+## 4. Relationships
 
-## 4. Example from the source tests
+- [`odbc_record.md`](odbc_record.md) — holds fields for a fetched row
+- [`odbc_query.md`](odbc_query.md) — selects retrieval types and constructs field objects
+- [`../README.md`](README.md) — overall result traversal
 
-`sample.cpp` calls `get_field_name()` and `as_string()` on each returned field. It does not exercise all conversion helpers.
+## 5. References
 
-## 5. Relationships
-
-- `odbc_record` — owns fields for one row
-- `odbc_query` — retrieves and constructs fields from the ODBC result set
-
-## 6. References
-
-- `sdk/odbc/basic/odbc_field.hpp`
-- `test/testcase/odbc/sample.cpp`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

@@ -1,4 +1,4 @@
-### http3.pcapng - curl
+# Developer Notes - HTTP/3 capture and curl client trace
 
 ````
 $ SSLKEYLOGFILE=sslkeylog curl -s https://www.google.com/ --http3 -v

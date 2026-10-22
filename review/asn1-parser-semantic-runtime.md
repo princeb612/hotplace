@@ -1,6 +1,6 @@
 # ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1102
+> **Review baseline:** Revision 1106
 
 ## Review thesis
 
@@ -30,7 +30,7 @@ This makes the parser more than a syntax recognizer. The grammar now provides th
 
 ## From grammar vocabulary to semantic objects
 
-The notation path can be followed through a concrete production hierarchy, with revision 1102 as the current review baseline:
+The notation path can be followed through a concrete production hierarchy, using revision 1102 as the historical checkpoint for the grammar and module changes described in this section:
 
 ```text
 Statement
@@ -108,7 +108,7 @@ asn1_module
           └── update_linkage(...)
 ```
 
-`asn1_module_context` provides the registry for named modules, including the default module. This creates an integration seam between a module's local symbol table and symbols imported from another registered module. `resolve` and `is_resolvable` make dependency status explicit; `update_linkage` handles reference-linkage updates and constructed-bit propagation.
+`asn1_modules` is the process-wide singleton registry for named module instances, including the default module. This creates an integration seam between a module's local symbol table and symbols imported from another registered module. `resolve` and `is_resolvable` make dependency status explicit; `update_linkage` handles reference-linkage updates and constructed-bit propagation.
 
 These are module-model capabilities, not proof that arbitrary ASN.1 module sets can already be loaded and resolved end to end. The parser, semantic publisher, module context, import/export rules, and loader must still agree on the supported language subset.
 
@@ -169,13 +169,13 @@ semantic reconstruction
 runtime schema/type objects
 ```
 
-Revisions 1097–1102 should be described as the beginning of this integration, not as a completed module loader. The loader has moved beyond a purely isolated skeleton, but module-level ASN.1 support still has a distinction between grammar coverage, semantic implementation, and complete loading behavior.
+Revisions 1097–1102 established the beginning of this integration, not a completed module loader. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`. These are incremental semantic-construction steps, not evidence of a complete parameterized-type instantiation engine. The loader has moved beyond a purely isolated skeleton, but grammar coverage, semantic implementation, module linkage, and complete loading behavior remain separate levels of support.
 
 The parsing resources also have different roles:
 
 ```text
-asn1notation.ptb → notation parsing / semantic construction (binary parsing-table revision 2)
-asn1.ptb         → broader loader grammar (binary parsing-table revision 2)
+asn1notation.ptb → notation parsing / semantic construction (binary parsing-table revision 3)
+asn1.ptb         → broader loader grammar (binary parsing-table revision 3)
 ```
 
 That distinction prevents the existence of a parse table from being mistaken for complete language support.
@@ -241,4 +241,4 @@ Revision 1102 is a meaningful incremental boundary for ASN.1: the production/rul
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state around **revision 1102**.
+Reviewed against the hotplace source/documentation state through **revision 1106**.

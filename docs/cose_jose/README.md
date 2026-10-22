@@ -1,6 +1,6 @@
 # COSE / JOSE — CBOR, JSON, Keys & Key Exchange
 
-**Edition 1 · Revision 1090**
+**Edition 1 · Revision 1105**
 
 ## Context
 
@@ -68,6 +68,7 @@ The `CHANGELOG.md` gives a particularly clear history for the CBOR/COSE side.
 - Revision 926 — CBOR/COSE refactoring was tested.
 - Revision 998 — ML-DSA was tested for both JOSE and COSE.
 - Revision 1020 — `crypto_keygen` was added.
+- Revision 1105 — COSE Partial IV handling was fixed; the partial value participates in nonce construction rather than serving as the complete IV.
 
 The changelog does not provide a dedicated milestone for the initial JOSE implementation, so this document does not invent one. Current source and testcase structure are used to describe the present relationship instead.
 
@@ -311,6 +312,16 @@ JWS / JWE
 
 Nested signing and encryption are represented by `json_object_signing_encryption`.
 
+### COSE Partial IV is an input to nonce construction
+
+The COSE Partial IV header parameter is not the complete message IV. The implementation follows RFC 8152 §3.1: left-pad the Partial IV with zero bytes to the full IV length, then XOR that value with the context IV. Revision 1105 fixes this path in COSE cryptographic processing. The Partial IV is interpreted together with the security context; copying it directly into the AEAD IV would skip the required construction.
+
+```text
+context IV ────────────────────────┐
+                                  XOR ──> message IV
+Partial IV -> left-pad to IV size ─┘
+```
+
 ### Key representation and operation are separate
 
 ```text
@@ -448,8 +459,9 @@ That makes the testcase tree a second layer of documentation for the implementat
 
 ## Status
 
-The latest explicitly recorded implementation checkpoint is Revision 1078:
+The latest relevant implementation checkpoint is Revision 1105:
 
+- Revision 1105 fixes COSE Partial IV handling in nonce construction.
 - CBOR is an established lower serialization layer.
 - COSE is implemented as a structured security-object layer over CBOR.
 - JOSE provides the corresponding JSON-oriented security-object layer.

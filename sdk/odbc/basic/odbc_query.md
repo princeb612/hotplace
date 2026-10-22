@@ -2,81 +2,66 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
 
-# ODBC statement and result traversal
+# ODBC statement execution and result traversal
 
 ## 1. Role
 
-Wraps an ODBC statement handle (`HSTMT`) and is the execution/result-set object returned by `odbc_connector`.
+`odbc_query` wraps an ODBC statement handle (`HSTMT`) associated with the connection created by `odbc_connector`. It is the main API for executing SQL, binding parameters, describing result columns, fetching rows, and advancing through additional result sets.
 
-## 2. Model
-
-`odbc_query` wraps an ODBC statement handle (`HSTMT`) and is the main execution/result-set object returned by `odbc_connector`.
-
-## Execution model
+## 2. Data Model
 
 ```text
 odbc_query
-   |
-   +--> query()/execute()
-   |       |
-   |       +--> SQLExecDirect
-   |
-   +--> prepare_statement()
-   |       |
-   |       +--> SQLPrepare
-   |       +--> bind_statement_parameter()
-   |       |       |
-   |       |       +--> SQLBindParameter
-   |       +--> execute_statement()
-   |               |
-   |               +--> SQLExecute
-   |
-   +--> fetch()
-   |       |
-   |       +--> SQLFetch / SQLGetData
-   |       v
-   |    odbc_record
-   |
-   +--> more()
-           |
-           +--> SQLMoreResults
+  |
+  +-- direct execution: SQLExecDirect
+  |
+  +-- prepared execution
+  |     SQLPrepare
+  |       -> SQLBindParameter (for each parameter)
+  |       -> SQLExecute
+  |
+  +-- result metadata: SQLNumResultCols / SQLDescribeCol
+  |
+  +-- fetch: SQLFetch / SQLGetData
+  |     -> odbc_record -> odbc_field[]
+  |
+  +-- more(): SQLMoreResults
 ```
 
-## Query and statement paths
+The query stores the connection handle, statement handle, query mode, and a record-shaped collection of field metadata. The metadata record describes columns; each successful `fetch()` populates a separate caller-provided record with the values for one row.
 
-`query()`/`execute()` provide formatted SQL execution. The direct path uses `SQLExecDirect`.
+## 3. Behavior Model
 
-For parameterized statements, `prepare_statement()` creates a prepared statement, `bind_statement_parameter()` maps a caller buffer and ODBC C/SQL types to `SQLBindParameter`, and `execute_statement()` invokes `SQLExecute`.
+### Execution paths
 
-The class supports synchronous and asynchronous query modes. In asynchronous mode, `close()` uses `SQLCancel` before freeing the statement handle.
+`query()` and `execute()` format and execute a SQL string through the direct-execution path. Prepared statements use `prepare_statement()`, one or more `bind_statement_parameter()` calls, and `execute_statement()`. Parameter binding forwards the caller's buffer, C type, SQL type, and size to `SQLBindParameter`; callers remain responsible for providing suitable data storage for the parameter operation.
 
-## Result-set handling
+### Result metadata and fetching
 
-After execution, `build_fieldinfo()` uses `SQLNumResultCols` and `SQLDescribeCol` to construct field metadata. `fetch()` obtains rows with `SQLFetch` and retrieves column data with `SQLGetData`, mapping ODBC SQL types to suitable C-side representations before populating `odbc_field` objects in an `odbc_record`.
+After execution, `build_fieldinfo()` uses `SQLNumResultCols` and `SQLDescribeCol` to build column metadata. `fetch()` clears the destination record, calls `SQLFetch`, and retrieves column values with `SQLGetData`, selecting a C-side type from the SQL type. It uses a memory stream when a value needs multiple data chunks. `SQL_NO_DATA` is reported as `errorcode_t::no_data`, allowing the caller's fetch loop to stop.
 
-`get_resultset()` exposes column/row counts through `SQLNumResultCols` and `SQLRowCount`; `more()` advances through additional result sets with `SQLMoreResults`.
+`get_resultset()` reports the column count and row count returned by `SQLNumResultCols` and `SQLRowCount`; a row count of -1 is normalized to zero. `more()` calls `SQLMoreResults` and rebuilds metadata when the call succeeds.
 
-## 3. Important behavior and lifetime
+### Closing and asynchronous mode
 
-Direct execution uses `SQLExecDirect`. Prepared statements use `SQLPrepare`, `SQLBindParameter`, and `SQLExecute`. Result metadata uses `SQLNumResultCols` and `SQLDescribeCol`; fetching uses `SQLFetch` and `SQLGetData`; `more()` advances with `SQLMoreResults`. Asynchronous close can cancel a pending statement with `SQLCancel`.
+`close()` frees the statement handle and clears field metadata. In `async_query` mode it calls `SQLCancel` before freeing the statement. `odbc_sinker::ready()` repeatedly invokes `execute_statement()` for async work and closes the query if its timeout expires; synchronous mode is immediately considered ready.
 
-## 4. Example from the source tests
+## 4. Relationships
 
-`sample.cpp` calls `query()`, loops over `fetch(&record)`, reads fields through `get_field(i)` and `as_string()`, and advances additional result sets through `more()`. The example depends on caller-provided database settings.
+- [`odbc_connector.md`](odbc_connector.md) — creates the query and manages the environment/connection lifecycle
+- [`odbc_record.md`](odbc_record.md) — row container populated by `fetch()`
+- [`odbc_field.md`](odbc_field.md) — column values and conversions
+- [`odbc_diagnose.md`](odbc_diagnose.md) — diagnostic records for failed native operations
+- [`odbc_sinker.md`](odbc_sinker.md) — asynchronous readiness and timeout adapter
+- [`../../types.md`](../../types.md) — query modes and ODBC return-code mapping
+- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample's direct execution/fetch path
 
-## 5. Relationships
+## 5. References
 
-- `odbc_connector` — creates the query and owns the connection lifecycle
-- `odbc_record` — row container produced by `fetch()`
-- `odbc_field` — individual column value and conversion
-- `odbc_diagnose` — diagnostics for ODBC handles
-
-## 6. References
-
-- `sdk/odbc/basic/odbc_query.hpp`
-- `test/testcase/odbc/sample.cpp`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

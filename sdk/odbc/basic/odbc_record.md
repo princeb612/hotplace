@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -11,46 +12,36 @@ Documented with GPT-6
 
 ## 1. Role
 
-Represents one fetched database row as a collection of `odbc_field` objects.
+`odbc_record` represents one fetched row as an ordered collection of `odbc_field` objects. It provides row-level access without owning query execution or column retrieval.
 
-## 2. Model
-
-`odbc_record` represents one fetched database row as a collection of `odbc_field` objects.
+## 2. Data Model
 
 ```text
-SQLFetch / SQLGetData
+odbc_query::fetch(record)
           |
           v
-    odbc_record
-      /  |  \
-     v   v   v
- field field field ...
+     odbc_record
+       |
+       +-- field[0]
+       +-- field[1]
+       +-- field[2]
+       +-- ...
 ```
 
-## Role
+The record stores field pointers in a vector. `count()` returns the number of fields, `get_field(index)` retrieves a field by zero-based index, and the name-based overloads retrieve fields by column name. `operator<<` appends a field.
 
-The record owns a vector of field pointers. `operator<<` appends a field, `count()` returns the number of columns, and `get_field()` retrieves a field either by zero-based index or by column name.
+## 3. Behavior Model
 
-`clear()` removes the fields associated with the current record so the object can be reused for another fetched row.
+Before fetching a new row, `odbc_query::fetch()` clears the destination record. As column values are retrieved, field objects are appended to the record. `clear()` releases the field references and empties the vector so the record can be reused for another row. The record is therefore a row container, not a persistent result-set collection.
 
-## Relationship to query
+Index access uses the vector's `at()` operation, so callers should use an index within `0..count()-1`. The record's field objects expose metadata and value conversion through `odbc_field`.
 
-`odbc_query::fetch()` fills an `odbc_record`. The query determines the ODBC column metadata and retrieves the column data; the record provides the row-oriented interface used by callers.
+## 4. Relationships
 
-## 3. Important behavior and lifetime
+- [`odbc_query.md`](odbc_query.md) — populates records during row fetching
+- [`odbc_field.md`](odbc_field.md) — metadata and values for individual columns
+- [`../README.md`](README.md) — wrapper-class flow
 
-The record provides `count()`, index/name-based `get_field()`, append behavior through `operator<<`, and `clear()` for reuse across rows. `odbc_query::fetch()` populates it.
+## 5. References
 
-## 4. Example from the source tests
-
-`sample.cpp` iterates over `record.count()` and retrieves each field by zero-based index. It prints the field name and string conversion.
-
-## 5. Relationships
-
-- `odbc_query` — creates/populates records
-- `odbc_field` — column metadata and value conversion
-
-## 6. References
-
-- `sdk/odbc/basic/odbc_record.hpp`
-- `test/testcase/odbc/sample.cpp`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

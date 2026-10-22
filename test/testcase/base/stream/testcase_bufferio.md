@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1106                    │
+│ Source basis: Revision 1106                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -12,13 +12,11 @@
 
 # Buffer I/O Testcases (`testcase_bufferio.cpp`)
 
-## 1. Role
-
+## 1. What is tested?
 This testcase source exercises the low-level `bufferio` API in `sdk/base/stream/lowlevel`. Unlike a module reference, this document records what the inspected tests check and how strong that evidence is.
 
-## 2. Test model
-
-The file has two test functions:
+## 2. How is it tested?
+1. The file has two test functions:
 
 - `test_bufferio1()` exercises context creation, formatted writes, replacement, insertion, cutting, searching, size reporting, comparison, clearing, and closing.
 - `test_bufferio2()` exercises retrieval of a non-null data pointer when the context is opened with a nonzero padding size, both before writing and after clearing.
@@ -38,9 +36,9 @@ close context
 separate case: pad_size != 0 -> get() after open and clear -> non-null pointer
 ```
 
-## 3. Example: edit operations and expected content
+### Representative flow: edit operations and expected content
 
-In `test_bufferio1()`, the test writes `hello world`, checks the length and several search positions, removes the space, then compares the content with `helloworld`.
+2. In `test_bufferio1()`, the test writes `hello world`, checks the length and several search positions, removes the space, then compares the content with `helloworld`.
 
 ```cpp
 bio.printf(handle, "hello world");
@@ -58,13 +56,11 @@ test = bio.compare(handle, sample.c_str(), sample.size());
 _test_case.assert((true == test), __FUNCTION__, "compare");
 ```
 
-This excerpt is taken from the test's flow and depends on setup in `test_bufferio1()`. The `_test_case.test()` calls check operation results; the `_test_case.assert()` calls shown here check expected values.
+3. This excerpt is taken from the test's flow and depends on setup in `test_bufferio1()`. The `_test_case.test()` calls check operation results; the `_test_case.assert()` calls shown here check expected values.
 
-## 4. Test and verification status
-
-### 4.1 Source-level coverage
-
-The source-level status is documented against Revision 1105. Runtime status is recorded separately from the supplied CTest-generated report snapshot; that report does not identify the tested source revision or execution environment.
+## 3. What does the evidence establish?
+### Source-level evidence
+1. The source-level status is documented against Revision 1105. Runtime status is recorded separately from the supplied CTest-generated report snapshot; that report does not identify the tested source revision or execution environment.
 
 - **O** — an explicit check supports the stated claim: either an expected-value assertion or a checked operation result, as described in the evidence column.
 - **△** — the operation is exercised or diagnostic output is produced, but the stated content/behavior is not directly compared with an expected value.
@@ -80,30 +76,27 @@ The source-level status is documented against Revision 1105. Runtime status is r
 | `test_bufferio2()` — `get()` returns non-null storage after open and clear with `pad_size = 1` | Explicit non-null assertions after both calls to `get()` | O |
 | `test_bufferio2()` — return codes for setup and mutations | `open()`, `printf()`, `clear()`, and `close()` return values are not explicitly checked in this function | △ |
 
-### 4.2 Documentation and verification status
-
+### Evidence status and limitations
 | Axis | Status | Basis |
 |---|---|---|
 | Documentation completeness | Partial | The main test flows and visible assertions are mapped here; the document does not enumerate every internal branch or platform-specific behavior. |
 | Verification completeness | Partial | Several behaviors have explicit expected-value assertions, while the initial formatted output is diagnostic-only and some operations in `test_bufferio2()` have unchecked return values. |
 | Runtime execution | Pass (reported group) | The supplied `test/testcase/base/report` contains `@ test case "bufferio" success 30`; the bufferio group lists 30 `pass` results and no `fail` result. |
 
-`Documentation completeness` evaluates how well this document explains the inspected test source. `Verification completeness` evaluates the test evidence visible in the source; neither status substitutes for the separate report-backed runtime result.
+2. `Documentation completeness` evaluates how well this document explains the inspected test source. `Verification completeness` evaluates the test evidence visible in the source; neither status substitutes for the separate report-backed runtime result.
 
-## 5. Relationships
-
+## Relationships
 - Test source: [`testcase_bufferio.cpp`](testcase_bufferio.cpp)
 - Module description: [`sdk/base/stream/lowlevel-bufferio.md`](../../../../sdk/base/stream/lowlevel-bufferio.md)
 - Related module: [`sdk/base/stream/basic_stream.md`](../../../../sdk/base/stream/basic_stream.md)
 - Related tests: [`testcase_stream.cpp`](testcase_stream.cpp)
 
-## 6. References
-
-- Revision basis: hotplace source archive, revision 1104.
+## References
+- Source basis: Revision 1106; the supplied runtime report's source revision is unspecified.
 - Test implementation: `test/testcase/base/stream/testcase_bufferio.cpp`.
 - Runtime evidence for this snapshot is taken from the supplied report generated after CTest. The report does not state the tested source revision, OS, compiler, or build configuration; those details remain unrecorded. See the [test report snapshot](../../test-report-status.md) for the wider report scope.
 
 
 ## 7. Development Notes (for maintainer review)
 
-The source contains the comment in `test_bufferio2()` explaining that the case is intended to avoid a null `c_str()` result being passed to output functions (the nearby `std::cout` / `printf` examples are commented out). This is retained as a development note, not treated as a complete API contract or a replacement for dedicated null-handling tests.
+3. The source contains the comment in `test_bufferio2()` explaining that the case is intended to avoid a null `c_str()` result being passed to output functions (the nearby `std::cout` / `printf` examples are commented out). This is retained as a development note, not treated as a complete API contract or a replacement for dedicated null-handling tests.

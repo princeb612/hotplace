@@ -1,6 +1,6 @@
 # TLS
 
-> Edition 1 · Revision 1090  
+> Edition 1 · Revision 1105  
 > Documented with GPT-5.6 Luna — study, reconstruction & review
 
 ## Context
@@ -676,7 +676,7 @@ The last branch is intentionally shared with QUIC: TLS supplies handshake semant
 
 ## Status
 
-| Area | Revision 1090 state |
+| Area | Revision 1105 state |
 |---|---|
 | TLS 1.2 protocol / protection | implemented and extensively tested |
 | TLS 1.3 protocol / protection | implemented and extensively tested |
@@ -719,7 +719,7 @@ TLS therefore owns the handshake/security semantics shared with QUIC, while TCP/
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
+│ Edition 1 · Revision 1105            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

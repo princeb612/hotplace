@@ -1,111 +1,84 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
-│ Documented with GPT-6                        │
-│ Documentation scope: runnable server applet │
-└──────────────────────────────────────────────┘
+hotplace source-tree documentation
+Edition 1 · Revision 1106
+Source basis: Revision 1105
+Documented with GPT-6
+Scope: HTTP/1.1 server integration applet
 ```
 
 # HTTP/1.1 server applet
 
 ## 1. Role
 
-`httpserver1` is a runnable HTTP/1.1 server built on hotplace's `network_server` and HTTP routing layer. It is the first HTTP example in the source's progression `tcpserver1 → tcpserver2 → tlsserver → httpserver1 → httpserver2`. It supports plain HTTP and HTTPS/TLS listener configuration, and can select either the OpenSSL-backed socket path or the trial adapter.
+`httpserver1` is the HTTP/1.1 server integration example. It uses `http_server` and its routing layer, with either the OpenSSL-backed socket adapter or the trial adapter selected by the applet options.
 
-This is an integration applet for browser, curl and packet-capture inspection, not a complete HTTP conformance suite. The checked task list and commands below are historical maintainer notes; they are not a claim that every combination was rerun on the current source revision.
+It follows `tcpserver1`, `tcpserver2`, and `tlsserver` in the server progression. The source comments identify this order explicitly.
 
-## 2. Model
-
-### Request and response path
+## 2. Integration path
 
 ```text
-network_server / socket event
-          │
-          ▼
-consumer_routine(mux_connect / mux_read)
-          │
-          ├── retrieve network_session + parsed http_request
-          │
-          ▼
-HTTP response handling
-          │
-          ├── TLS-enabled server socket → http_router.route(...)
-          │
-          └── plain HTTP path → local response handling
-          │
-          ▼
-http_response → session output
+command-line options
+    └─ select OpenSSL or trial socket adapter
+             │
+             ▼
+       http_server_builder
+             │
+             ├─ configure listeners and TLS certificate
+             ├─ configure HTTP protocol
+             └─ build/start http_server
+                       │
+                       ▼
+              HTTP request callback
+                       │
+                       ├─ http_router
+                       └─ http_response
 ```
 
-The source defines simple HTML and JSON response handlers. In the TLS-enabled branch, the read callback delegates the request to the configured `http_router`; the plain HTTP branch has its own handling path. The applet therefore demonstrates integration between transport events, parsed requests and response composition rather than implementing all HTTP parsing inside the callback.
+The applet source registers routes for static content, API responses, and authentication-related flows. The server callback routes parsed requests and sends the composed response through the HTTP server/session path. HTTP parsing and request/response handling belong to `sdk/net/http`; socket events and sessions are provided by the lower network layers.
 
-### Relevant options
+## 3. Execution
 
-- `-r` starts the server.
-- `-h` selects the plain HTTP port (default 8080 in `sample.cpp`).
-- `-s` selects the HTTPS port (default 9000).
-- `-T` selects the trial adapter.
-- `-k` enables TLS key logging.
-- `-cert` selects a configured certificate family; `-cs` can select a cipher suite.
-- `-e` enables Content-Encoding handling.
+The applet's command-line options are defined in `sample.cpp`. Relevant options include `-r` to run the server, `-h` and `-s` for the plain HTTP and HTTPS ports, `-T` for the trial adapter, `-cert` for certificate selection, and `-k` for TLS key logging.
 
-Use the command-line parser in `sample.cpp` as the source of truth for the current option set.
-
-## 3. Important behavior and lifetime
-
-The server uses the shared `http_server` instance configured by the applet setup. Incoming events are delivered to `consumer_routine`; a read event has access to the `network_session` and parsed `http_request`, and response objects are composed for that request. Router handlers are registered on the shared HTTP server rather than reconstructed as independent protocol stacks for every callback.
-
-TLS availability depends on the selected socket implementation, certificate family, cipher configuration and allowed TLS versions. The checked historical matrix includes TLS 1.2 and TLS 1.3, OpenSSL and trial integration, browser/curl requests and several key-agreement groups. Some hybrid groups remain unchecked in that matrix; do not interpret neighboring checked rows as proof of support for those entries.
-
-The `.run` marker is used by the applet's run/stop instructions. Key-log files contain sensitive traffic secrets and should be treated as diagnostic material, not committed as ordinary test data.
-
-## 4. Example from the applet instructions
-
-Start the server using the selected backend:
+Examples from the applet's documented usage:
 
 ```sh
 ./test-httpserver1 -r -k --trace
-# or the trial adapter
-./test-httpserver1 -r -k --trace -T
+./test-httpserver1 -r -k --trace -T -cert mldsa
 ```
 
-Then issue a request using curl:
+The executable suffix and runtime working directory depend on the build environment. Certificate/key files must be available where the applet loads them. The applet uses a `.run` marker for its run-loop lifetime.
 
-```sh
-curl https://localhost:9000/ -v -s -k --http1.1
-```
+## 4. Interoperability and existing evidence
 
-The `-k` curl option skips certificate verification and is suitable only for this local diagnostic setup. The request exercises the TLS handshake and HTTP/1.1 request/response path together. It does not by itself validate every HTTP method, malformed request, connection reuse case or response-framing edge case.
+The HTTP server can be exercised by external peers, including Chrome, Edge, curl, and wget. `netclient` provides a project-local peer for the supported client-side protocol paths. Which client, adapter, certificate, and protocol combination was used should be taken from the corresponding record rather than inferred from the available options.
+
+The `pcap/` directory preserves one specific ML-DSA certificate scenario:
+
+- [Capture index](pcap/README.md)
+- [Client-side trace](pcap/httpserver1-mldsa-client.md)
+- [Server-side trace](pcap/httpserver1-mldsa-server.md)
+- `httpserver1-mldsa.pcapng`
+- `sslkeylog.txt`
+
+The recorded client trace shows TLS 1.3, ALPN `http/1.1`, `GET /`, and an HTTP `200 OK` response. The server trace records the trial adapter and `-cert mldsa` configuration. These files describe that captured exchange only; they are not a report for every adapter, certificate family, client, or source revision.
+
+TLS key-log material contains session secrets and should be treated as sensitive diagnostic data.
 
 ## 5. Relationships
 
-- [HTTP implementation](../../../sdk/net/http/README.md) — HTTP request/response and routing implementation.
-- [TLS/DTLS/QUIC implementation](../../../sdk/net/tls/README.md) — secure transport and session state.
-- [Network-server layer](../../../sdk/net/server/README.md) — socket events and session integration.
-- [Network client applet](../netclient/README.md) — runnable client-side protocol selection.
-- `httpserver2/` — HTTP/2 applet and ALPN-focused comparison.
+- [TCP server using the multiplexer](../tcpserver1/README.md) — direct socket-event handling.
+- [TCP server using network_server](../tcpserver2/README.md) — shared server/session abstraction.
+- [TLS server](../tlsserver/README.md) — secure transport integration before HTTP.
+- [HTTP/2 server](../httpserver2/README.md) — the related applet using the same higher-level HTTP server abstraction with HTTP/2.
+- [Network client](../netclient/README.md) — project-local peer.
+- [Network server](../../../sdk/net/server/README.md), [HTTP](../../../sdk/net/http/README.md), and [TLS/DTLS/QUIC](../../../sdk/net/tls/README.md) — the underlying implementation layers.
 
-## 6. References
+## 6. Source map
 
-- `run_server.cpp` — event callback, routing and response handling.
-- `sample.cpp`, `sample.hpp` — command-line setup and shared applet state.
-- `CMakeLists.txt` — applet target and static-file staging.
-- `index.html`, `signin.html`, `style.css` — static content.
-- `pcap/` — captured HTTP/1.1 verification cases.
-
-## 7. Developer Notes
-
-### Historical integration checklist retained from the original README
-
-The original checklist records successful local integration for the listed browser, curl and OpenSSL scenarios. It is retained as historical context, not as a current test report for Revision 1105. Unchecked hybrid groups remain explicitly unchecked.
-
-- HTTP/1.1 with `network_server`, OpenSSL and trial paths.
-- TLS 1.3 with Chrome/Edge, curl and OpenSSL client scenarios.
-- TLS 1.2 curl scenario using `TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384`.
-- ML-DSA certificate experiment.
-
-Before relying on a specific client, group, certificate or backend combination, rerun that exact scenario and record the source revision and tool versions.
+- `sample.cpp`, `sample.hpp` — command-line options and applet setup.
+- `run_server.cpp` — adapter selection, HTTP server construction, routes, and request handling.
+- `index.html`, `signin.html`, `style.css` — sample web resources.
+- `CMakeLists.txt` — executable target and resource staging.

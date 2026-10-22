@@ -45,7 +45,7 @@ replace(source, old, new) ---------------> modified source
 - Source: `test/testcase/base/string/testcase_string.cpp`
 - Test entry: `testcase_string()`
 - Relevant functions: `test_string_format()`, `test_string_gettoken()`, `test_string_getline()`, `test_string_scan()`, `test_string_scan2()`, `test_string_replace()`, `test_string_tokenize()`
-- Test analysis and recorded execution result: [`testcase_string.md`](../../../test/testcase/base/string/testcase_string.md)
+- Test analysis and recorded execution result: [`README.md`](../../../test/testcase/base/string/README.md)
 
 ## 4. Relationships
 

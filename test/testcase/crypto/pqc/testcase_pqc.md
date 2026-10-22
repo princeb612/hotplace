@@ -17,7 +17,7 @@ This document maps the common PQC testcase sources and the nested OQS integratio
 
 ## 2. Test model
 
-The suite covers key serialization, KEM, signatures, and a hybrid KEM path. Provider-specific tests are under `oqs/`; common PQC tests are directly under this directory.
+1. The suite covers key serialization, KEM, signatures, and a hybrid KEM path. Provider-specific tests are under `oqs/`; common PQC tests are directly under this directory.
 
 ## 3. Example: provider-backed KEM and signature operations
 

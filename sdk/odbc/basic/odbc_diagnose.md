@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -11,51 +12,41 @@ Documented with GPT-6
 
 ## 1. Role
 
-Converts native ODBC diagnostic records into hotplace callback-oriented error reporting.
+`odbc_diagnose` reads native ODBC diagnostic records and forwards them to registered application callbacks. It keeps SQLSTATE, native error codes, and driver-provided messages separate from the module's coarse `return_t` conversion.
 
-## 2. Model
-
-`odbc_diagnose` converts native ODBC diagnostic records into hotplace's callback-oriented error reporting path.
-
-## Flow
+## 2. Data Model
 
 ```text
-ODBC operation
-      |
-      | failure / diagnostic information
-      v
-SQLGetDiagRec
-      |
-      v
-odbc_diagnose
-      |
-      +--> native error
-      +--> SQLSTATE
-      +--> message
-      |
-      v
-DATABASE_ERRORHANDLER callbacks
+ODBC operation on a native handle
+             |
+             v
+       SQLGetDiagRec
+             |
+             v
+       odbc_diagnose
+             |
+             +-- native error code
+             +-- SQLSTATE
+             +-- message
+             |
+             v
+       registered callbacks
 ```
 
-The class is a process-level singleton accessed through `get_instance()`. `diagnose()` walks the diagnostic records for an ODBC handle using `SQLGetDiagRec` and forwards each record to registered handlers.
+The class is a singleton. Each handler registration stores a callback and caller-supplied context pointer. The callback receives the native error code, state, message, a control flag, and the context.
 
-A handler receives the native error code, SQLSTATE, message, a control flag and caller-supplied context. This keeps database-specific diagnostics outside the connector/query implementation while allowing an application to decide how errors should be logged or handled.
+## 3. Behavior Model
 
-The sample testcase registers a handler that writes the native error, SQLSTATE and message through the hotplace logger.
+`diagnose()` iterates diagnostic records using `SQLGetDiagRec` until ODBC returns `SQL_NO_DATA` or `SQL_INVALID_HANDLE`. Each record is passed to `run_handlers()`, which invokes registered callbacks while holding the handler-list critical section. A callback can set the control flag to false to stop dispatching the current diagnostic record to later handlers.
 
-## 3. Important behavior and lifetime
+This is diagnostic reporting, not a replacement for checking the return value of the original ODBC call. The diagnostic path runs only when code asks the singleton to inspect a handle, commonly after a native operation fails.
 
-`diagnose()` walks diagnostic records using `SQLGetDiagRec` and forwards native error, SQLSTATE and message to registered handlers. The class is a singleton and protects the handler list with a critical section.
+## 4. Relationships
 
-## 4. Example from the source tests
+- [`odbc_connector.md`](odbc_connector.md) and [`odbc_query.md`](odbc_query.md) — native handles whose failures may have diagnostic records
+- [`../README.md`](README.md) — shared ODBC wrapper model
+- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample registers a callback that logs diagnostic details
 
-`sample.cpp` registers `dbdiag_handler`, which logs the native error code, SQLSTATE and message. Whether the callback runs depends on an ODBC operation producing diagnostics.
+## 5. References
 
-## 5. Relationships
-
-- `odbc_connector` / `odbc_query` / `odbc_record` / `odbc_field` participate in the connection-to-row path; the exact relation depends on this class.
-
-## 6. References
-
-- `sdk/odbc/basic/odbc_diagnose.hpp`
-- `test/testcase/odbc/sample.cpp`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

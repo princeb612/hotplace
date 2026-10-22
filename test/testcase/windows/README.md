@@ -2,49 +2,62 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1105
+Edition 2 · Revision 1106
 Source basis: Revision 1105
 Documented with GPT-6
-Documentation scope: Windows-specific testcase inventory
+— Windows-specific test behavior & evidence
 ```
 
 # Windows-specific testcases
 
-## 1. Role
+## 1. What
 
-This directory contains Windows-only utility tests and their shared testcase harness. The APIs and behaviors here are platform-specific and should not be interpreted as portable SDK contracts.
+This directory contains the Windows-only `test-windows` testcase executable. It checks two narrow platform paths: process-module enumeration and debug-trace capture. These are platform integration checks, not portable SDK contracts or a comprehensive Windows API suite.
 
-## 2. Test model
+## 2. How
 
-- `sample.cpp` — Windows-specific test entry point.
-- `CMakeLists.txt` — target registration/build integration.
-- `test_enum_modules()` — exercises process module enumeration through the hotplace helper and logs module paths.
-- `test_trace()` — covers the Windows trace-related path.
+### 2.1 Build and entry point
 
-The adjacent manifest/resource note concerns Windows application manifests and side-by-side assembly behavior.
+- `CMakeLists.txt` defines the `windows` module and passes it to the shared `maketest(...)` helper.
+- `test/testcase/CMakeLists.txt` adds this directory only when `WIN32` is true.
+- `sample.cpp` configures the shared testcase/logger harness, parses optional logging and debug flags, calls both test functions, reports the accumulated testcase result, and returns that result from `main`.
 
-## 3. Example: enumerate process modules
+### 2.2 Enumerate process modules
 
-The source path invokes `test_enum_modules()`, obtains process module information through the hotplace helper, and logs module paths. This is a Windows API integration check; it does not establish that equivalent module-enumeration behavior exists on Linux.
+1. `test_enum_modules()` calls `enum_modules(GetCurrentProcess(), enum_modules_handler, nullptr)`.
+2. For the `enum_toolhelp` callback type, `enum_modules_handler()` reads the `MODULEENTRY32` entry and logs `szExePath`.
+3. The `enum_psapi` callback branch is currently only a commented outline; it does not assert module metadata.
+4. The testcase records the return code from `enum_modules()`.
 
-## 4. Test and verification status
+### 2.3 Capture a debug trace
 
-### 4.1 Source-level coverage
+1. `test_trace()` creates a `debug_trace` object and opens a trace context.
+2. It captures a Windows `CONTEXT` structure with `dbg.capture(&rtlcontext)`.
+3. It calls `dbg.trace(handle, &rtlcontext, &stream)`, then closes the context.
+4. The trace text is logged and the return code from `trace()` is passed to the testcase assertion.
 
-The current directory covers module enumeration and trace behavior. It is not an exhaustive test of Windows registry, sockets, ODBC, or all platform-specific SDK code.
+## 3. Evidence
 
-### 4.2 Documentation and verification status
+### 3.1 Source-level coverage
 
-A runtime claim must identify a Windows build/compiler and the corresponding test report. This README does not claim execution during the documentation update.
+- **O** — the return codes from module enumeration and trace generation are checked through `_test_case.test(...)`.
+- **O** — Tool Help module paths and trace text are emitted for inspection.
+- **△** — the test does not assert an expected module list, exact trace contents, or a particular stack frame.
+- **△** — the PSAPI callback path is not implemented beyond commented placeholders.
+- **—** — no Windows runtime report is asserted by this documentation update.
 
-## 5. Relationships
+### 3.2 Runtime verification
 
+A passing `test-windows` run demonstrates that these test functions completed with successful return codes in that environment. It does not establish coverage of Windows registry, sockets, ODBC, or every Windows-specific SDK path. Associate runtime claims with the relevant Windows/compiler report; no test was rerun for this documentation change.
+
+## 4. Relationships
+
+- `sdk/io/system/` — operating-system-facing facilities.
 - `sdk/io/system/windows_registry.md` — Windows registry wrapper.
-- `sdk/io/system/` — OS-specific facilities.
+- `test/testcase/CMakeLists.txt` — platform-gated testcase registration.
 - `test/README.md` — environment-specific verification matrix.
 
-## 6. References
+## 5. References
 
 - `sample.cpp`
 - `CMakeLists.txt`
-- [Microsoft application manifest reference](https://learn.microsoft.com/ko-kr/windows/win32/sbscs/application-manifests)

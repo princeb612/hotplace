@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1106                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
@@ -85,6 +85,10 @@ TCP accept and TLS handshake are separate stages. A dedicated TLS-accept worker 
 ### HTTP connection
 
 `http_server` owns/configures a `network_server`, registers HTTP protocol handling, and provides HTTP-specific callbacks and routing. `http_server_builder` selects the socket adapter, configures addresses, TLS/certificates, protocol options and concurrency, then builds/starts the server. The network layer handles socket/session/event work; the HTTP layer interprets requests and dispatches application behavior.
+
+### Applet progression: multiplexer to network_server
+
+The runnable examples show the integration boundary in stages. `test/applet/tcpserver1` and `udpserver1` register sockets with the platform multiplexer and handle events directly. `tcpserver2` and `udpserver2` use `network_server` for listener contexts, event loops, and callbacks. `tlsserver` and `dtlsserver` configure secure socket implementations through that server path. `httpserver1` and `httpserver2` then use `http_server` to add HTTP request handling and routing. These applets are source examples of the layers working together; their presence alone does not state that every runtime combination was tested.
 
 ## 4. Relationships
 

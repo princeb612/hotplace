@@ -1,46 +1,46 @@
 ## Publication
 
 ```text
-hotplace source tree
-Edition 2 · Revision 1105
-Source basis: Revision 1105
+hotplace source-tree documentation
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
-— source structure, implementation & tests
+— ODBC testcase scope, execution & evidence
 ```
 
 # ODBC testcase directory
 
-## 1. Role
+## 1. What
 
-This directory contains the configurable ODBC integration sample for `sdk/odbc`. The detailed source-level coverage and verification limits are documented in [`testcase_odbc.md`](testcase_odbc.md).
+This directory contains the configurable `test-odbc` integration sample for `sdk/odbc`. It demonstrates the connection-to-row traversal path when supplied with a usable ODBC connection and table. It does not provision a database or validate a fixed result set.
 
-## 2. Test model
+## 2. How
 
-`sample.cpp` accepts a caller-supplied connection string and table name; it does not provision a database fixture.
+- `test/testcase/CMakeLists.txt` adds this directory only when `SUPPORT_ODBC` is enabled.
+- `CMakeLists.txt` defines the `odbc` module and registers it through the shared `maketest(...)` helper.
+- `sample.cpp` accepts `--c` for the connection string and `--t` for the table name.
+- With a non-empty connection string, the sample calls `odbc_connector::connect()`, executes `select * from <table>`, fetches records, and logs each field name and string value. It registers `dbdiag_handler` to log native error details.
+- If `--c` is absent or empty, the sample exits its test body before connecting. The database, driver, credentials, and table are external prerequisites.
 
-## 3. Example: ODBC integration sample
+The detailed source path and its limits are recorded in [ODBC integration testcase](testcase_odbc.md).
 
-See [`testcase_odbc.md`](testcase_odbc.md) for the connection-to-row traversal.
+## 3. Evidence
 
-## 4. Test and verification status
+The user-provided Revision 1106 Windows 11 / MinGW64 CTest report recorded `test-odbc Passed 0.05 sec` in a 13-target run. This is evidence that the target completed successfully in that run; it is **not** proof of a live database query or validated result values. The source can skip the connection when `--c` is absent and has no deterministic row-value assertions.
 
-### 4.1 Source-level coverage
+The reported Ubuntu 20 / Sanitizer run included 12 passing targets but did not include `test-odbc`; it is not ODBC runtime evidence. These supplied results were not rerun as part of this documentation update.
 
-The sample covers the integration path only when supplied with a valid ODBC driver, connection string, and table. It does not provide deterministic assertions over returned database values.
+## 4. Relationships
 
-### 4.2 Documentation and verification status
-
-The supplied report records `pass 0` with no classified cases. Successful live database execution is not established by that report.
-
-## 5. Relationships
-
-- [`testcase_odbc.md`](testcase_odbc.md) — detailed sample analysis
-- [`sample.cpp`](sample.cpp) — testcase source
-- [`CMakeLists.txt`](CMakeLists.txt) — target setup
+- [`testcase_odbc.md`](testcase_odbc.md) — detailed source-level coverage and verification interpretation
+- [`sample.cpp`](sample.cpp) — integration sample
+- [`CMakeLists.txt`](CMakeLists.txt) — testcase target setup
 - [`sdk/odbc/README.md`](../../../sdk/odbc/README.md) — implementation overview
+- [`../test-report-status.md`](../test-report-status.md) — central report snapshot and its interpretation
 
-## 6. References
+## 5. References
 
-- `test/testcase/odbc/sample.cpp`
-- `test/testcase/odbc/sample.hpp`
-- `test/testcase/odbc/CMakeLists.txt`
+- `sample.cpp`
+- `sample.hpp`
+- `CMakeLists.txt`
+- [ODBC integration testcase](testcase_odbc.md)

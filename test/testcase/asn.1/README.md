@@ -2,32 +2,105 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1105
+Edition 2 · Revision 1106
 Source basis: Revision 1105
 Documented with GPT-6
-— source structure, implementation & tests
+— testcase procedure, parser flow & evidence
 ```
 
 # ASN.1 testcase suite
 
-## 1. Role
+## 1. What
 
-This directory contains ASN.1 object-model, parser, loader, publisher, DER/X.690 encoding, constraints, and parameterized-notation test sources. It also contains schema and test-vector fixtures. The directory spans focused unit-style checks and exploratory/progressive integration work; these must not be treated as one uniformly complete end-to-end pipeline.
+This directory exercises several related but distinct parts of the ASN.1 implementation under `sdk/io/asn.1/`: X.690 identifier and length encoding, ASN.1 object construction and DER publication, weakly typed DER decoding, strongly typed schema-based decoding, notation parsing and reconstruction, constraints, module loading, and parameterized-type experiments. It also contains ASN.1 schema fixtures and YAML test-vector corpora.
 
-## 2. Test model
+The test executable's `main()` first checks that the advisor's LALR(1) notation parsers and GLR parsers are ready in both build-table and imported-table forms. It then dispatches the basic encoding/object tests, constraints, DER vectors, parser tests and notation vectors, publisher, strongly typed decoding, loader, and parameterized tests. The source files cover different stages; they do not demonstrate one uniformly complete ASN.1 compiler pipeline.
 
-The suite is split across `testcase_basic*.cpp`, `testcase_constraints.cpp`, `testvector_der.cpp`, `testvector_parser.cpp`, `runtime/`, `loader/`, and `parameterized/`. YAML fixtures are stored in `testvector_der.yml` and `testvector_parser.yml`. The ASN.1 runtime implementation lives under `sdk/io/asn.1/`.
+| Source area | Primary responsibility |
+| --- | --- |
+| `testcase_basic1.cpp` | X.690 identifier and length octets, including invalid high-tag encodings |
+| `testcase_basic2.cpp` | Weakly typed DER decoding, semantic promotion, object trees and re-encoding scenarios |
+| `testcase_basic3.cpp` | Strongly typed schema definitions, tagged types and DER read/publish comparisons |
+| `testcase_constraints.cpp` | Integer/real/string/size constraints represented by constraint objects |
+| `testvector_der.cpp` + `testvector_der.yml` | YAML-driven weakly typed DER decoding |
+| `testvector_parser.cpp` + `testvector_parser.yml` | DER decoding, notation reconstruction and value injection from YAML |
+| `runtime/testcase_parser.cpp` | Table-driven ASN.1 notation inputs covering assignments, types, tags and constraints |
+| `runtime/testcase_publish.cpp` | Parse-tree semantic construction and publication experiments |
+| `loader/testcase_loader.cpp` | ASN.1 file-to-token, parse-tree, module build, exports/imports and symbol lookup |
+| `parameterized/testcase_parameterized.cpp` | Direct semantic specialization prototypes; parser-to-loader integration probe remains disabled |
+| Advisor/provider path | Entity dictionaries, tagging/class lookups, shared publisher and parser providers are described in the integrated sections below |
 
-### Preserved source material
+The runtime's current module representation is `asn1_module`, with the named-module registry `asn1_modules`. The earlier `asn1_module_context` name is not current in the source basis documented here.
 
-The ASN.1 runtime representation is now `asn1_module`; the singleton registry for named modules is `asn1_modules`. The former `asn1_module_context` name is not current in Revision 1105.
+## 2. How
 
-Parameterized ASN.1 has two distinct workstreams in this revision. The LALR/GLR grammar and binary parsing tables are at revision 3, while `parameterized/testcase_parameterized.cpp` actively exercises direct semantic prototypes through `test_parameterized1()` (`define()`, `specialize()`, and parameter values). The parser → loader → publisher probe (`test_parameterized2()`) remains disabled in `testcase_parameterized()`. This is progress beyond grammar-only work, but it is not complete end-to-end parameterized ASN.1 support.
+### 2.1 X.690 identifier and length octets
 
-##### references
+1. `test_x690_8_1_2_identifier_octects()` in `testcase_basic1.cpp` iterates a table of identifier class, primitive/constructed bit, tag number, expected notation, and expected DER bytes.
+2. For positive cases, call `asn1_encode::write_identifier()` and compare its output with the fixed expected hex.
+3. Construct the corresponding ASN.1 object and compare its published notation and DER.
+4. Call `read_identifier()` and check that identifier class and tag number round-trip.
+5. For incomplete high-tag encodings, unterminated continuation bits, and non-minimal high-tag form, assert `errorcode_t::bad_data`.
+6. `test_x690_8_1_3_length_octets()` checks short- and long-form length values around encoding boundaries using explicit expected-octet comparisons; diagnostic output is not the oracle.
 
-* [ASN.1 JavaScript decoder](https://lapo.it/asn1js/)
-* [ASN.1 Decoder](https://holtstrom.com/michael/tools/asn1decoder.php)
+### 2.2 Weakly typed DER and object-model round trips
+
+1. In `testcase_basic2.cpp`, construct semantic ASN.1 objects for the selected X.690 structures: primitive/constructed values, implicit/explicit and chained tags, nested containers, SET ordering, long lengths, high tag numbers, SEQUENCE/SET and OF forms, CHOICE, DEFAULT, ENUMERATED, named numbers, and value binding.
+2. Publish the objects to DER and feed encoded bytes through the weakly typed reader.
+3. Promote the decoded TLV tree into ASN.1 objects and republish DER.
+4. Compare expected structure or bytes only where the individual case defines those checks. These are selected object-model examples, not an exhaustive proof of every ASN.1 type.
+
+### 2.3 Strongly typed schema decoding
+
+1. In `testcase_basic3.cpp`, define named schema types with `asn1_referenced_type::define()` and create references with `refer()`.
+2. Add the schema notation to an `asn1_module`.
+3. Read each DER input using the expected object name, so decoding is guided by the declared schema rather than inferred only from TLV identifiers and lengths.
+4. Compare the module's represented notation with the expected schema notation.
+5. Republish DER and compare the resulting bytes with the original input.
+
+### 2.4 Constraint construction and value validation
+
+1. For each row in `testcase_constraints.cpp`, build the ASN.1 type/object and its constraint tree.
+2. Publish the type as notation and compare it with the expected source or canonical notation.
+3. Parse the expected notation into a module as part of the case setup.
+4. Instantiate an `asn1_value` and assign the test data: integer/real scalars, strings, OCTET STRING/BIT STRING values, collections, enumerated values, or nested SEQUENCE fields.
+5. Call `type->validate(value)`.
+6. Use the row's `expect` flag to select `_test_case.assert(test, ...)` for valid inputs or `_test_case.nassert(test, ...)` for invalid inputs.
+7. The selected cases cover single values/unions, integer and real ranges, intersections and EXCEPT/ALL EXCEPT, SIZE, permitted alphabets, string and collection sizes, ENUMERATED members, nested fields, patterns, and an exclusive boundary. They do not exhaustively enumerate the full value domain.
+
+### 2.5 YAML DER vectors
+
+1. `test_yaml_testvector_der()` loads `testvector_der.yml` and decodes each `der` field from hexadecimal.
+2. Pass the bytes to `asn1_module::read_weakly_typed()`.
+3. Check that decoding succeeds and that the consumed position equals the complete input length.
+4. Emit the represented type, decoded value, and republished DER for inspection. Those dumps are not separate equality assertions in this path.
+
+### 2.6 YAML parser and notation reconstruction
+
+1. `test_yaml_testvector_parser()` loads `testvector_parser.yml` and reads each example's optional named values (string, integer, float, Boolean, arrays, or raw bytes).
+2. Inject the values into an `asn1_value` according to their declared type.
+3. Weakly decode each item's DER, check the return status and complete stream consumption, and emit the module's type/value/DER representations.
+4. Pass the supplied notation to `parse_reconst_notation()`, which builds semantic objects from the parse tree.
+5. Compare the published notation with the source notation. The YAML schema below describes available inputs; actual assertions are the checks in these steps.
+
+### 2.7 Parser, publisher, loader, and advisor
+
+1. `runtime/testcase_parser.cpp::test_asn1parser()` feeds notation snippets for assignments, built-in types, tags, nested SEQUENCE/SET/CHOICE, defaults/optional fields, constraints, and non-assignment forms to the parser.
+2. Record the parse status through the testcase harness. Parse-tree printing is diagnostic and does not validate a specific tree shape unless separately compared.
+3. In `runtime/testcase_publish.cpp`, construct semantic objects from parse trees and exercise publication of the resulting module/object representation.
+4. In `loader/testcase_loader.cpp`, load a fixture file into a parse tree, build the result through the advisor's publisher, compare module names with an expected list, and look up expected modules and symbols.
+5. Interpret the advisor as the shared provider of entity/class/tagging dictionaries and prepared parser/publisher instances. `prepare()` prepares the publisher and its basic-type/constraint handlers; the runtime-facing parser currently selects the imported GLR parser.
+6. Interpret the semantic model accurately: `asn1_object` carries type/entity, parent/linkage, tag, constructed, DEFAULT/OPTIONAL, tagging and constraint information; `asn1_referenced_type::define()` creates a definition while `refer()` creates a reference; `asn1_value` stores values separately from the schema. Visitors use the model for notation, DER and constraint evaluation.
+
+### 2.8 Parameterized ASN.1
+
+1. In `parameterized/testcase_parameterized.cpp::test_parameterized1()`, define parameterized types and specialize them with actual type/value parameters.
+2. Exercise the `Envelope` payload, `FRAME` type/maximum-length parameters, a header with default priority, and a TLV buffer with maximum capacity.
+3. Supply the concrete type/value parameters and invoke specialization for each selected prototype.
+
+### 2.9 YAML data formats consumed by the test suite
+
+The vector schemas below describe the inputs consumed by `testvector_der.cpp` and `testvector_parser.cpp`. Actual coverage still depends on which fields the consumers read and assert; the schemas alone are not execution evidence.
 
 ##### YAML schema
 
@@ -56,6 +129,176 @@ testvector:
       - item: string            # [mandatory] ASN.1 notation
         der: hexstring          # [mandatory] base16 stream
 ````
+## 3. Evidence
+
+### Source-level coverage
+
+The following paths describe what the source checks, not merely the order of operations. Each path stops at the last explicit assertion or observable output; no implicit verification is inferred between stages.
+
+**Built-in-value DER path — testcase_basic1.cpp**
+
+~~~text
+expected DER vector
+  -> encode value
+  -> assert encoded DER == expected DER
+  -> weakly typed decode expected DER
+  -> assert decode status + full input consumption
+  -> re-publish decoded object
+  -> assert republished DER == expected DER
+  -> end
+~~~
+
+This path checks byte equality after re-encoding. It does not decode the re-encoded buffer a second time.
+
+**Weakly typed semantic-object path — testcase_basic2.cpp**
+
+~~~text
+construct semantic object/value
+  -> publish notation and DER
+  -> assert expected notation and DER (per case)
+  -> weakly typed decode original DER (selected cases)
+  -> promote / re-publish object tree
+  -> assert republished DER equality (selected cases)
+  -> end
+~~~
+
+The decode/re-publish block is conditional: schema-dependent cases skip it, and type-only cases normalize the final byte before comparison. Do not extend this assertion to every table entry.
+
+**Schema-guided path — testcase_basic3.cpp**
+
+~~~text
+schema definition + DER input
+  -> schema-guided read
+  -> assert represented notation == expected schema notation
+  -> assert republished DER == input DER
+  -> end
+~~~
+
+This verifies decoding and re-encoding through the schema path, but not a second decode.
+
+**YAML DER vector path — testvector_der.cpp**
+
+~~~text
+YAML DER hex
+  -> weakly typed decode
+  -> assert decode success
+  -> assert full input consumption
+  -> log decoded representation and republished DER
+  -> end
+~~~
+
+The republished DER is logged, not compared with the input. Therefore this helper does not assert byte-for-byte round-trip equality.
+
+**Notation parsing and reconstruction — runtime/testcase_parser.cpp, runtime/testcase_publish.cpp, testvector_parser.cpp**
+
+~~~text
+notation sample
+  -> parser.parse()
+  -> record/assert parser status
+  -> parse-tree dump (diagnostic)
+  -> end
+
+notation / YAML parser vector
+  -> DER decode and full-consumption checks where applicable
+  -> parse_reconst_notation()
+  -> parser.parse() -> publisher.build()
+  -> publish semantic object as notation
+  -> assert reconstructed notation == input/canonical expectation
+  -> end
+~~~
+
+The shared parse_reconst_notation() helper does not separately assert the return statuses from parser.parse() or publisher.build(). The notation comparison is the effective output assertion; parse-tree and logger output are not structural assertions.
+
+**File loading and module resolution — loader/testcase_loader.cpp**
+
+~~~text
+ASN.1 fixture
+  -> assert staged load/token/parse/publish statuses
+  -> assert expected module names
+  -> assert selected module/symbol lookups
+  -> assert is_resolvable() for dependencies
+  -> represent() regenerated notation (observable output)
+  -> end
+~~~
+
+The regenerated notation is not compared against a complete expected source string. The active test_asn1loader_babystep() is invoked by testcase_loader(), while the separate parameterized parser → loader → publisher probe remains disabled.
+
+**Constraint evaluation / value validation — testcase_constraints.cpp**
+
+~~~text
+construct constrained ASN.1 type and constraint tree
+  -> publish type notation
+  -> assert notation == expected notation
+  -> instantiate value and assign candidate data
+  -> parse notation into module (test setup)
+  -> type->validate(value)
+  -> asn1_constraints::validate / do_validate
+  -> asn1_constraint_evaluator<T>
+  -> build t_set_runtime<T> from constraint nodes
+  -> membership / SIZE / alphabet / pattern check
+  -> return valid or invalid
+  -> _test_case.assert OR _test_case.nassert
+  -> release value and type
+  -> end
+~~~
+
+The evaluator visits the constraint tree and produces a runtime allowed-value set through `t_set_runtime<T>`; the validation code then checks extracted values against that result (for example, numeric/string membership, container or string size, permitted alphabet, or pattern). ENUMERATED values use the object's enumeration validation path. The test's positive and negative rows use `_test_case.assert(test, ...)` and `_test_case.nassert(test, ...)` respectively, so the evidence is not limited to successful construction or notation rendering. Examples include inclusive/exclusive range values, values outside numeric and SIZE limits, disallowed characters, invalid ENUMERATED members, and nested SEQUENCE fields. The table tests selected inputs; it does not exhaustively enumerate every constraint domain or composition.
+
+The runtime publisher's constraint table is a separate path: it parses constraint notation and asserts the reconstructed notation, which verifies construction/representation rather than evaluating candidate values.
+
+**Parameterized types**
+
+The active parameterized test checks direct semantic specialization through `test_parameterized1()`; it does not establish the disabled parser → loader → publisher integration path in `test_parameterized2()`.
+
+**Coverage limits**
+
+- Invalid identifier vectors explicitly check bad_data for selected malformed encodings; this is not exhaustive malformed-DER coverage.
+- Notation parsing records status for the supplied samples, but does not assert the complete structure of every parse tree.
+- The suite contains decode → re-encode assertions for selected cases, but none of the paths above establishes a general encode → decode → re-encode → re-decode sequence.
+- These tests do not prove full X.690/ASN.1 conformance or exhaustive rejection of invalid input.
+
+### Practical testcase reinforcement candidates
+
+These are focused follow-ups to the observed gaps, not claims that the current suite is invalid:
+
+1. **Make the YAML DER vector a real round-trip check.** In testvector_der.cpp, after successful weakly typed decoding and full input consumption, compare the republished DER against the input when canonical byte identity is expected. If BER/non-canonical encodings are intentionally allowed, compare a documented canonical DER expectation instead of requiring raw input equality.
+2. **Assert intermediate statuses in notation reconstruction.** In sample.cpp::parse_reconst_notation(), check parser.parse() and publisher.build() return values before comparing the reconstructed notation. This separates syntax/publisher failure from a later output mismatch and improves failure localization for runtime/testvector_parser.cpp.
+3. **Add a second decode only where it adds value.** For selected deterministic DER cases, feed the re-encoded bytes into a fresh module/value path and assert decode success, complete consumption, and the expected notation/value. This would establish encode → decode → re-encode → re-decode for those selected cases; it should not be implied for the suite as a whole.
+
+Priority is 1 and 2: they strengthen existing paths with small, local assertions. Candidate 3 is a deliberate extension, not a requirement to duplicate every vector across the entire suite.
+
+### Documentation and verification status
+
+The supplied `asn.1/report` records **1,628 pass, 40 expt, 0 fail, 0 skip, 0 triv**. The shared [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on the conversation's run context; the report itself does not independently identify the tested source commit, exact compiler version, build flags or command line. The meaning of `expt` is not inferred. This documentation uses Revision 1105 as its source basis, which is distinct from that last known test-run context. No tests were executed during this documentation update.
+
+## 4. Relationships
+
+- [ASN.1 implementation overview](../../../sdk/io/asn.1/README.md) — runtime implementation and data model.
+- [Runtime tests](runtime/README.md) — parser, publisher, module representation, resolution, and verification paths.
+- [Loader tests](loader/README.md) — file loading, module imports/exports and reference resolution.
+- [DER vectors](testvector_der.yml) and [parser vectors](testvector_parser.yml) — fixture inputs.
+- [Test report snapshot](../test-report-status.md) — aggregate results and provenance limitations.
+
+## 5. References
+
+- [ITU-T X.690 — ASN.1 encoding rules: BER, CER and DER](https://www.itu.int/rec/T-REC-X.690)
+- [RFC 5280 — Internet X.509 Public Key Infrastructure Certificate and CRL Profile](https://www.rfc-editor.org/rfc/rfc5280)
+- [RFC 5912 — New ASN.1 Modules for the PKIX](https://www.rfc-editor.org/rfc/rfc5912)
+
+## 6. Developer Notes (for maintainer review)
+
+The following material is retained as developer working notes rather than normative testcase procedure: a `pyasn1` scratch example, certificate DER and third-party decoder output, and the original runtime/compiler/loader/repository checklist. The YAML field contracts used by the active vector consumers are documented under `2. How`. The checklist is not a claim that the listed components are absent or complete.
+
+### Preserved source material
+
+The ASN.1 runtime representation is now `asn1_module`; the singleton registry for named modules is `asn1_modules`. The former `asn1_module_context` name is not current in Revision 1105.
+
+Parameterized ASN.1 has two distinct workstreams in this revision. The LALR/GLR grammar and binary parsing tables are at revision 3, while `parameterized/testcase_parameterized.cpp` actively exercises direct semantic prototypes through `test_parameterized1()` (`define()`, `specialize()`, and parameter values). The parser → loader → publisher probe (`test_parameterized2()`) remains disabled in `testcase_parameterized()`. This is progress beyond grammar-only work, but it is not complete end-to-end parameterized ASN.1 support.
+
+##### references
+
+* [ASN.1 JavaScript decoder](https://lapo.it/asn1js/)
+* [ASN.1 Decoder](https://holtstrom.com/michael/tools/asn1decoder.php)
 
 ##### using pyasn1
 
@@ -363,39 +606,7 @@ SEQUENCE {
 }
 ````
 
-## 3. Example: DER and notation test vectors
-
-`testcase_basic1.cpp` tests X.690 identifier and length octets with positive and negative vectors. `runtime/testcase_parser.cpp` feeds a table of ASN.1 type assignments and constraints to `asn1_parser`. `parameterized/testcase_parameterized.cpp` includes `test_parameterized1()` for direct semantic specialization and a separate `test_parameterized2()` integration probe that is disabled in the current testcase dispatcher.
-
-## 4. Test and verification status
-
-### 4.1 Source-level coverage
-
-- **O** — source includes explicit DER/X.690 byte comparisons and invalid-encoding checks.
-- **O** — parser test source supplies a broad table of ASN.1 type notation and constraints.
-- **O** — object-model, module/publisher, loader, and constraints paths have dedicated testcase sources.
-- **△** — parameterized direct semantic prototype coverage does not imply full parser → loader → publisher integration; the `test_parameterized2()` probe is disabled in the current dispatcher.
-- **△** — source coverage alone does not establish successful execution on Revision 1105.
-
-### 4.2 Documentation and verification status
-
-The supplied `asn.1/report` records 1,628 pass, 40 expt, 0 fail, 0 skip and 0 triv. The shared [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on conversation context; the report itself does not independently identify the tested source revision, exact OS/compiler build details, or configuration. This is distinct from the current documentation basis, Revision 1105. The report does not define `expt`, so the label is preserved without interpretation. No test was executed as part of this documentation update.
-
-## 5. Relationships
-
-- [`sdk/io/asn.1/README.md`](../../../sdk/io/asn.1/README.md) — implementation overview
-- [`basic/asn1-object-model.md`](basic/asn1-object-model.md) — object model
-- [`runtime/README.md`](runtime/README.md) — module, parser, publisher
-- [`loader/asn1_loader.md`](loader/asn1_loader.md) — loading path
-- [`testvector_der.yml`](testvector_der.yml) and [`testvector_parser.yml`](testvector_parser.yml) — vector fixtures
-
-## 6. References
-
-- `test/testcase/asn.1/`
-- `sdk/io/asn.1/`
-- `test/testcase/asn.1/CMakeLists.txt`
-
-## 7. Development Notes (for maintainer review)
+### Original working-status checklist
 
 The original README contains a working-status checklist for ASN.1 Runtime, Compiler, Schema Loader, and Repository, plus reference-decoder links, YAML schema examples, a `pyasn1` scratch example, and a DER certificate vector. These items are preserved below for maintainer review; the checklist is not a claim that the listed components are absent or complete.
 

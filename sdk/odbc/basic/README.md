@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1105
-Source basis: Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -12,35 +12,39 @@ Documented with GPT-6
 
 ## 1. Role
 
-`basic/` contains the concrete ODBC wrapper classes. It maps native ODBC handles and operations to hotplace-oriented connector, query, record, field, diagnostics, and readiness objects.
+`basic/` contains the concrete ODBC wrappers. These classes keep the native ODBC handle, statement, row, and diagnostic concepts visible through a small hotplace-facing interface; they do not introduce a database-independent object-relational model.
 
-## 2. Model
+## 2. Data Model
 
 ```text
 odbc_connector -> odbc_query -> odbc_record -> odbc_field
-                       |
-                       +--> odbc_diagnose reports errors
-odbc_sinker wraps query readiness / timeout handling
+                         |                |
+                         |                +-- row owns its fields
+                         |
+                         +-- odbc_diagnose reports native diagnostics
+
+odbc_sinker -> retains an odbc_query reference
+            -> checks async readiness and timeout
 ```
 
-## 3. Important behavior and lifetime
+`odbc_sinker` is declared alongside `odbc_query` in `odbc_query.hpp`; it is a readiness adapter around an existing query, not a separate connection or statement owner.
 
-The classes retain native ODBC behavior rather than hiding it behind a database-specific ORM. The source tree includes ANSI implementation files and Windows Unicode-specific files under `unicode/`. Build selection and native ODBC library linkage are defined in `sdk/odbc/CMakeLists.txt`.
+## 3. Behavior Model
 
-## 4. Example from the source tests
+The connector initializes the ODBC environment and creates query objects. A query wraps a statement handle, supports direct and prepared execution, builds result metadata, and fills records as rows are fetched. Each record retains field objects for one row. The diagnostic singleton walks ODBC diagnostic records and invokes registered handlers. In async mode, the sinker polls query execution and closes the query when its configured timeout expires.
 
-`test/testcase/odbc/sample.cpp` demonstrates the connector → query → record → field path using a caller-supplied connection string and table name.
+The module build selects the common implementation and, on Windows, any Unicode-specific sources matched by `sdk/odbc/CMakeLists.txt`; it links the platform ODBC library. Text conversion and ODBC type-width behavior therefore depend in part on the platform headers and driver manager.
 
-## 5. Relationships
+## 4. Relationships
 
-- [`odbc_connector.md`](odbc_connector.md) — connection and environment lifecycle
-- [`odbc_query.md`](odbc_query.md) — statements, binding and result traversal
-- [`odbc_record.md`](odbc_record.md) and [`odbc_field.md`](odbc_field.md) — row and column values
-- [`odbc_diagnose.md`](odbc_diagnose.md) — diagnostics
-- [`odbc_sinker.md`](odbc_sinker.md) — readiness and timeout integration
+- [`odbc_connector.md`](odbc_connector.md) — environment, connection, and query creation
+- [`odbc_query.md`](odbc_query.md) — statement execution, metadata, fetching, and result sets
+- [`odbc_record.md`](odbc_record.md) and [`odbc_field.md`](odbc_field.md) — fetched rows and their column values
+- [`odbc_diagnose.md`](odbc_diagnose.md) — diagnostic record dispatch
+- [`odbc_sinker.md`](odbc_sinker.md) — asynchronous readiness and timeout behavior
+- [`../README.md`](../README.md) and [`../types.md`](../types.md) — module contract and shared types
+- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — checked-in integration sample and its limits
 
-## 6. References
+## 5. References
 
-- `sdk/odbc/basic/`
-- `sdk/odbc/CMakeLists.txt`
-- `test/testcase/odbc/sample.cpp`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

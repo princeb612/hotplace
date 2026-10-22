@@ -77,7 +77,7 @@ These are semantic groups, not a claim that the source directory layout must exa
 
 The foundation layer provides basic types, controlled standard-library compatibility, and small general-purpose building blocks.
 
-`nostd` is particularly important in hotplace because it is not merely a convenience wrapper around STL. It provides a controlled compatibility boundary for environments where newer C++ facilities cannot be assumed.
+`nostd` is particularly important in hotplace because it is not merely a convenience wrapper around STL. It provides a controlled compatibility boundary for environments where newer C++ facilities cannot be assumed. One example is `t_value<T>`: a deferred typed value backed by cached state and `std::promise`/`std::future`, used by the ASN.1 parameterized-semantic prototype. It is intentionally not exception-sensitive, so it should not be described as a general future abstraction that propagates failures.
 
 This fits the project's C++11-first portability goal:
 
@@ -465,7 +465,7 @@ This layered verification is important because a base component can be locally c
 
 ## Status
 
-At Revision 1090:
+At Revision 1105:
 
 - `sdk/base` is the common dependency root for the higher SDK layers.
 - Its role is broader than a generic utility collection: it provides reusable representation, algorithm, runtime, portability, diagnostics, and verification mechanisms.
@@ -473,6 +473,8 @@ At Revision 1090:
 - Base representation facilities are reused by IO, parser, crypto, and network code.
 - Pattern/algorithm facilities support parser/lexical processing without becoming parser-specific.
 - Error/trace/runtime facilities provide common mechanisms while higher layers retain domain semantics.
+- `process` provides a base-level external-process execution facility used by higher-level workflows such as Authenticode CRL retrieval; it is execution support, not protocol semantics.
+- `t_value<T>` provides a deferred-value mechanism used by the ASN.1 parameterized-semantic prototype. Its promise/future behavior is deliberately not exception-sensitive and does not imply that parameterized ASN.1 instantiation is complete.
 - The C++11/C++14 distinction is best treated as an implementation/compatibility dimension rather than two unrelated architectural layers.
 
 At this point, a file-by-file inventory of every base utility would add little to the architectural document. Individual facilities should be documented when a higher-level topic needs their specific contract.

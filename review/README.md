@@ -6,7 +6,7 @@ The documents here are not replacements for the source-tree `README.md` files an
 
 ## Source Baseline
 
-- Source revision: 1102
+- Source revision: 1106
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
@@ -70,7 +70,7 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1102                                │
+│ Revision 1106                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
@@ -183,7 +183,7 @@ semantically implemented
 fully supported feature
 ```
 
-This distinction is especially important for the loader/module integration that began around revision 1097 and gained import/export and reference-resolution operations through revisions 1099–1102.
+This distinction is especially important for the loader/module integration that began around revision 1097, gained import/export and reference-resolution operations through revisions 1099–1102, and continued with the `asn1_modules` registry and parameterized-type/value prototypes in revisions 1103–1104.
 
 ---
 
@@ -597,7 +597,7 @@ Each review document should identify the source revision it describes.
 For the current review package:
 
 ```text
-Source Baseline: Revision 1102
+Source Baseline: Revision 1106
 ```
 
 When the implementation changes materially:
@@ -618,7 +618,7 @@ In particular, parser production names, ASN.1 loader capabilities, protocol reso
 
 ## 8. Current Review Status
 
-The review package currently uses revision 1102 as its overall source baseline. Individual documents retain their own review baselines where they have not been re-evaluated in this pass.
+The review package uses revision 1106 as its overall source baseline. Individual documents retain their own review baselines where a later source change does not materially alter that review axis.
 
 ```text
 1. Parser evolution
@@ -631,7 +631,7 @@ The review package currently uses revision 1102 as its overall source baseline. 
 8. Authenticode cross-cutting verification path
 ```
 
-These review axes form the current architecture-review map. The earlier pass added a more explicit protocol-state → wire-unit boundary observation without creating another subsystem-specific review file. This revision pass updates the ASN.1/parser/resource relationships without expanding the review set unnecessarily.
+These review axes form the current architecture-review map. The earlier pass added a more explicit protocol-state → wire-unit boundary observation without creating another subsystem-specific review file. This pass updates ASN.1 module naming and prototype status, parsing-table revision 3, and Authenticode's restored CRL revocation-check path without expanding the review set unnecessarily.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
@@ -640,7 +640,7 @@ The next review pass should therefore focus on **cross-referencing and correctio
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1102                                │
+│ Revision 1106                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

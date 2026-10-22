@@ -1,18 +1,34 @@
-# TLS 1.3 handshake-flow sketch
+# Developer Notes - TLS 1.3 handshake-flow sketch
 
-This page is a compact message-order sketch for the 1-RTT and 0-RTT paths, not a complete state-machine specification.
+This page is a compact message-order aid for reading traces. It is not a complete TLS state machine, and optional messages vary with negotiation, resumption, authentication, and peer policy.
 
-## 1-RTT path
+## 1-RTT full-handshake sketch
 
-1. Client → Server: `ClientHello`
-2. Server → Client: `ServerHello`, `EncryptedExtensions`, `Certificate`, `CertificateVerify`, `Finished`
-3. Client → Server: `Finished`
-4. Server → Client: `NewSessionTicket` (post-handshake, when issued)
-5. Both directions: application data
-6. Both directions: `close_notify` during orderly shutdown
+```text
+Client                         Server
+  | -------- ClientHello ------> |
+  | <------- ServerHello ------- |
+  | <--- EncryptedExtensions --- |
+  | <------- Certificate ------- |  when certificate authentication is used
+  | <---- CertificateVerify ---- |  when applicable
+  | <--------- Finished -------- |
+  | --------- Finished --------> |
+  | <---- NewSessionTicket ----- |  optional post-handshake
+  | <====== Application Data ===>|
+  | <====== close_notify ======> |  orderly shutdown, direction may vary
+```
+
+A compatibility `ChangeCipherSpec` can appear in TLS 1.3 captures but is not a TLS 1.3 handshake state transition equivalent to the TLS 1.2 change of record protection. The figure omits record-layer details and encrypted handshake payload boundaries.
 
 ## 0-RTT sketch
 
-The client sends `ClientHello` with a `pre_shared_key` offer and early data; the server response shown here includes `ServerHello`, `EncryptedExtensions`, and `Finished`. The actual accepted/rejected early-data path and complete message ordering depend on negotiation and server policy, so this abbreviated diagram should not be used as a full trace template.
+A resuming client may send a `ClientHello` with a `pre_shared_key` offer and early application data. The server's acceptance or rejection of early data changes the subsequent exchange; therefore a single abbreviated message list is not a complete 0-RTT trace template. Early data also has replay-related semantics that are outside the scope of this sketch.
 
-Related test material: [TLS test cases](README.md), [TLS 1.3 captures](tls13/README.md).
+## Where the repository demonstrates these paths
+
+- [Top-level TLS testcase README](README.md) — executable test inventory and YAML record replay.
+- [TLS 1.3 capture README](tls13/README.md) — selected suite and key-exchange captures, plus a handshake-failure capture.
+- `testcase_rfc8448_*.cpp` — fixed examples from RFC 8448, including the HelloRetryRequest example in `testcase_rfc8448_5.cpp`.
+- `testcase_helloretryrequest.cpp` — separate HelloRetryRequest-oriented testcase.
+
+Do not infer that every message shown here has an independent assertion in every listed source file; consult the testcase implementation and current report for the exact claim.

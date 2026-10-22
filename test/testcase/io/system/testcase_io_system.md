@@ -17,11 +17,11 @@ Documents the available system-I/O testcase sources under `test/testcase/io/syst
 
 ## 2. Test model
 
-`testcase_mlfq.cpp` covers the multi-level feedback queue implementation. `testcase_netlink.cpp` covers Linux netlink-related functionality; its applicability depends on platform and build guards in the source.
+1. `testcase_mlfq.cpp` covers the multi-level feedback queue implementation. `testcase_netlink.cpp` covers Linux netlink-related functionality; its applicability depends on platform and build guards in the source.
 
 ## 3. Example: system I/O testcase entry points
 
-`test_mlfq()` creates a scenario thread, then producer/consumer workers; the producer posts 100 integers at randomized priorities, and the consumer dequeues and deletes values until it signals completion. The source logs a priority-grouped summary but does not assert a deterministic priority order or every payload. `test_netlink()` subscribes to Linux process events and waits for SIGINT; it is guarded by Linux/glibc conditions and is not a short, unattended default testcase.
+1. `test_mlfq()` creates a scenario thread, then producer/consumer workers; the producer posts 100 integers at randomized priorities, and the consumer dequeues and deletes values until it signals completion. The source logs a priority-grouped summary but does not assert a deterministic priority order or every payload. `test_netlink()` subscribes to Linux process events and waits for SIGINT; it is guarded by Linux/glibc conditions and is not a short, unattended default testcase.
 
 ## 4. Test and verification status
 

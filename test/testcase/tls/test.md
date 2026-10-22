@@ -1,4 +1,10 @@
-#### test
+# Developer Notes - TLS study checklist and historical TODOs
+
+This checklist preserves the original study/work notes and revision annotations. A checked item records the checklist's historical state; it is not a substitute for a current source-level coverage review or a CTest execution report.
+
+Use the [TLS testcase README](README.md) for the current source inventory and verification boundaries, [cipher-suite inventory](cipher-suites.md) for the suite list, [packet-capture index](packet-capture.md) for recorded experiments, and [TLS 1.3 flow sketch](tls13-flow.md) for message-order orientation.
+
+---
 
 - [x] tasks
   - [x] baby steps
@@ -29,7 +35,7 @@
           - [x] X25519MLKEM768 (Revision 901)
           - [x] SecP256r1MLKEM768, SecP384r1MLKEM1024 (Revision 902)
       - [x] TLS 1.2
-        - [x] entrypt_then_mac (Revision 752)
+        - [x] encrypt_then_mac (Revision 752)
         - [x] extended_master_secret (Revision 779)
         - [x] ciphersuite
           - [x] CBC
@@ -44,4 +50,3 @@
   - [x] sslkeylog
   - [ ] TODO
     - [ ] 0-RTT performance optimization
-

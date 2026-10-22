@@ -1,6 +1,6 @@
 # Hotplace Parser Evolution
 
-> **Review baseline:** Revision 1102
+> **Review baseline:** Revision 1106
 
 ## Review thesis
 
@@ -105,15 +105,15 @@ The parameterized ASN.1 path is still an area of active grammar work. Revision 1
 
 The practical distinction is important: a grammar production or lexer handler records how input is recognized, but does not by itself establish full semantic construction or complete support for parameterized ASN.1. The same review discipline applies at each layer: grammar coverage, parse-tree shape, semantic reconstruction, module linkage, and loader behavior need separate evidence.
 
-The binary parsing-table format also advanced from revision 1 to revision 2. The generated `.ptb` files and the table reader/writer therefore need to be treated as a versioned resource pair; an updated grammar source alone is not the whole parser update.
+The binary parsing-table format advanced from revision 1 to revision 2 in revision 1102, then to revision 3 in revision 1104. The generated `.ptb` files and the table reader/writer therefore need to be treated as a versioned resource pair; an updated grammar source alone is not the whole parser update.
 
 ## Resource roles
 
 For ASN.1, the generated resources have different purposes:
 
 ```text
-asn1notation.ptb → notation parsing / semantic construction (table revision 2)
-asn1.ptb         → broader loader grammar (table revision 2)
+asn1notation.ptb → notation parsing / semantic construction (table revision 3)
+asn1.ptb         → broader loader grammar (table revision 3)
 ```
 
 Keeping these roles distinct prevents a large parsing table from being treated as proof of complete ASN.1 language support.
@@ -153,7 +153,7 @@ The resulting system has more moving parts than a parser whose tables are genera
 
 ## Current state
 
-Revision 1102 adds another layer to that architecture: the ASN.1 parameterized-assignment/type/value grammar has changed, lexer handling has been adjusted, and the binary parsing-table format is now at revision 2. LALR(1)/GLR still serve different grammar scopes, and external `.ptb` resources remain part of parser generation and build integration.
+Revision 1102 changed the ASN.1 parameterized-assignment/type/value grammar and lexer handling, and advanced the binary parsing-table format to revision 2. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 added prototypes for parameterized-type definition/value handling and advanced the table format to revision 3. The parameterized support remains prototypical: grammar recognition, semantic construction, and full instantiation are distinct capabilities. LALR(1)/GLR still serve different grammar scopes, and external `.ptb` resources remain part of parser generation and build integration.
 
 ### Related source / documents
 
@@ -168,4 +168,4 @@ Revision 1102 adds another layer to that architecture: the ASN.1 parameterized-a
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state around **revision 1102**.
+Reviewed against the hotplace source/documentation state through **revision 1106**.

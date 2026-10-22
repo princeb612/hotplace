@@ -27,15 +27,15 @@ testcase_consolecolor.cpp ──► console color output
          base/report
 ```
 
-The first testcase covers result recording and selected control-flow helpers; the other two isolate logger filtering and terminal presentation.
+1. The first testcase covers result recording and selected control-flow helpers; the other two isolate logger filtering and terminal presentation.
 
 ## 3. Example: result category and failure flow
 
-In `testcase_unittest.cpp`, the harness opens the `test_case` group and records success, unsupported/skip, and low-security categories. The report preserves these as distinct outcomes; they should not be normalized into a single Boolean pass/fail label.
+1. In `testcase_unittest.cpp`, the harness opens the `test_case` group and records success, unsupported/skip, and low-security categories. The report preserves these as distinct outcomes; they should not be normalized into a single Boolean pass/fail label.
 
-The `test_fail()` path exercises `__leave2_if_fail` and checks that execution did not continue past the failure point. By contrast, `test_trace()` and `test_try_leave()` end with constant-true assertions, which do not validate the emitted trace text. The shown `test_except()` code dereferences a null pointer; source presence alone does not establish that this path is safely handled or even reached in the reported run.
+2. The `test_fail()` path exercises `__leave2_if_fail` and checks that execution did not continue past the failure point. By contrast, `test_trace()` and `test_try_leave()` end with constant-true assertions, which do not validate the emitted trace text. The shown `test_except()` code dereferences a null pointer; source presence alone does not establish that this path is safely handled or even reached in the reported run.
 
-`testcase_loglevel.cpp` checks explicit and implicit logger levels against the configured threshold. `testcase_consolecolor.cpp` separately exercises console styling, a presentation concern independent of pass/fail accounting.
+3. `testcase_loglevel.cpp` checks explicit and implicit logger levels against the configured threshold. `testcase_consolecolor.cpp` separately exercises console styling, a presentation concern independent of pass/fail accounting.
 
 ## 4. Test and verification status
 

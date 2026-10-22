@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1105
-Source basis: Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -12,55 +12,60 @@ Documented with GPT-6
 
 ## 1. Role
 
-The ODBC module provides a thin hotplace-oriented wrapper around the native ODBC handle model. It is a database connectivity integration, not an ORM or database-specific abstraction.
+The ODBC module provides a thin hotplace-oriented wrapper over the native ODBC handle and statement APIs. It is a database connectivity layer, not an ORM: connection strings, SQL statements, driver behavior, and database-specific semantics remain visible to the caller.
 
-## 2. Model
+## 2. Data Model
 
-The public type boundary is in `types.hpp`; concrete classes are under `basic/`.
+The public boundary in `types.hpp` defines the query mode, shared class declarations, and conversion from `SQLRETURN` to hotplace `return_t`. Concrete wrappers are implemented under `basic/`.
 
 ```text
-odbc_connector  — environment / connection handles
-      |
-      v
-odbc_query      — statement, parameter binding, execution
-      |
-      v
-odbc_record    — one fetched row
-      |
-      v
-odbc_field    — column metadata and value conversion
+odbc_connector
+  environment (HENV) / connection (HDBC)
+       |
+       v
+odbc_query
+  statement (HSTMT), execution and result metadata
+       |
+       v
+odbc_record
+  one fetched row
+       |
+       v
+odbc_field
+  column metadata and retrieved value
 
-odbc_diagnose  — diagnostic records and callbacks
-odbc_sinker    — readiness / timeout bridge for async query
+Cross-cutting:
+  odbc_diagnose  -> SQL diagnostic records -> registered callbacks
+  odbc_sinker    -> readiness / timeout handling for async query
 ```
 
-## 3. Important behavior and lifetime
+The main path is connector → query → record → field. Diagnostics and asynchronous readiness are supporting mechanisms rather than additional steps in every query.
 
-### Native handle lifecycle
+## 3. Behavior Model
 
-The implementation uses native ODBC environment, connection, and statement handles and depends on the platform ODBC driver manager. During startup, `odbc_connector` requests connection pooling and allocates an environment configured for ODBC 3. The exact behavior still depends on the installed driver manager and the supplied connection string.
+### Connection and statement lifecycle
 
-`odbc_query` is associated with a connection handle and owns a statement handle. It builds result-field metadata from `SQLNumResultCols` and `SQLDescribeCol`, and binds statement parameters through `SQLBindParameter`. Its close/destruction path closes the statement and disconnects/frees the associated connection handle; callers should not assume a query object is independent of its connection lifetime.
+`odbc_connector` initializes an ODBC environment, requests connection pooling, selects ODBC 3, and creates a query associated with a connection handle. `odbc_query` owns a statement handle. Its destructor closes the statement and disconnects/frees the associated connection; a query therefore should not be treated as independent of its connection lifecycle.
 
-The build includes ANSI sources generally and Windows Unicode-specific source files on Windows. Platform-specific ODBC type widths and text types are handled in the implementation, so portability claims should be checked against the target compiler and ODBC headers.
+### Execution and result traversal
 
-## 4. Example from the source tests
+Direct execution uses `SQLExecDirect`. Prepared execution follows `SQLPrepare`, `SQLBindParameter`, and `SQLExecute`. Result metadata is collected with `SQLNumResultCols` and `SQLDescribeCol`; fetching uses `SQLFetch` and `SQLGetData`. The result is exposed as `odbc_record` rows containing `odbc_field` values. `more()` advances to subsequent result sets with `SQLMoreResults`.
 
-The source sample in `test/testcase/odbc/sample.cpp` accepts a connection string (`--c`) and table name (`--t`). The flow is: parse command-line inputs, create/connect through `odbc_connector`, create a query for `select * from <table>`, execute the statement, fetch rows, and print each field name and string value. Column metadata is built from the result set before row values are read.
+### Errors and platform integration
 
-This is a configurable integration sample, not a self-contained test against a bundled database. Its successful execution depends on an external ODBC driver, a valid connection string, and a table accessible to that connection; the source sample alone does not establish that a live database was available during documentation.
+Native return codes are converted into coarse hotplace error categories by `error_traits<SQLRETURN, odbc_category>`. Detailed SQLSTATE, native error code, and message are retrieved separately through `odbc_diagnose`. The build links the platform ODBC library and includes Windows Unicode-specific sources selected by the module's CMake configuration. Actual connectivity and data behavior depend on the installed driver manager, driver, connection string, and database.
 
-## 5. Relationships
+## 4. Relationships
 
-`odbc_connector` creates `odbc_query`; query execution produces `odbc_record` rows containing `odbc_field` values. `odbc_diagnose` reports ODBC diagnostics to registered callbacks. `odbc_sinker` adapts asynchronous query readiness and timeout handling.
+- [`types.md`](types.md) — shared ODBC types, query modes, and return-code conversion
+- [`basic/README.md`](basic/README.md) — concrete wrapper classes
+- [`basic/odbc_connector.md`](basic/odbc_connector.md) — environment and connection lifecycle
+- [`basic/odbc_query.md`](basic/odbc_query.md) — statement execution and result traversal
+- [`basic/odbc_record.md`](basic/odbc_record.md) and [`basic/odbc_field.md`](basic/odbc_field.md) — row and column representation
+- [`basic/odbc_diagnose.md`](basic/odbc_diagnose.md) — diagnostic callbacks
+- [`basic/odbc_sinker.md`](basic/odbc_sinker.md) — async readiness and timeout bridge
+- [`test/testcase/odbc/testcase_odbc.md`](../../test/testcase/odbc/testcase_odbc.md) — sample behavior and verification limits
 
-## 6. References
+## 5. References
 
-- `types.hpp`
-- `basic/README.md`
-- `basic/odbc_connector.hpp/.cpp`
-- `basic/odbc_query.hpp/.cpp`
-- `basic/odbc_record.hpp/.cpp`
-- `basic/odbc_field.hpp/.cpp`
-- `test/testcase/odbc/sample.cpp`
-- `CMakeLists.txt`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

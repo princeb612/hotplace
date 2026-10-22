@@ -2,7 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 1 · Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1106
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -11,43 +12,35 @@ Documented with GPT-6
 
 ## 1. Role
 
-Bridges an `odbc_query` into the surrounding sink/readiness infrastructure; it is not a separate database abstraction.
+`odbc_sinker` adapts an existing `odbc_query` to the readiness/timeout interface used by surrounding asynchronous code. It does not create a connection or statement and does not provide a separate database abstraction.
 
-## 2. Model
-
-`odbc_sinker` is a small integration object around an `odbc_query` and timeout value. It provides a readiness check used by code that treats a query as a sink/source participant rather than interacting with the query object directly.
-
-The implementation is intentionally small compared with `odbc_connector` and `odbc_query`; it does not introduce another database abstraction. Its role is to bridge an ODBC query into the surrounding hotplace asynchronous/sink-oriented infrastructure.
-
-## Relationship
+## 2. Data Model
 
 ```text
-odbc_connector
-      |
-      v
-odbc_query
-      |
-      v
-odbc_sinker
-      |
-      +--> ready()
+odbc_query (async_query)
+       |
+       v
+  odbc_sinker
+       |
+       +-- ready()
+       +-- configured timeout
+       +-- retained query reference
 ```
 
-The sink retains the query reference and releases it when destroyed.
+The class is declared in `odbc_query.hpp`, stores a query pointer and timeout in seconds, and records a monotonic timestamp when constructed. It expects a non-null query; construction throws if none is supplied.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-The object retains the query reference. `ready()` returns success immediately for synchronous mode. For asynchronous mode it checks execution readiness and returns timeout after the configured duration, calling `close()` to cancel when the timeout expires. Destruction releases the query reference.
+For synchronous query mode, `ready()` returns success immediately. For asynchronous mode it calls `execute_statement()`. If execution remains busy, the sinker checks elapsed monotonic time; when the elapsed seconds exceed the configured timeout, it returns `errorcode_t::timeout` and closes the query to cancel the statement. Other execution results are passed through.
 
-## 4. Example from the source tests
+The destructor releases the retained query reference. The checked-in ODBC sample does not instantiate this adapter, so its behavior is described from the implementation rather than claimed as covered by the sample.
 
-The checked-in ODBC sample does not instantiate `odbc_sinker`; its behavior is documented from `odbc_sinker.cpp`, not claimed as covered by that sample.
+## 4. Relationships
 
-## 5. Relationships
+- [`odbc_query.md`](odbc_query.md) — owns statement execution and exposes the query mode
+- [`../README.md`](README.md) — class-level model
+- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample coverage boundary
 
-- `odbc_connector` / `odbc_query` / `odbc_record` / `odbc_field` participate in the connection-to-row path; the exact relation depends on this class.
+## 5. References
 
-## 6. References
-
-- `sdk/odbc/basic/odbc_sinker.hpp`
-- `test/testcase/odbc/sample.cpp`
+- [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

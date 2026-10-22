@@ -8,13 +8,13 @@ The scope is deliberately narrow: this is a review of the implementation path us
 
 ## Source Baseline
 
-- Source tree: hotplace revision 1097
+- Source tree: hotplace revision 1105
 - Primary area: `sdk/crypto/authenticode/`
 - Practical sample: `test/applet/authenticode/sample.cpp`
 
-## 1097 review pass
+## Revision 1105 review pass
 
-This document was rechecked as part of the revision-1097 architecture review. No material revision-1097 architectural change was identified in this axis; the document therefore preserves the established 1096 relationship model rather than inventing a new revision-specific change.
+Revision 1105 restored the CRL revocation-check path after the addition of the project's `process` abstraction. This changes the current behavior description in the trust/CRL section, but does not change the core architecture: PE-specific digest rules remain in the PE plugin, while signer and certificate verification use OpenSSL.
 
 ## 1. Verification as a composition of distinct responsibilities
 
@@ -227,9 +227,9 @@ sdk/io/string::split_url()
 local CRL/cache representation
 ```
 
-The current source treats CRL download/cache handling as an evolving area. The sample applet disables CRL download for its practical verification path.
+Revision 1105 restored the `get_crl()` path. It reads CRL distribution-point URIs from certificates, reuses context/cache or local files where available, and can invoke `wget` through the project's `process` abstraction when retrieval is enabled. The verifier configures `X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL` and adds successfully decoded CRLs to the OpenSSL store before `PKCS7_verify()`.
 
-This is a good example of why the review layer should record **actual implementation boundaries and current status**, rather than presenting every surrounding facility as a finished general-purpose framework.
+The sample applet enables CRL retrieval by setting `authenticode_ctrl_t::set_crl = 1`; the source notes that it may be disabled for an air-gapped environment. This is a restored revocation-check path, not proof of a complete revocation policy: retrieval, decoding, freshness, issuer validation, and successful chain revocation checking remain distinct concerns. In particular, the callback does not turn a missing-CRL error into success.
 
 ## 7. Reusing the existing file-I/O boundary
 
@@ -341,7 +341,7 @@ test/applet/authenticode/sample.cpp
              │
              ├── target executable
              ├── trust.crt
-             ├── CRL download disabled
+             ├── CRL retrieval enabled (set_crl = 1)
              └── separated-signature flag
                        │
                        ▼
@@ -393,13 +393,14 @@ The important distinction is between **direct implementation responsibilities** 
 
 ## 13. Current Status
 
-As of revision 1097:
+As of revision 1105:
 
 - PE Authenticode verification is the documented implementation scope.
 - The verifier uses a plugin-oriented architecture.
 - PE-specific digest calculation is isolated in `authenticode_plugin_pe`.
 - PKCS#7/X.509 processing uses OpenSSL APIs directly.
 - Trust roots/signers and CRL-related state are handled by the verifier context.
+- Revision 1105 restores CRL retrieval through local/cache paths and optional `wget` execution via `process`, and configures OpenSSL CRL-check flags.
 - `file_stream` and URL splitting are concrete cross-module dependencies.
 - MSI/Cabinet engine identifiers remain in the source, but are outside the current PE-focused documentation scope.
 - There is no dedicated Authenticode testcase directory; the sample applet is the practical executable example.
@@ -423,7 +424,7 @@ As of revision 1097:
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1097                                │
+│ Revision 1105                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

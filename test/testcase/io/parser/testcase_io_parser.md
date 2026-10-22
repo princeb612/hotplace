@@ -16,7 +16,7 @@ Documents the parser/lexer test sources and test vectors under `test/testcase/io
 
 ## 2. Test model
 
-The directory contains parser and lexer C++ test sources, YAML parser test vectors, and ASN.1 sample modules. The source-level test functions include parser, lexer, parsing-table loading, YAML test-vector parsing, and ASN.1 notation/parameterized paths.
+1. The directory contains parser and lexer C++ test sources, YAML parser test vectors, and ASN.1 sample modules. The source-level test functions include parser, lexer, parsing-table loading, YAML test-vector parsing, and ASN.1 notation/parameterized paths.
 
 ## 3. Example: follow the assertions
 
@@ -24,7 +24,7 @@ The directory contains parser and lexer C++ test sources, YAML parser test vecto
 - `testcase_parser.cpp::test_asn1_notation()` checks that four parser instances (LALR build/import and GLR build/import) are ready, then runs a shared set of notation vectors through each. `test_load_parsingtable()` isolates the binary table import path.
 - `testvector_parser.cpp::test_yaml_testvector_parser()` reads `testvector_parser.yml`, compares reducer-produced module clause ranges with expected ranges, and verifies level-trigger and edge-trigger behavior.
 
-The first two are lexer/parser tests; the YAML test is a context-aware module-boundary pre-parser. Keep their purposes distinct when interpreting a pass or failure.
+1. The first two are lexer/parser tests; the YAML test is a context-aware module-boundary pre-parser. Keep their purposes distinct when interpreting a pass or failure.
 
 ## 4. Test and verification status
 

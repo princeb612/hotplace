@@ -3,72 +3,379 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1106                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1105                  │
+│ Source basis: Revision 1106                  │
 │ — testcase assets and verification           │
 └──────────────────────────────────────────────┘
 ```
 
 # JOSE test resources
 
-## 1. Role
+## 1. What
 
-This directory contains direct testcase sources, JOSE samples, RFC example fixtures, JWK/PEM keys, and algorithm test vectors for `sdk/crypto/jose`. It is test data and executable source, not a separate JOSE implementation.
+This directory contains the executable testcase source, JOSE RFC example fixtures, JWK/PEM keys, and ML-DSA JSON test vectors used to exercise `sdk/crypto/jose`. The fixtures are inputs and expected protocol examples; they are not a separate JOSE implementation.
 
-## 2. Test model
+The suite covers JWS signing and verification, JWE encryption and decryption, compact and JSON serializations, JWK handling, JWA key-management/content-encryption algorithms, JWK thumbprints, OKP/EdDSA/ECDH-ES, and ML-DSA paths.
 
-The suite is organized by RFC and capability:
+## 2. How
 
-- RFC 7515 — JWS signing/verification and serialization forms.
-- RFC 7516 — JWE examples.
-- RFC 7517 — JWK handling.
-- RFC 7518 — JWA algorithm cases.
-- RFC 7520 — broad JWS/JWE examples and combinations.
-- RFC 7638 — JWK thumbprints.
-- RFC 8037 — ECDH and EdDSA-related JOSE support.
-- AKP — ML-DSA-oriented signing vectors, gated by OpenSSL version in the source.
+### 2.1 Prepare and run the testcase executable
 
-## 3. Example: RFC 7515 A.1 JWS
+The entry point is `sample.cpp`; `sample.hpp` declares the testcase functions and shared command-line options.
 
-`testcase_rfc7515.cpp::test_rfc7515_A1()` loads `rfc7515.jwk`, signs the RFC's HS256 header and payload, and checks the compact JWS string against the expected RFC output. It also exercises flattened and general JSON serializations and verification calls. This is a concrete example of protocol-level serialization being checked around a common MAC operation.
+1. Parse options and configure logging. `-v` enables verbose diagnostic output, `-l` writes `test.log`, `-t` adds timestamps, and `-k` enables key dumps at sites that consult the option. Debug/trace switches are registered only in `DEBUG` builds.
+2. Call `openssl_startup()` before the JOSE test groups.
+3. Dispatch the groups in source order: RFC 7515, 7516, 7517, 7518, 7520, 7638 and 8037, followed by the AKP signing test and its JSON-vector consumer.
+4. Call `openssl_cleanup()`, flush logging, report the testcase summary and return the framework result.
+5. Preserve the build/compiler, OpenSSL version/provider configuration, command-line options and report when comparing runs. Verbose output and key dumps are diagnostic, not additional assertions.
 
-## 4. Test and verification status
+The fixture files are copied into the build tree by `CMakeLists.txt` for the `jose` module. Run the executable from the directory where those fixture names resolve; several tests open the files by relative name.
 
-### 4.1 Source-level coverage
+### 2.2 Procedure: JWS known-output and serialization checks (RFC 7515)
 
-| Source | Coverage indicated by source | Data / vectors |
-|---|---|---|
-| `testcase_rfc7515.cpp` | JWS sign/verify, compact/flattened/general JSON, PEM and key-generation paths | `rfc7515.jwk`, `rfc7515.pem`, RFC 7515 fixtures |
-| `testcase_rfc7516.cpp` | JWE RFC examples and key-management/content-encryption cases | `rfc7516_A*.jwk/.jws` and related fixtures |
-| `testcase_rfc7517.cpp` | JWK examples | JWK fixture files |
-| `testcase_rfc7518.cpp` | JWA algorithm cases including RSA-PSS | RFC 7518 key fixtures |
-| `testcase_rfc7520.cpp` | JWS/JWE examples, nested content, JSON/flattened JWE | `rfc7520_figure*.jws/.jwe`, public/private JWKs |
-| `testcase_rfc7638.cpp` | JWK thumbprint example | `rfc7638_3.jwk` |
-| `testcase_rfc8037.cpp` | ECDH/EdDSA feature cases | X25519, X448, Ed25519 JWKs |
-| `testcase_akp.cpp`, `testvector_akp.cpp` | ML-DSA sign/verify and JSON test vectors | `testvector_akp_mldsa44.json`, `...65.json`, `...87.json` |
+1. Load `rfc7515.jwk` into a `crypto_key` and prepare the RFC header and payload bytes.
+2. For RFC 7515 A.1, sign with HS256 using the `json_web_signature` API in compact form.
+3. Compare the resulting compact JWS string with the fixed RFC string. This is a byte-for-byte serialized-output oracle, not merely a successful sign status.
+4. Verify the produced JWS, then repeat signing and verification using flattened and general JWS JSON serialization. Those paths primarily record operation status.
+5. Repeat the RFC examples for RS256, ES256, ES512 and unsecured `none` behavior, plus general/flattened multi-signature forms. The exact checks differ: some compact RSA/HMAC cases compare a fixed string; randomized ECDSA signatures are verified rather than compared with fixed generated bytes.
+6. Run the additional key/API paths: HMAC through `json_object_signing_encryption`, PEM-based keys, generated-key combinations and key-match cases. These broaden the exercised APIs but should not be described as fixed-output RFC vectors unless the source compares against an expected string.
 
-The `testcase_akp.cpp` implementation explicitly requires OpenSSL 3.5 for its ML-DSA branch; otherwise it records `not_supported`. The testcase directory also includes `sample.cpp/.hpp` and `CMakeLists.txt`.
+### 2.3 Procedure: JWE example processing (RFC 7516)
 
-### 4.2 Documentation and verification status
+1. Load the example's JWK and prepare a `json_object_signing_encryption` context with the appropriate encryption/decryption key.
+2. Run the RFC 7516 A.1–A.4 examples for the source's supported key-management and content-encryption combinations, including RSA-OAEP/AES-GCM, RSA1_5/AES-CBC-HMAC, AES Key Wrap, and general JWE JSON serialization.
+3. Exercise compact, flattened JSON, general JSON, and file-based inputs where the test has separate calls for those forms.
+4. The shared file helper memory-maps a fixture and calls `jose.decrypt()`; its recorded test result is the returned operation status. The helper does not independently compare the decrypted bytes with a separately stored expected plaintext.
+5. The low-level A.1 computation separately checks the decrypted CEK, the encoded protected-header AAD, and the AES-GCM tag/ciphertext against the RFC's fixed values. It also invokes decryption using the RFC ciphertext/tag; inspect its explicit assertions rather than assuming the printed plaintext is compared.
+6. The RSA-OAEP helper cases and Appendix B CBC-HMAC computation exercise algorithm-specific processing. Appendix B explicitly compares the generated ciphertext/tag and recovered plaintext with expected values.
 
-The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md). The associated run context supplied in the conversation is **Revision 1104 · MinGW64/GCC · CTest**; the report payload does not independently identify the tested source commit or exact build configuration. This is distinct from the current documentation basis, Revision 1105. Its JOSE summary is:
+### 2.4 Procedure: JWK and JWA examples (RFC 7517 / 7518)
+
+1. **RFC 7517 Appendix C:** load the encrypted-private-key example and passphrase, create the PBES2-HS256+A128KW key-management input, encrypt to compact JWE, then decrypt. The testcase records the final decrypt status; it does not explicitly compare recovered plaintext with the original sample.
+2. **RFC 7518 RSASSA-PSS:** load the JWK, sign the sample claims with PS256, and verify compact, flattened, and general JSON JWS serializations. These checks record operation statuses.
+3. **RFC 7518 Appendix C:** load Alice and Bob JWK fixtures and derive an ECDH shared secret.
+4. Build Concat KDF `otherinfo` from `A128GCM`, `apu=Alice`, `apv=Bob`, and a 128-bit output length; Base64URL-encode the derived key and compare it with the RFC expected value.
+5. Call the additional `ecdh_es()` helper and treat its result as diagnostic unless a separate expected-value assertion exists.
+6. In the additional P-384 ECDH case, generate Alice and Bob keys, derive the secret in both directions, and compare the two secret buffers.
+
+### 2.5 Procedure: broad JWS/JWE fixtures (RFC 7520)
+
+1. Load `rfc7520_priv.jwk` for the RFC signature and decryption fixture paths.
+2. For each `.jws` fixture, memory-map the file and call JWS verification. The helper records the returned status.
+3. For each `.jwe` fixture, open a JOSE context with the selected key, decrypt the fixture and record the returned status; plaintext is logged on success.
+4. The fixture set includes RSA signatures, HMAC integrity, detached/content-only and protected-header examples, multiple signatures, RSA key encryption, RSA-OAEP/AES-GCM, PBES2 key wrapping, ECDH-ES key agreement and nested signature/encryption examples.
+5. The nesting section separately checks the relevant JWS/JWE fixtures. The generated JWE loops exercise flattened and general JSON serialization across the selected content-encryption algorithms and key-management algorithms.
+6. These helper-driven fixtures are status-oriented: a successful API return does not by itself prove the decoded payload equals an independently asserted expected plaintext or that the verification-result boolean was separately asserted.
+
+### 2.6 Procedure: JWK thumbprint (RFC 7638)
+
+1. Load `rfc7638_3.jwk` and extract the RSA public modulus and exponent.
+2. Build the required public JWK members `e`, `kty` and `n` in lexicographic order, with Base64URL-encoded values and compact JSON serialization.
+3. Hash the resulting UTF-8 JSON bytes with SHA-256.
+4. Base64URL-encode the digest and compare the thumbprint with the fixed RFC value `NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
+
+### 2.7 Procedure: OKP, EdDSA and ECDH-ES (RFC 8037)
+
+1. Load the Ed25519 JWK, sign the sample claim with EdDSA, and record the signing status.
+2. Verify the generated signature and a separate RFC-provided compact JWS string. The testcase records operation statuses; it does not explicitly assert the returned `result` boolean.
+3. Load the X25519 and X448 JWK fixtures and invoke JWE encryption with the matching ECDH-ES key-management and AES-GCM choices.
+4. Exercise the broader OKP matrix using generated X25519/Ed25519/X448/Ed448 keys across the configured content-encryption and ECDH-ES key-management combinations. Successful encryptions are followed by decrypt calls; status is recorded, while recovered plaintext is logged rather than explicitly compared with the original claim.
+5. The OKP JWS path signs and verifies with EdDSA. Its result is operation-status evidence, not a fixed signature-output comparison.
+
+### 2.8 Procedure: ML-DSA signing and JSON vectors (AKP)
+
+1. The common AKP path is compiled for OpenSSL 3.5 or later. It adds ML-DSA-44, ML-DSA-65 and ML-DSA-87 keys, signs the fixed payload, and verifies each generated JWS.
+2. The JSON-vector consumer opens each of `testvector_akp_mldsa44.json`, `testvector_akp_mldsa65.json` and `testvector_akp_mldsa87.json`.
+3. Read the embedded JWK, expected JWS, raw to-be-signed bytes and raw public-key bytes. Load the JWK, extract the public key and compare it byte-for-byte with the vector's raw public key.
+4. Verify the supplied JWS with the loaded key. The vector consumer does not regenerate the expected JWS or compare a newly generated signature byte-for-byte.
+5. On older OpenSSL versions the source records `not_supported`; this is a version-gated path, not a successful ML-DSA execution.
+
+## 3. Evidence
+
+### Source-level coverage
+
+The diagrams below split the suite by **test case and verification path**, rather than grouping whole source files. A successful framework status, a comparison against an RFC value, and a diagnostic dump are different forms of evidence.
+
+#### Case 1 — RFC 7515 A.1: HS256 compact JWS known output
+
+```text
+rfc7515.jwk
+  → load JWK into crypto_key
+  → fixed protected header + fixed claim
+  → json_web_signature::sign(HS256, compact)
+  → compare complete compact JWS with RFC string
+  → verify the generated compact JWS
+  → test return status + explicit serialized-string assertion
+```
+
+The compact case has an exact output oracle. Its flattened and general JSON siblings follow the same input/sign/verify sequence but record operation status rather than comparing their serialized output to a fixed RFC string.
+
+#### Case 2 — RFC 7515 A.2–A.5: RSA, ECDSA and unsecured JWS
+
+```text
+A.2: rfc7515.jwk → RS256 sign → verify
+  → compare compact serialization with RFC string
+  → flattened/general JSON → sign → verify status
+
+A.3/A.4: same JWK + claim → ES256 / ES512 sign
+  → verify generated compact / flattened / general JWS
+  → verify supplied RFC example string
+  → record operation status; no fixed generated ECDSA string comparison
+
+A.5: unsecured header (alg=none) + claim
+  → sign → verify supplied unsecured compact JWS
+  → record return status
+```
+
+The suite exercises several serialization forms, but it does not assert the verification-result boolean independently at each call. For ECDSA, randomized signatures make the verification path more meaningful than comparing generated signature bytes with one fixed string.
+
+#### Case 3 — RFC 7515 A.6–A.7 and alternate key sources
+
+```text
+A.6: rfc7515.jwk + claim + [RS256, ES256]
+  → general JSON multi-signature sign
+  → verify serialized JWS → record status
+
+A.7: rfc7515.jwk + claim + RS256
+  → flattened JSON sign → verify serialized JWS
+  → record status
+
+PEM path: rfc7515.pem → load key → write temp.pem
+  → RS256 / ES256 / ES512 / PS256 JSON sign → verify
+  → record status (HS256 branch only on older OpenSSL)
+
+Generated-key path:
+  → keychain creates oct / RSA / EC keys
+  → run configured HMAC / RSASSA / ECDSA algorithm cases
+  → sign → verify → record status
+```
+
+A.6 signs with a two-algorithm list and A.7 uses the flattened form. These are serialization/multi-signature API exercises; their logged output is not an exact-output assertion.
+
+#### Case 4 — RFC 7516 A.1: JWE serialization round trips vs RFC component vectors
+
+```text
+High-level serialization path:
+  rfc7516_A1.jwk → open JOSE context
+  → AES-256-GCM + RSA-OAEP encrypt fixed plaintext
+  → compact / flattened JSON / general JSON outputs
+  → decrypt each output → assert returned operation status
+  → file helper maps fixture → jose.decrypt → assert status
+  → close context
+
+Low-level RFC component path:
+  load JWK + RFC CEK / protected-header AAD / IV / ciphertext / tag
+  → RSA-OAEP decrypt encrypted CEK → compare CEK bytes
+  → compare encoded protected-header bytes with AAD
+  → AES-256-GCM encrypt fixed plaintext with AAD
+  → compare generated tag bytes and ciphertext bytes
+  → decrypt RFC ciphertext/tag → dump recovered plaintext
+```
+
+The high-level round trips do not explicitly compare every recovered plaintext buffer with the original. The low-level path has exact comparisons for CEK, AAD, tag and ciphertext, but its final recovered plaintext is dumped without a corresponding byte-equality assertion.
+
+#### Case 5 — RFC 7516 A.2–A.4 and RSA-OAEP variants
+
+```text
+A.2: rfc7516_A2.jwk + "Live long and prosper."
+  → RSA1_5 + A128CBC-HS256 encrypt compact / flat / general
+  → source decrypts compact output for all three checks
+  → status checks + file-fixture decrypt status
+
+A.3: rfc7516_A3.jwk + same plaintext
+  → A128KW + A128CBC-HS256 encrypt compact / flat / general
+  → decrypt matching compact / flat / general output
+  → status checks + file-fixture decrypt status
+
+A.4: rfc7516_A4.jwk
+  → PBES2-HS256+A128KW + A128CBC-HS256 general JWE
+  → decrypt generated JSON + decrypt file fixture
+  → status checks
+
+RSA-OAEP / RSA-OAEP-256:
+  load A.1 JWK → encrypt compact → decrypt
+  → assert final operation status only
+```
+
+**Source-level gap:** in A.2, the flattened and general serialization cases call decrypt with `compact`, not with `json_flat` or `json_serial`. Those calls therefore do not verify the two generated JSON outputs. A.3 passes the corresponding output to decrypt. The RSA-OAEP helper cases also do not explicitly compare recovered plaintext bytes.
+
+#### Case 6 — RFC 7517 Appendix C and RFC 7518 PS256
+
+```text
+RFC 7517 C:
+  encrypted-private-key JWK + passphrase
+  → PBES2-HS256+A128KW key management
+  → A128CBC-HS256 compact JWE encrypt → decrypt
+  → record operation status; no explicit plaintext equality
+
+RFC 7518 PS256:
+  JWK + fixed claims
+  → sign → verify compact / flattened / general JSON JWS
+  → record operation status; no fixed JWS string comparison
+```
+
+These paths check that the selected JOSE operations complete. They do not establish exact serialized output or payload equality unless a separate comparison is added.
+
+#### Case 7 — RFC 7518 ECDH and Concat KDF
+
+```text
+Bidirectional ECDH consistency:
+  generate Alice + Bob P-384 key pairs
+  → Alice private + Bob public → secret_alice
+  → Bob private + Alice public → secret_bob
+  → compare secret_alice == secret_bob
+  → assert equality
+
+RFC 7518 Appendix C:
+  load Alice/Bob RFC JWKs → derive ECDH secret Z
+  → compose otherinfo(alg=A128GCM, apu=Alice, apv=Bob, L=128)
+  → Concat KDF(Z, otherinfo, 16 bytes)
+  → Base64URL encode derived key
+  → compare with "VqqN6vgjbSBcIijNcacQGg"
+  → separately call ecdh_es(...) and dump result
+```
+
+The bidirectional test proves both sides derive the same secret, not that the secret matches a published fixed value. Appendix C compares the derived key with the RFC value; the subsequent `ecdh_es()` call has no second expected-value assertion.
+
+#### Case 8 — RFC 7520 fixture verification
+
+```text
+JWS fixture helper:
+  memory-map named .jws fixture
+  → json_web_signature::verify(key, fixture, result)
+  → test framework records return status
+
+  Called for RSA v1.5 / RSA-PSS / ECDSA / HMAC examples,
+  protected headers, content-only cases and multi-signature examples.
+
+JWE fixture helper:
+  memory-map named .jwe fixture
+  → open JOSE context with selected private/key-management key
+  → jose.decrypt(fixture, output, result)
+  → close context → test framework records return status
+
+  Called for RSA key encryption, RSA-OAEP/AES-GCM, PBES2,
+  ECDH-ES/key wrap, direct AES-GCM, compression, AAD,
+  protected headers, content-only, general JSON and nested JWS/JWE.
+```
+
+These helpers assert the returned operation status. They do not compare a decoded JWS payload or decrypted JWE plaintext against a separate expected byte string, and they do not independently assert the `result` boolean. Fixture coverage is broad, but its oracle is mainly API-status based.
+
+#### Case 9 — RFC 7638 JWK thumbprint
+
+```text
+rfc7638_3.jwk
+  → load RSA JWK → extract public modulus n and exponent e
+  → Base64URL encode e and n
+  → build compact public JWK JSON in lexicographic order: e, kty, n
+  → SHA-256(JSON UTF-8 bytes)
+  → Base64URL encode digest
+  → compare with fixed RFC thumbprint
+  → assert exact string equality
+```
+
+This is a deterministic known-answer comparison for the complete thumbprint. The intermediate JSON and hash dumps are diagnostic; the final string equality is the oracle.
+
+#### Case 10 — RFC 8037 EdDSA and ECDH-ES
+
+```text
+EdDSA:
+  load rfc8037_A_ed25519.jwk + fixed claim
+  → sign generated JWS → record sign status
+  → verify generated JWS → record verify status
+  → verify supplied RFC compact JWS → record status
+
+RFC ECDH-ES examples:
+  load X25519 JWK → A128GCM + ECDH-ES+A128KW encrypt
+  load X448 JWK → A256GCM + ECDH-ES+A256KW encrypt
+  → record operation status
+
+Generated OKP matrix:
+  create X25519 / Ed25519 / X448 / Ed448 keychain
+  → loop 6 content-encryption algorithms × 4 ECDH-ES key-management choices
+  → encrypt flattened JWE → if success, decrypt same JWE
+  → record final status; dump plaintext on success
+  → EdDSA flattened JWS sign → verify → record status
+```
+
+The matrix tests API combinations, but successful decryption is not followed by an explicit comparison between recovered bytes and the original claim. EdDSA verification also records status without asserting the returned verification-result boolean.
+
+#### Case 11 — AKP ML-DSA operations and supplied JSON vectors
+
+```text
+OpenSSL >= 3.5:
+  add ML-DSA-44 / 65 / 87 keys
+  → sign fixed payload → assert sign status
+  → verify generated JWS → assert verify status
+
+For each testvector_akp_mldsa{44,65,87}.json:
+  open + read JSON → load embedded JWK
+  → extract public key from JWK
+  → compare raw public-key bytes with vector raw key
+  → verify vector's supplied JWS → assert operation status
+
+OpenSSL < 3.5:
+  → record not_supported
+```
+
+The vector path checks raw public-key equality and verifies the supplied JWS. It does not regenerate the vector JWS or compare newly generated signature bytes against the fixture. A version-gated `not_supported` result is not evidence that ML-DSA operations ran successfully.
+
+#### Cross-case interpretation
+
+```text
+Exact known-answer checks
+  ├─ RFC 7515 selected compact JWS output
+  ├─ RFC 7516 A.1 CEK / AAD / tag / ciphertext
+  ├─ RFC 7518 Appendix C derived key
+  ├─ RFC 7638 final thumbprint
+  └─ AKP vector raw public key
+       → compare against explicit expected bytes/string
+
+Consistency / round-trip checks
+  ├─ P-384 ECDH: Alice secret == Bob secret
+  └─ selected JWS/JWE sign-verify or encrypt-decrypt paths
+       → operation status may be checked without asserting result/data equality
+
+Fixture/API status checks
+  ├─ most RFC 7520 JWS/JWE files
+  ├─ several JWS serialization variants
+  └─ multiple JWE algorithm/serialization combinations
+       → successful return is not equivalent to an independent payload assertion
+
+Diagnostics / conditional paths
+  ├─ dumps of JWS/JWE, keys, plaintext and intermediate values
+  └─ ML-DSA paths gated by OpenSSL >= 3.5
+       → logs are not assertions; unsupported paths are not successful runs
+```
+
+### Documentation and verification status
+
+The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md). The associated run context supplied for this project is **Revision 1104 · MinGW64/GCC · CTest**; the report payload does not independently identify the tested source commit or exact build configuration. This differs from the current documentation basis, Revision 1106.
 
 | Report group | pass | expt | fail | skip | triv |
 |---|---:|---:|---:|---:|---:|
 | JOSE total | 295 | 0 | 0 | 0 | 2 |
 
-The report's RFC 7515 group records `success 34, triv 2`; RFC 7520 records `success 164`, and RFC 8037 records `success 30`. The terms `expt` and `triv` are reproduced without inferring framework semantics. These are supplied report results, not a new test run performed during documentation work. Preserve this snapshot until a newer, revision-associated report is supplied.
+The report records RFC 7515 as `success 34, triv 2`, RFC 7520 as `success 164`, and RFC 8037 as `success 30`. These labels are reproduced without inferring framework semantics. The values are supplied report results, not a test run performed during this documentation update. Preserve the snapshot until a newer report associated with a known source revision is available.
 
-## 5. Relationships
+## 4. Relationships
 
-- `../../../sdk/crypto/jose/` contains the implementation documented by these tests.
-- `../../sdk/crypto/basic/` supplies the cryptographic primitives and key abstractions.
-- `../../sdk/crypto/advisor/` provides common algorithm/resource metadata.
-- `../../sdk/crypto/cose/` has related security-object functionality using CBOR and COSE-specific identifiers.
+- `../../../sdk/crypto/jose/` — production JOSE implementation.
+- `../../../sdk/crypto/basic/` — common cryptographic operations and key abstractions.
+- `../../../sdk/crypto/advisor/` — JOSE/JWA algorithm metadata and mappings.
+- `../../../sdk/crypto/cose/` — related CBOR/COSE security-object functionality.
+- `testcase_jose.md` — supplemental map of testcase functions, fixture families and the supplied report snapshot.
 
-## 6. References
+## 5. References
 
 - [JOSE implementation overview](../../../sdk/crypto/jose/jose-overview.md)
 - [JWS/JWE processing](../../../sdk/crypto/jose/jose-signing-encryption.md)
 - [JWK and algorithm mapping](../../../sdk/crypto/jose/jose-key-and-algorithms.md)
+- RFC 7515 — JSON Web Signature (JWS)
+- RFC 7516 — JSON Web Encryption (JWE)
+- RFC 7517 — JSON Web Key (JWK)
+- RFC 7518 — JSON Web Algorithms (JWA)
+- RFC 7520 — Examples of Protecting Content Using JOSE
+- RFC 7638 — JSON Web Key (JWK) Thumbprint
+- RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE

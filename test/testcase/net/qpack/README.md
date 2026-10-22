@@ -2,64 +2,129 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1105
-Source basis: working source tree aligned to Revision 1105
+Edition 2 · Revision 1106
+Source basis: Revision 1105
 Documented with GPT-6
-Documentation scope: QPACK testcase behavior and verification
 ```
 
-# QPACK testcases
+# QPACK Testcases
 
-## 1. Role
+## 1. What
 
-This directory contains tests for QPACK, the header-compression format used by HTTP/3. The source covers RFC 9204 examples, dynamic-table capacity and eviction, encoder/decoder instruction streams, and header-block decoding. It tests QPACK encoding/decoding and state transitions; it is not itself a live HTTP/3 client/server test.
+`test/testcase/net/qpack/` tests QPACK, the header-compression format used by HTTP/3. It covers RFC 9204 field sections and instruction streams, dynamic-table capacity and eviction, and captured encoder-stream/header-block inputs. It tests QPACK encoding/decoding and state transitions; it is not a live QUIC or HTTP/3 client/server suite.
 
-## 2. Test model
-
-| Source | Main responsibility |
+| Source | Role |
 |---|---|
-| `testcase_capacity.cpp` | Zero/tiny capacity, table state and eviction behavior |
-| `testcase_qpack_stream.cpp` | Decode captured encoder instructions and HEADERS payload examples |
-| `testcase_rfc9204.cpp` | RFC 9204 examples and encoded-byte expectations |
-| `test.cpp` | Testcase registration/entry point |
+| `testcase_capacity.cpp` | Zero/tiny capacity, bounded table state and eviction behavior |
+| `testcase_rfc9204.cpp` | RFC 9204 examples, encoded-byte expectations, field decode and selected acknowledgements |
+| `testcase_qpack_stream.cpp` | Captured encoder-stream and header-stream decoding |
+| `test.cpp` | QPACK logging helper |
 
-The capacity tests create a `qpack_encoder` and `qpack_dynamic_table`, insert fields, then assert the expected encoded bytes and table capacity/entry/size state. Debug hooks count table-eviction events, making eviction behavior an explicit part of the assertion set.
+## 2. How
 
-The stream test includes captured examples of QPACK encoder-stream instructions and HEADERS payloads. These are byte-vector/parser examples; they should not be described as complete QUIC stream scheduling or HTTP/3 transaction tests.
+### 2.1 Capacity and eviction
 
-## 3. Example: zero-capacity dynamic table
+1. Create a `qpack_encoder` and `qpack_dynamic_table`, and attach the debug hook that counts eviction events.
+2. **Zero capacity:** insert the supplied field lines using the default zero capacity. Compare the selected encoded insertion with its fixed hex vector.
+3. Still in the zero-capacity case, assert that capacity, entry count, table size, and eviction count remain zero.
+4. **Capacity 32:** set the capacity to 32 and insert the supplied fields. Assert capacity, entry count, table size, and eviction count; the resulting bytes are dumped rather than compared with a fixed expected vector in this case.
+5. **Capacity 80:** insert fields one by one. After each insertion, assert the expected single-entry table state, eviction count, and calculated table size.
+6. Compare encoded bytes only for capacity-80 steps that supply an expected vector. The final insertion has no fixed expected-byte assertion. Eviction assertions use the debug hook's observed event count.
 
-`test_zero_capacity()` leaves the dynamic table at capacity zero, inserts several fields, then checks an encoded field against a known hexadecimal expectation. It asserts that capacity, entry count and table size remain zero and that no eviction callback fired. This verifies the no-dynamic-table case directly.
+### 2.2 RFC 9204 examples
 
-The tiny-capacity tests extend the same idea to bounded table state and eviction. The RFC example tests use explicit expected byte sequences, so the encoding output—not merely a successful return code—is checked.
+1. Run the selected RFC 9204 examples with their supplied field sections or encoder/decoder instruction inputs.
+2. In the B.1 field-section path, encode the `:path` field, compare the encoded bytes with the RFC hexadecimal expectation, and check the field-section prefix values.
+3. Decode the field section and compare the recovered field name and value with the expected values.
+4. For the other examples, exercise the supplied encoder-stream capacity/insertion instructions, header sections, decoder instructions/acknowledgements, and selected dynamic-table state checks.
+5. Evaluate each example against only the assertions it actually contains. The RFC test collection does not check every possible state property for every example.
 
-## 4. Test and verification status
+### 2.3 Captured QPACK stream vectors
 
-### 4.1 Source-level coverage
+1. Select each captured stream sample together with its stream type and description.
+2. Decode the sample bytes from Base16.
+3. Call `qpack_encoder::decode` with the dynamic table and the corresponding encoder-stream or header-stream type.
+4. Record the returned status through the testcase harness.
+5. Do not interpret the description or packet-analysis comments as assertions. This callback does not compare a decoded field map or resulting table state with a separate expected object for every sample.
 
-The source includes capacity/eviction behavior, RFC 9204 examples and captured encoder/header stream examples. It does not by itself verify packet protection, QUIC loss recovery, HTTP/3 request semantics or live client/server interoperability.
+## 3. Evidence
 
-### 4.2 Documentation and verification status
+### 3.1 Source-level coverage
 
-The latest available aggregate report for the parent `net` testcase group is recorded in [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied context)**, with 268 pass, 1 expt, 0 fail, 0 skip and 0 triv for the whole `net` group. The report does not separate QPACK from other network tests and does not independently identify the tested source commit.
+#### Zero-capacity dynamic table
 
-This documentation update did not execute the test. Do not treat the aggregate network result as a QPACK-only count or as proof of end-to-end HTTP/3 behavior.
+```text
+default capacity (zero)
+  -> insert field lines
+  -> compare selected encoded bytes with fixed hex
+  -> assert capacity == 0
+  -> assert entries == 0
+  -> assert table size == 0
+  -> assert eviction count == 0
+```
 
-## 5. Relationships
+**Assertion strength:** one insertion's bytes plus four explicit state/eviction checks.
 
-- [HTTP/3 implementation](../../../../sdk/net/http/README.md) — HTTP/3 uses QPACK for header compression.
-- [QUIC testcase material](../../quic/README.md) — packet/frame and capture-vector material; distinct from QPACK codec assertions.
-- [HPACK testcases](../hpack/README.md) — HTTP/2 counterpart with a different compression synchronization model.
-- [Parent network testcase report](../README.md) — aggregate runtime result.
+#### Tiny and bounded capacities
 
-## 6. References
+```text
+capacity = 32
+  -> insert fields
+  -> assert capacity / entries / table size / eviction count
+  -> dump encoded bytes (no fixed byte comparison)
+
+capacity = 80
+  -> insert field
+  -> assert one table entry
+  -> assert eviction count
+  -> assert table size == name length + value length + 32
+  -> compare encoded bytes only where an expected vector is supplied
+  -> repeat for later insertions
+```
+
+**Assertion strength:** capacity-32 output is diagnostic. Capacity-80 checks table/eviction state on each insertion and compares bytes only for steps with a non-null expected vector.
+
+#### RFC 9204 field sections and instruction streams
+
+```text
+RFC example input
+  -> encode field section or encoder/decoder instruction
+  -> compare selected encoded bytes with RFC hex
+  -> decode/unpack selected instruction or field
+  -> compare decoded name/value and prefix fields
+  -> assert selected capacity / table size / acknowledgement bytes
+```
+
+**Assertion strength:** RFC paths combine fixed byte comparisons, decoded-field checks, and selected state/acknowledgement assertions. Not every RFC example checks all of these properties.
+
+#### Captured stream samples
+
+```text
+captured stream bytes + stream type
+  -> Base16 decode
+  -> qpack_encoder::decode(dynamic table, stream type)
+  -> test returned status
+```
+
+**Assertion strength:** status-only per-sample checks in this callback; no per-vector expected decoded map or expected table snapshot is compared.
+
+### 3.2 Documentation and verification status
+
+The latest available aggregate report for the parent `net` group is linked from [Test Report Snapshot](../../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest**, with 268 pass, 1 expt, 0 fail, 0 skip and 0 triv for the whole group. It does not separate QPACK results from other network tests or independently identify the tested source commit.
+
+This documentation update did not execute tests. These sources do not establish QUIC transport behavior, packet protection, loss recovery, or end-to-end HTTP/3 interoperability.
+
+## 4. Relationships
+
+- [HTTP testcases](../http/README.md) — HTTP/2 frame/protocol path and related HTTP implementation.
+- [HPACK testcases](../hpack/README.md) — HTTP/2 compression counterpart; QPACK has different synchronization behavior.
+- [Network testcase group](../README.md) — shared entry point and aggregate report context.
+- [Network SDK](../../../../sdk/net/README.md) — implementation area.
+
+## 5. References
 
 - RFC 9204 — QPACK: Field Compression for HTTP/3.
 - `testcase_capacity.cpp`
-- `testcase_qpack_stream.cpp`
 - `testcase_rfc9204.cpp`
+- `testcase_qpack_stream.cpp`
 - [Test Report Snapshot](../../test-report-status.md)
-
-## 7. Developer Notes
-
-Keep QPACK codec tests, QUIC packet parsing, and HTTP/3 end-to-end behavior as separate verification claims. Report counts should remain tied to the granularity the report actually provides; the current known report has a parent `net` row, not separate HPACK or QPACK rows.
