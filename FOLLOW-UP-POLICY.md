@@ -17,11 +17,11 @@ hotplace is a one-person project space for studying, experimenting, integrating,
 ## Layout and responsibilities
 
 - Top-level `DATA-BEHAVIOR-FOLLOW-UP.md`: concise cumulative index of IDs, current status, and links to per-issue files.
-- `BASE001-500/BASE-001.md`: the self-contained detail record for BASE-001. Create only the issue files that are needed; do not generate empty placeholders.
+- `BASE001-500/BASE-NNN.md`: self-contained working records for BASE-001 through BASE-500. Create files only for actual issues; do not create empty placeholders.
 - `BASE501-1000/`: create this directory only when an ID in that range is first needed. Use the same pattern for later ranges.
 - `revision-NNNN/DATA-BEHAVIOR-FOLLOW-UP.md`: historical review record for findings observed against that revision. Preserve it as historical context; do not rewrite it to pretend old observations were made against a newer source snapshot.
-- Each per-issue file should be sufficient to resume work without asking GPT to reconstruct the issue from conversation history. Include background, source basis and links, current understanding, confirmed facts vs hypotheses, next steps, and a concise history. Add behavior diagrams or focused verification guidance when they materially help.
-- The branch contains follow-up records and this agreement only. Do not copy source files, tests, or ordinary hotplace documentation into it.
+- Every open index item should link to a per-issue file that lets work resume without reconstructing the issue from conversation history. Include background, source basis and links, current understanding, confirmed facts versus hypotheses, useful behavior flow, next steps, and concise history as appropriate.
+- The branch contains follow-up records and this agreement only. Do not copy source files, tests, or ordinary hotplace Markdown documentation into it.
 
 ## Issue IDs and status
 
@@ -30,7 +30,7 @@ hotplace is a one-person project space for studying, experimenting, integrating,
 - Use concise status labels when useful: `Open`, `Investigating`, `Resolved`, `Recheck`, or `Closed`. These are continuity aids, not a required workflow.
 - On a newer source revision, re-check the finding and update its status only when evidence supports the change.
 - Keep historical context and decisions in the issue file; keep the cumulative index short.
-- When a finding is first recorded in a revision overview, create or expand its per-issue file when it becomes a practical candidate for work. Do not bulk-create shallow boilerplate files.
+- Do not bulk-create shallow boilerplate files. Detail should be enough to resume work, but remain proportionate to the issue.
 
 ## Recording and working style
 
