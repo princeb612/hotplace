@@ -9,9 +9,10 @@ The documentation pass moved internal indexes and testcase inventories out of mo
 ## BASE-001 — function_pipeline
 
 - **Kind:** Source follow-up.
-- **Observation:** The reviewed branch's `function_pipeline.hpp` assigned `error_traits<T, category>::_discriminant`, while `error.hpp` exposed `is_success()` and `is_not_fail()` predicates.
-- **Expected source change discussed:** `goahead_if_success()` should use `error_traits<T, category>::is_success`; `goahead_if_not_fail()` should use `error_traits<T, category>::is_not_fail`.
-- **Next check:** Inspect the committed source after the user's next source update; update the note only after confirming actual declarations and definitions.
+- **Observation:** The reviewed source assigned `error_traits<T, category>::_discriminant` in `goahead_if_success()`, while the error-traits API exposed `is_success` and `is_not_fail` predicates.
+- **Current status:** Rechecked against master commit `98f4185e9631911683cbf214af1d9912e28bba42` on 2026-10-23; the inconsistent assignment is still visible there. No source change or test run was performed.
+- **Detailed working record:** [BASE-001.md](../BASE001-500/BASE-001.md).
+- **Expected correction to verify:** `goahead_if_success()` selects `is_success`; `goahead_if_not_fail()` selects `is_not_fail`. This remains a proposed correction until the relevant specializations and behavior are checked.
 
 ## BASE-002 — stream splitter lifetime
 
@@ -84,8 +85,8 @@ The documentation pass moved internal indexes and testcase inventories out of mo
 - Moved internal focused-document indexes into Relationships in `nostd/README.md` and `system/README.md`.
 - Moved registration mutation details into Behavior Model in `basic/cmdline.md`; moved `execparam` mutation semantics into Behavior Model in `system/process.md`.
 - Moved testcase inventories/results out of Behavior Model in `encoding/base16.md`, `basic/valist.md`, `basic/variant.md`, `basic/dump_memory.md`, `graph/graph.md`, `graph/gss.md`, `system/datetime.md`, `system/endian-and-wire-integers.md`, and `system/floating_point.md`.
-- Separated CRC's cross-module relationship from Data Model in `basic/crc.md); moved Base64 group processing and log-level conversion into Behavior Model in `encoding/base64.md` and `types.md`.
-- Removed repeated/orphaned content in `basic/dump_memory.md`, `nostd/range.md`, `nostd/range_set.md`, `stream/README.md`, and `stream/basic_stream.md); separated logger buffer state from flush behavior in `unittest/logger.md`.
+- Separated CRC's cross-module relationship from Data Model in `basic/crc.md`; moved Base64 group processing and log-level conversion into Behavior Model in `encoding/base64.md` and `types.md`.
+- Removed repeated/orphaned content in `basic/dump_memory.md`, `nostd/range.md`, `nostd/range_set.md`, `stream/README.md`, and `stream/basic_stream.md`; separated logger buffer state from flush behavior in `unittest/logger.md`.
 - Removed redundant status/rationale subsections in `system/ieee754.md` and `system/floating_point.md`.
 
 ## Session boundary
