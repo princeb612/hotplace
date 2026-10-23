@@ -326,7 +326,7 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 
 ## 5. Relationships
 
-### 4.1 Internal implementation boundaries
+### 5.1 Internal implementation boundaries
 
 - `sdk/crypto/basic/crypto_key.hpp` declares `keydesc`, `crypto_key_object`, and `crypto_key`.
 - `sdk/crypto/basic/crypto_keychain.hpp` declares format loading/writing, family-specific construction, and OpenSSL key encoding/decoding entry points. Implementations are split among `crypto_keychain.cpp` and family files such as `crypto_keychain_ec.cpp`, `crypto_keychain_rsa.cpp`, and `crypto_keychain_ossl3.cpp`.
@@ -339,7 +339,7 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 - `sdk/crypto/cose/` handles COSE structures and operations. COSE_Key conversion bridges CBOR key representation and `crypto_key`; COSE signing/encryption code owns the surrounding message processing.
 - `sdk/net/tls/` owns TLS handshake flow and key-schedule integration. Its key-share extension path calls `crypto_keyexchange`; the key directory provides key material and group-level cryptographic operations.
 
-### 4.2 The common representation boundary
+### 5.2 The common representation boundary
 
 ```text
              JWK / COSE_Key
@@ -365,7 +365,7 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 
 This is a conceptual boundary diagram, not a claim that all paths use the same conversion function. JOSE and COSE translate their own wire/data formats; TLS key shares are protocol-specific bytes described by the selected group. The common layer reuses key objects and cryptographic operations without making those external representations interchangeable.
 
-### 4.3 Algorithm-family and EC representation map
+### 5.3 Algorithm-family and EC representation map
 
 ```text
                      algorithm / NID
@@ -402,11 +402,11 @@ OKP raw public/private bytes --> add_okp()
 
 This diagram maps the construction interfaces; it does not imply that every family supports every `crypto_keygen::build()` parameter route. In particular, the OpenSSL 3 named-algorithm path and the empty ML-KEM/ML-DSA/SLH-DSA cases in the generic `build()` dispatcher must be treated separately.
 
-### Implementation entry points
+### 5.4 Implementation entry points
 
 The source files listed in §4.1 define the key object, key collection, key construction, key generation, and group exchange boundaries. The links in §4.2 and §4.3 are conceptual maps of those boundaries, not a substitute for the concrete contracts and limitations described in the Data Model and Behavior Model.
 
-### Local implementation documents
+### 5.5 Local implementation documents
 - [Crypto primitives](../README.md)
 - [Crypto advisor](../../advisor/README.md)
 - [JOSE](../../jose/README.md)
@@ -414,7 +414,7 @@ The source files listed in §4.1 define the key object, key collection, key cons
 - [TLS](../../../net/tls/README.md)
 - [Key testcases](../../../../test/testcase/crypto/key/README.md)
 
-### Source-test coverage map
+### 5.6 Source-test coverage map
 
 The key testcase directory covers several distinct contracts rather than one undifferentiated “key support” claim:
 
