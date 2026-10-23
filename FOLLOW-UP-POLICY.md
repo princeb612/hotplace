@@ -24,6 +24,7 @@ hotplace is a one-person project space for studying, experimenting, integrating,
   - `NET001-500/NET-NNN.md` and later NET ranges
 - The numeric range is a storage convention; the area prefix identifies the technical domain.
 - `revision-NNNN/DATA-BEHAVIOR-FOLLOW-UP.md`: historical review record for findings observed against that revision. Preserve it as historical context; do not rewrite it to pretend old observations were made against a newer source snapshot.
+- Supplemental records such as `revision-NNNN/SOURCE-DOC-FOLLOW-UP-MIGRATION.md` may record a separate cleanup/migration pass without rewriting the original revision review.
 - Every open index item should link to a per-issue file that lets work resume without reconstructing the issue from conversation history. Include background, source basis and links, current understanding, confirmed facts versus hypotheses, useful behavior flow, next steps, and concise history as appropriate.
 - The branch contains follow-up records and this agreement only. Do not copy source files, tests, or ordinary hotplace Markdown documentation into it.
 
