@@ -59,12 +59,10 @@ execute_statement()
 
 The timeout condition is strictly greater than the configured seconds, not greater-than-or-equal. This is polling around the driver's async execution mode; it does not create a scheduler or convert a synchronous driver call into asynchronous work.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`odbc_query.md`](odbc_query.md) — owns statement execution and exposes the query mode
 - [`../README.md`](README.md) — class-level model
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample coverage boundary
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

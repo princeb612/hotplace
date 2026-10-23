@@ -53,7 +53,7 @@ The same test also covers an HTTPS URL without an explicit port (expected defaul
 
 The HTTP layer consumes `url_info_t` for URI/request handling, and Authenticode CRL handling also uses `split_url()`.
 
-## 5. Relationships
+## 4. Relationships
 - `sdk/base/encoding/base16` — hexadecimal representation used by percent escaping.
 - `sdk/base/pattern/` — regular-expression matching used by URL decomposition.
 - `sdk/base/stream/` — output target for escaped/unescaped text.
@@ -65,7 +65,6 @@ The HTTP layer consumes `url_info_t` for URI/request handling, and Authenticode 
 - `sdk/io/string/string.hpp`
 - `test/testcase/io/string/testcase_string.cpp`
 
-## 6. References
-
+## 5. References
 - [RFC 2396 — Uniform Resource Identifiers (URI): Generic Syntax](https://www.rfc-editor.org/rfc/rfc2396) — historical URI syntax referenced by implementation comments.
 - [RFC 2068 — Hypertext Transfer Protocol — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc2068) — historical HTTP syntax reference in source comments.
