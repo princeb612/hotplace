@@ -324,9 +324,8 @@ The implementation returns status codes for invalid parameters, unsupported algo
 
 OpenSSL reference counting controls object lifetime; it does not erase application copies of private values or derived secrets. Callers remain responsible for the lifetime and handling of sensitive byte buffers. Borrowed pointers must not outlive the object or collection that owns their reference, and callers that request `up_ref = true` must release the extra reference.
 
-## 5. Relationships
-
-### 5.1 Internal implementation boundaries
+## 4. Relationships
+### 4.1 Internal implementation boundaries
 
 - `sdk/crypto/basic/crypto_key.hpp` declares `keydesc`, `crypto_key_object`, and `crypto_key`.
 - `sdk/crypto/basic/crypto_keychain.hpp` declares format loading/writing, family-specific construction, and OpenSSL key encoding/decoding entry points. Implementations are split among `crypto_keychain.cpp` and family files such as `crypto_keychain_ec.cpp`, `crypto_keychain_rsa.cpp`, and `crypto_keychain_ossl3.cpp`.
@@ -339,7 +338,7 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 - `sdk/crypto/cose/` handles COSE structures and operations. COSE_Key conversion bridges CBOR key representation and `crypto_key`; COSE signing/encryption code owns the surrounding message processing.
 - `sdk/net/tls/` owns TLS handshake flow and key-schedule integration. Its key-share extension path calls `crypto_keyexchange`; the key directory provides key material and group-level cryptographic operations.
 
-### 5.2 The common representation boundary
+### 4.2 The common representation boundary
 
 ```text
              JWK / COSE_Key
@@ -365,7 +364,7 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 
 This is a conceptual boundary diagram, not a claim that all paths use the same conversion function. JOSE and COSE translate their own wire/data formats; TLS key shares are protocol-specific bytes described by the selected group. The common layer reuses key objects and cryptographic operations without making those external representations interchangeable.
 
-### 5.3 Algorithm-family and EC representation map
+### 4.3 Algorithm-family and EC representation map
 
 ```text
                      algorithm / NID
@@ -402,11 +401,11 @@ OKP raw public/private bytes --> add_okp()
 
 This diagram maps the construction interfaces; it does not imply that every family supports every `crypto_keygen::build()` parameter route. In particular, the OpenSSL 3 named-algorithm path and the empty ML-KEM/ML-DSA/SLH-DSA cases in the generic `build()` dispatcher must be treated separately.
 
-### 5.4 Implementation entry points
+### 4.4 Implementation entry points
 
 The source files listed in §4.1 define the key object, key collection, key construction, key generation, and group exchange boundaries. The links in §4.2 and §4.3 are conceptual maps of those boundaries, not a substitute for the concrete contracts and limitations described in the Data Model and Behavior Model.
 
-### 5.5 Local implementation documents
+### 4.5 Local implementation documents
 - [Crypto primitives](../README.md)
 - [Crypto advisor](../../advisor/README.md)
 - [JOSE](../../jose/README.md)
@@ -414,7 +413,7 @@ The source files listed in §4.1 define the key object, key collection, key cons
 - [TLS](../../../net/tls/README.md)
 - [Key testcases](../../../../test/testcase/crypto/key/README.md)
 
-### 5.6 Source-test coverage map
+### 4.6 Source-test coverage map
 
 The key testcase directory covers several distinct contracts rather than one undifferentiated “key support” claim:
 
@@ -427,8 +426,7 @@ The key testcase directory covers several distinct contracts rather than one und
 
 These are source-level coverage references. They do not mean every algorithm/provider combination runs successfully in every build. In particular, post-quantum key generation and KEM paths depend on the OpenSSL version and provider capabilities described above.
 
-## 6. References
-
+## 5. References
 - [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517) — JWK key parameter names and representation.
 - [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037) — OKP keys in JOSE.
 - [RFC 7748 — Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.

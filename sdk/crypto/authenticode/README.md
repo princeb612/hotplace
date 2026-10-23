@@ -195,8 +195,7 @@ These are explicit review questions, not claims that each behavior is currently 
 
 A typical invocation shown in the source comments is `test-authenticate -v -i /path/to/target.exe`; the target file and `trust.crt` must be supplied in the environment. This documentation pass did not run the applet.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`authenticode_verifier.md`](authenticode_verifier.md) — context lifecycle, verification stages, trust and CRL boundaries.
 - [`authenticode-pe-plugin.md`](authenticode-pe-plugin.md) — PE parsing, digest exclusions and checksum API.
 - [`../../basic/openssl_sdk.hpp`](../basic/openssl_sdk.hpp) — OpenSSL initialization/hash support used by the surrounding crypto layer.
@@ -217,8 +216,7 @@ A typical invocation shown in the source comments is `test-authenticate -v -i /p
 - The plugin interface documents PE, MSI, and Cabinet as historical/intended engine types, but this directory's concrete implementation and this documentation scope are PE-focused.
 - Although older source comments describe CRL retrieval as temporary or under construction, the current implementation includes an external-process download path and CRL-check flags. Treat this as an implemented mechanism, not proof of a complete production revocation policy. The sample currently enables CRL retrieval and comments that it can be disabled for an air-gapped network; actual outcomes still depend on certificate distribution-point data, network/process configuration, cache state, and trust-store settings.
 
-## 6. References
-
+## 5. References
 - [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE headers, optional header, and certificate-table layout.
 - [Microsoft Authenticode PE Image Hashing](https://learn.microsoft.com/en-us/windows/win32/secbp/understanding-pe-signatures) — Authenticode-specific image hashing and signature layout.
 - [RFC 5652: Cryptographic Message Syntax (CMS)](https://www.rfc-editor.org/rfc/rfc5652) — SignedData and signer information; this is the broader CMS reference for the PKCS#7-style container used by OpenSSL.
