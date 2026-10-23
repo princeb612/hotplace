@@ -1,32 +1,31 @@
 # BASE-001 — function_pipeline discriminant selection
 
-- **Status:** Open — source recheck required
+- **Status:** Resolved in current source; focused runtime verification not performed in this follow-up
 - **Kind:** Source behavior follow-up
 - **Area:** `sdk/base/basic/function_pipeline`
-- **Source basis:** The review notes were recorded against Revision 1107. The current `master` snapshot was checked on 2026-10-23 at commit `98f4185e9631911683cbf214af1d9912e28bba42`. Do not treat the branch name or revision label alone as proof of source identity.
+- **Original finding:** Revision 1107 review; checked master commit `98f4185e9631911683cbf214af1d9912e28bba42`
+- **Current source basis:** Revision 1108 commit `4ff020d8f4db6be2639f8dd11ad39c4faa0904d8` (2026-10-23)
 - **Related review record:** [Revision 1107 follow-up overview](../revision-1107/DATA-BEHAVIOR-FOLLOW-UP.md#base-001--function_pipeline)
 
 ## Background
 
-During the Data Model / Behavior Model review of `sdk/base`, the `function_pipeline` continuation predicate selection looked inconsistent: the success path used a member named `_discriminant` on `error_traits`, while the error-traits API exposed predicates named `is_success` and `is_not_fail`.
+During the Data Model / Behavior Model review of `sdk/base`, the `function_pipeline` continuation predicate selection was inconsistent: `goahead_if_success()` assigned `error_traits<T, category>::_discriminant`, although the policy API exposes `is_success` and `is_not_fail`. The constructor already selected `is_success`.
 
-This is a source-level follow-up, not merely a documentation wording issue. The intended continuation rule should be selected explicitly by the corresponding `goahead_...` method.
+This is a source-level follow-up, not merely a documentation wording issue. The selected predicate controls continuation and result classification throughout the pipeline.
 
 ## Source context
 
-- [`sdk/base/basic/function_pipeline.hpp` on the checked master snapshot](https://github.com/princeb612/hotplace/blob/98f4185e9631911683cbf214af1d9912e28bba42/sdk/base/basic/function_pipeline.hpp)
-- [`sdk/base/system/error.hpp` on the checked master snapshot](https://github.com/princeb612/hotplace/blob/98f4185e9631911683cbf214af1d9912e28bba42/sdk/base/system/error.hpp)
+- [Current `sdk/base/basic/function_pipeline.hpp` at Revision 1108](https://github.com/princeb612/hotplace/blob/4ff020d8f4db6be2639f8dd11ad39c4faa0904d8/sdk/base/basic/function_pipeline.hpp)
+- [Current `sdk/base/system/error.hpp` at Revision 1108](https://github.com/princeb612/hotplace/blob/4ff020d8f4db6be2639f8dd11ad39c4faa0904d8/sdk/base/system/error.hpp)
+- [Revision 1108 commit](https://github.com/princeb612/hotplace/commit/4ff020d8f4db6be2639f8dd11ad39c4faa0904d8)
 
-Relevant code in `function_pipeline.hpp`:
+## Current understanding
+
+### Original finding
+
+At the original checked snapshot (`98f4185e9631911683cbf214af1d9912e28bba42`), the relevant methods were:
 
 ```cpp
-function_pipeline()
-    : _lastcode(error_traits<T, category>::value_success()),
-      _processed_count(0), _total_count(0), _tracer(nullptr),
-      _returncode(errorcode_t::success) {
-    _discriminant = error_traits<T, category>::is_success;
-}
-
 function_pipeline& goahead_if_success() {
     _discriminant = error_traits<T, category>::_discriminant;
     return *this;
@@ -38,35 +37,42 @@ function_pipeline& goahead_if_not_fail() {
 }
 ```
 
-The same class uses `_discriminant` as a function pointer of type `bool (*)(T)`; `passed()`, `failed()`, and the runner's continuation checks depend on that selected predicate. The `error_traits` predicates are therefore behavior selectors, not data fields.
+### Recheck against Revision 1108
 
-The checked `sdk/base/system/error.hpp` defines `is_success(code)` and `is_not_fail(code)` on its `error_traits` specializations. The `function_pipeline.hpp` constructor already selects `is_success`, which makes the use of `error_traits<T, category>::_discriminant` in `goahead_if_success()` stand out as inconsistent.
+The current source now contains:
 
-## Current understanding
+```cpp
+function_pipeline& goahead_if_success() {
+    _discriminant = error_traits<T, category>::is_success;
+    return *this;
+}
 
-### Confirmed in the checked snapshot
+function_pipeline& goahead_if_not_fail() {
+    _discriminant = error_traits<T, category>::is_not_fail;
+    return *this;
+}
+```
 
-1. The constructor initializes `_discriminant` to `error_traits<T, category>::is_success`.
-2. `goahead_if_success()` assigns `error_traits<T, category>::_discriminant`.
-3. `goahead_if_not_fail()` assigns `error_traits<T, category>::is_not_fail`.
-4. The selected predicate controls `passed()`, `failed()`, processed-count updates, and whether subsequent pipeline steps run.
-5. The source is still present in the checked `master` snapshot at the commit listed above. This does not establish whether another local or unpushed working tree has already changed it.
+The latest source therefore has the expected predicate mapping. The diff between the original checked commit and Revision 1108 confirms that `sdk/base/basic/function_pipeline.hpp` changed by one line, replacing the inconsistent `_discriminant` member reference with `is_success`.
 
-### Likely correction — confirm before editing
+The relevant policy specializations in `sdk/base/system/error.hpp` expose `is_success(code)` and `is_not_fail(code)`. The pipeline stores the selected predicate as `bool (*)(T)`; `passed()`, `failed()`, runner continuation checks, and processed-count updates use that selected predicate.
 
-The expected assignment is:
+### Existing testcase evidence
 
-- `goahead_if_success()` → `error_traits<T, category>::is_success`
-- `goahead_if_not_fail()` → `error_traits<T, category>::is_not_fail`
+`test/testcase/base/basic/testcase_pipeline.cpp` already covers:
+- ordinary success and failure routing, including `walk_failed()` and `walk_always()`;
+- `goahead_if_not_fail()` continuing after the non-severe `errorcode_t::debug` result;
+- OpenSSL-style `int` result classification and conversion;
+- preservation of an explicit hotplace `return_t` result.
 
-This is a proposed correction based on the visible API and constructor, not a claim that the change has been made or tested.
+The existing testcase does not directly exercise an explicit call to `goahead_if_success()`. No new test was added and no test command was run as part of this follow-up session. The user's separate Revision 1108 build completion is not treated here as evidence of a particular test result.
 
 ## Behavior path
 
 ```text
 function_pipeline<T, category>
           |
-          | selects predicate
+          | select continuation predicate
           v
   _discriminant : bool (*)(T)
           |
@@ -82,17 +88,13 @@ function_pipeline<T, category>
                    +--> increment processed count when predicate returns true
 ```
 
-The distinction between the two predicates matters for error categories where “not a severe failure” is broader than “success”. Do not assume they are equivalent for every specialization; inspect the relevant specializations and intended API contract.
+The distinction between the two predicates matters for categories where “not a severe failure” is broader than “success”. They must not be assumed equivalent for every specialization.
 
-## Next steps
+## Disposition
 
-1. Before editing, fetch the current working source/branch and compare it with the checked master snapshot. The user may have made a source update since this note was prepared.
-2. Inspect all relevant `error_traits<T, category>` specializations, especially those used by `function_pipeline`, and confirm the exact predicate signatures and semantics.
-3. If the inconsistency remains, make the minimal source correction on a working branch only. Never modify `master`.
-4. Check existing tests for `goahead_if_success()` and `goahead_if_not_fail()`. If behavior is not exercised, consider a focused test only if it is useful to this personal project; do not expand into a broad QA exercise.
-5. Build/run the relevant existing test target and record the actual result. Do not mark resolved before source and verification results are known.
+**Resolved at source level in Revision 1108.** The previously inconsistent assignment is corrected in the current source. A dedicated `goahead_if_success()` assertion could be considered if future work makes it useful, but it is not required to keep this finding open, and no broad QA expansion is proposed.
 
 ## History
 
-- **Revision 1107 review:** Recorded the inconsistent assignment and the intended predicate mapping; further source verification was left pending.
-- **2026-10-23:** Rechecked `function_pipeline.hpp` and `sdk/base/system/error.hpp` on master commit `98f4185e9631911683cbf214af1d9912e28bba42`. The inconsistent assignment is still visible in that snapshot. No source change or test run was performed as part of creating this note.
+- **Revision 1107 review:** Recorded the inconsistent assignment and expected predicate mapping; further source verification was pending.
+- **2026-10-23, Revision 1108 recheck:** Compared the original checked commit `98f4185e9631911683cbf214af1d9912e28bba42` with current commit `4ff020d8f4db6be2639f8dd11ad39c4faa0904d8`. Confirmed the one-line source correction and updated this record. No source or testcase changes were made in this follow-up workspace, and no test run is claimed.
