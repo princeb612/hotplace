@@ -40,8 +40,7 @@
 
 A common wrapper does not automatically join worker threads or transfer ownership of native resources. Callers must coordinate callback completion before releasing socket/session contexts, wait for MLFQ consumers before freeing their work context, and close Registry handles explicitly. Platform-specific error and access rules still apply.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/net/basic/` — higher-level socket/client/server abstractions.
 - `sdk/net/server/` — uses the multiplexer and may compose event dispatch with work scheduling.
 - `sdk/base/system/` — synchronization, thread and process primitives.
@@ -55,8 +54,7 @@ A common wrapper does not automatically join worker threads or transfer ownershi
 
 These are source-level examples, not a claim that the tests ran during this documentation update or that they cover every platform branch.
 
-## 6. References
-
+## 5. References
 - [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) — Linux event notification API.
 - [Microsoft Learn: Windows Sockets](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2) — Winsock API.
 - [Microsoft Learn: I/O completion ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports) — IOCP model.

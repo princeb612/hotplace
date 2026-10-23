@@ -50,8 +50,7 @@ The packet builder encodes packet-level structure; the session/publisher supplie
 
 The shared `hotplace::io::payload` abstraction describes binary fields where used by the implementation; it does not replace QUIC-specific packet-header rules, packet-number reconstruction, or protection logic.
 
-## 5. Relationships
-
+## 4. Relationships
 - `quic_packet.hpp/.cpp`, `quic_packets.hpp/.cpp`, `quic_packet_builder.hpp/.cpp`.
 - `quic_packet_initial.*`, `quic_packet_handshake.*`, `quic_packet_0rtt.*`, `quic_packet_1rtt.*`, `quic_packet_retry.*`, `quic_packet_version_negotiation.*`.
 - [QUIC overview](../README.md) and [frame implementation](../frame/README.md).
@@ -59,7 +58,6 @@ The shared `hotplace::io::payload` abstraction describes binary fields where use
 - `sdk/io/basic/payload.hpp/.cpp` — reusable binary field-layout abstraction where used by packet/frame code.
 - `../../protection/` — QUIC Initial derivation from the destination connection ID, later TLS-derived QUIC secrets, and the shared cryptographic protection operations.
 
-## 6. References
-
+## 5. References
 - [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

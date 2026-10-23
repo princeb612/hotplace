@@ -67,8 +67,7 @@ hotplace value / object ─► cbor_encode ─► CBOR bytes
 
 These outputs are different representations of the same logical item; diagnostic notation is not a wire encoding. Parsing a value tree and publishing it also does not by itself establish application-specific semantics such as COSE message validation.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Component documents
 
 - [CBOR object model](cbor-object-model.md) — object/value representation and container structure.
@@ -86,7 +85,6 @@ These outputs are different representations of the same logical item; diagnostic
 
 - [CBOR testcase sources and vectors](../../../test/testcase/cbor/) — vector-driven parse/publication checks, RFC-oriented encoding checks, and sample object construction.
 
-## 6. References
-
+## 5. References
 - [RFC 7049 — Concise Binary Object Representation](https://www.rfc-editor.org/rfc/rfc7049), the earlier specification used by retained examples.
 - [RFC 8949 — Concise Binary Object Representation](https://www.rfc-editor.org/rfc/rfc8949), the current CBOR specification.
