@@ -14,13 +14,14 @@ This record captures the 2026-10-23 pass that moved explicit follow-up notes and
 - `CRYPTO-001` captures JOSE decryption result/output and multi-recipient questions.
 - `CRYPTO-002` captures the stale JOSE TODO/status checklist; it is not a current support matrix.
 - `CRYPTO-003` captures Authenticode digest error propagation.
+- `CRYPTO-004` captures the stale Authenticode CRL source-comment mismatch.
 - `NET-001` captures the RFC 9258 external-PSK TODO scope question.
 
 ## Source-document changes
 
 - Removed the BASE `containers`, `keyvalue`, and `binary` maintainer-review paragraphs after preserving their substantive observations in the existing/new BASE records.
 - Removed the old parser TODO and recommended-architecture sections from `sdk/io/parser/parser.md`; retained the external references.
-- Removed the unchecked loader TODO list from `sdk/io/asn.1/loader/loader-flow.md`.
+- Removed the unchecked loader TODO list from `sdk/io/asn.1/loader/loader-flow.md` and moved the compact Runtime/Compiler/Schema Loader/Repository checklist out of the ASN.1 testcase README into IO-002.
 - Removed the ASN.1 testcase reinforcement candidate subsection from `test/testcase/asn.1/README.md`; retained its What/How/Evidence narrative and supplied-report context.
 - Removed JOSE decryption discrepancy/test-gap prose from the normal JOSE README and the historical TODO checklist from `jose-overview.md`; renamed that file heading to the agreed `Developer Notes - ...` convention for its remaining historical material.
 - Removed the RFC 9258 TODO mention from the HTTP authentication README.
