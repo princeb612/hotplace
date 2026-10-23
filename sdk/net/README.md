@@ -113,8 +113,7 @@ The source components `dtls_record_arrange`, `dtls_record_publisher`, and `quic_
 
 A directory's presence does not guarantee that every backend, protocol version, extension, or optional feature is enabled in every build. Use the relevant CMake configuration and source guards when stating platform or feature support. Keep implementation claims separate from protocol-standard requirements.
 
-## 5. Relationships
-
+## 4. Relationships
 ```text
 Application / protocol consumer
   ├─ server/ ── coordinates ──> basic/ socket backends
@@ -145,8 +144,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [TLS/DTLS/QUIC area](tls/README.md)
 - [HTTP area](http/README.md)
 
-## 6. References
-
+## 5. References
 ### Protocol specifications
 
 - TLS 1.0: [RFC 2246](https://www.rfc-editor.org/rfc/rfc2246)

@@ -106,8 +106,7 @@ The implementation derives QUIC-labelled key, IV, and header-protection values f
 
 Sharing the TLS handshake and key schedule does not make QUIC a TLS-record transport. TLS transcript processing, CRYPTO stream offsets, QUIC packet numbers, STREAM IDs, and TLS record sequence numbers are distinct state domains. The implementation's integration path should be reviewed across session, protection, publisher, packet, and frame code rather than inferred from one class alone.
 
-## 5. Relationships
-
+## 4. Relationships
 - `quic/rfc9000.md`
 - `quic/rfc9001.md`
 - `quic/rfc9369.md`
@@ -128,8 +127,7 @@ Sharing the TLS handshake and key schedule does not make QUIC a TLS-record trans
 - `session/` — session and packet publisher lifecycle
 - `protection/` — TLS-derived secrets and packet-protection primitives
 
-## 6. References
-
+## 5. References
 - [RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

@@ -95,8 +95,7 @@ A recognized extension identifier does not prove that its payload is supported o
 
 ALPN contributes to application-protocol selection; it does not route HTTP requests. QUIC transport parameters contribute to QUIC connection configuration; they do not construct packets. Those consumers remain outside the extension representation layer.
 
-## 5. Relationships
-
+## 4. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [Handshake messages](../handshake/README.md) — extension collection and enclosing message context.
 - [TLS advisor](../../advisor/README.md) — extension identifiers and protocol hints.
@@ -105,8 +104,7 @@ ALPN contributes to application-protocol selection; it does not route HTTP reque
 - [QUIC integration](../../quic/README.md) — QUIC transport parameters and TLS 1.3 handshake integration.
 - [HTTP/2](../../../http/http2/README.md) — ALPN-selected application protocol path.
 
-## 6. References
-
+## 5. References
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 7301 — TLS Application-Layer Protocol Negotiation (ALPN)](https://www.rfc-editor.org/rfc/rfc7301)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

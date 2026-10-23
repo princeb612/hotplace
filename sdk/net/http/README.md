@@ -89,8 +89,7 @@ Protocol processing consults `http_resource` for the in-process names, phrases, 
 - `hpack/` — HTTP/2 header compression.
 - `qpack/` — HTTP/3 field compression.
 
-## 5. Relationships
-
+## 4. Relationships
 - [HTTP core model](http-core-model.md) — request, response, URI, header, routing, and authentication relationships.
 - [HTTP server/client flow](http-server-client.md) — builder options, startup, protocol registration, handler callback and client path.
 - [HTTP protocol stack](http-protocol-stack.md) — the network stream/protocol framing boundary.
@@ -104,8 +103,7 @@ Protocol processing consults `http_resource` for the in-process names, phrases, 
 - [Basic socket layer](../basic/README.md) and [TLS/DTLS/QUIC](../tls/README.md) — transport and secure-session integration.
 - [HTTP testcase documentation](../../../test/testcase/net/http/README.md), [HPACK tests](../../../test/testcase/net/hpack/README.md), and [QPACK tests](../../../test/testcase/net/qpack/README.md) — source-level testcase inventory and evidence.
 
-## 6. References
-
+## 5. References
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)

@@ -84,8 +84,7 @@ TLS handshake processing hashes handshake messages in protocol-defined order. In
 
 The advisor's algorithm metadata does not guarantee that the active OpenSSL build/provider offers a particular digest. Keep the selected algorithm, context lifecycle and backend availability separate in diagnostics.
 
-## 5. Relationships
-
+## 4. Relationships
 - `../../advisor/README.md` maps digest names/aliases and resolves backend methods.
 - `../mac/README.md` documents keyed HMAC/CMAC contracts that share hash-context machinery.
 - `../kdf/README.md` uses digest/HMAC algorithms for key derivation.
@@ -106,7 +105,6 @@ The advisor's algorithm metadata does not guarantee that the active OpenSSL buil
 - `testcase_transcript_hash.cpp` hashes `client hello` followed by `server hello` in one incremental context, then repeats the sequence while capturing intermediate hashes. It compares the final incremental result with the result produced through `transcript_hash_builder`, demonstrating agreement for the same accumulated transcript.
 - The hash testcase directory also contains HMAC/CMAC RFC groups; those are related backend coverage, not all direct tests of `crypto_hash`.
 
-## 6. References
-
+## 5. References
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.
 - RFC 2104 — HMAC: Keyed-Hashing for Message Authentication (related keyed-hash backend, not the unkeyed digest contract).

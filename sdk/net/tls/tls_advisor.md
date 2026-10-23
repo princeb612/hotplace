@@ -73,8 +73,7 @@ This is similar in shape to `crypto_advisor::get_instance()` and its guarded fir
 
 A successful TLS lookup means the identifier exists in the TLS resource tables; it does not prove backend availability, policy suitability, successful negotiation or end-to-end protocol support.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/net/tls/advisor/tls_advisor.cpp`
 - `sdk/net/tls/advisor/resource.cpp`
 - `sdk/net/tls/advisor/resource_ciphersuite.cpp`
@@ -107,8 +106,7 @@ TLS cipher-suite ID
 
 The TLS advisor's suite record carries the protocol mapping. The crypto advisor resolves the mapped primitive identifiers into reusable crypto metadata, and may separately expose an executable backend method. Neither layer alone guarantees that the chosen suite is permitted by policy or successfully negotiated. The handshake/session caller owns those decisions, and `tls_protection` owns transcript/key-schedule/record-protection operations.
 
-## 6. References
-
+## 5. References
 - [IANA TLS Parameters Registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml)
 - [IANA QUIC Transport Parameters and Error Codes](https://www.iana.org/assignments/quic/quic.xhtml)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
