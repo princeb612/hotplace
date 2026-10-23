@@ -8,7 +8,6 @@ The index is for navigation and current disposition. Open the linked per-issue f
 
 | ID | Area | Current disposition | Detail record |
 |---|---|---|---|
-| BASE-001 | `sdk/base/basic/function_pipeline` | Recheck predicate selection against current source; inconsistent assignment confirmed in checked master snapshot `98f4185e9631911683cbf214af1d9912e28bba42` | [BASE-001.md](BASE001-500/BASE-001.md) |
 | BASE-002 | `sdk/base/stream` | Verify splitter ownership and borrowed-input lifetime across overloads | [BASE-002.md](BASE001-500/BASE-002.md) |
 | BASE-003 | `sdk/base/graph` | Verify callback semantics, traversal results, and source-graph lifetime | [BASE-003.md](BASE001-500/BASE-003.md) |
 | BASE-004 | `sdk/base/encoding/encoder_stream` | Verify chunk state, finalization, repeated accessors, and output limits | [BASE-004.md](BASE001-500/BASE-004.md) |
@@ -30,6 +29,11 @@ The index is for navigation and current disposition. Open the linked per-issue f
 | CRYPTO-004 | `sdk/crypto/authenticode` | Reconcile stale CRL source comment with current retrieval/checking implementation | [CRYPTO-004.md](CRYPTO001-500/CRYPTO-004.md) |
 | NET-001 | `sdk/net/http/auth` | Trace RFC 9258 TODO to the owning TLS/PSK component; avoid attributing it to HTTP auth without evidence | [NET-001.md](NET001-500/NET-001.md) |
 
+## Resolved items
+
+| ID | Area | Disposition | Detail record |
+|---|---|---|---|
+| BASE-001 | `sdk/base/basic/function_pipeline` | Predicate selection corrected in Revision 1108; no new test or test run claimed in follow-up | [BASE-001.md](BASE001-500/BASE-001.md) |
 
 ## Maintenance
 
