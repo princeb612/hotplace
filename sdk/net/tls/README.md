@@ -188,8 +188,6 @@ These flows describe responsibilities visible in source. The presence of a messa
 
 ## 5. Relationships
 
-
-
 - [TLS advisor implementation](tls_advisor.md)
 - [DTLS record arrangement](session/dtls_record_arrange.md)
 - [DTLS record publisher](session/dtls_record_publisher.md)

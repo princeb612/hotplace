@@ -50,7 +50,7 @@ encoder_stream::write(chunk)
       ├── encode remaining complete 3-byte groups
       └── retain 0–2 trailing input bytes
                     │
-             str() / flush()
+              str() / flush()
                     └── encode pending tail
 
 decoder_stream::write(chunk)

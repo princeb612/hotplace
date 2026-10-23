@@ -2,7 +2,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1105
+Edition 2 Â· Revision 1105
 Source basis: Revision 1105
 Documented with GPT-6
 Documentation scope: certificate script arguments

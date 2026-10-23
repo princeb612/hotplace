@@ -111,12 +111,8 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 
+- Test implementation files: `test/testcase/crypto/kdf/testcase_hkdf.cpp`, `test/testcase/crypto/kdf/testcase_rfc6070.cpp`, `test/testcase/crypto/kdf/testcase_rfc7914.cpp`, `test/testcase/crypto/kdf/testcase_rfc9106.cpp`, `test/testcase/crypto/kdf/testvector_rfc4615.cpp`, `test/testcase/crypto/kdf/testvector_rfc5869.cpp`
+
 ## 5. References
 
-Source files in this directory:
-- `test/testcase/crypto/kdf/testcase_hkdf.cpp`
-- `test/testcase/crypto/kdf/testcase_rfc6070.cpp`
-- `test/testcase/crypto/kdf/testcase_rfc7914.cpp`
-- `test/testcase/crypto/kdf/testcase_rfc9106.cpp`
-- `test/testcase/crypto/kdf/testvector_rfc4615.cpp`
-- `test/testcase/crypto/kdf/testvector_rfc5869.cpp`
+No external references are currently listed.

@@ -6,7 +6,7 @@
 │ Edition 2 · Revision 1105                    │
 │ Documented with GPT-6                        │
 │ Source basis: Revision 1105                  │
-│ — testcase behavior and verification          │
+│ — testcase behavior and verification         │
 └──────────────────────────────────────────────┘
 ```
 # I/O Stream Testcases

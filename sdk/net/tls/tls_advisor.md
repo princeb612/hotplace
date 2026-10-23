@@ -75,8 +75,6 @@ A successful TLS lookup means the identifier exists in the TLS resource tables; 
 
 ## 5. Relationships
 
-
-
 - `sdk/net/tls/advisor/tls_advisor.cpp`
 - `sdk/net/tls/advisor/resource.cpp`
 - `sdk/net/tls/advisor/resource_ciphersuite.cpp`
@@ -89,6 +87,7 @@ A successful TLS lookup means the identifier exists in the TLS resource tables; 
 - [TLS advisor directory](advisor/README.md)
 - [TLS protection/session model](tls-protection-and-session.md)
 - [TLS key schedule](protection/tls_key_schedule.md)
+
 ### Relationship with crypto advisor
 
 The two advisors map different identifier domains and should be read as a two-stage lookup, not as a chain where TLS advisor performs the cryptographic operation:

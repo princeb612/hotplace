@@ -1,13 +1,13 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 2 · Revision 1107                    │
-│ Documented with GPT-6                        │
-│ Source basis: Revision 1107                  │
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 2 · Revision 1107                     │
+│ Documented with GPT-6                         │
+│ Source basis: Revision 1107                   │
 │ Documentation scope: implementation navigation│
-└──────────────────────────────────────────────┘
+└───────────────────────────────────────────────┘
 ```
 
 # OQS provider adapter

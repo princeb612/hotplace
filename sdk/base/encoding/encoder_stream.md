@@ -64,11 +64,11 @@ For HTTP/2 Huffman, each input symbol is looked up in the fixed code table. Bits
 write(chunk 1) ─┐
 write(chunk 2) ─┼──► persistent stream state
 write(chunk n) ─┘            │
-                              ▼
-                         str() / bin()
-                              │
-                             flush
-                              ▼
+                             ▼
+                       str() / bin()
+                             │
+                            flush
+                             ▼
                        finalized output
 ```
 

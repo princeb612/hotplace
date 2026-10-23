@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1105
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — QUIC packet construction, RFC vectors & capture replay
 ```
@@ -19,6 +19,37 @@ The group is not a live QUIC client/server interoperability suite. Most cases cr
 The `http3/` child directory retains a recorded `http3.pcapng`, associated `sslkeylog` material and explanatory client-side curl output. Those files are diagnostic evidence from a recorded experiment, not independent CTest targets. Their inventory notes are kept as Developer Notes.
 
 ## 2. How
+
+### Test flow at a glance
+
+```text
+sample.cpp
+    |
+    +--> RFC 9000
+    |      varint / packet-number expected values
+    |
+    +--> RFC 9001 / RFC 9369
+    |      Initial secrets + packet vectors
+    |      construct / protect / parse
+    |
+    +--> QUIC Illustrated / selected 1-RTT
+    |      selected packet inputs + status checks
+    |
+    +--> PCAP SIMPLE HTTP/3 vector
+           direction + packet bytes
+                    |
+                    v
+              QUIC packet parser
+                    |
+              frame / alert handling
+                    |
+          assertions and testcase status
+
+Stored PCAP + SSLKEYLOG + curl output = experiment artifacts,
+not a live end-to-end QUIC interoperability test.
+```
+
+The RFC known-value checks and the walkthrough/status paths are not equivalent evidence. Read each case's assertions before treating a successful parse or printed packet label as a verified field value.
 
 ### 2.1 Test dispatch and build inputs
 
@@ -172,15 +203,15 @@ This is the last known report snapshot, not a fresh run for the current document
 - `sdk/net/http/qpack/` — QPACK header compression.
 - `test/testcase/tls/` — separate TLS/DTLS test group; QUIC's TLS 1.3 record-vector branch is currently inactive.
 - `test/testcase/quic/http3/` — recorded HTTP/3 capture, key-log material and experiment notes.
+- `testcase_rfc9000.cpp`, `testcase_rfc9001.cpp`, `testcase_rfc9369.cpp`
+- `testvector_pcap.cpp` and `testvector_pcap_http3.yml`
 
 ## 5. References
 
-- RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport
-- RFC 9001 — Using TLS to Secure QUIC
-- RFC 9369 — QUIC Version 2
+- [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
+- [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
+- [RFC 9369 — QUIC Version 2](https://www.rfc-editor.org/rfc/rfc9369)
 - [QUIC Illustrated](https://quic.xargs.org/)
-- `testcase_rfc9000.cpp`, `testcase_rfc9001.cpp`, `testcase_rfc9369.cpp`
-- `testvector_pcap.cpp` and `testvector_pcap_http3.yml`
 
 ## 6. Developer Notes
 

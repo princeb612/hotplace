@@ -97,11 +97,4 @@ _test_case.assert(
 - Module overview: [`sdk/base/stream/README.md`](../../../../sdk/base/stream/README.md)
 
 ## References
-- Source basis: Revision 1106; the supplied runtime report's source revision is unspecified.
-- Test implementation: `test/testcase/base/stream/testcase_stream.cpp`.
-- Project test harness and build configuration determine how these test functions are registered and executed; consult the corresponding test target and CTest results for runtime evidence.
 
-
-## 7. Development Notes (for maintainer review)
-
-5. `test_stream_split3()` retains the source comment `// sketch dtls_record_publisher::publish(tls_records*, ...)`. It signals that the testcase's segment grouping sketch was related to a DTLS publisher design idea; it does not by itself establish a production call path or a current architectural dependency. Keep this note for maintainer review and decide whether it still reflects the intended relationship.

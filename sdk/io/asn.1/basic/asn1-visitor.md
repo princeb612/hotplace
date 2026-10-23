@@ -102,9 +102,9 @@ notation visitor   DER visitor    constraint evaluator
      |                 |                |
      v                 v                v
 ASN.1 text         DER bytes      allowed-value set
-                                      |
-                                      v
-                                value membership
+                                        |
+                                        v
+                                  value membership
 ```
 
 `asn1_object::publish(stream_t*)` routes to notation representation, while `publish(binary_t*)` routes to DER representation. Constraint evaluation traverses constraint nodes and constructs a runtime allowed-value set; it is neither notation rendering nor byte encoding.

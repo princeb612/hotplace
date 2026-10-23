@@ -108,8 +108,6 @@ Sharing the TLS handshake and key schedule does not make QUIC a TLS-record trans
 
 ## 5. Relationships
 
-
-
 - `quic/rfc9000.md`
 - `quic/rfc9001.md`
 - `quic/rfc9369.md`
@@ -118,6 +116,7 @@ Sharing the TLS handshake and key schedule does not make QUIC a TLS-record trans
 - [QUIC packet publisher](session/quic_packet_publisher.md)
 - [TLS key schedule](protection/tls_key_schedule.md)
 - [TLS session support](session/README.md)
+
 ### Related areas
 
 - `quic/frame/`

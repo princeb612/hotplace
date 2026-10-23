@@ -2,71 +2,59 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1106
+Edition 1 · Revision 1108
 Source basis: Revision 1105
 Documented with GPT-6
-Documentation scope: test-supporting build tools
+Documentation scope: parser-table build tool
 ```
 
 # Test-supporting tools
 
 ## 1. Role
 
-`test/tool` contains build-support utilities that prepare resources consumed by tests. It is distinct from `test/testcase`, which builds executable test groups, and `test/applet`, which contains runnable integration examples. The current subdirectory is `makeparsingtable`, a command-line generator for the binary parser-table resources used by parser-related tests.
+`test/tool` contains build-support utilities that prepare resources consumed by the parser runtime and its testcase groups. The current tool, `makeparsingtable`, generates binary parsing-table files from parser configurations. It is not itself the parser runtime: generation and parsing are separate stages with different responsibilities.
 
-## 2. Model
+## 2. Tool Model
+
+The overall relationship is split into a **tool role** that builds a binary parsing table and a **parser role** that imports that table and uses it to parse input.
 
 ```text
-sdk/io/parser + ASN.1 grammar builders
-                 │
-                 ▼
-        makeparsingtable
-          ├─ default: ASN.1 notation parser
-          │            └─ asn1notation.ptb
-          └─ -glr: ASN.1 parser
-                       └─ asn1.ptb
-                 │
-                 ▼
-          parsingtable.zip
-                 │
-                 ▼
-       etc/parsingtable/CMakeLists.txt
-          ├─ test/testcase/io/
-          └─ test/testcase/asn.1/
+Tool role
+  parser CFG
+      │ build
+      ▼
+  binary parsing table (.ptb)
+      │ packaged as
+      ▼
+  parsingtable.zip
+      │ extracted by etc/parsingtable/CMakeLists.txt
+      ▼
+  build-tree resources for parser / ASN.1 testcases
+
+
+Parser role
+  import binary parsing table
+      │
+      ▼
+  parser CFG / runtime table state
+      │ parse input
+      ▼
+  parse tree
 ```
 
-The `.ptb` files are generated artifacts, not hand-maintained grammar source. The generator's CMake post-build command is conditional: it runs for GNU C++ on Windows (the documented MinGW64 development path). Separately, `etc/parsingtable/CMakeLists.txt` unpacks the checked-in archive into the configured build-tree testcase directories. These are different operations; the archive is not regenerated on every platform or every build.
+`makeparsingtable` selects a parser configuration, ensures the parser is ready, learns its table representation, and serializes it to a `.ptb` file. The current build rule generates two variants:
 
-## 3. Example from the source build
+- `asn1notation.ptb` — the default accessor selects the ASN.1 notation parser.
+- `asn1.ptb` — the `-glr` option selects the ASN.1 parser built for GLR.
 
-From the generator's output directory, the two commands used by the CMake post-build rule are:
+The generator's CMake post-build rule is conditional: it runs for GNU C++ on Windows, the documented MinGW64 development path. That rule packages the generated files as `parsingtable.zip`. Separately, `etc/parsingtable/CMakeLists.txt` extracts the checked-in archive into the configured build-tree testcase directories. Archive extraction does not regenerate the parser tables, and the generator is not run on every platform or every build.
 
-```sh
-./makeparsingtable -o asn1notation.ptb
-./makeparsingtable -o asn1.ptb -glr
-```
+## 3. Relationships
 
-The first uses the default parser type, which selects the ASN.1 notation parser. The second selects the GLR parser with `-glr`. In both cases, `-o` is required to name the output file. The CMake rule then packages both files as `parsingtable.zip`.
-
-## 4. Test and verification status
-
-### 4.1 Source-level coverage
-
-This is a resource-generation tool, not a CTest testcase group. Its relevant checks are whether parser-table generation succeeds, whether the archive contains the expected artifacts, and whether downstream parser/ASN.1 tests can consume them. The presence of the generator and its build rule does not by itself prove that generation was run successfully on every supported platform.
-
-### 4.2 Documentation and verification status
-
-The generation path is documented from `sample.cpp`, the tool's `CMakeLists.txt`, and `etc/parsingtable/CMakeLists.txt`. Generation and downstream tests were not run as part of this documentation update.
-
-## 5. Relationships
-
-- [Parser implementation](../../sdk/io/parser/README.md) — parser construction, table serialization, and execution.
+- [makeparsingtable implementation and build rule](makeparsingtable/README.md) — command-line options, parser selection, table construction, and serialization.
+- [Parser implementation](../../sdk/io/parser/README.md) — importing the binary table and parsing input.
 - [ASN.1 implementation](../../sdk/io/asn.1/README.md) — grammar and higher-level parser consumer.
 - [Stored parsing-table artifacts](../../etc/parsingtable/README.md) — checked-in archive and build-tree extraction.
 - [Parser testcase group](../testcase/io/parser/README.md) and [ASN.1 testcase group](../testcase/asn.1/README.md) — downstream consumers of the generated resources.
-- [Test area](../README.md) — overall distinction between testcases, applets, and tools.
-
-## 6. References
-
+- [Test area](../README.md) — distinction between testcase groups, integration applets, and build-support tools.
 - `test/tool/CMakeLists.txt` — registers the tool subdirectory.
-- [`makeparsingtable` implementation and build rule](makeparsingtable/README.md) — command-line behavior and conditional generation path.

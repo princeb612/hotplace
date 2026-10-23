@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1105
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — testcase inputs, procedures & verification
 ```
@@ -27,6 +27,36 @@ The group also includes tests that do not use YAML, such as constructed handshak
 PCAP files and their associated Markdown client/server logs are supporting experiment inventories, not separate CTest targets. The child READMEs are intentionally maintained as inventories of these artifacts. QUIC tests are separate under `test/testcase/quic/`.
 
 ## 2. How
+
+### Test flow at a glance
+
+```text
+sample.cpp / testcase harness
+             |
+      registered test cases
+             |
+     +-------+-------------------+
+     |                           |
+direct API / fixed vectors    PCAP SIMPLE YAML
+     |                           |
+construct messages/keys      protocol + direction
+or compare expected values   + record byte ranges
+     |                           |
+     +-------------+-------------+
+                   |
+       TLS / DTLS session processing
+                   |
+       +-----------+-----------+
+       |                       |
+ explicit assertions       status / diagnostic output
+       |                       |
+ expected-value evidence   limited evidence by itself
+
+PCAP / peer logs / capture files -> experiment inventory
+                                  (not separate CTest targets)
+```
+
+Use this map to distinguish a fixed expected-value assertion from a parser/status walkthrough or a stored capture. They provide different strengths of evidence.
 
 ### 2.1 Test dispatch and build inputs
 
@@ -57,6 +87,8 @@ PCAP files and their associated Markdown client/server logs are supporting exper
 1. `testcase_tls12_aead.cpp` exercises selected TLS 1.2 record-protection cases using the test inputs and session state prepared by the source.
 2. The TLS test entry point also calls the ML-KEM encoding testcase. This is a separate encoding path from the YAML PCAP replay.
 3. Check the individual source assertions before interpreting a case as a known-answer comparison, a state/status check, or a diagnostic demonstration. The cipher-suite inventory is not a substitute for inspecting which inputs and assertions each testcase actually uses.
+
+4. In the ChaCha20-Poly1305 case, the source derives TLS 1.2 key-block values from fixed master-secret and random inputs, compares the client write key and IV with fixed expected bytes, and decrypts captured client/server Finished records against expected plaintext handshake bytes. This is targeted evidence for those exact values and records, not a full-handshake interoperability test.
 
 ### 2.5 PCAP SIMPLE YAML vectors
 
@@ -109,6 +141,19 @@ Where supplied, `sslkeylog` data contains session secrets used to decrypt the co
 ### 3.1 Source-level verification paths
 
 The diagrams below distinguish explicit expected-value comparisons from return-status checks and diagnostic output. They summarize the paths present in the source; they do not claim exhaustive coverage.
+
+#### TLS 1.2 AEAD known-value path
+
+```text
+testcase_tls12_aead.cpp
+  -> fixed cipher suite + client/server randoms + master secret
+  -> tls_protection::calc_keyblock(...)
+  -> compare client_key and client_iv with expected bytes
+  -> decrypt selected encrypted client/server Finished records
+  -> compare plaintext bytes with expected handshake encodings
+```
+
+**Assertion strength:** this case contains explicit comparisons for selected key-block outputs and decrypted Finished-message bytes. It does not independently prove all TLS 1.2 cipher suites, all nonce/AAD combinations, or all handshake transitions.
 
 #### TLS/DTLS record construction
 
@@ -191,6 +236,8 @@ The documentation change did not execute tests. The source diagrams above descri
 - [HTTP testcases](../net/http/README.md) — HTTP framing and protocol components related to HTTP-over-TLS captures.
 - [Test Report Snapshot](../test-report-status.md) — aggregate results and provenance limits.
 
+- TLS testcase implementation sources: `sample.cpp`
+
 ## 5. References
 
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.
@@ -200,7 +247,6 @@ The documentation change did not execute tests. The source diagrams above descri
 - [TLS 1.2 walkthrough](https://tls12.xargs.org/)
 - [DTLS walkthrough](https://dtls.xargs.org/)
 - [RFC 8448 — Example Handshake Traces for TLS 1.3](https://www.rfc-editor.org/rfc/rfc8448)
-- `sample.cpp`, `testcase_construct_tls.cpp`, `testcase_construct_dtls12_1.cpp`, `testcase_construct_dtls12_2.cpp`, `testcase_construct_dtls13.cpp`, `testcase_rfc8448_*.cpp`, `testcase_pre_master_secret.cpp`, `testcase_tls12_aead.cpp`, `testvector_pcap.cpp`
 
 
 ## 6. Developer Notes

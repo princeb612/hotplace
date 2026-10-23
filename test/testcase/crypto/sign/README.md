@@ -145,16 +145,8 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 
+- Test implementation files: `test/testcase/crypto/sign/testcase_crypto_sign.cpp`, `test/testcase/crypto/sign/testcase_ecdsa.cpp`, `test/testcase/crypto/sign/testcase_hmac.cpp`, `test/testcase/crypto/sign/testcase_mldsa.cpp`, `test/testcase/crypto/sign/testcase_rsassa.cpp`, `test/testcase/crypto/sign/testcase_slhdsa.cpp`, `test/testcase/crypto/sign/testcase_x509.cpp`, `test/testcase/crypto/sign/testvector_dsa.cpp`, `test/testcase/crypto/sign/testvector_ecdsa.cpp`, `test/testcase/crypto/sign/testvector_rsassa.cpp`
+
 ## 5. References
 
-Source files in this directory:
-- `test/testcase/crypto/sign/testcase_crypto_sign.cpp`
-- `test/testcase/crypto/sign/testcase_ecdsa.cpp`
-- `test/testcase/crypto/sign/testcase_hmac.cpp`
-- `test/testcase/crypto/sign/testcase_mldsa.cpp`
-- `test/testcase/crypto/sign/testcase_rsassa.cpp`
-- `test/testcase/crypto/sign/testcase_slhdsa.cpp`
-- `test/testcase/crypto/sign/testcase_x509.cpp`
-- `test/testcase/crypto/sign/testvector_dsa.cpp`
-- `test/testcase/crypto/sign/testvector_ecdsa.cpp`
-- `test/testcase/crypto/sign/testvector_rsassa.cpp`
+No external references are currently listed.

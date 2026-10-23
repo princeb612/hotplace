@@ -77,7 +77,8 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 
+- Test implementation files: `test/testcase/crypto/prng/testcase_random.cpp`
+
 ## 5. References
 
-Source files in this directory:
-- `test/testcase/crypto/prng/testcase_random.cpp`
+No external references are currently listed.

@@ -53,8 +53,10 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 
 - Crypto implementation: `sdk/crypto/README.md`
 - Test sources and vector consumers are located in the corresponding sibling testcase directories.
+- Related testcase source: `test/testcase/crypto/sample.cpp`
+
+
 
 ## 6. References
 
-Source files in this directory:
-- `test/testcase/crypto/sample.cpp`
+No external references are currently listed.

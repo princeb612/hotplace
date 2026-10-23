@@ -2,57 +2,57 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1105
+Edition 2 · Revision 1108
 Source basis: Revision 1105
 Documented with GPT-6
-Documentation scope: generated parser-table artifacts and build distribution
+Documentation scope: binary parser-table artifact and build distribution
 ```
 
 # Binary parsing tables
 
 ## 1. Role
 
-This directory stores generated binary parsing-table artifacts consumed by the parser and ASN.1 test/build paths. The `.ptb` tables are generated outputs, not hand-maintained grammar source.
+`etc/parsingtable/` stores the packaged binary parsing-table artifact consumed by parser and ASN.1 test/build paths. The `.ptb` tables are generated outputs, not hand-maintained grammar source.
 
-## 2. Model
+## 2. Data Model
 
-The documented grammar coverage distinguishes two table families:
+The packaged archive is `parsingtable.zip`. Its documented table families are:
 
 - **LALR(1):** ASN.1 notation.
 - **GLR:** ASN.1 notation plus module definitions, `EXPORTS`/`IMPORTS`, parameterized constructs, information object classes, and extension markers (versions 1 and 2).
 
-The generator lives under `test/tool/makeparsingtable`; the binary format is documented in [Binary parsing-table format](../../sdk/io/parser/parsing-table-binary-format.md).
+The generator is maintained under `test/tool/makeparsingtable/`; the binary layout is described in `sdk/io/parser/parsing-table-binary-format.md`. The archive is a distribution artifact; it is not the grammar source and is not itself the parser runtime state.
 
-## 3. Important behavior and lifetime
+## 3. Behavior Model
 
-The build flow has two related but distinct operations:
+The resource lifecycle has separate generation, packaging, and extraction stages:
 
-1. The generator's CMake post-build path can create `asn1notation.ptb` and `asn1.ptb` and package them into `parsingtable.zip` for the configured MinGW64/GNU-on-Windows path.
-2. `etc/parsingtable/CMakeLists.txt` unpacks the stored `parsingtable.zip` into the build-tree `test/testcase/io` and `test/testcase/asn.1` directories.
-
-Do not assume every platform regenerates the tables during every build. Confirm the active CMake configuration and archive contents when diagnosing missing or stale parser resources.
-
-## 4. Example from the source build
-
-From the generator's build/output directory, the documented generator commands are:
-
-```sh
-./makeparsingtable -o asn1notation.ptb
-./makeparsingtable -o asn1.ptb -glr
+```text
+grammar / parser configuration
+       │
+       ▼
+test/tool/makeparsingtable
+       │ generate
+       ▼
+asn1notation.ptb + asn1.ptb
+       │ package (conditional build path)
+       ▼
+parsingtable.zip
+       │ unzip by etc/parsingtable/CMakeLists.txt
+       ├───────────────────────┐
+       ▼                       ▼
+test/testcase/io/         test/testcase/asn.1/
+build-tree tables         build-tree tables
 ```
 
-The resulting artifacts are then packaged/copied according to the build configuration. These commands document the generation path; they were not run during this documentation update.
+The generator's CMake post-build path can create `asn1notation.ptb` and `asn1.ptb` and package them into `parsingtable.zip` for the GNU-on-Windows path used by the documented MinGW64 setup. `etc/parsingtable/CMakeLists.txt` unpacks the stored archive into build-tree testcase directories; it does not regenerate the tables.
 
-## 5. Relationships
+Do not assume every platform regenerates the tables during every build. When diagnosing missing or stale parser resources, inspect the active CMake configuration and the archive contents. This documentation update did not execute the generator or verify a newly generated archive.
+
+## 4. Relationships
 
 - `sdk/io/parser/` — parser runtime and binary table format.
 - `sdk/io/asn.1/` — ASN.1 parser/loader/runtime consumers.
 - `test/tool/makeparsingtable/` — table generation utility.
 - `test/testcase/io/parser/` and `test/testcase/asn.1/` — test consumers.
-
-## 6. References
-
-- [Binary parsing-table format](../../sdk/io/parser/parsing-table-binary-format.md)
-- `CMakeLists.txt`
-- `test/tool/makeparsingtable/CMakeLists.txt`
-- `test/tool/makeparsingtable/`
+- [Repository resource map](../README.md) — relationship to other repository-managed resources.

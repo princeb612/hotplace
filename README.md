@@ -16,30 +16,35 @@
 
 ## Documentation
 
-GPT-6
-* [/docs](docs/README.md)
-* [/review](review/README.md)
-* [Project Review](review/project-review.md)
----
-* Hotplace documentation can be understood as three complementary layers:
-  
-  ```text
-                           hotplace documentation
-                                    │
-               ┌────────────────────┼────────────────────┐
-               │                    │                    │
-               ▼                    ▼                    ▼
-          source-tree             /docs               /review
-            docs                study flow       architecture review
-               │                    │                    │
-               │                    │                    │
-        "what is here?"       "how did I learn?"   "how are these
-               │                    │                things connected?"
-               │                    │                    │
-               ▼                    ▼                    ▼
-         directory/module       conceptual         cross-cutting
-         identity + details    progression       relationships/evolution
-  ```
+**Documented with GPT-6**
+
+* [/docs](docs/README.md) — study notes and conceptual progression
+* [/review](review/README.md) — cross-cutting relationships and architectural evolution
+* [Project Review](review/project-review.md) — a project-wide perspective
+
+Hotplace documentation is organized into three complementary layers:
+
+```text
+                         hotplace documentation
+                                  │
+             ┌────────────────────┼────────────────────┐
+             │                    │                    │
+             ▼                    ▼                    ▼
+        source-tree              /docs               /review
+           docs                study flow       architecture review
+             │                    │                    │
+             ▼                    ▼                    ▼
+      "what is here?"      "how did I learn?"   "how are things
+                                                   connected?"
+             │                    │                    │
+             ▼                    ▼                    ▼
+      directory/module       concepts and        relationships
+       identity/details       progression         and evolution
+```
+
+Documentation is not merely a description of the source code. It is a map connecting a system's structure, data, behavior, and relationships.
+
+The goal is not to document everything, but to make the important things understandable, traceable, and revisitable — even long after the code was written.
 
 ## Summary
 

@@ -149,21 +149,8 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
 
+- Test implementation files: `test/testcase/crypto/key/testcase_crypto_key.cpp`, `test/testcase/crypto/key/testcase_curves.cpp`, `test/testcase/crypto/key/testcase_der.cpp`, `test/testcase/crypto/key/testcase_dh.cpp`, `test/testcase/crypto/key/testcase_ec.cpp`, `test/testcase/crypto/key/testcase_hpke.cpp`, `test/testcase/crypto/key/testcase_key_dsa.cpp`, `test/testcase/crypto/key/testcase_key_ffdhe.cpp`, `test/testcase/crypto/key/testcase_key_mlkem.cpp`, `test/testcase/crypto/key/testcase_key_rsa.cpp`, `test/testcase/crypto/key/testcase_keyexchange.cpp`, `test/testcase/crypto/key/testcase_keygen.cpp`, `test/testcase/crypto/key/testvector_keygen.cpp`, `test/testcase/crypto/key/testvector_keyshare.cpp`, `test/testcase/crypto/key/testvector_rfc7919.cpp`
+
 ## 5. References
 
-Source files in this directory:
-- `test/testcase/crypto/key/testcase_crypto_key.cpp`
-- `test/testcase/crypto/key/testcase_curves.cpp`
-- `test/testcase/crypto/key/testcase_der.cpp`
-- `test/testcase/crypto/key/testcase_dh.cpp`
-- `test/testcase/crypto/key/testcase_ec.cpp`
-- `test/testcase/crypto/key/testcase_hpke.cpp`
-- `test/testcase/crypto/key/testcase_key_dsa.cpp`
-- `test/testcase/crypto/key/testcase_key_ffdhe.cpp`
-- `test/testcase/crypto/key/testcase_key_mlkem.cpp`
-- `test/testcase/crypto/key/testcase_key_rsa.cpp`
-- `test/testcase/crypto/key/testcase_keyexchange.cpp`
-- `test/testcase/crypto/key/testcase_keygen.cpp`
-- `test/testcase/crypto/key/testvector_keygen.cpp`
-- `test/testcase/crypto/key/testvector_keyshare.cpp`
-- `test/testcase/crypto/key/testvector_rfc7919.cpp`
+No external references are currently listed.

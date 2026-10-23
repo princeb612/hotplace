@@ -62,10 +62,10 @@ The supplied report snapshot identifies the JOSE suite as MinGW64 / source revis
 
 ## 5. References
 
-- RFC 7515 — JSON Web Signature (JWS)
-- RFC 7516 — JSON Web Encryption (JWE)
-- RFC 7517 — JSON Web Key (JWK)
-- RFC 7518 — JSON Web Algorithms (JWA)
-- RFC 7520 — Examples of Protecting Content Using JOSE
-- RFC 7638 — JSON Web Key (JWK) Thumbprint
-- RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE
+- [RFC 7515 — JSON Web Signature (JWS)](https://www.rfc-editor.org/rfc/rfc7515)
+- [RFC 7516 — JSON Web Encryption (JWE)](https://www.rfc-editor.org/rfc/rfc7516)
+- [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517)
+- [RFC 7518 — JSON Web Algorithms (JWA)](https://www.rfc-editor.org/rfc/rfc7518)
+- [RFC 7520 — Examples of Protecting Content Using JOSE](https://www.rfc-editor.org/rfc/rfc7520)
+- [RFC 7638 — JSON Web Key (JWK) Thumbprint](https://www.rfc-editor.org/rfc/rfc7638)
+- [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037)

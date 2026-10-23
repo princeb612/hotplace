@@ -35,8 +35,8 @@ Initial secrets are derived from the QUIC version's fixed Initial salt and desti
 
 ```text
 TLS handshake bytes -> CRYPTO frame -----+
-                                          |
-other transport/control frames ---------+-> packet builder
+                                         |
+other transport/control frames ----------+-> packet builder
                                              | header + packet number
                                              | frame payload
                                              v

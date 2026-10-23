@@ -487,9 +487,6 @@ The supplied `test/testcase/crypto/report` records **4,214 pass, 281 expt, 0 fai
 - `test/testcase/cose/` and `test/testcase/jose/` — format-specific cryptographic consumers, distinct from primitive known-answer tests.
 - `test/testcase/tls/` — TLS-specific transcript, key-schedule and record-protection tests.
 - `test/testcase/crypto/CMakeLists.txt` — source/vector collection, optional OQS versus dummy source selection, vector-file copying, and `test-crypto` target setup.
-
-## 5. References
-
 - [Test vectors and external references](test-vectors.md)
 - [ECDSA curve/hash reference](ecdsa-curves.md)
 - [Post-quantum cryptography](pqc.md)
@@ -503,3 +500,5 @@ The supplied `test/testcase/crypto/report` records **4,214 pass, 281 expt, 0 fai
 - `test/testcase/crypto/sign/testvector_ecdsa.cpp`
 - `test/testcase/crypto/pqc/testcase_pqc_kem.cpp`
 - `test/testcase/crypto/prng/testcase_random.cpp`
+
+## 5. References

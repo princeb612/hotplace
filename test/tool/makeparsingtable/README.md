@@ -2,7 +2,7 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1106
+Edition 1 · Revision 1108
 Source basis: Revision 1105
 Documented with GPT-6
 Scope: parser-table generation utility
@@ -12,9 +12,11 @@ Scope: parser-table generation utility
 
 ## 1. Role
 
-`makeparsingtable` is a build-support executable that serializes a parser's generated tables into a `.ptb` file. It does not parse test input or run a testcase. Its output is consumed by the parser runtime and the parser/ASN.1 testcase build paths.
+`makeparsingtable` is a build-support executable that builds a parser's generated table representation and serializes it to a `.ptb` file. Its responsibility ends at resource generation; importing the table and parsing input belong to the parser runtime.
 
-## 2. Model
+## 2. Tool Model
+
+### Generation flow
 
 ```text
 command-line options
@@ -34,49 +36,46 @@ binary_parsing_table::learn(parser)
           │
           ▼
 binary_parsing_table::write(output, parser)
+          │
+          ▼
+       <file>.ptb
 ```
 
-The default parser type is LALR(1) in the command-line option structure, but the default accessor specifically returns the ASN.1 notation parser. The `-glr` option switches the selection to the ASN.1 parser built for GLR. The output file name is supplied independently with `-o`.
+The command-line option structure defaults to the LALR(1) parser type, while the default accessor specifically returns the ASN.1 notation parser. The `-glr` option selects the ASN.1 parser built for GLR. The output path is supplied independently with `-o`; the generator does not choose a destination automatically.
 
-## 3. Important behavior and lifetime
+The main routine initializes OpenSSL, parses options, configures logging according to the selected flags, and calls `generate_parsing_table()`. Generation checks `parser.ready()`; if the parser is not ready, it returns `not_ready`. Otherwise, `binary_parsing_table::learn()` obtains the parser's table representation and `write()` serializes it to the requested output path. The process then flushes logging, reports through the testcase result helper, and performs OpenSSL cleanup. If `-o` is omitted, no table is written.
 
-The main routine initializes OpenSSL, parses options, creates logging according to the selected flags, and calls `generate_parsing_table()`. Generation checks `parser.ready()`; if the parser is not ready, it returns `not_ready`. Otherwise, `binary_parsing_table::learn()` obtains the parser's table representation and `write()` serializes it to the requested output path. The process then flushes logging, reports through the testcase result helper, and performs OpenSSL cleanup.
+### Build integration
 
-The generator does not choose its output path automatically. If `-o` is omitted, it exits the generation path without writing a table. Build automation supplies explicit output names.
-
-## 4. Example from the source build
-
-From the directory containing the built executable:
+The CMake post-build rule is enabled only when the compiler ID is GNU and the target platform is Windows. It runs both commands below, then packages the generated files as `parsingtable.zip`:
 
 ```sh
 ./makeparsingtable -o asn1notation.ptb
 ./makeparsingtable -o asn1.ptb -glr
+zip parsingtable.zip asn1notation.ptb asn1.ptb
 ```
 
-- The first command uses the default parser selection and writes `asn1notation.ptb`.
-- The second selects GLR and writes `asn1.ptb`.
+The first command uses the default parser selection; the second selects GLR. This generation-and-packaging step is separate from `etc/parsingtable/CMakeLists.txt`, which extracts the stored archive into the configured parser and ASN.1 testcase build directories. Extraction does not invoke `makeparsingtable`.
 
-In `CMakeLists.txt`, this post-build generation and packaging rule is enabled only when the compiler ID is GNU and the target platform is Windows. It runs both commands and then uses `zip parsingtable.zip asn1notation.ptb asn1.ptb`. The separate `etc/parsingtable/CMakeLists.txt` unpacks the stored archive into the configured testcase build directories; it does not invoke this generator.
+### Boundary to the parser runtime
 
-## 5. Test and verification status
+```text
+makeparsingtable
+  parser CFG -> build -> binary parsing table
+                              │
+                              ▼
+parser runtime
+  import -> parser state -> parse input -> parse tree
+```
 
-### 5.1 Source-level coverage
+The tool constructs the serialized table; the runtime imports the resource and uses it during parsing. Parser behavior and parse-tree construction are therefore not results demonstrated by table generation alone. This documentation update did not execute the generator, so it makes no new claim about a successful generation run.
 
-This executable prepares parser-table resources. Validation therefore includes generation exit status and artifact availability/consumability; ordinary parser behavior is exercised by downstream parser and ASN.1 testcase groups rather than by this tool alone.
+## 3. Relationships
 
-### 5.2 Documentation and verification status
-
-This description follows `sample.cpp` and the tool's CMake rule. The generator was not executed during this documentation update, so no new generation result is claimed.
-
-## 6. Relationships
-
-- [Parent tool directory](../README.md) — role of test-supporting tools in the test tree.
-- [Parser runtime](../../../sdk/io/parser/README.md) — parser-table representation and import/execution.
+- [Parent tool directory](../README.md) — role of parser-table generation in the test-supporting build.
+- [Parser runtime](../../../sdk/io/parser/README.md) — binary-table import and parsing behavior.
+- [ASN.1 implementation](../../../sdk/io/asn.1/README.md) — parser consumer and grammar integration.
 - [Stored table archive](../../../etc/parsingtable/README.md) — artifact distribution and extraction.
 - [Parser testcase group](../../testcase/io/parser/README.md) and [ASN.1 testcase group](../../testcase/asn.1/README.md) — consumers of the generated tables.
 - `sample.cpp` — command-line parsing, parser selection, generation, and reporting.
-- `CMakeLists.txt` — tool target and conditional post-build generation.
-
-## 7. References
-
-No external references are required for this build utility. The implementation and the related source-tree documents above define its behavior and integration.
+- `CMakeLists.txt` — executable target and conditional post-build generation.

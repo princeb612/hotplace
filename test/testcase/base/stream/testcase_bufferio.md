@@ -92,11 +92,4 @@ _test_case.assert((true == test), __FUNCTION__, "compare");
 - Related tests: [`testcase_stream.cpp`](testcase_stream.cpp)
 
 ## References
-- Source basis: Revision 1106; the supplied runtime report's source revision is unspecified.
-- Test implementation: `test/testcase/base/stream/testcase_bufferio.cpp`.
-- Runtime evidence for this snapshot is taken from the supplied report generated after CTest. The report does not state the tested source revision, OS, compiler, or build configuration; those details remain unrecorded. See the [test report snapshot](../../test-report-status.md) for the wider report scope.
 
-
-## 7. Development Notes (for maintainer review)
-
-3. The source contains the comment in `test_bufferio2()` explaining that the case is intended to avoid a null `c_str()` result being passed to output functions (the nearby `std::cout` / `printf` examples are commented out). This is retained as a development note, not treated as a complete API contract or a replacement for dedicated null-handling tests.

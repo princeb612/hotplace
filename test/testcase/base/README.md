@@ -301,7 +301,6 @@ The separately supplied aggregate report is documented in [Test Report Snapshot]
 
 The two records use different counting units: Revision 1104 aggregates testcase-level outcomes from report files, while Revision 1106 records the number of CTest test files/targets that passed on MinGW64 and Ubuntu 20. They are not directly comparable totals. The Revision 1104 report payload does not independently identify the tested source commit, exact GCC version, or complete build configuration.
 
-The maintainer-facing backlog of candidate test improvements is kept separately in [Developer Notes - Testcase reinforcement candidates](Developer%20Notes%20-%20Testcase%20reinforcement%20candidates.md). It is not a statement of current test coverage or a mandatory test plan.
 
 
 

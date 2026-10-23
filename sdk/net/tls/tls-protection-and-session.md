@@ -13,7 +13,6 @@
 
 ## 1. Role
 
-
 The TLS implementation separates protocol messages from the state that makes those messages secure and usable over a transport.
 
 ```text
@@ -157,8 +156,6 @@ SSLKEYLOG import/export is an auxiliary diagnostic path for labeled secret mater
 
 ## 5. Relationships
 
-
-
 - `protection/tls_protection*.cpp`
 - `session/tls_session.cpp`, `session/dtls_record_arrange.cpp`, `session/dtls_record_publisher.cpp`
 - `session/quic_packet_publisher.cpp`, `session/quic_session.cpp`, `session/quic_streams.cpp`
@@ -169,6 +166,7 @@ SSLKEYLOG import/export is an auxiliary diagnostic path for labeled secret mater
 - [TLS message model](tls-message-model.md)
 - [TLS advisor](tls_advisor.md)
 - [QUIC/TLS integration](quic-tls-integration.md)
+
 ### Related areas
 
 - `../basic/` — socket and OpenSSL transport adapters

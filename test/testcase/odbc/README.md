@@ -2,8 +2,8 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1106
-Source basis: Revision 1106
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — ODBC testcase scope, execution & evidence
 ```
@@ -37,10 +37,3 @@ The reported Ubuntu 20 / Sanitizer run included 12 passing targets but did not i
 - [`CMakeLists.txt`](CMakeLists.txt) — testcase target setup
 - [`sdk/odbc/README.md`](../../../sdk/odbc/README.md) — implementation overview
 - [`../test-report-status.md`](../test-report-status.md) — central report snapshot and its interpretation
-
-## 5. References
-
-- `sample.cpp`
-- `sample.hpp`
-- `CMakeLists.txt`
-- [ODBC integration testcase](testcase_odbc.md)

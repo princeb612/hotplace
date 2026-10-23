@@ -257,16 +257,6 @@ The active parameterized test checks direct semantic specialization through `tes
 - The suite contains decode → re-encode assertions for selected cases, but none of the paths above establishes a general encode → decode → re-encode → re-decode sequence.
 - These tests do not prove full X.690/ASN.1 conformance or exhaustive rejection of invalid input.
 
-### Practical testcase reinforcement candidates
-
-These are focused follow-ups to the observed gaps, not claims that the current suite is invalid:
-
-1. **Make the YAML DER vector a real round-trip check.** In testvector_der.cpp, after successful weakly typed decoding and full input consumption, compare the republished DER against the input when canonical byte identity is expected. If BER/non-canonical encodings are intentionally allowed, compare a documented canonical DER expectation instead of requiring raw input equality.
-2. **Assert intermediate statuses in notation reconstruction.** In sample.cpp::parse_reconst_notation(), check parser.parse() and publisher.build() return values before comparing the reconstructed notation. This separates syntax/publisher failure from a later output mismatch and improves failure localization for runtime/testvector_parser.cpp.
-3. **Add a second decode only where it adds value.** For selected deterministic DER cases, feed the re-encoded bytes into a fresh module/value path and assert decode success, complete consumption, and the expected notation/value. This would establish encode → decode → re-encode → re-decode for those selected cases; it should not be implied for the suite as a whole.
-
-Priority is 1 and 2: they strengthen existing paths with small, local assertions. Candidate 3 is a deliberate extension, not a requirement to duplicate every vector across the entire suite.
-
 ### Documentation and verification status
 
 The supplied `asn.1/report` records **1,628 pass, 40 expt, 0 fail, 0 skip, 0 triv**. The shared [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on the conversation's run context; the report itself does not independently identify the tested source commit, exact compiler version, build flags or command line. The meaning of `expt` is not inferred. This documentation uses Revision 1105 as its source basis, which is distinct from that last known test-run context. No tests were executed during this documentation update.
@@ -285,9 +275,9 @@ The supplied `asn.1/report` records **1,628 pass, 40 expt, 0 fail, 0 skip, 0 tri
 - [RFC 5280 — Internet X.509 Public Key Infrastructure Certificate and CRL Profile](https://www.rfc-editor.org/rfc/rfc5280)
 - [RFC 5912 — New ASN.1 Modules for the PKIX](https://www.rfc-editor.org/rfc/rfc5912)
 
-## 6. Developer Notes (for maintainer review)
+## 6. Developer Notes
 
-The following material is retained as developer working notes rather than normative testcase procedure: a `pyasn1` scratch example, certificate DER and third-party decoder output, and the original runtime/compiler/loader/repository checklist. The YAML field contracts used by the active vector consumers are documented under `2. How`. The checklist is not a claim that the listed components are absent or complete.
+The following material is retained as developer working notes rather than normative testcase procedure: a `pyasn1` scratch example, certificate DER and third-party decoder output, and reference-decoder links. The YAML field contracts used by the active vector consumers are documented under `2. How`.
 
 ### Preserved source material
 
@@ -609,8 +599,3 @@ SEQUENCE {
 ### Original working-status checklist
 
 The original README contains a working-status checklist for ASN.1 Runtime, Compiler, Schema Loader, and Repository, plus reference-decoder links, YAML schema examples, a `pyasn1` scratch example, and a DER certificate vector. These items are preserved below for maintainer review; the checklist is not a claim that the listed components are absent or complete.
-
-- [ ] ASN.1 Runtime
-- [ ] ASN.1 Compiler
-- [ ] ASN.1 Schema Loader
-- [ ] ASN.1 Repository

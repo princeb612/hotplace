@@ -2,8 +2,8 @@
 
 ```text
 hotplace source-tree documentation
-Edition 1 · Revision 1106
-Source basis: Revision 1106
+Edition 1 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — ODBC integration behavior & evidence
 ```

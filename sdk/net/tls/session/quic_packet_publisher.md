@@ -66,8 +66,6 @@ The publisher orchestrates content-to-frame and frame-to-packet layout. It does 
 
 ## 5. Relationships
 
-
-
 - `quic_packet_publisher.hpp`
 - `session/quic_packet_publisher.cpp`
 - `quic/packet/README.md`
@@ -79,6 +77,7 @@ The publisher orchestrates content-to-frame and frame-to-packet layout. It does 
 - [TLS/QUIC integration](../quic-tls-integration.md)
 - [TLS session support](README.md)
 - [Network session model](../../server/network_session.md)
+
 ### Session relationship
 
 ```text

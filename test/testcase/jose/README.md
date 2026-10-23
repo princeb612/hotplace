@@ -366,16 +366,16 @@ The report records RFC 7515 as `success 34, triv 2`, RFC 7520 as `success 164`, 
 - `../../../sdk/crypto/advisor/` — JOSE/JWA algorithm metadata and mappings.
 - `../../../sdk/crypto/cose/` — related CBOR/COSE security-object functionality.
 - `testcase_jose.md` — supplemental map of testcase functions, fixture families and the supplied report snapshot.
-
-## 5. References
-
 - [JOSE implementation overview](../../../sdk/crypto/jose/jose-overview.md)
 - [JWS/JWE processing](../../../sdk/crypto/jose/jose-signing-encryption.md)
 - [JWK and algorithm mapping](../../../sdk/crypto/jose/jose-key-and-algorithms.md)
-- RFC 7515 — JSON Web Signature (JWS)
-- RFC 7516 — JSON Web Encryption (JWE)
-- RFC 7517 — JSON Web Key (JWK)
-- RFC 7518 — JSON Web Algorithms (JWA)
-- RFC 7520 — Examples of Protecting Content Using JOSE
-- RFC 7638 — JSON Web Key (JWK) Thumbprint
-- RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE
+
+## 5. References
+
+- [RFC 7515 — JSON Web Signature (JWS)](https://www.rfc-editor.org/rfc/rfc7515)
+- [RFC 7516 — JSON Web Encryption (JWE)](https://www.rfc-editor.org/rfc/rfc7516)
+- [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517)
+- [RFC 7518 — JSON Web Algorithms (JWA)](https://www.rfc-editor.org/rfc/rfc7518)
+- [RFC 7520 — Examples of Protecting Content Using JOSE](https://www.rfc-editor.org/rfc/rfc7520)
+- [RFC 7638 — JSON Web Key (JWK) Thumbprint](https://www.rfc-editor.org/rfc/rfc7638)
+- [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037)

@@ -148,17 +148,6 @@ The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail,
 - Implementation documentation: `sdk/crypto/basic/crypt/README.md`; cipher inventory is preserved in `sdk/crypto/basic/README.md` under Developer Notes
 - Parent testcase overview: `test/testcase/crypto/README.md`
 - The parent testcase CMake configuration controls registration and build integration.
+- Test implementation files: `test/testcase/crypto/crypt/testcase_aead_ccm.cpp`, `test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp`, `test/testcase/crypto/crypt/testcase_crypto_aead.cpp`, `test/testcase/crypto/crypt/testcase_crypto_encrypt.cpp`, `test/testcase/crypto/crypt/testcase_openssl_crypt.cpp`, `test/testcase/crypto/crypt/testvector_cavp_blockciphers.cpp`, `test/testcase/crypto/crypt/testvector_cbc_hmac_jose.cpp`, `test/testcase/crypto/crypt/testvector_cbc_hmac_tls.cpp`, `test/testcase/crypto/crypt/testvector_rfc3394.cpp`, `test/testcase/crypto/crypt/testvector_rfc7539.cpp`
 
 ## 5. References
-
-Source files in this directory:
-- `test/testcase/crypto/crypt/testcase_aead_ccm.cpp`
-- `test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp`
-- `test/testcase/crypto/crypt/testcase_crypto_aead.cpp`
-- `test/testcase/crypto/crypt/testcase_crypto_encrypt.cpp`
-- `test/testcase/crypto/crypt/testcase_openssl_crypt.cpp`
-- `test/testcase/crypto/crypt/testvector_cavp_blockciphers.cpp`
-- `test/testcase/crypto/crypt/testvector_cbc_hmac_jose.cpp`
-- `test/testcase/crypto/crypt/testvector_cbc_hmac_tls.cpp`
-- `test/testcase/crypto/crypt/testvector_rfc3394.cpp`
-- `test/testcase/crypto/crypt/testvector_rfc7539.cpp`

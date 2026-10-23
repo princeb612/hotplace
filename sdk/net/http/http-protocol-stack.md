@@ -133,8 +133,6 @@ The generic stream layer can retain input when the protocol reports insufficient
 
 ## 5. Relationships
 
-
-
 - `http1/http_protocol.hpp/.cpp` — HTTP/1.x framing implementation.
 - `http2/http2_protocol.hpp/.cpp` — HTTP/2 preface and frame framing.
 - `http2/http2_frame*.*` and `http2/http2_session.*` — frame codec and per-stream request state.

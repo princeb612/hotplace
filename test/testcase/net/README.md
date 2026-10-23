@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
-│ Source basis: Revision 1105                   │
+│ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — testcase inputs, procedures & verification │
 └──────────────────────────────────────────────┘
@@ -163,15 +163,6 @@ This documentation update did not execute tests. The source-level diagrams descr
 
 ## 4. Relationships
 
-- [Network SDK implementation](../../../sdk/net/README.md) — network primitives and protocol layers.
-- [HPACK tests](hpack/README.md) — HTTP/2 header compression and dynamic-table behavior.
-- [HTTP tests](http/README.md) — HTTP helpers, HTTP/2 frame and protocol-consumption paths.
-- [QPACK tests](qpack/README.md) — HTTP/3 header compression with its own dynamic-table synchronization model.
-- [Basic network tests](basic/README.md) — IP address ACL behavior.
-- The CMake configuration in this directory collects the child sources and copies the YAML fixtures into the test build tree.
-
-## 5. References
-
 - `test/testcase/net/sample.cpp` — shared entry point and testcase dispatch.
 - `test/testcase/net/hpack/testvector_hpack.cpp` and `testvector_hpack.yml` — HPACK YAML consumer and vectors.
 - `test/testcase/net/hpack/testcase_huffman.cpp` — Huffman known-answer and round-trip checks.
@@ -180,3 +171,5 @@ This documentation update did not execute tests. The source-level diagrams descr
 - `test/testcase/net/http/testcase_http2_frame.cpp` — frame compose/read byte comparisons.
 - `test/testcase/net/qpack/` — RFC 9204, capacity, and stream test sources.
 - [Test Report Snapshot](../test-report-status.md) — aggregate runtime report and provenance limits.
+
+## 5. References
