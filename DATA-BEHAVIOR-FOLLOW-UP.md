@@ -27,6 +27,7 @@ The index is for navigation and current disposition. Open the linked per-issue f
 | CRYPTO-001 | `sdk/crypto/jose` | Verify decrypt result contract, mixed-recipient acceptance, and output-buffer behavior | [CRYPTO-001.md](CRYPTO001-500/CRYPTO-001.md) |
 | CRYPTO-002 | `sdk/crypto/jose` | Reconcile historical TODO/status matrix; do not treat it as current support status | [CRYPTO-002.md](CRYPTO001-500/CRYPTO-002.md) |
 | CRYPTO-003 | `sdk/crypto/authenticode` | Decide digest error propagation contract and add focused failure-path evidence if needed | [CRYPTO-003.md](CRYPTO001-500/CRYPTO-003.md) |
+| CRYPTO-004 | `sdk/crypto/authenticode` | Reconcile stale CRL source comment with current retrieval/checking implementation | [CRYPTO-004.md](CRYPTO001-500/CRYPTO-004.md) |
 | NET-001 | `sdk/net/http/auth` | Trace RFC 9258 TODO to the owning TLS/PSK component; avoid attributing it to HTTP auth without evidence | [NET-001.md](NET001-500/NET-001.md) |
 
 
