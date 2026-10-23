@@ -68,8 +68,7 @@ Direct execution uses `SQLExecDirect`. Prepared execution follows `SQLPrepare`, 
 
 Native return codes are converted into coarse hotplace error categories by `error_traits<SQLRETURN, odbc_category>`. Detailed SQLSTATE, native error code, and message are retrieved separately through `odbc_diagnose`. The build links the platform ODBC library and includes Windows Unicode-specific sources selected by the module's CMake configuration. Actual connectivity and data behavior depend on the installed driver manager, driver, connection string, and database.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`types.md`](types.md) — shared ODBC types, query modes, and return-code conversion
 - [`basic/README.md`](basic/README.md) — concrete wrapper classes
 - [`basic/odbc_connector.md`](basic/odbc_connector.md) — environment and connection lifecycle
@@ -79,6 +78,5 @@ Native return codes are converted into coarse hotplace error categories by `erro
 - [`basic/odbc_sinker.md`](basic/odbc_sinker.md) — async readiness and timeout bridge
 - [`test/testcase/odbc/testcase_odbc.md`](../../test/testcase/odbc/testcase_odbc.md) — sample behavior and verification limits
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

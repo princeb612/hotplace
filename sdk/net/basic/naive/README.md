@@ -56,8 +56,7 @@ network_stream -> protocol consumer
 
 UDP has no TCP-style accept step and does not create one connected stream socket per peer. The server reacts to socket readiness, receives a datagram with its peer-address context, and sends datagrams according to the selected API. Any peer/session association is a higher-level caller/server decision; do not infer a TCP session lifecycle from the UDP wrapper.
 
-## 5. Relationships
-
+## 4. Relationships
 - `naive_tcp_client_socket.hpp/.cpp`, `naive_tcp_server_socket.hpp/.cpp`
 - `naive_udp_client_socket.hpp/.cpp`, `naive_udp_server_socket.hpp/.cpp`
 - [Common socket model](../socket-model.md) — common client/server contract.
@@ -66,6 +65,5 @@ UDP has no TCP-style accept step and does not create one connected stream socket
 - [Trial socket composer](../trial-socket-composer.md) — contrast with the experimental prosumer/handshake path.
 - `../../../../test/testcase/net/basic/` — basic network socket testcase sources.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

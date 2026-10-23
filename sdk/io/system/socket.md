@@ -46,8 +46,7 @@ The Windows build additionally exposes `winsock_startup()` and `winsock_cleanup(
 
 Sockets are native resources. Every successful create/connect/listener path must be paired with the appropriate close path, and a socket must not be closed while another thread or callback can still use it. For listeners, the caller owns each socket in the output vector. On Windows, overlapped sockets and Winsock startup/cleanup must be coordinated with the lifetime of the code using them. A minimal caller flow is to initialize the socket to `INVALID_SOCKET`, call `create_socket()` with an output `sockaddr_storage_t`, use the successfully created socket, and finish with `close_socket()`; the exact cleanup path must account for failures and platform-specific startup requirements.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Event multiplexer](multiplexer.md) — classifies sockets and dispatches readiness/completion callbacks.
 - `sdk/net/basic/` — adds client/server role, transport and secure-backend behavior.
 - `sdk/net/server/` — consumes sockets with the event multiplexer.
@@ -60,7 +59,6 @@ Sockets are native resources. Every successful create/connect/listener path must
 - `sdk/io/system/types.hpp`
 - `sdk/net/basic/`
 
-## 6. References
-
+## 5. References
 - [Linux man-pages: socket(2)](https://man7.org/linux/man-pages/man2/socket.2.html), [connect(2)](https://man7.org/linux/man-pages/man2/connect.2.html), [shutdown(2)](https://man7.org/linux/man-pages/man2/shutdown.2.html), and [getaddrinfo(3)](https://man7.org/linux/man-pages/man3/getaddrinfo.3.html) — POSIX socket and address-resolution APIs.
 - [Microsoft Learn: Winsock functions](https://learn.microsoft.com/en-us/windows/win32/winsock/winsock-functions) — Windows socket API, including WSASocket and ioctlsocket.

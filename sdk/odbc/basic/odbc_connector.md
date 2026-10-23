@@ -61,14 +61,12 @@ connector destruction -> HENV free
 
 Connection success and status depend on the installed driver manager, driver, and connection string. Native diagnostic detail is available through `odbc_diagnose`; the boolean/status helpers do not themselves expose a complete diagnostic record.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`README.md`](README.md) — module data flow
 - [`odbc_query.md`](odbc_query.md) — statement and connection-associated query lifetime
 - [`odbc_diagnose.md`](odbc_diagnose.md) — environment and statement diagnostics
 - [`../../types.md`](../../types.md) — shared return-code conversion and query modes
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample's caller-supplied connection configuration
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)
