@@ -61,7 +61,6 @@ The important boundary is external resource access: the file-stream implementati
 
 The implementation is split across `file_stream.hpp`, `stream.hpp`, `linux/file_stream.cpp`, and `windows/file_stream.cpp`; these files are linked from the [stream directory](./) and should be read when checking platform-specific lifecycle details.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 - Keep the boundary with `sdk/base/stream` explicit: do not describe in-memory `basic_stream` behavior as if it were implemented by `file_stream`.
 - If a second concrete stream type is added, give it a separate module document instead of turning this directory README into an exhaustive class reference.

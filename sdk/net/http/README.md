@@ -111,8 +111,7 @@ Protocol processing consults `http_resource` for the in-process names, phrases, 
 - [RFC 7541 — HPACK](https://www.rfc-editor.org/rfc/rfc7541)
 - [RFC 9204 — QPACK](https://www.rfc-editor.org/rfc/rfc9204)
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 ### Protocol evolution notes
 
 These notes preserve the original developer-oriented comparison; they are conceptual background, not a claim that every item is implemented by this repository.

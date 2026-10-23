@@ -106,8 +106,7 @@ The applet sources show concrete selection points: `tlsserver` and `dtlsserver` 
 ## 5. References
 No external references are currently listed.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 ### Class-family orientation
 
 This is a compact orientation map, not a UML inheritance claim.

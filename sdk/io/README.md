@@ -132,8 +132,7 @@ This is an architectural orientation map, not a complete include graph or a clai
 - ITU-T X.680 — ASN.1 notation.
 
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 - The directory map is intentionally a responsibility map, not a dependency graph. In particular, the ASN.1 and CBOR implementations should not be described as one mandatory pipeline.
 - When documenting behavior, distinguish the source implementation from the behavior defined by a referenced standard. A citation alone does not imply full conformance.
 - Preserve the distinction between general-purpose facilities and protocol-specific interpretation: the former provides representation or mechanics, while higher layers decide what those results mean.

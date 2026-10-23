@@ -171,8 +171,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 - Preserve the original protocol/reference material when reorganizing the document; move it under References rather than deleting it.
 - Keep detailed TLS/DTLS/QUIC state and record/packet relationships in `tls/` component documents. This README should provide orientation and boundaries, not duplicate the implementation walkthrough.
 - Keep HTTP/2 HPACK and HTTP/3 QPACK distinct. Shared purpose does not mean identical wire format or algorithm.
