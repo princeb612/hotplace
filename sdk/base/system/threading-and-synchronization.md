@@ -70,13 +70,6 @@ create() × N
 
 The object tracks a maximum concurrent-thread capacity, running threads, callbacks and thread IDs. `signal_and_wait_all()` is used to release waiting workers and wait until the group has terminated.
 
-The corresponding test creates four workers, verifies the maximum-concurrency failure path, waits, and then terminates all workers.
-
-### Tests
-
-- `test/testcase/base/system/testcase_signalwait_threads.cpp`
-- platform-specific thread/semaphore/critical-section implementations under `sdk/base/system/linux` and `sdk/base/system/windows`
-
 The higher-level `signalwait_threads` behavior is the main project-specific part; the platform classes are primarily compatibility layers.
 
 ## 4. Relationships
@@ -85,4 +78,4 @@ The higher-level `signalwait_threads` behavior is the main project-specific part
 - `sdk/base/system/shared_instance.hpp` — project-specific shared ownership and reference-count lifetime.
 - `sdk/base/system/signalwait_threads.hpp/.cpp` — worker-group orchestration built on threads and semaphores.
 - `sdk/base/system/linux/` and `sdk/base/system/windows/` — platform implementations selected by the public headers.
-- `test/testcase/base/system/testcase_signalwait_threads.cpp` — source-level test for worker capacity, signaling, waiting, and termination.
+- `test/testcase/base/system/testcase_signalwait_threads.cpp` — source-level test for four-worker coordination, capacity failure, signaling, waiting, and termination.

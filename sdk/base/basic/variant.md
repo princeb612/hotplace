@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -113,17 +113,13 @@ Important flags include:
 - `vt_flag_float`
 - `vt_flag_user_type`
 
-`clear()` releases owned resources and returns the value to the null state. `reset()` performs a shallower representation reset and does not perform the same ownership cleanup.
-
-The distinction matters whenever a variant contains a dynamically allocated string or binary buffer.
+The distinction between direct storage and owned allocation matters whenever a variant contains a dynamically allocated string or binary buffer. In particular, `vt_flag_free` indicates that the corresponding value requires release, while `vt_flag_standalone` versus `vt_flag_composite` describes whether the value can be represented without a separate size component. Attribute flags (`vt_flag_int`, `vt_flag_float`, `vt_flag_string`, `vt_flag_binary`, and `vt_flag_user_type`) classify the stored value; they are not ownership indicators.
 
 ### Protocol-width values and conversion
 
 The implementation provides explicit setters and binary conversion for protocol-width integer values such as 24-bit and 48-bit integers.
 
 Conversion functions include `to_str()`, `to_hex()`, `to_bin()`, `to_int()`, `to_binary()`, and `to_string()`.
-
-`to_binary()` can apply truncation and endian-conversion controls. This lets protocol encoders use the same generic value container while still producing the required wire representation.
 
 ### Type queries and special values
 
@@ -140,13 +136,30 @@ The implementation provides queries such as:
 
 `minvalue()` and `maxvalue()` provide explicit sentinel values represented by `TYPE_MINVALUE` and `TYPE_MAXVALUE`.
 
-### Coalescing
-
-`is_coalescable_with()` checks whether another variant can logically follow the current value for coalescing purposes.
-
-The relation is directional rather than necessarily symmetric. The implementation recognizes compatible numeric and boundary-value combinations instead of treating all values of the same broad category as interchangeable.
-
 ## 3. Behavior Model
+
+### Value lifecycle and conversion flow
+
+Construction or assignment establishes the type, size, flags, and union representation. For dynamically owned values, the ownership flags determine how replacement and cleanup release the prior storage. `clear()` releases owned resources and returns the value to the null state; `reset()` performs a shallower representation reset and must not be treated as equivalent cleanup.
+
+`to_binary()` reads the stored type/value and applies the requested controls, such as truncation and endian conversion, to produce a `binary_t` representation. The result is a byte representation for the caller; it does not change the semantic meaning of the protocol field or make host-native layout a wire-format guarantee.
+
+```text
+typed C++ value
+  └─ variant_traits<T> selects vartype + union member + flags
+       └─ variant / variant_t stores type, size, flags, data
+            ├─ query / compare / coalescing
+            ├─ to_str / to_int / to_hex / to_bin
+            └─ to_binary(controls) → binary_t bytes
+clear() → release owned data → TYPE_NULL
+reset() → shallow state reset (not an ownership-cleanup substitute)
+```
+
+### Binary conversion and coalescing
+
+`to_binary()` can apply `variant_trunc` and `variant_convendian` controls. These are operation controls, not persistent value attributes: truncation and endian conversion affect the produced `binary_t`, not the stored type metadata.
+
+`is_coalescable_with()` checks whether another variant can logically follow the current value for coalescing purposes. The relation is directional rather than necessarily symmetric; the implementation recognizes compatible numeric and boundary-value combinations instead of treating all values of the same broad category as interchangeable.
 
 ### Big numbers
 
@@ -156,16 +169,9 @@ A big number can be inserted with `set_bn()` and then participate in the same co
 
 The negative flag is also supported. This is useful when a protocol representation stores a magnitude separately from the semantic sign.
 
-### Tests
-
-`test/testcase/base/basic/testcase_variant.cpp`
-
-The testcase covers protocol-oriented integer conversion, endian conversion and truncation, `bignumber` conversion and formatting, and negative-value handling.
-
-One concrete assertion stores `32768` as `uint32`, converts it with `variant_convendian | variant_trunc`, Base16-encodes the resulting `binary_t`, and checks `00008000`. The tests demonstrate how a generic variant value is turned back into a protocol-oriented binary representation.
-
 ## 4. Relationships
 
+- `test/testcase/base/basic/testcase_variant.cpp` covers protocol-oriented integer conversion, endian conversion and truncation, `bignumber` conversion/formatting, and negative-value handling. One assertion stores `32768` as `uint32`, converts with `variant_convendian | variant_trunc`, Base16-encodes the resulting `binary_t`, and checks `00008000`; this is a concrete example, not a guarantee for every type/flag combination.
 - `valist` uses variant values to retain heterogeneous arguments before formatting.
 - `binary_t` is the byte-container used by binary conversion; Base16 encoding is used by the testcase to make the bytes inspectable.
 - Higher-level protocol code defines field meaning and ordering; `variant` supplies value/type conversion primitives. The main implementation is in `variant.hpp/.cpp` with shared declarations in `types.hpp`; `testcase_variant.cpp` provides conversion examples, while `valist.hpp/.cpp` is a consumer of heterogeneous values. The testcase is a concrete conversion example, not a universal statement that every `vartype_t` has a defined binary representation for every flag combination.

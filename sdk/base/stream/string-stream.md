@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,23 +20,28 @@ The stream layer provides `ansi_string` and `wide_string` for mutable string dat
 
 `ansi_string` derives from `stream_t` and delegates storage and many byte-oriented operations to `bufferio`. It supports formatted output, appending through stream operators, searching, replacement, substring extraction, trimming, cutting, line extraction, comparison, and resizing. The wide-string implementation provides the corresponding wide-character path and is integrated with the platform conversion helpers.
 
-```text
-ansi_string / wide_string
-          │
-          ▼
-       stream_t
-          │
-          ▼
-  bufferio-backed storage
-          │
-          ├── formatted output
-          ├── search / replace / trim
-          └── line and substring operations
-```
+
 
 The API includes copy/move construction and assignment. The implementation details are not identical between ANSI and wide strings: `ansi_string` uses the common `bufferio` path, while wide-character formatting and storage have dedicated implementation files under `unicode/`.
 
 ## 3. Behavior Model
+
+### Storage and operation path
+
+```text
+caller
+  └─ ansi_string operations ─► bufferio-backed byte storage
+       ├─ formatted output / append
+       ├─ search / replace / trim
+       └─ line / substring / resize
+
+caller
+  └─ wide_string operations ─► wide-character storage/conversion path
+       ├─ formatted output / append
+       └─ search / replace / trim / line extraction
+```
+
+`stream_t` is the abstract interface inherited by `ansi_string`; it is not an intermediate runtime call. The wide-string implementation has dedicated code under `unicode/` and should not be assumed to use an identical storage path.
 
 - `test/testcase/base/stream/testcase_stream.cpp` — `test_stream_getline()` uses `ansi_string` to extract lines and asserts that four lines were returned.
 - `test/testcase/base/stream/testcase_bufferio.cpp` — exercises the lower-level buffer I/O implementation used by the string-stream classes.

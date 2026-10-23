@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -22,30 +22,103 @@ node vector ────────────────oid_to_str───�
 ```
 
 ## 2. Data Model
-`oid_t` is an alias for `std::vector<uint32>`. The API is deliberately small:
 
-- `str_to_oid(const std::string&, oid_t&)` delegates to the buffer-and-size overload.
-- `str_to_oid(const char*, size_t, oid_t&)` scans dotted decimal tokens and converts each token to a 32-bit node.
-- `asn1str_to_oid(const char*, size_t, oid_t&)` extracts digit sequences from ASN.1-style text using the project's regex-token helper.
-- `oid_to_str(const oid_t&, basic_stream&)` writes nodes separated by `.` into a stream.
+### Numeric representation: `oid_t`
 
-The code is a representation/conversion layer, not a complete OID validator. In particular, callers should not infer that the helper alone enforces all first-node/second-node constraints or performs BER/DER base-128 encoding.
+`oid_t` is an alias for `std::vector<uint32>`. Each element is one numeric arc/node in the dotted representation. It is not a BER/DER byte sequence and does not retain the original text spelling, labels, or formatting.
+
+The conversion API uses three data forms:
+
+| Form | Role |
+|---|---|
+| Dotted decimal text, e.g. `2.16.840.1.101.3.4.2.1` | External textual input |
+| `oid_t` node vector | Intermediate representation used by the dictionary and ASN.1 layer |
+| `basic_stream` | Output target for dotted decimal text from `oid_to_str()` |
+
+### Token and cursor data
+
+The dotted parser passes a character buffer, its size, a current scan position, and a delimiter boundary to the string-scanning helper. Each delimited decimal token is converted to `uint32` and inserted into the output vector.
+
+The ASN.1-style parser uses a list of `range_t` token spans returned by `regex_token()`. Each span identifies a decimal run in the original input; conversion then reads the corresponding character range into one node. The spans are temporary parsing data, not part of the resulting OID.
+
+The adjacent dictionary stores metadata separately from the node sequence: `oid_metadata` contains a `name` and `description`, while `oid_dictionary` indexes node sequences in a trie. This allows the same OID value to be used independently of its human-readable label.
 
 ## 3. Behavior Model
-`str_to_oid()` clears the output vector before scanning, and `asn1str_to_oid()` also clears its output before extracting numeric tokens. `oid_to_str()` clears the destination stream before writing the dotted representation. This means these functions replace the output rather than append to prior contents.
 
-The ASN.1-braced parser is intentionally lexical: it extracts decimal runs. The caller is responsible for supplying the expected notation and for interpreting the result in the proper ASN.1 context. BER/DER OBJECT IDENTIFIER byte encoding is implemented by `sdk/io/asn.1/`, not here.
+### Dotted-decimal text to nodes
 
-### Source-level evidence
-`test/testcase/io/basic/testcase_oid.cpp` demonstrates the conversion in its actual use context:
+```text
+str_to_oid(string)
+       │ delegates to buffer + size overload
+       ▼
+clear output oid_t
+       │
+       ▼
+scan for "." delimiters
+       │
+       ├─ each token span ─► t_atoi_n<uint32>()
+       │                         │
+       │                         ▼
+       └──────────────────── append numeric node
+                                 │
+                                 ▼
+                            oid_t vector
+```
 
-1. `load_oid()` initializes the singleton dictionary.
-2. `test_oid()` looks up the dotted string `2.16.840.1.101.3.4.2.1`; a successful lookup logs the resolved name and description.
-3. `test_oid2()` passes ASN.1-braced text such as `{joint-iso-itu-t(2) country(16) us(840) ... hashalgs(2) 3}` to `asn1str_to_oid()`, then looks up the resulting node vector.
+The implementation replaces the caller's previous output by clearing the vector before scanning. It converts the tokens it finds; this helper is not a complete semantic OID validator and does not independently enforce the ASN.1 first-arc/second-arc constraints.
 
-The test confirms dictionary lookup through both accepted input forms. It does not directly assert a `str_to_oid()` → `oid_to_str()` round trip, so the documentation does not claim that this testcase covers that behavior.
+### ASN.1-braced notation to nodes
 
-## 4. Relationships
+```text
+ASN.1-style text
+       │
+       ▼
+regex_token(R"(\d+)")
+       │
+       ▼
+list<range_t> decimal spans
+       │
+       ▼
+convert each span to uint32
+       │
+       ▼
+clear-and-fill oid_t
+```
+
+This is lexical extraction: labels such as `country(16)` contribute the digits `16`, while the surrounding labels and braces are not represented in `oid_t`. The caller must provide the expected notation and use the nodes in the appropriate ASN.1 context.
+
+### Nodes to dotted-decimal text
+
+```text
+oid_t nodes
+    │
+    ▼
+oid_to_str(nodes, basic_stream)
+    ├─ clear destination stream
+    ├─ write first node
+    └─ for each remaining node: write "." then decimal node
+                │
+                ▼
+          dotted text
+```
+
+The destination stream is cleared before output, so the function replaces previous stream contents rather than appending a second OID to them.
+
+### Dictionary lookup is a separate step
+
+```text
+dotted text ──► str_to_oid() ──► oid_t ──┐
+                                         ├─► oid_dictionary trie ──► oid_metadata
+node vector ─────────────────────────────┘
+```
+
+The dictionary can also accept a node vector directly. A successful lookup copies the stored name and description into the caller's `oid_metadata`; an absent or empty node sequence does not produce a successful match. The dictionary lookup is not performed automatically by `str_to_oid()`.
+
+### Failure and coverage boundaries
+
+The conversion functions return `void`, so they do not provide a status code for malformed or out-of-range decimal tokens. A caller should not treat successful completion of the function as proof that the text is a valid ASN.1 OBJECT IDENTIFIER. The existing OID testcase demonstrates dictionary lookup from dotted text and ASN.1-braced text; it does not directly assert a conversion round trip through `oid_to_str()`.
+
+## 5. Relationships
 - `oid_dictionary.hpp/.cpp` — uses `str_to_oid()` to index and search the OID trie.
 - `sdk/io/asn.1/basic/` — uses the conversion helpers as part of ASN.1 value encoding/decoding; BER/DER rules live there.
 - `sdk/base/nostd/atoi.hpp` and `sdk/base/string/string.hpp` — numeric token conversion and scanning helpers used by this implementation.
@@ -56,7 +129,7 @@ The test confirms dictionary lookup through both accepted input forms. It does n
 - `sdk/io/basic/oid.hpp/.cpp`
 - `sdk/io/basic/oid_dictionary.hpp/.cpp`
 
-## 5. References
+## 6. References
 
-- ITU-T X.660 / ISO/IEC 9834-1 — object identifier framework.
-- ISO/IEC 6523 — identification of organizations and organization parts, referenced in the source header.
+- [ITU-T X.660 / ISO/IEC 9834-1](https://www.itu.int/rec/T-REC-X.660/en) — object identifier framework.
+- [ISO/IEC 6523-1](https://www.iso.org/standard/63547.html) — identification of organizations and organization parts.

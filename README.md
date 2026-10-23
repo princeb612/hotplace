@@ -11,7 +11,7 @@
 
 ## Introduction
 
-* Research on personal interests
+* A personal project space for studying, experimenting, integrating, documenting, and playing.
 * Starting in 2026, actively utilizing AIs like GPT and Gemini.
 
 ## Documentation

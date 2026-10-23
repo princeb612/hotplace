@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -29,11 +29,14 @@ Each `trienode` contains:
 - `eow`: marks that the path is a complete stored key.
 - `index`: integer identifier associated with that key.
 - `value` and `parent`: symbol and parent link used to reconstruct a key.
-- `invalidate()`: clears terminal status and resets the index without necessarily deleting shared prefix nodes.
 
 The template parameters separate the comparison symbol (`BT`), input element (`T`), optional tag type (`TP`) and element extractor (`memberof_t`). Tags are additional caller data; they are not the key's integer index. The trie owns and deletes registered tag pointers.
 
 ## 3. Behavior Model
+
+### Terminal-state invalidation
+
+`invalidate()` clears terminal status and resets the index without necessarily deleting shared prefix nodes. This lets a key be removed while retaining nodes that may still be prefixes of other stored keys.
 
 ### Insert and exact lookup
 
@@ -80,6 +83,27 @@ Invalidates the terminal key and deletes its tag. Shared nodes are retained when
 **`reset()` / `clear()`**
 
 `reset()` rebuilds the root when it has children, then clears tag and reverse-index state. `clear()` clears auxiliary maps and deletes registered tags.
+
+### Source flow: path existence is not key existence
+
+```text
+insert(key, index, tag)
+  root ── symbol 0 ── child ── symbol 1 ── ... ── terminal
+                                                   ├─ eow = true
+                                                   ├─ index
+                                                   └─ optional tag
+
+search(key) / find(key)
+  root ── follow every symbol ──► final node
+                                  ├─ eow = true  ─► key exists / index
+                                  └─ eow = false ─► only a prefix, not a key
+
+scan(input, pos)
+  follow transitions from pos; remember each terminal encountered
+  └─ when traversal stops, return the last terminal (longest key)
+```
+
+That terminal marker is the semantic boundary between a stored key and an internal prefix. For example, after inserting `ab` and `abcd`, the node for `ab` is terminal even though it has descendants; a path such as `abc` may exist without being a stored key. `scan()` uses the last terminal visited rather than simply returning the deepest node reached.
 
 ## 4. Relationships
 

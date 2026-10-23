@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,29 +20,24 @@
 
 The facility transforms characters into a fixed-size representation during constant evaluation and provides a way to reconstruct the original string. The public macro/helper names used by the testcase include `CONSTEXPR_OBF`, `CONSTEXPR_OBF_CSTR`, `t_constexpr_obf`, and `define_constexpr_obf`.
 
-```text
-literal / constexpr input
-          |
-          v
-compile-time transformed representation
-          |
-          v
-explicit reconstruction for output/use
-```
+The compile-time object stores a transformed fixed-size representation of the literal. Its helper and macro names identify the compile-time facility; the original text is reconstructed explicitly for output or use.
 
 The purpose is to avoid leaving the original full literal as a single obvious string in the compiled image. It is not a cryptographic secrecy boundary; fragments, program logic, or runtime reconstruction may still reveal the value.
 
 ## 3. Behavior Model
 
-The runtime wrapper supports conversion to `binary_t` and `std::string`, comparison, and append operations. The testcase initializes it with `hello world` and compares the recovered output bytes with the original character array.
+### Compile-time construction and reconstruction
 
-### Tests
+```text
+literal / constexpr input
+          └─ constant evaluation ─► transformed fixed-size representation
+                                         └─ explicit reconstruction ─► output/use
+```
 
-- Source: `test/testcase/base/string/testcase_string.cpp`
-- Functions: `test_string_constexpr_hide()`, `test_string_constexpr_obf()`
-- Test analysis and execution report: [`testcase_string.cpp` testcase guide](../../../test/testcase/base/string/README.md)
+The compile-time wrapper supports reconstruction for output/use, comparison, and append operations.
 
 ## 4. Relationships
 
+- `test/testcase/base/string/testcase_string.cpp` — `test_string_constexpr_hide()` and `test_string_constexpr_obf()` compare reconstructed output with the original character data; see the [testcase guide](../../../test/testcase/base/string/README.md).
 - [Runtime string obfuscation](obfuscation.md) covers `obfuscate_string`, which has a different storage/use model.
 - The project-wide baseline remains C++11; this isolated feature is explicitly C++14+. The implementation is in `constexpr_obfuscate.hpp`; it should remain isolated from headers that must compile under the C++11 baseline.

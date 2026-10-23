@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -16,72 +16,55 @@
 
 ### Introduction
 
-`decoder_stream` is the stateful streaming layer for encoded input that arrives in multiple chunks.
+`decoder_stream` incrementally decodes input that may arrive across arbitrary chunk boundaries. It preserves incomplete decoding state and delegates complete units to the corresponding decoder.
 
-It supports the same major streaming formats as `encoder_stream`:
-
-- Base16
-- Base64
-- Base64URL
-- RFC-style Base16
-- HTTP/2 Huffman
+The implemented streaming paths are Base16, Base64/Base64URL, and HTTP/2 Huffman. Although the enum/header describes RFC-style Base16, the current `write()` implementation returns `not_supported` for that selector.
 
 ## 2. Data Model
 
-### Output
+### Input, output, and retained state
 
-Decoded data is accumulated internally and returned through `data()`.
+- `_encoding` selects the decoding path.
+- `_buffer` accumulates decoded bytes returned by `data()`.
+- `encbuf_t` retains incomplete textual units: up to one trailing Base16 character or up to three trailing Base64/Base64URL characters.
+- `_huffbuf` stores pending Huffman bit state between calls.
+- `_maxsize` defaults to 32 KiB and is configurable through `set_maxsize()`. The implementation checks `_buffer.size() + input size`; this is the actual guard, not a general promise that every intermediate or final representation is bounded identically.
 
-`set_maxsize()` controls the maximum output buffer size; the default is 32 KiB.
-
-The class also provides `add()` and stream-style operators for incremental input.
+The class accepts raw character/byte ranges and provides `add()` and stream-style operators as convenience wrappers around `write()`.
 
 ## 3. Behavior Model
 
-### Stateful processing
-
-Encoded input does not necessarily arrive at a decoding-unit boundary.
-
-For example, a Base64 unit contains four encoded characters, while Base16 consumes two. `decoder_stream` retains an incomplete unit and combines it with the next `write()` call.
+### Chunk processing
 
 ```text
-encoded chunks
-     │
-     ├── write(chunk 1)
-     ├── write(chunk 2)
-     ├── write(chunk 3)
-     └── flush()
-            │
-            ▼
-        binary data
+write(encoded chunk)
+      │ validate input and apply size check
+      ▼
+switch (_encoding)
+  ├── Base16 ───────────────► decode complete pairs; retain odd tail
+  ├── Base64 / Base64URL ───► decode complete 4-char groups; retain suffix
+  ├── HTTP/2 Huffman ───────► decode through fixed table and retain bit state
+  └── Base16 RFC ───────────► not_supported
+                                      │
+                                      ▼
+                              append decoded bytes
 ```
 
-Huffman decoding uses a separate string buffer because its symbols are bit-oriented rather than fixed-width character units.
+If a prior chunk left a partial Base16/Base64 unit, the next chunk first fills that unit. The decoder then processes the remaining complete groups and saves any incomplete suffix. Huffman input follows a separate bit-oriented path through `http_huffman_coding`.
 
-### Tests
+### Finalization
 
-The streaming decoder is exercised by:
+`data()` invokes `flush()` and then returns the accumulated `_buffer`. The current implementation handles the retained state by encoding type:
 
-- `test/testcase/encode/testcase_base16.cpp`
-- `test/testcase/encode/testcase_base64.cpp`
-- `test/testcase/encode/testcase_huffman.cpp`
+- Base16 decodes a pending unit only when two characters are retained.
+- Base64/Base64URL discard a one-character suffix; other non-empty suffixes are passed to the Base64 decoder.
+- HTTP/2 Huffman checks the remaining padding state and may return `bad_data` from `flush()`.
 
-The tests feed the same encoded value using different chunk sizes and verify that the decoded result remains identical.
+Important API detail: `data()` returns the byte buffer, not the status returned by its internal `flush()`. Callers needing explicit error handling should check each `write()` result and should not treat a returned buffer alone as proof that finalization succeeded.
 
 ## 4. Relationships
 
-### Relationship with decoders
-
-Like `encoder_stream`, this class is an orchestration layer rather than another decoding algorithm.
-
-```text
-decoder_stream
-      │
-      ├── Base16 decoder
-      ├── Base64 decoder
-      └── HTTP/2 Huffman decoder
-```
-
-Its main responsibility is preserving partial state across input boundaries.
-
-- The implementation is in `decoder_stream.hpp/.cpp`; it delegates to `base16.*`, `base64.*`, and `huffman_coding.*`. `testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide consumer-facing coverage for those decoders.
+- `base16.*` and `base64.*` provide the conversion routines used by this stream.
+- `http_huffman_coding.*` supplies the protocol-specific Huffman decoder.
+- `encoder_stream` is the corresponding stateful encoding layer.
+- `test/testcase/encode/testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide source-level coverage for chunked decoding, including inputs split at different chunk sizes.

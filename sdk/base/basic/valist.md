@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,54 +20,37 @@
 
 Arguments are stored as `variant_t` values. When `get()` is requested, the implementation builds the platform-specific native `va_list` representation from those stored values.
 
-```text
-C++ values
-    │
-    ▼
- variant_t
-    │
-    ▼
-  valist
-    │
-    ▼
-platform ABI-specific va_list
-    │
-    ▼
-variadic API / formatting
-```
-
 ## 2. Data Model
 
-### Argument handling
+### Stored arguments and native view
 
-`operator<<()` accepts the primitive numeric types together with pointers, strings, `basic_stream`, `binary_t`, and `variant_t`.
+Each insertion is normalized into a `variant_t` and appended to the ordered `_args` vector. This vector is the retained argument model: it preserves each argument's type/value metadata and its position for the formatter's 1-based references. `at()` and `operator[]` expose stored values by index; `clear()` removes the stored sequence and releases the constructed native view.
 
-The stored arguments can also be inspected by index and the list can be cleared and rebuilt.
-
-The implementation normalizes several C/C++ argument promotions before constructing the native representation. This is important because a `va_list` cannot be treated as a portable pointer-like object.
-
-### ABI-specific construction
-
-`build()` contains platform-specific handling for the `va_list` layouts used by the supported GCC/Linux and Microsoft compiler environments.
-
-For the GCC x86-64 representation, the implementation handles the register-save/overflow-area model rather than assuming a simple stack-based argument list.
-
-The source contains explicit handling for integer widths and floating-point values so that the reconstructed list matches what the receiving variadic function expects.
-
-This ABI dependency is the main reason the implementation is more substantial than a simple wrapper around `va_list`.
+The native representation is held separately in `_va_internal` and exposed through the `valist_t` union as the platform's `va_list` view. `_modified` records that the stored arguments have changed and the native representation must be rebuilt. The internal critical section protects list operations; it does not make a native `va_list` portable across ABIs.
 
 
 ## 3. Behavior Model
 
 ### ABI and argument promotions
 
+The implementation normalizes several C/C++ argument promotions before constructing the native representation. This is important because a `va_list` cannot be treated as a portable pointer-like object.
+
 A native `va_list` has compiler- and architecture-specific representation. The implementation includes distinct handling for supported GCC/Linux and Microsoft compiler environments; the GCC x86-64 path accounts for the register-save and overflow-area model rather than assuming that arguments form a simple stack array.
 
 Argument promotions and exact widths matter. The stored `variant_t` values must be mapped to the representation expected by the receiving variadic function. Treating `va_list` as a portable pointer or copying its internals across ABIs is unsafe.
 
-### Rebuild and consumption
+### Rebuild and consumption flow
 
-The list can be cleared and rebuilt, and its stored values can be inspected by index. The practical flow is to append values, build the native representation, then pass it to a compatible formatting interface. The native view should not be assumed to remain valid beyond the lifetime/state for which it was built; inspect the current implementation before retaining it across mutations.
+Appending an argument changes `_args` and marks the native view modified. A call to `get()` requests the native view; if the stored sequence changed, `build()` reconstructs it for the active compiler/architecture. The consumer then uses that view for the duration of a compatible variadic call. Any subsequent append, clear, or reassignment can invalidate the correspondence between the stored sequence and the already-built native view, so consumers should reacquire it after mutation.
+
+```text
+operator<< / append
+  └─ normalize to variant_t → append to _args → mark native view modified
+get()
+  └─ if modified → build ABI-specific va_list → expose native view
+formatter / variadic consumer
+  └─ consume according to its argument types and format syntax
+```
 
 ### Hotplace format-string syntax
 
@@ -88,14 +71,29 @@ For integer arguments, `x` / `X` use the formatter's `0x`-prefixed hexadecimal f
 
 These are `sprintf()` format semantics, not conversions performed when `valist` stores a value: `valist` retains the typed argument and the formatter applies the specifier later.
 
-### Source tests
+### Value-to-call flow
 
-- `test/testcase/base/basic/testcase_valist.cpp`
-- `test/testcase/base/basic/testvector_valist.cpp`
-- `test/testcase/base/basic/testvector_valist.yml`
+```text
+append typed values
+  └─ store each value as variant_t
+       ├─ retain type / size / flags / value representation
+       └─ preserve argument order
+
+build native argument view
+  └─ map stored values to the selected compiler/architecture ABI
+       ├─ register-save area / overflow area where required
+       └─ native variadic-call representation
+
+formatter consumes arguments
+  └─ parse 1-based {position:specifier} fields
+       └─ apply formatting specifier according to stored type
+```
+
+`valist` storage and formatting are separate phases: a format specifier does not change the stored value's type. Native `va_list` reconstruction is ABI-specific, so a change to its layout handling must be reviewed against each supported compiler/architecture rather than inferred from a single platform.
 
 ## 4. Relationships
 
 - `variant_t` is the intermediate typed-value representation; `valist` adapts stored values to the native variadic calling convention.
 - The adapter is general-purpose; `sprintf()` is one consumer of `valist`. `basic_stream::vaprintf()` and `basic_stream::vaprintln()` are convenience entry points that forward to the formatter, not the definition of the `valist` abstraction.
+- `test/testcase/base/basic/testcase_valist.cpp`, `testvector_valist.cpp`, and `testvector_valist.yml` provide source-level coverage for the adapter and formatting paths.
 - `valist` is ABI-sensitive; do not infer portability from the high-level `operator<<()` interface alone. The adapter is implemented in `valist.hpp/.cpp`, uses `variant.hpp` as its intermediate representation, and is exercised by `testcase_valist.cpp`.

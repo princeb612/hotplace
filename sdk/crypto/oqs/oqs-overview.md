@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -24,7 +24,7 @@ The current integration boundary is the OpenSSL 3 `oqsprovider` adapter describe
 ## 3. Behavior Model
 Provider availability, OpenSSL version, OID registration, and hotplace's common key/operation support are separate constraints. A family name appearing in a background table does not prove that the corresponding implementation is available or tested in a particular environment.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Implementation and test sources
 

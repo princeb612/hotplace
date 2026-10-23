@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -20,33 +20,44 @@ The composer is not a socket, does not own the network destination, and does not
 
 ## 2. Data Model
 
-### Secure socket and prosumer relationship
+The diagram below is a responsibility map, read from the network edge toward handshake construction and then back toward output. Each row names a component boundary and the work assigned to it; the arrows describe conceptual dependency/flow, not a single synchronous call stack.
 
 ```text
-trial_tls_server_socket / secure_client_socket
-                   │
-                   ▼
-          secure_prosumer
-          ├─ socket input/output integration
-          ├─ producer / consumer coordination
-          └─ buffers received and outgoing data
-                   │
-                   ▼
-              tls_session
-              ├─ handshake status
-              ├─ protocol/version state
-              └─ tls_protection
-                   ▲
-                   │ observes status / constructs next flight
-              tls_composer
-                   │ encoded bytes via callback
-                   ▼
-             send/publish path
+  NETWORK EDGE
+  trial socket / secure_client_socket
+  - transport-specific send/receive operations
+                 |
+                 v
+  I/O + BUFFER COORDINATION
+  client_socket_prosumer / secure_prosumer
+  - moves received and outgoing data between socket I/O and secure processing
+  - coordinates producer/consumer work
+                 |
+                 v
+  PROTOCOL STATE
+  tls_session + tls_protection
+  - handshake progress, negotiated protocol/version, and traffic protection
+                 ^
+                 | status is updated by receive/session processing
+                 |
+  HANDSHAKE CONSTRUCTION
+  tls_composer
+  - chooses the next handshake action from the current session status
+  - constructs and serializes handshake output
+                 |
+                 v
+  OUTPUT HAND-OFF
+  callback carrying encoded bytes
+  - gives the prepared bytes to the caller's send/publish path
+  - transport-specific code handles TLS records, DTLS datagrams,
+    or QUIC packets/CRYPTO frames
 ```
 
-On the server, `trial_tls_server_socket` is selected by `trial_server_socket_adapter` and `server_socket_builder`; `network_server` owns accept/event orchestration and invokes the socket's TLS-accept path before attaching the established session to normal processing. The secure prosumer/composer relationship supplies the protocol-specific work below that server orchestration.
+In short, the socket moves bytes, the prosumer coordinates I/O and buffering, the session/protection objects hold protocol state, and the composer reacts to that state to build the next handshake output. The callback is only the hand-off point; it does not itself mean the bytes have reached the peer.
 
-On the client, `secure_client_socket` uses the client prosumer path. `secure_prosumer` connects socket activity to the session processing path and coordinates the composer callback. These are cooperating objects and asynchronous paths, not necessarily one nested synchronous call stack.
+The server-side adapter/builder selects and exposes a socket implementation; it is not the handshake driver. The detailed execution order and transport-specific publication paths are described in Behavior Model.
+
+## 3. Behavior Model
 
 ### Transport-specific publication
 
@@ -56,11 +67,9 @@ On the client, `secure_client_socket` uses the client prosumer path. `secure_pro
 | DTLS | Handshake messages → DTLS records → fragmentation/publication | UDP datagrams with peer address |
 | QUIC / QUIC2 | TLS 1.3 handshake bytes → CRYPTO frames → QUIC packets | UDP datagrams with QUIC packet/stream state |
 
-QUIC is not TLS-over-UDP or DTLS. The handshake messages and key schedule are related to TLS 1.3, but QUIC has its own packet-number spaces, packet protection, and frame encoding.
+QUIC is not TLS-over-UDP or DTLS. Its handshake messages and key schedule are related to TLS 1.3, but QUIC has its own packet-number spaces, packet protection, and frame encoding.
 
-## 3. Behavior Model
-
-### Client handshake flow
+### 3.1 Client handshake flow
 
 The client calls `tls_composer::handshake(from_client, timeout, callback)`. The composer constructs a ClientHello and then waits for state transitions produced by the receive/session path.
 
@@ -84,7 +93,7 @@ DTLS may first receive HelloVerifyRequest and resend ClientHello with a cookie. 
 
 The QUIC client path is separate. It places ClientHello in CRYPTO data inside an Initial packet, uses `quic_packet_publisher`, and waits for TLS-derived handshake status. It does not serialize an ordinary TLS record around the handshake. Some QUIC client-flight operations remain incomplete/commented in the current trial source, so class existence must not be read as proof of a complete general-purpose QUIC client.
 
-### Server handshake flow
+### 3.2 Server handshake flow
 
 `tls_composer::session_status_changed(status, from_server, timeout, callback)` is the server-side entry point when the parser advances session state.
 
@@ -105,11 +114,11 @@ incoming bytes / packet
 
 For DTLS, phase 1 may emit HelloVerifyRequest before a cookie-validated ClientHello proceeds. For QUIC, server handshake data is published in QUIC packets containing CRYPTO frames. The public role-specific methods are asymmetric: client `handshake(from_client, ...)` is not a general server entry point, and the client-side status callback path is not implemented symmetrically.
 
-### Callback and lifetime boundary
+### 3.3 Callback and lifetime boundary
 
 The composer callback is the hand-off for already encoded output. TLS passes record bytes; DTLS delegates record fragmentation/publication; QUIC delegates packet/frame construction. The callback's caller decides how bytes are sent. Keep three independently traceable paths in mind: socket I/O, session-status advancement, and record/packet publication.
 
-## 4. Relationships
+## 5. Relationships
 
 - `secure_prosumer.hpp/.cpp` — secure I/O composition and status coordination.
 - `secure_client_socket.hpp/.cpp` and `trial_tls_server_socket.hpp/.cpp` — client/server secure socket integration.
@@ -121,10 +130,10 @@ The composer callback is the hand-off for already encoded output. TLS passes rec
 - `../server_socket_adapter.hpp/.cpp`, `../server_socket_builder.hpp/.cpp` — backend selection.
 - [Trial backend](README.md), [network server](../../server/README.md), and [TLS implementation](../../tls/README.md).
 
-## 5. References
+## 6. References
 
 No external references are currently listed.
 
-## 6. Developer Notes
+## 7. Developer Notes
 
 The `trial` prefix marks an experimental composition path, not guaranteed feature parity with OpenSSL. Review a concrete handshake by following the receive path and state update as carefully as the outgoing composer flight.

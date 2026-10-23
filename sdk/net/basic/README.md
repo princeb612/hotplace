@@ -26,51 +26,89 @@ These backends share some interfaces, but TCP/TLS stream I/O, UDP/DTLS datagram 
 
 ## 2. Data Model
 
-```text
-basic_socket
-  ├─ client_socket
-  │    ├─ naive TCP / UDP clients
-  │    ├─ OpenSSL TLS / DTLS clients
-  │    └─ trial clients + prosumer composition
-  └─ server_socket
-       ├─ naive TCP / UDP servers
-       ├─ OpenSSL TLS / DTLS servers
-       └─ trial secure/QUIC server sockets
+### Common socket contract
 
-Selection / policy helpers
-  server_socket_adapter -> server_socket_builder
-  ipaddr_acl
+`basic_socket` is the shared identity/lifetime layer. It exposes socket type, TLS capability, scheme metadata and reference-counted object lifetime. `client_socket` and `server_socket` add endpoint-specific operations rather than defining a protocol session.
+
+| Model | Main data and responsibility |
+|---|---|
+| `basic_socket` | Socket type, TLS capability, scheme bits and object reference count |
+| `client_socket` | Client endpoint operations: open/connect, stream read/send, datagram receive/send and close |
+| `server_socket` | Listener operations: open/bind/listen, accept and server-side I/O |
+| `server_socket_adapter` | Maps a requested scheme to a backend-qualified scheme; adapter-level startup/shutdown integration |
+| `server_socket_builder` | Uses scheme and supplied configuration to construct/configure the concrete server socket |
+| `ipaddr_acl` | Independent address-rule set and whitelist/blacklist policy; not socket state |
+
+### Concrete backend families
+
+```text
+client_socket                       server_socket
+  ├─ naive TCP / UDP                  ├─ naive TCP / UDP
+  ├─ OpenSSL TLS / DTLS               ├─ OpenSSL TLS / DTLS
+  └─ trial transport / secure path    └─ trial TLS / DTLS / QUIC
 ```
 
-The adapter maps a configured scheme to a backend; the builder constructs the concrete socket. Neither object is the handshake state machine. `ipaddr_acl` is a separate policy evaluator: it returns an allow/deny decision for an address, and the caller enforces that decision. Its rule representation, IPv4/IPv6 handling, and conflict semantics are documented in [IP address ACL](ipaddr/README.md); the [ipaddr module README](ipaddr/README.md) covers the module boundary rather than duplicating the algorithm.
+The shared hierarchy expresses a common calling contract, not equal capabilities. TCP is stream-oriented; UDP is datagram-oriented; TLS and DTLS preserve their underlying transport semantics; QUIC has its own packet and frame model. Concrete backend state is described in the child documents.
 
 ## 3. Behavior Model
 
-The server layer selects a socket through the adapter/builder path and then passes the socket into `network_server`, which owns accept/event processing and session hand-off.
+### 3.1 Server backend selection and hand-off
 
-- **naive:** TCP uses stream operations; UDP uses datagrams with peer addresses.
-- **OpenSSL:** TCP is paired with TLS, while UDP is paired with DTLS.
-- **trial:** transport I/O and handshake/session state are composed through prosumer and composer helpers. QUIC uses UDP datagrams but has QUIC packet/frame handling and TLS 1.3 handshake integration; it is not DTLS.
-- **ACL:** evaluate the peer address at the relevant admission boundary and act on the result. The ACL does not install itself as a socket filter.
+```text
+application/server configuration
+        |
+        v
+server_socket_adapter::get_adapter_scheme()
+        |
+        v
+transport + security + backend scheme bits
+        |
+        v
+server_socket_builder
+        |
+        v
+concrete server_socket
+        |
+        v
+network_server
+        |
+        v
+accept / event processing / session hand-off
+        |
+        v
+network_session / network_stream / protocol
+```
 
-The applet sources show the selection point: `tlsserver` and `dtlsserver` add either `socket_scheme_openssl` or `socket_scheme_trial` to the secure-socket scheme; `httpserver1` and `httpserver2` build the corresponding server adapter and pass it to `http_server_builder`. `netclient` exposes its own `-T` selection for the trial client path. These are separate backend-selection paths behind the socket contracts; they do not imply that every protocol/certificate combination is interchangeable.
+The adapter maps the requested scheme to a backend marker; the builder creates and configures the concrete socket; `network_server` owns listener events, accept processing and session hand-off. The adapter and builder do not implement the TLS handshake or application protocol.
 
-## 4. Relationships
+### 3.2 Backend-specific transport path
+
+- **naive:** TCP reads/writes an ordered byte stream; UDP sends/receives discrete datagrams and may carry a peer address.
+- **OpenSSL:** TCP is paired with TLS; UDP is paired with DTLS. The OpenSSL socket/context owns secure transport operations.
+- **trial:** socket I/O and producer/consumer buffering feed session processing. Session status changes drive `tls_composer`, which publishes TLS records, DTLS records or QUIC packets depending on the path.
+- **QUIC:** uses UDP as its datagram carrier, but its packet/frame layer and TLS 1.3 handshake integration are distinct from DTLS.
+
+### 3.3 Address admission is a separate policy step
+
+`ipaddr_acl` normalizes and evaluates a peer address, returning an allow/deny result. The server/socket caller chooses where to invoke it and enforces the result; the ACL is not automatically installed as a socket filter.
+
+The applet sources show concrete selection points: `tlsserver` and `dtlsserver` add either `socket_scheme_openssl` or `socket_scheme_trial`; `httpserver1` and `httpserver2` configure an adapter through `http_server_builder`; `netclient` exposes `-T` for the trial client path. These paths share the socket contract, but not universal protocol/certificate compatibility.
+
+## 5. Relationships
 
 - [Socket model](socket-model.md) — shared client/server contracts and scheme metadata.
 - [Naive sockets](naive/README.md) — direct TCP/UDP.
 - [OpenSSL sockets](openssl/README.md) and [OpenSSL socket adapter](openssl/openssl-socket-adapter.md) — TLS/DTLS backend selection.
 - [Trial implementations](trial/README.md) and [trial socket composer](trial/trial-socket-composer.md) — prosumer and handshake flow.
-- [IP address ACL](ipaddr/README.md) — rule storage, IPv4/IPv6 handling, whitelist/blacklist defaults, and determination behavior.
-- [IP ACL module](ipaddr/README.md) — module API and implementation organization.
+- [IP address and ACL](ipaddr/README.md) — module API, normalized address/rule model, whitelist/blacklist behavior, and conflict resolution.
 - [Network server](../server/README.md) — accept, multiplexer, session, stream, and protocol orchestration.
 - [TLS/DTLS/QUIC](../tls/README.md) — protocol state, record protection, and QUIC packet/frame handling.
 
-## 5. References
+## 6. References
 
 No external references are currently listed.
 
-## 6. Developer Notes
+## 7. Developer Notes
 
 ### Class-family orientation
 

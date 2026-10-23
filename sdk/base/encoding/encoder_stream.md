@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -16,79 +16,65 @@
 
 ### Introduction
 
-`encoder_stream` is the stateful streaming layer over the encoding implementations in this directory.
+`encoder_stream` provides stateful encoding when input arrives in multiple chunks or through stream-style insertion. It coordinates the encoders in this directory; it is not a separate encoding algorithm.
 
-It is designed for input that arrives in multiple chunks rather than as one complete buffer.
-
-Supported encodings include:
-
-- Base16
-- Base64
-- Base64URL
-- RFC-style Base16
-- HTTP/2 Huffman
+Supported paths include Base16, Base64, Base64URL, RFC-style Base16 encoding, and HTTP/2 Huffman coding.
 
 ## 2. Data Model
 
-### Input types
+### Input, mode, and output state
 
-The stream supports raw byte buffers as well as common hotplace values through `operator<<()` / `add()`.
+- `encoding_t _encoding` selects the algorithm.
+- `_buffer` accumulates textual output for Base16/Base64-family paths.
+- `_bin` accumulates binary output for HTTP/2 Huffman coding.
+- `encbuf_t` retains up to two pending input bytes for Base64/Base64URL.
+- `bitbuf_t` accumulates Huffman code bits until a complete byte can be emitted.
+- `_use_bigendian` controls the byte order used when integral values are inserted; it defaults to big-endian.
+- `_maxsize` defaults to 32 KiB and is configurable with `set_maxsize()`. The implementation's size check uses the text-output buffer, so this setting should not be read as a uniform cap over every internal output path.
 
-Integral values can optionally be written in big-endian form. The default is big-endian, and `set_endian()` changes that behavior.
-
-The maximum internal output buffer is 32 KiB by default and can be changed with `set_maxsize()`.
+The stream accepts raw bytes and common hotplace containers. Integral values are converted to bytes before being passed to the selected encoder.
 
 ## 3. Behavior Model
 
-### Stateful processing
+### Chunk processing
 
 ```text
-write(chunk 1)
-      │
-write(chunk 2)
-      │
-write(chunk 3)
-      │
-     ...
-      │
-    flush()
-      │
+write(data, size)
+      │ validate pointer and configured size check
       ▼
-complete encoded output
+switch (_encoding)
+  ├── Base16 ───────────────► encode this chunk
+  ├── Base16 RFC ───────────► format chunk as RFC-style hex text
+  ├── Base64 / Base64URL ───► complete 3-byte groups; retain tail
+  └── HTTP/2 Huffman ───────► append each symbol's code bits
+                                      │
+                                      ▼
+                               emit each full byte
 ```
 
-The important implementation detail is that encoding-unit boundaries are retained between calls.
+For Base64/Base64URL, `write()` first completes a previously retained group if enough new bytes arrive, then encodes all remaining complete three-byte groups. Zero to two trailing bytes stay in `encbuf_t`.
 
-For Base64, for example, input is processed in 3-byte units. If a `write()` ends with one or two bytes left over, those bytes remain in the internal buffer and are combined with the next input chunk.
+For HTTP/2 Huffman, each input symbol is looked up in the fixed code table. Bits are appended to `bitbuf_t`; every eight bits are moved to `_bin`.
 
-The same idea is used for bit-oriented Huffman encoding through an internal bit buffer.
+### Finalization and retrieval
 
-### Tests
+`str()` calls `flush()` and returns `_buffer`; `bin()` calls `flush()` and returns `_bin`. Base64 finalization encodes any remaining input bytes. Huffman finalization pads a partial output byte with one-bits before appending it. Base16 has no pending-unit finalization.
 
-The streaming behavior is exercised by:
-
-- `test/testcase/encode/testcase_base16.cpp`
-- `test/testcase/encode/testcase_base64.cpp`
-- `test/testcase/encode/testcase_huffman.cpp`
-
-These tests deliberately change chunk boundaries and compare the streaming result with the ordinary encoder result.
+```text
+write(chunk 1) ─┐
+write(chunk 2) ─┼──► persistent stream state
+write(chunk n) ─┘            │
+                              ▼
+                         str() / bin()
+                              │
+                             flush
+                              ▼
+                       finalized output
+```
 
 ## 4. Relationships
 
-### Relationship with encoders
-
-`encoder_stream` does not replace `base16_encode()`, `base64_encode()`, or `huffman_coding::encode()`.
-
-Instead it retains incomplete units and delegates complete units to those implementations:
-
-```text
-encoder_stream
-      │
-      ├── Base16 encoder
-      ├── Base64 encoder
-      └── HTTP/2 Huffman encoder
-```
-
-This keeps the encoding rules in one place while adding chunked processing.
-
-- The implementation is in `encoder_stream.hpp/.cpp`; it delegates to `base16.*`, `base64.*`, and `huffman_coding.*`. `testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide consumer-facing coverage for those encoders.
+- `base16.*` and `base64.*` provide the conversion routines used by the stream.
+- `http_huffman_coding.*` provides the fixed protocol table and symbol-code lookup.
+- `decoder_stream` is the corresponding stateful decoding layer.
+- `test/testcase/encode/testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide source-level coverage for chunked input and finalization; this documents test intent, not execution in this documentation task.

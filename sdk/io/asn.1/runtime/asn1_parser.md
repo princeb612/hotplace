@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -47,102 +47,77 @@ The class deliberately keeps three stages visible:
 This separation is useful to the loader and tests because each boundary can be exercised independently.
 
 ## 2. Data Model
-### Grammar work: parameterized notation
 
-The current ASN.1 GLR grammar includes productions for parameterized assignments and invocations. The grammar describes these forms through `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterizedValueAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Actual parameters include type/value forms and brace-delimited forms.
+### Input and intermediate representations
 
-This is a grammar-capability statement, not a claim that parameterized ASN.1 is fully implemented end to end. In the Revision 1105 source, the parameterized testcase contains `FRAME{TypeParam, INTEGER:maxSize}` and `MyPacket ::= FRAME{ OCTET STRING, 1024 }` examples. It also contains direct semantic construction/specialization probes, but `test_parameterized2()`—the loader → parse tree → publisher path—remains disabled in `testcase_parameterized()`. Semantic binding, parameter substitution, and reliable instantiated-type construction should therefore remain documented as work in progress until the corresponding implementation and tests are enabled.
+- **Notation buffer:** source text supplied directly or by `asn1_loader`.
+- **`parser_token` sequence:** generic parser tokens produced from ASN.1 lexical descriptions; comments are omitted and identifier-like lexical values are mapped to the ASN.1 identifier token.
+- **`parse_tree`:** generic grammar result. It represents syntax and parser structure, not a fully reconstructed ASN.1 module.
+- **`asn1_build_resultset`:** publisher output containing reconstructed ASN.1 semantic/runtime results.
 
-The current focus combines grammar revision 3 with direct semantic prototyping. Do not infer complete parser-to-runtime parameterized support from grammar productions or direct object-model tests.
+The parser obtains ASN.1-specific lexical and grammar providers through `asn1_advisor`. The lexical analyzer's prepared state is cached in the parser object; parser engines and their tables remain part of `sdk/io/parser`.
+
+### Parameterized notation boundary
+
+The GLR grammar includes productions such as `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Source examples include `FRAME{TypeParam, INTEGER:maxSize}` and `MyPacket ::= FRAME{ OCTET STRING, 1024 }`.
+
+This establishes grammar coverage, not full parameterized-type semantics. Direct semantic construction/specialization probes exist, while the parser-to-publisher testcase path for parameterized instantiation remains disabled in the source snapshot. Do not infer end-to-end parameter binding and substitution from the productions alone.
 
 ## 3. Behavior Model
-### Main operations
 
-### `parse()`
+### Prepare and tokenize
 
-The convenience overloads perform the complete pipeline.
+The parser lazily prepares its lexical analyzer through `load()`. Preparation configures ASN.1 lexical behavior and loads ASN.1 token definitions from parser resources. `to_tokens()` scans the notation, converts lexical descriptions to `parser_token` values, skips comments, maps identifier-like values to the ASN.1 identifier token, and appends the generic EOF token.
+
+### Parse tokens into a tree
+
+`to_parsetree()` passes prepared tokens to the selected parser provider. The current source path obtains the ASN.1 GLR parser through the shared advisor/provider layer:
+
+```text
+asn1_advisor
+    |
+    v
+get_glr_parser_asn1_by_import()
+    |
+    v
+generic GLR parser
+    |
+    v
+parse_tree
+```
+
+The parser engine remains in `sdk/io/parser`; `asn1_parser` supplies ASN.1-specific input and provider configuration.
+
+### Reconstruct semantic results
 
 ```text
 parse(notation, result)
-    -> parse(notation, parse_tree)
-    -> to_result(parse_tree, result)
+    ├── parse(notation, parse_tree)
+    │      ├── to_tokens()
+    │      └── to_parsetree()
+    └── to_result(parse_tree, result)
+             |
+             v
+       asn1_publisher::build()
+             |
+             v
+       asn1_build_resultset
 ```
 
-The parse-tree overload stops after syntax parsing:
+`to_result()` gets the shared publisher from `asn1_advisor` and asks it to reconstruct semantic objects from the parse tree. It does not embed production handlers in the parser.
 
-```text
-parse(notation, parse_tree)
-    -> to_tokens()
-    -> to_parsetree()
-```
+### Source-level test paths
 
-### `to_tokens()`
+- `test/testcase/asn.1/runtime/testcase_parser.cpp::test_asn1parser()` — notation through parser and parse-result assertions.
+- `test/testcase/asn.1/runtime/testcase_publish.cpp` — staged parse-tree-to-semantic publishing.
+- `test/testcase/asn.1/loader/testcase_loader.cpp` — separately inspects tokenization, parse-tree creation, and result publication.
 
-`to_tokens()` invokes the hotplace `lexical_analyzer`, converts lexical descriptions into the parser's `parser_token` representation, skips comments, maps lexical l-values to the ASN.1 identifier token, and appends the parser EOF token.
+These links describe source-level test paths; this documentation update did not execute the tests.
+## 5. Relationships
 
-The lexer is configured for the ASN.1 grammar, including quoted values, comments, l-value/usertype handling, and ASN.1 parameterized syntax. In Revision 1105, the ASN.1 LALR and GLR grammar providers declare binary parsing-table revision 3.
-
-### `to_parsetree()`
-
-`to_parsetree()` passes the prepared token vector to the selected parser implementation. The current source obtains the parser provider from `asn1_advisor`. The selected runtime path uses the imported GLR parser:
-
-```text
-get_parser()
-    -> get_glr_parser_asn1_by_import()
-```
-
-The parser itself remains part of `sdk/io/parser`; `asn1_parser` only provides the ASN.1-specific runtime-facing adapter.
-
-### `to_result()`
-
-`to_result()` obtains the prepared shared publisher from `asn1_advisor` and asks it to build semantic results from the parse tree.
-
-```text
-parse_tree
-    |
-    v
-asn1_advisor::get_instance()->get_publisher()
-    |
-    v
-asn1_publisher::build()
-    |
-    v
-asn1_build_resultset
-```
-
-This makes `asn1_parser` the visible boundary between syntax parsing and semantic construction without embedding the publisher's grammar handlers in the parser itself.
-
-### Related tests
-
-- `test/testcase/asn.1/testcase_basic3.cpp`
-- `test/testcase/asn.1/loader/testcase_loader.cpp`
-- `test/testcase/asn.1/runtime/testcase_parser.cpp`
-
-The loader testcase is particularly useful because it explicitly exercises `to_tokens()`, `to_parsetree()`, and `to_result()` as separate stages.
-
-### Preparation and parser resources
-
-The parser lazily prepares its lexical analyzer through `load()`.
-
-The preparation step:
-
-- configures the lexical analyzer for ASN.1 handling;
-- loads ASN.1 token definitions from `parser_resource`;
-- keeps the prepared state in `_ready`.
-
-The parser therefore uses repository-provided parser resources rather than constructing a complete grammar table dynamically for every parse operation.
-
-## 4. Relationships
-
-### Implementation source navigation
-- `sdk/io/asn.1/runtime/asn1_parser.hpp`
-- `sdk/io/asn.1/runtime/asn1_parser.cpp`
-- `sdk/io/asn.1/runtime/asn1_publisher.*`
-- `sdk/io/asn.1/asn1_advisor.hpp`
-- `sdk/io/parser/lexical_analyzer.*`
-- `sdk/io/parser/lalr1_parser.*`
-- `sdk/io/parser/parse_tree.*`
-- `asn1_publisher` consumes the parse tree to build semantic module information.
-- `sdk/io/parser/` provides the generic lexer, LALR/GLR engines, and parse-tree infrastructure.
-- `sdk/io/asn.1/loader/` consumes the parser stages for file loading.
-
+- [Generic parser](../../parser/README.md) — lexer, parser engines, parse-tree model, and table resources.
+- [ASN.1 publisher](asn1_publisher.md) — semantic reconstruction from the parse tree.
+- [ASN.1 runtime](README.md) — module registry and runtime data model.
+- [ASN.1 loader developer notes](../loader/asn1_loader.md) — file loading and staged parser use.
+- `../basic/` — ASN.1 semantic and structural types.
+- `../advisor/` — shared ASN.1 provider implementation.

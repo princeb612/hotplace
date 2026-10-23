@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -22,30 +22,35 @@ This directory is project test infrastructure. It is not the same thing as CTest
 
 ```text
 test program
-    │
-    ├── test_case
-    │     ├── begin / test / assert
-    │     ├── result categories and statistics
-    │     ├── report()
-    │     └── result() ─────────► process exit status
-    │
-    └── logger
-          ├── formatting / stream input
-          ├── log-level filtering
-          ├── console and file output
-          ├── binary dump / console color
-          └── buffered output / consumer
+  ├─ test_case
+  │    ├─ named group and individual records
+  │    ├─ result-category counters and timing
+  │    └─ report/result state
+  └─ logger
+       ├─ per-thread message context
+       ├─ level and destination configuration
+       └─ consumer/buffering and output settings
 ```
 
-### Test-result path
-
-[`testcase.md`](testcase.md) explains the lifecycle from opening a named group through recording checks and generating a report. The `result()` return value allows the test executable to expose its accumulated status to the surrounding build/test runner.
-
-### Diagnostic path
-
-[`logger.md`](logger.md) explains how callers send messages without needing to know whether the configured destination is stdout or a file. Builder configuration controls output destinations and buffering/rotation options; log-level filtering is a separate concern from pass/fail accounting.
-
 ## 3. Behavior Model
+
+### Execution and diagnostic paths
+
+```text
+test_case
+  ├─ begin(group) ─► initialize group/result counters
+  ├─ test / assert ─► classify check ─► update counters and timing
+  ├─ report() ─────► render accumulated results
+  └─ result() ─────► process exit status ─► test runner / CTest
+
+logger
+  ├─ builder configuration ─► logger instance / consumer
+  ├─ level filter ──────────► accept or suppress message
+  ├─ format / dump ─────────► buffered message
+  └─ consumer ──────────────► console or file ─► flush / rotation
+```
+
+The two paths can meet when a test case emits diagnostics through a logger, but they remain independent: logging a message does not update the test result, and the test runner sees the process result rather than interpreting log text as pass/fail evidence.
 
 - **Separate responsibilities:** `test_case` determines test outcomes; `logger` makes diagnostic information visible. A message being logged does not itself mark a test as passed or failed.
 - **Result categories:** the test framework distinguishes ordinary success/failure from states such as not-supported and low-security, and offers expected-failure forms. Tests should use the intended category rather than disguising a known limitation as an ordinary pass.
@@ -55,6 +60,14 @@ test program
 - **Historical material:** older logger sketches in this directory are retained as design/history material. They should not be treated as the current implementation contract without comparison to the active `.hpp/.cpp` files.
 
 ## 4. Relationships
+
+### Test-result path
+
+[`testcase.md`](testcase.md) explains the lifecycle from opening a named group through recording checks and generating a report. The `result()` return value allows the test executable to expose its accumulated status to the surrounding build/test runner.
+
+### Diagnostic path
+
+[`logger.md`](logger.md) explains how callers send messages without needing to know whether the configured destination is stdout or a file. Builder configuration controls output destinations and buffering/rotation options; log-level filtering is a separate concern from pass/fail accounting.
 
 - `test_case` may attach a `logger` for diagnostics, but test outcome tracking remains a separate responsibility.
 - The test executable's `main`/test harness uses `test_case::result()` to return a process status; CTest consumes the executable result at a higher level.

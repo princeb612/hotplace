@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -20,7 +20,7 @@ This directory provides address normalization and the `ipaddr_acl` rule engine u
 
 ### Address representation
 
-The public API accepts textual addresses or `sockaddr_storage_t` values. `convert_addr` and `convert_sockaddr` normalize them to `ipaddr_t` while retaining family information for validation.
+The public API accepts textual addresses or `sockaddr_storage_t` values. The normalized key is `ipaddr_t`; family information is retained for validation so IPv4 is not accidentally treated as IPv6.
 
 - When `__SIZEOF_INT128__` is defined, `ipaddr_t` is a 128-bit unsigned integer and IPv6 rules are supported.
 - Otherwise, `ipaddr_t` is 32-bit and IPv6 input returns `not_supported`.
@@ -33,17 +33,34 @@ This is a normalized integer-key model, not two independent IPv4 and IPv6 rule e
 
 A rule can represent an exact address, a CIDR prefix, or an inclusive address range, with an `allow` outcome. Exact-address rules and range-like rules are stored separately:
 
-```text
-add_rule(...)
-  ├─ exact address ───────> _single_type_rule[address]
-  └─ CIDR / address range -> _range_type_rule[start]
-                              item.addr  = inclusive end
-                              item.allow = true / false
-```
-
-CIDR is calculated as an inclusive range rather than stored as a separate rule-map type.
+- `_single_type_rule` is keyed by the normalized exact address.
+- `_range_type_rule` is keyed by the inclusive start address; its value retains the inclusive end in `item.addr` and the allow/deny outcome in `item.allow`.
+- CIDR is represented as an inclusive range rather than as a separate rule-map type.
 
 ## 3. Behavior Model
+
+### Address normalization and rule insertion
+
+```text
+text address / sockaddr_storage_t
+              |
+              v
+    convert_addr / convert_sockaddr
+              |
+              v
+       ipaddr_t + family
+              |
+              v
+        validate input
+              |
+              v
+  exact / CIDR / inclusive range rule
+              |
+              v
+ _single_type_rule / _range_type_rule
+```
+
+CIDR input is converted into an inclusive start/end interval before storage. Address-family checks and integer-width support described in Data Model constrain which inputs can be represented.
 
 ### Whitelist and blacklist
 
@@ -88,7 +105,7 @@ caller enforces the decision
 
 The rule collection is synchronized during insertion and matching. This does not make mode changes, clearing, and server accept lifecycle coordination an atomic server-wide operation.
 
-## 4. Relationships
+## 5. Relationships
 
 - `ipaddr_acl.hpp/.cpp` — public API, normalized rule representation, and matching implementation.
 - `sdk.hpp/.cpp` — SDK-facing integration.
@@ -97,6 +114,6 @@ The rule collection is synchronized during insertion and matching. This does not
 - [Network server](../../server/README.md) — higher-level accept/session orchestration.
 - `test/testcase/net/basic/testcase_acl.cpp` — source-level ACL assertions; this documentation update does not claim that tests were executed.
 
-## 5. References
+## 6. References
 
 No external references are currently listed.

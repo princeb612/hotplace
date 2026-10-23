@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -55,6 +55,28 @@ CBOR values / maps / arrays / byte strings
 
 The CBOR layer does not decide what bytes belong in Enc_structure, Sig_structure, or MAC_structure. COSE constructs those inputs from the COSE context, protected-header serialization, external AAD and payload. The resulting ciphertext, tag or signature is then placed into the COSE message model and serialized as CBOR.
 
+### Data consumed and produced between the model and primitive operations
+
+| Data | In-memory representation / source | Role in the operation |
+|---|---|---|
+| Algorithm identifier (`alg`) | `cose_data` entry in a layer's protected or unprotected header; resolved through `crypto_advisor` | Selects operation family and algorithm metadata. Content encryption/MAC/signature algorithms belong to the body; key-distribution algorithms belong to recipient layers. |
+| Protected-header bytes | `cose_protected`, serialized by `cbor()` | Exact serialized protected map is included in the COSE authenticated structure. Its values and encoding affect the operation input. |
+| Unprotected headers | `cose_unprotected` / `cose_data` | Carry parameters such as `kid`, `iv`, `salt`, `epk` and other metadata. They are not interchangeable with protected-header bytes. |
+| Payload / plaintext | `cose_binary` and `cose_param_plaintext` in layer/context parameters | Sender-side content supplied to the operation; the receiver-side payload is ciphertext for Encrypt/Encrypt0 and content for Sign/Sign1 or Mac/Mac0. |
+| External AAD | `cose_param_external` in `cose_unsent` | Application-provided additional authenticated data. It is included in the Enc_structure, Sig_structure or MAC_structure but is not carried as the message payload; both parties must supply matching bytes. |
+| `Enc_structure` | CBOR array serialized by `compose_enc_context()` | `[context, body_protected, external_aad]`; context distinguishes Encrypt/Encrypt0 and recipient-specific operations. Becomes AEAD associated data. |
+| `Sig_structure` | CBOR array serialized by `compose_sign_context()` | `[context, body_protected, sign_protected?, external_aad, payload]`; context distinguishes Signature, Signature1 and CounterSignature. It is the signature input, not the final envelope bytes. |
+| `MAC_structure` | CBOR array serialized by `compose_mac_context()` | `[context, protected, external_aad, payload]`; context distinguishes MAC and MAC0. The tag authenticates this serialized structure. |
+| CEK / MAC key | `cose_param_cek` in layer parameters, possibly established through recipient processing | Key used by the content-encryption or MAC primitive. It is distinct from the recipient's key-agreement/wrapping key. |
+| IV, Partial IV, salt | Header entries interpreted using algorithm metadata and layer scope | IV/nonce and KDF inputs. Presence, length and combination rules depend on the selected algorithm; these values are not interchangeable. |
+| Recipient KDF context | Serialized COSE KDF Context: algorithm ID, PartyU/PartyV info, SuppPubInfo and optional SuppPrivInfo | Binds derived key material to the algorithm, parties, output length and protected-header context. Used during key distribution, not as body payload. |
+| `kid` and COSE key parameters | Header metadata and `cbor_web_key` / `crypto_key` mapping | Identify/select key material and represent key parameters. A `kid` is a selector, not proof that a key is suitable for the algorithm. |
+| Signature / tag / ciphertext | `cose_binary` single-item or payload state | Output of the primitive operation, placed into the appropriate COSE message slot. Where a backend returns ciphertext concatenated with a tag, COSE separates the fields using the algorithm's tag length. |
+
+The model carries both *envelope data* and *operation-only parameters*. `cose_unsent` stages caller inputs such as external AAD and ephemeral IV/party information; these values are not all serialized as ordinary headers. `cose_data` stores typed map entries and binary payload material, while `cose_recipient` adds parent/child relationships and per-layer state.
+
+
+
 ## 3. Behavior Model
 
 ### The high-level API: specify intent, let COSE compose the envelope
@@ -76,6 +98,39 @@ ret = cose.encrypt(handle, key, input, cbor);
 The sign path sets the body's algorithm and calls `cose.sign(handle, key, input, cbor)`; the MAC path sets the body's MAC algorithm and, when key distribution is involved, a recipient algorithm before calling `cose.mac(...)`.
 
 The important implementation point is that the caller does **not** manually construct every nonce, tag, cryptographic context, encoded structure, ciphertext field or signature field. The operation's preprocess path and composer fill/process the required message state using algorithm metadata, caller-provided keys/context and random generation where needed. This is not “algorithm name alone is enough for every use”: the caller must still provide appropriate key material, payload, any required recipient layer and any external AAD/context required by the application.
+
+### Shared send-side pipeline
+
+```text
+open(&handle)
+    └─ allocate cose_context_t + cose_composer
+          │
+caller configures headers, recipient tree, external AAD and key material
+          │
+encrypt / sign / mac
+          ▼
+preprocess
+    ├─ validate algorithm categories for the requested operation
+    ├─ initialize the body layer when an algorithm list is supplied
+    ├─ store body alg and payload/plaintext
+    ├─ create recipient layers for key-distribution algorithms
+    └─ select key identifiers where required
+          ▼
+preprocess_random
+    ├─ resolve each layer's algorithm hint/group flags
+    ├─ fill missing kid where key selection is required
+    ├─ generate algorithm-required IV and salt values
+    └─ construct ephemeral/static EC public-key metadata where required
+          ▼
+process(send)
+    ├─ walk nested recipient layers and process key distribution
+    ├─ dispatch body operation by COSE tag/category
+    └─ process countersignatures when present
+          ▼
+composer.compose → CBOR array → CBOR bytes → output
+```
+
+Overloads accepting an algorithm list build a skeleton from the requested categories. Overloads using a preconfigured composer retain the caller's model and run the random-preparation stage. `preprocess_random()` is metadata-driven; it does not mean every operation receives every possible random field.
 
 ### Encrypt flow
 
@@ -99,6 +154,28 @@ protected body alg + optional recipient alg(s) + key + payload
 
 For Encrypt, the body algorithm identifies content encryption; a recipient's algorithm describes how the content-encryption key is supplied, derived or wrapped. Those are separate roles. Encrypt0 has no recipient tree and uses the directly supplied key path. On receive, COSE parses the message, processes recipient layers and body in the appropriate order, reconstructs the same authenticated context, and delegates decryption/tag verification to the primitive layer.
 
+#### Recipient key-distribution path
+
+```text
+recipient alg + recipient headers + selected recipient key
+                         │
+               process_keydistribution
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
+   direct / direct+KDF            ECDH / RSA / AES-KW
+          │                             │
+          └──────────────┬──────────────┘
+                         ▼
+             establish or recover CEK
+                         │
+               store layer CEK parameter
+                         ▼
+           body AEAD or MAC operation
+```
+
+For ECDH-based derivation, COSE constructs a KDF context from the recipient algorithm, party information, requested key-data length, protected-header context and optional private context. Nested recipient children are processed before their containing recipient, then the body. The body algorithm protects the payload; the recipient algorithm determines how the required key is obtained.
+
 ### Sign flow
 
 ```text
@@ -117,13 +194,40 @@ protected body alg + key + payload
 
 The protected header matters because its serialized form is part of the signed input. COSE signs the specified Sig_structure, not a byte-for-byte hash of the final CBOR envelope. Receive-side verification reconstructs that structure from the parsed message.
 
+#### Signature input construction
+
+`compose_sign_context()` chooses `Signature1` when there is no signer/recipient collection, `Signature` for the multi-signature form, and `CounterSignature` for a countersignature layer. It serializes the body's protected-header bytes, signer protected-header bytes when applicable, external AAD and payload into a CBOR array. `dosign()` then resolves the COSE algorithm to the primitive signature operation. Receive-side verification rebuilds this structure from parsed fields.
+
 ### MAC flow
 
 MAC follows the same high-level composition pattern, but computes a keyed authenticator over the COSE MAC_structure. In the recipient form, key-distribution metadata is distinct from the body's MAC algorithm. The resulting tag is verified after the matching structure and key have been reconstructed.
 
+#### Receive-side pipeline and result handling
+
+```text
+process(recv)
+    ├─ composer.parse(CBOR bytes)
+    │     └─ clear old model → parse CBOR array/tag → populate layers
+    ├─ walk nested recipient layers (children before parent)
+    ├─ process recipient key distribution
+    ├─ dispatch Encrypt/Sign/MAC by algorithm category and message tag
+    ├─ rebuild Enc_structure / Sig_structure / MAC_structure
+    ├─ decrypt/authenticate, verify signature, or verify MAC
+    ├─ process countersignature layers when present
+    └─ combine operation status and expose body output
+```
+
+`verify()` delegates to `process()` and derives its boolean result from whether the overall return code is success. Per-layer return codes are collected, so mixed results are not silently treated as full success. Callers should distinguish successful CBOR parsing from successful authentication and check the return code and operation-specific output contract.
+
 ### Randomness and protected headers
 
 The implementation contains `preprocess_random()` and algorithm/group metadata for fields such as IV/nonce, ephemeral key and key-agreement context. Those paths populate fields needed by the selected operation; the exact fields depend on the algorithm family. Protected headers are serialized as part of the cryptographic input, whereas unprotected headers carry metadata that is not covered by the same protected-header byte sequence. Security-sensitive algorithm selection and context must therefore be placed according to COSE's header rules, not merely whichever map is convenient.
+
+#### IV and Partial IV: generation and receive-side processing
+
+The `iv` and `partial_iv` header parameters participate in nonce construction, but the rule for generating a Partial IV must not be conflated with the receiver's processing of a received Partial IV. The RFC wording is conditional on the Partial IV generation procedure; it does not, by itself, establish that the receiver must repeat that generation operation verbatim.
+
+In the receive-side `docrypt()` and `domac()` paths, hotplace combines the received Partial IV with the context IV using bitwise OR (`|=`). This is an intentional implementation choice, not evidence of a specification discrepancy merely because the operator differs from XOR. Describe and assess this code in the context of the RFC's generation-versus-processing distinction; do not label it non-conformant based on the operator alone. The Partial IV is an input to nonce construction, not the final nonce by itself.
 
 ### Algorithm inventory: what the source currently declares and tests
 
@@ -145,7 +249,7 @@ For other algorithms, use three separate evidence levels: (1) metadata exists in
 
 CWT (CBOR Web Token) uses CBOR claims and commonly uses COSE as its protection envelope, but CWT claim semantics are not the same thing as COSE message processing. The COSE code can protect a CBOR payload; the source reviewed here does not expose a separate CWT claims-validation API for registered claims, issuer/audience policy or application authorization. Those checks belong to the CWT/application layer above the COSE envelope.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/io/cbor/` — CBOR values, maps, arrays, byte strings, parsing and serialization.
 - `sdk/crypto/basic/` — AEAD, signatures, MAC, keys, key exchange and KDF operations.
@@ -168,12 +272,12 @@ The tests assert operation return status and exercise receive-side processing. T
 - `cbor_web_key.hpp/.cpp` — COSE key representation.
 - `sdk/crypto/advisor/resource_cose.cpp` — algorithm/group metadata and explicit support flags.
 
-## 5. References
+## 6. References
 
-- RFC 8949 — Concise Binary Object Representation (CBOR).
-- RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process.
-- RFC 9053 — CBOR Object Signing and Encryption (COSE): Initial Algorithms.
-- RFC 8610 — Concise Data Definition Language (CDDL): A Notational Convention to Express CBOR and JSON Data Structures.
-- RFC 8392 — CBOR Web Token (CWT).
-- RFC 9338 — COSE Countersignatures.
-- IANA COSE registry — algorithm, header, key-type and curve identifiers: https://www.iana.org/assignments/cose/cose.xhtml
+- [RFC 8949 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949).
+- [RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process](https://www.rfc-editor.org/rfc/rfc9052).
+- [RFC 9053 — CBOR Object Signing and Encryption (COSE): Initial Algorithms](https://www.rfc-editor.org/rfc/rfc9053).
+- [RFC 8610 — Concise Data Definition Language (CDDL)](https://www.rfc-editor.org/rfc/rfc8610) — notation for CBOR and JSON data structures.
+- [RFC 8392 — CBOR Web Token (CWT)](https://www.rfc-editor.org/rfc/rfc8392).
+- [RFC 9338 — COSE Countersignatures](https://www.rfc-editor.org/rfc/rfc9338).
+- [IANA COSE registry](https://www.iana.org/assignments/cose/cose.xhtml) — algorithm, header, key-type and curve identifiers.

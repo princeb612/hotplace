@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1106                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
@@ -18,71 +18,126 @@ This document focuses on `network_server` worker orchestration and lifecycle. Re
 
 ## 2. Data Model
 
-```text
-network_server context
-  ├─ server socket + platform multiplexer
-  ├─ session manager
-  ├─ protocol group
-  ├─ accept / TLS-accept work
-  ├─ producer queue and threads
-  └─ consumer queue and threads
-```
+### Shared context
 
-Linux uses the implemented `multiplexer_epoll` path; Windows uses `multiplexer_iocp`. A kqueue class/reference exists but should not be treated as evidence of a supported macOS/BSD server path.
+`network_multiplexer_context_t` is the object shared by event, accept, producer, TLS-accept, and consumer routines. It carries the listening socket and selected `server_socket`, multiplexer handle, callback and user parameter, event concurrency, worker groups, accept queue and lock, priority event queue, `network_session_manager`, and `network_protocol_group`. It is coordination state rather than the state of an individual connection.
 
-The configured concurrency keys include event, TLS accept, producer/network, and consumer counts, along with TCP/UDP buffer sizes. When `network_server::open()` receives no configuration, source defaults are event 1024, TLS accept 1, producer 1, and consumer 2. `http_server_builder` initializes its own defaults (event 1024, TLS accept 2, producer 2, consumer 2), so effective concurrency depends on the caller's configuration path.
+### Queues and worker groups
+
+| State | Purpose | Data crossing the boundary |
+|---|---|---|
+| `accept_queue` | Holds accepted TCP sockets while secure acceptance is pending | accepted socket and peer address |
+| `event_queue` | Schedules sessions for consumer processing | referenced `network_session`, ordered by priority |
+| producer workers | Read transport data and append it to a session stream | bytes plus optional peer address |
+| consumer workers | Frame queued bytes and dispatch completed messages | session, protocol group, request stream |
+| TLS-accept workers | Run the secure accept/handshake stage | queued socket -> secure socket context/session |
+
+The implemented server paths use `multiplexer_epoll` on Linux and `multiplexer_iocp` on Windows. A kqueue class/reference exists, but should not be treated as evidence of a supported macOS/BSD server path.
+
+The configuration keys include event, TLS-accept, producer/network, and consumer counts, plus TCP/UDP buffer sizes. Without an explicit configuration, `network_server::open()` uses event concurrency 1024, TLS-accept concurrency 1, producer concurrency 1, and consumer concurrency 2. `http_server_builder` initializes its own defaults (event 1024, TLS-accept 2, producer 2, consumer 2); actual concurrency depends on which layer supplies the configuration.
 
 ## 3. Behavior Model
 
-### Worker and session path
+### Open and worker initialization
 
 ```text
-accept worker
-  -> accept socket
+network_server::open(...)
+  -> server_socket::open(listener)
+  -> create platform multiplexer
+  -> allocate network_multiplexer_context_t
+  -> configure queues, worker groups and callback context
+  -> session_manager.set_server_conf(conf)
+  -> addref server_socket
+  -> start platform-specific accept work when required
+  -> start TLS-accept workers for secure stream sockets
+  -> return context handle
+```
+
+The listener setup differs by transport: TCP/TLS uses a stream bind/listen path, while UDP/DTLS binds a datagram socket. The Linux DTLS path explicitly constrains producer concurrency to one for the supported epoll handshake flow. Producer/consumer work loops are created through the corresponding `*_loop_run()` methods rather than being synonymous with merely opening the listener.
+
+### Accept and handshake
+
+```text
+accept routine
+  -> accept socket + peer address
   -> optional accept-control callback
-  -> accept_queue (secure sockets)
-  -> TLS-accept worker(s)
-  -> session_manager.connected / session registration
-
-multiplexer read event
-  -> producer worker
-  -> session_manager.find(socket)
-  -> network_session::produce(...)
-  -> network_stream queues raw bytes
-  -> session scheduled by priority
-
-consumer worker
-  -> dequeue session
-  -> network_session::consume(protocol_group, ...)
-  -> protocol framing
-  -> callback with interpreted message and session context
+       STOP -> close socket
+       CONTINUE -> continue
+  -> plain socket -> session_accepted(...)
+  -> secure socket -> enqueue accept_context
+                    -> TLS-accept worker
+                    -> server_socket::tls_accept(...)
+                    -> success: session_accepted(...)
+                    -> failure: server_socket::tls_accept_fails(...)
 ```
 
-For TLS server sockets, TCP accept and TLS handshake are distinct work stages. The configured TLS-accept worker count supports one or more workers; the queue may become a bottleneck when handshake arrivals exceed processing capacity. More workers can increase parallel handshake work, at the cost of additional CPU and memory pressure.
+The separate TLS-accept stage exists because a handshake may take substantially longer than accepting a TCP socket. The worker removes one item from the protected queue before calling `tls_accept`; successful handshakes enter the normal session path. Backend-specific failure cleanup is delegated to `tls_accept_fails`.
 
-The session manager and the stream/protocol layer have separate responsibilities. The manager indexes and coordinates session lifetime; the session owns per-connection state; `network_stream` buffers bytes; the protocol group selects a registered interpreter; and the protocol determines message boundaries. See the linked focused documents rather than treating these as interchangeable links.
-
-### Lifecycle and shutdown
+### Producer path: event to raw stream
 
 ```text
-open
-  -> initialize socket, multiplexer, session manager, protocol group
-  -> start accept / TLS-accept / event / producer / consumer work
-  -> event_loop_break / consumer_loop_break / tls_accept_loop_break
-  -> close and release registrations/context
+multiplexer event/completion
+  -> identify event socket
+  -> session_manager.find(event socket)
+  -> add a temporary session reference
+  -> network_session::produce(...)
+       -> transport read (or TLS read loop)
+       -> network_stream::produce(bytes, optional peer)
+       -> priority event_queue.push(session)
+  -> release temporary reference
 ```
 
-Shutdown must account for queued session references and worker loops. Stopping one thread does not by itself prove all session references or multiplexer bindings have been released.
+The platform backends deliver read data differently: the Linux path reads through the socket wrapper into the session buffer; the Windows completion path can pass the transferred buffer and size. TLS processing may perform repeated SSL reads while data remains available, then schedules the session when data has been produced. The producer stage buffers input; it does not decide application message boundaries.
 
-## 4. Relationships
+### Consumer path: raw stream to callback
 
-- `network_server.hpp/.cpp` — worker loops and context lifecycle.
-- [Network server overview](README.md) — integrated end-to-end path.
-- [Network session](network_session.md) — state, ownership and lifetime.
-- [Network stream and protocol](network-stream-and-protocol.md) — raw bytes to framed messages.
-- [Socket model](../basic/socket-model.md) — socket contracts.
-- [HTTP server](../http/README.md) — higher-level protocol and callback layer.
+```text
+consumer worker
+  -> pop next session from event_queue
+  -> network_session::consume(protocol_group, ...)
+  -> _stream.read(protocol_group, _request)
+  -> network_stream framing loop
+  -> protocol_group.is_kind_of(prefix)
+  -> protocol.read_stream(...)
+  -> complete message(s) in _request
+  -> callback with message + session context
+```
 
-## 5. References
+The priority queue schedules sessions, not individual TCP packets as independent requests. A single consumer pass may yield multiple complete messages; incomplete trailing data remains buffered. Protocol selection and message framing are owned by `network_protocol_group`, `network_protocol`, and `network_stream`, not by the event backend.
+
+### Shutdown and ownership
+
+The implemented `network_server::close(context)` order is:
+
+```text
+close listening socket
+  -> Windows: signal/wait accept workers
+  -> cleanup_tls_accept()
+  -> signal/wait TLS-accept workers
+  -> signal/wait producer workers
+  -> signal/wait consumer workers
+  -> protocol_group.clear()
+  -> release context's server_socket reference
+  -> close multiplexer
+  -> invalidate context signature
+  -> delete context
+       -> network_session_manager destructor
+            -> shutdown(): release and clear stream/datagram map entries
+```
+
+The ordering above is the literal `close()` sequence; the manager's `shutdown()` is not called as an explicit earlier step. It runs when deleting the context destroys its manager member. A stream disconnect follows a different path: `session_closed()` first removes the socket from the manager lookup map, then unbinds it from the multiplexer, invokes the disconnect callback, and releases the map-held session reference.
+
+A manager lookup returns a referenced session, so work already holding a reference can outlive removal from the lookup map. Conversely, `close()` waits for the worker groups before clearing protocol references and closing the multiplexer, and context destruction then releases sessions still retained by manager maps. These are distinct lifetime stages: worker quiescence, lookup deregistration, multiplexer unbinding/closure, and reference-counted object destruction should not be conflated.
+
+## 5. Relationships
+
+- `network_server.hpp/.cpp` — context fields and worker routines.
+- [Server overview](README.md) — integrated socket-to-application flow.
+- [Network session](network_session.md) — session state and lifetime.
+- [Network stream and protocol](network-stream-and-protocol.md) — framing path.
+- [Socket model](../basic/socket-model.md) — common socket contract.
+- [HTTP server](../http/README.md) — higher-level protocol/callback layer.
+
+## 6. References
 
 No external references are currently listed.

@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -32,15 +32,7 @@ The increment/decrement operations use the project's platform atomic helpers.
 
 It does not own an object and therefore does not perform deletion itself. The containing object decides what to do when `delref()` reaches zero.
 
-### Ownership caveat
-
-These classes are reference-counting primitives, not a complete replacement for every smart-pointer ownership model. Copy operations are intentionally disabled; ownership transfer is represented by move operations or explicit `addref`/`delref` calls.
-
-## 3. Behavior Model
-
-### `t_shared_reference`
-
-`t_shared_reference<T>` couples an object pointer with an embedded reference count.
+### Object relationship
 
 ```text
 object
@@ -50,9 +42,20 @@ object
         object pointer
 ```
 
+
+`t_shared_reference<T>` couples an object pointer with an embedded reference count. `t_shared_instance<T>` keeps the counter separately allocated from the managed object.
+
+### Ownership caveat
+
+These classes are reference-counting primitives, not a complete replacement for every smart-pointer ownership model. Copy operations are intentionally disabled; ownership transfer is represented by move operations or explicit `addref`/`delref` calls.
+
+## 3. Behavior Model
+
+### `t_shared_reference`
+
 `make_share()` attaches the object and establishes the first reference. `delref()` deletes the object when the count reaches zero.
 
-The class was written to provide a smart-pointer-like ownership pattern without requiring the project to depend on `std::shared_ptr` for its older compatibility targets. The source testcase covers explicit release for `t_shared_reference<T>` and move transfer between `t_shared_instance<T>` owners, checking that destruction occurs once at the end of the ownership lifetime.
+The class was written to provide a smart-pointer-like ownership pattern without requiring the project to depend on `std::shared_ptr` for its older compatibility targets.
 
 ### `t_shared_instance`
 
@@ -84,6 +87,6 @@ This recursive behavior is specific to composite types such as `cbor_map` that i
 - `sdk/base/nostd/set.hpp` — `t_set_runtime` uses a shared-instance handle for its concrete set object.
 - `sdk/base/nostd/value.hpp` — a separate deferred-value abstraction; it uses future/promise state rather than this ownership counter.
 - `sdk/io/cbor/cbor_map.hpp/.cpp` — concrete composite ownership: map-level `addref()` / `release()` propagate to stored pairs and nested members.
-- `test/testcase/base/system/testcase_shared.cpp` — explicit reference release and move/ownership lifetime checks.
+- `test/testcase/base/system/testcase_shared.cpp` — explicit reference release and move/ownership lifetime checks, including single destruction at the end of ownership.
 - `sdk/io/cbor/cbor_map.hpp` — includes the nested-map ownership example; `cbor_map.cpp` implements member-wise reference propagation.
 - This utility is distinct from `std::shared_ptr`; callers must follow its own attach/release contract.

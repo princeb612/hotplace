@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -31,7 +31,23 @@ This is the general base layer. It is separate from `sdk/base/stream` (stream-or
 
 The components share a string-oriented scope, but the two obfuscation facilities have different execution and language-standard requirements. They should not be treated as one interchangeable API.
 
+The ownership distinction is part of the data contract: `split_context_t` retains a source copy and range indexes, while general bounded-buffer helpers operate on caller-supplied memory. Runtime and compile-time obfuscation have different language-standard requirements; neither is encryption.
+
 ## 3. Behavior Model
+
+### Source-flow overview
+
+```text
+bounded input ─► scan / getline / tokenize ─► positions and extracted text
+source string ─► split_begin ─► owned source + {begin, length} ranges
+                                  ├─ split_get(index) ─► one materialized fragment
+                                  └─ foreach(callback) ─► visit fragments
+
+literal ─► constexpr_obfuscate (C++14+) ─► transformed compile-time representation
+text ─────► obfuscate_string (runtime) ─► transformed object bytes ─► reconstruction on output
+```
+
+The string helpers do not all own their results in the same way. `split_context_t` retains its own source copy and indexes fragments by range, while the general bounded-buffer helpers operate on caller-supplied memory. Runtime and compile-time obfuscation are separate facilities with different language-standard requirements; neither is encryption.
 
 String wrappers, bounded buffers, and split ranges may have different lifetime and ownership constraints. Check the individual declarations and implementation before retaining references into input buffers or assuming a returned segment owns its characters.
 

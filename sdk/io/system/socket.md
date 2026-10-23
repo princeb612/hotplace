@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — socket creation, readiness and ownership   │
 └──────────────────────────────────────────────┘
@@ -44,21 +44,9 @@ The Windows build additionally exposes `winsock_startup()` and `winsock_cleanup(
 
 ### Resource ownership
 
-Sockets are native resources. Every successful create/connect/listener path must be paired with the appropriate close path, and a socket must not be closed while another thread or callback can still use it. For listeners, the caller owns each socket in the output vector. On Windows, overlapped sockets and Winsock startup/cleanup must be coordinated with the lifetime of the code using them.
+Sockets are native resources. Every successful create/connect/listener path must be paired with the appropriate close path, and a socket must not be closed while another thread or callback can still use it. For listeners, the caller owns each socket in the output vector. On Windows, overlapped sockets and Winsock startup/cleanup must be coordinated with the lifetime of the code using them. A minimal caller flow is to initialize the socket to `INVALID_SOCKET`, call `create_socket()` with an output `sockaddr_storage_t`, use the successfully created socket, and finish with `close_socket()`; the exact cleanup path must account for failures and platform-specific startup requirements.
 
-### Example from the API contract
-
-```cpp
-socket_t sock = INVALID_SOCKET;
-sockaddr_storage_t address;
-create_socket(&sock, &address, SOCK_STREAM, "127.0.0.1", 1234);
-// use sock
-close_socket(sock, true, 0);
-```
-
-This is the documented API shape, not a claim that every error and platform branch has dedicated unit coverage.
-
-## 4. Relationships
+## 5. Relationships
 
 - [Event multiplexer](multiplexer.md) — classifies sockets and dispatches readiness/completion callbacks.
 - `sdk/net/basic/` — adds client/server role, transport and secure-backend behavior.
@@ -72,7 +60,7 @@ This is the documented API shape, not a claim that every error and platform bran
 - `sdk/io/system/types.hpp`
 - `sdk/net/basic/`
 
-## 5. References
+## 6. References
 
-- POSIX socket and address-resolution APIs, including `getaddrinfo`, `connect`, `shutdown`, and `close`.
-- Winsock API reference for `WSASocket`, `ioctlsocket`, and Winsock startup/cleanup.
+- [Linux man-pages: socket(2)](https://man7.org/linux/man-pages/man2/socket.2.html), [connect(2)](https://man7.org/linux/man-pages/man2/connect.2.html), [shutdown(2)](https://man7.org/linux/man-pages/man2/shutdown.2.html), and [getaddrinfo(3)](https://man7.org/linux/man-pages/man3/getaddrinfo.3.html) — POSIX socket and address-resolution APIs.
+- [Microsoft Learn: Winsock functions](https://learn.microsoft.com/en-us/windows/win32/winsock/winsock-functions) — Windows socket API, including WSASocket and ioctlsocket.

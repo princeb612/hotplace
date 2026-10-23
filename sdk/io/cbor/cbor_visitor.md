@@ -3,10 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -14,98 +14,71 @@
 
 ## 1. Role
 
-Describes visitor-based representations of CBOR objects, including diagnostic and concise output.
+Describes visitor-based representations of CBOR objects, including concise binary output and diagnostic notation.
 
 ## 2. Data Model
-### Role
 
-The visitor layer provides alternate representations of an already parsed `cbor_object` tree.
+### Visitor interface
 
-```text
-             cbor_object tree
-                    │
-              cbor_visitor
-              /           \
-             /             \
-            ▼               ▼
- concise visitor      diagnostic visitor
-     │                       │
-     ▼                       ▼
- encoded CBOR            readable form
-```
+The visitor layer operates on an existing `cbor_object` tree. It does not own a separate CBOR value model.
 
-This avoids coupling the object model to one output representation.
+- `cbor_visitor` defines the visitor boundary.
+- `cbor_concise_visitor` retains a caller-provided `binary_t*` output target.
+- `cbor_diagnostic_visitor` retains a caller-provided `stream_t*` output target.
 
-### Base visitor
+Both concrete visitor constructors reject a null output target by throwing an exception. The output objects are supplied by the caller; the visitor stores the pointer rather than constructing an independent output buffer/stream.
 
-`cbor_visitor` defines the traversal interface.
-
-Concrete visitors receive `cbor_object` instances and produce their respective output.
-
-### Concise representation
-
-`cbor_concise_visitor` produces the compact CBOR binary representation.
-
-It is useful when an object tree already exists and the caller wants the encoded data without directly managing `cbor_encode`.
-
-### Diagnostic representation
-
-`cbor_diagnostic_visitor` produces a human-readable diagnostic representation through `stream_t`.
-
-This is useful for debugging and for comparing the object tree with the notation used by RFC CBOR examples.
-
-### Why this is separate from encoding
-
-The project keeps three concerns distinct:
+### Representation dispatch
 
 ```text
-cbor_object
-    │
-    ├── semantic/object structure
-    │
-    ├── cbor_encode / concise visitor
-    │       └── binary representation
-    │
-    └── diagnostic visitor
-            └── human-readable representation
+cbor_object tree
+      │
+      ├── cbor_concise_visitor ──► binary_t
+      │
+      └── cbor_diagnostic_visitor ──► stream_t
 ```
 
-That separation is particularly useful when checking a test vector:
-
-```text
-encoded CBOR
-    ↓
-reader
-    ↓
-object tree
-    ↓
-diagnostic representation
-```
-
-and then:
-
-```text
-object tree
-    ↓
-encoder / concise visitor
-    ↓
-encoded CBOR
-```
+Each visitor's `visit(cbor_object*)` calls the object's `represent()` method with the selected output target. Concrete object classes determine how their own values and children are represented.
 
 ## 3. Behavior Model
-The logical CBOR object model is distinct from its encoded byte layout. Readers construct object values, while encoders and publishers produce output representations.
 
-### Example: compare binary and diagnostic output
+### Visitor execution
 
-A useful trace is to read a vector into a `cbor_object` tree, then compare the encoded representation with a diagnostic representation of the same logical value. The concise visitor targets CBOR binary; the diagnostic visitor targets readable notation. They are two views of the object tree, not interchangeable wire formats. Additional RFC-oriented cases are retained as historical reference material; this documentation update did not execute the tests.
+1. The caller creates an output target and passes its address to the appropriate visitor.
+2. The caller dispatches an object through the visitor interface.
+3. The visitor forwards the target to `object->represent(...)`.
+4. The concrete object's representation implementation writes its value and, where applicable, recursively represents children in the selected form.
 
-## 4. Relationships
+```text
+caller creates output target
+          │
+          ▼
+construct visitor(target)
+          │
+          ▼
+visit(object)
+          │
+          ▼
+object.represent(target)
+          │
+          ├── concise visitor ──► CBOR bytes
+          └── diagnostic visitor ──► readable diagnostic notation
+```
+
+The concise output is a CBOR encoding; diagnostic output is text intended for inspection. They may describe the same logical object, but are not interchangeable wire formats. This visitor interface is distinct from the low-level `cbor_encode` overloads even though both can produce binary output.
+
+### Test interpretation
+
+The RFC-oriented testcase builds values or object trees and uses `cbor_publisher` to obtain both diagnostic and concise output, then compares concise bytes against expected hex. The YAML-vector testcase parses encoded bytes and publishes both forms; it compares bytes first and uses diagnostic text for selected cases where multiple valid floating-point widths represent the same value. These are source-level verification paths; this documentation update did not execute the tests.
+
+## 5. Relationships
+
 ### Related source
 
-- `cbor_visitor.*`
-- `cbor_object.*`
-- `cbor_encode.*`
-- `cbor_publisher.*`
+- `cbor_visitor.*` — visitor interface and concrete output-target adapters.
+- `cbor_object.*` — `accept()` and object representation boundary.
+- `cbor_encode.*` — direct value/object binary encoding.
+- `cbor_publisher.*` — higher-level output facade used by sample/test code.
 
 ### Related tests
 
@@ -113,5 +86,10 @@ A useful trace is to read a vector into a `cbor_object` tree, then compare the e
 - `test/testcase/cbor/testvector_cbor.cpp`
 - `test/testcase/cbor/sample.cpp`
 
-### Related documents
-- `rfc8949-examples.md` — retained RFC 8949 Appendix A encoded examples
+### Related document
+
+- [CBOR reader and encoder](cbor-reader-encoder.md) — parse and encode paths leading into and out of the object tree.
+
+## 6. References
+
+- [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), including diagnostic notation and encoded data-item examples.

@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -45,17 +45,47 @@ openssl_kdf
 
 ## 3. Behavior Model
 
-Algorithm-specific parameters are part of the security contract:
+### 3.1 Select the derivation family from the input model
 
-- PBKDF2's iteration count determines repeated PRF work; the caller must choose a suitable deployment cost.
-- scrypt's `N`, `r`, and `p` affect work and memory profile.
-- Argon2's variant and iteration, memory, and parallelism costs must be selected deliberately. Build/provider support is conditional, so source presence alone is not a runtime-availability guarantee.
-- HKDF's output length, salt, and info must match the consuming protocol/application. `info` provides context separation; it does not create entropy.
-- TLS label helpers serialize protocol labels and context according to the TLS/DTLS-specific path. The handshake/key-schedule state machine remains in `sdk/net/tls`.
+```text
+password ──► PBKDF2 / scrypt / Argon2 ──► derived key material
+                         (cost parameters)
+
+existing secret / IKM ──► HKDF-Extract ──► PRK
+                                             |
+                                             v
+                                  HKDF-Expand(info, length)
+                                             |
+                                             v
+                                      derived output
+
+IKM ──► CMAC-KDF extract/expand ──► derived output
+
+TLS/DTLS secret + label + context + length
+                 |
+                 v
+      protocol label encoding
+                 |
+                 v
+           HKDF-Expand
+                 |
+                 v
+       traffic/key-schedule input
+```
+
+The input model selects the family: password KDFs deliberately impose a configurable guessing cost, while HKDF and the CMAC-based KDF derive purpose-specific material from existing secret input. The TLS/DTLS label helpers are wrappers around HKDF expansion with protocol-defined input encoding; they do not run the handshake or decide which secret belongs at a particular protocol stage.
+
+### 3.2 Parameters are part of the derivation contract
+
+- PBKDF2's iteration count determines repeated PRF work; the caller chooses a deployment-appropriate cost.
+- scrypt's `N`, `r` and `p` affect the work and memory profile.
+- Argon2's variant and iteration, memory and parallelism costs must be selected deliberately. Build/provider support is conditional; source presence alone is not a runtime-availability guarantee.
+- HKDF's output length, salt and `info` must match the consuming protocol/application. `info` provides context separation; it does not create entropy.
+- TLS/DTLS label helpers encode the label and context before expansion. The consuming protocol still owns the key-schedule state and secret-lifetime rules.
 
 A KDF does not generate random salts or nonces, store passwords, or manage key lifetime. Password KDFs should not be substituted for HKDF, and HKDF should not be treated as a password-hardening function.
 
-## 4. Relationships
+## 5. Relationships
 
 - `../../advisor/README.md` resolves digest names used by HMAC/HKDF and backend operations.
 - `../digest/README.md` provides digest primitives used by digest-based KDFs.
@@ -76,7 +106,7 @@ A KDF does not generate random salts or nonces, store passwords, or manage key l
 - `testcase_rfc6070.cpp` covers PBKDF2; `testcase_rfc7914.cpp` covers scrypt; `testcase_rfc9106.cpp` covers Argon2; `testvector_rfc4615.cpp` covers AES-CMAC-related material.
 - These vector/testcase files show source-level coverage, not runtime execution or availability in every build.
 
-## 5. References
+## 6. References
 
 - RFC 4615 — The Advanced Encryption Standard-Cipher-based Message Authentication Code-PRF-128 (AES-CMAC-PRF-128).
 - RFC 5869 — HMAC-based Extract-and-Expand Key Derivation Function (HKDF).

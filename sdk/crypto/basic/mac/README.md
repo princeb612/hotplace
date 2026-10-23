@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -24,27 +24,57 @@ This directory groups keyed authentication operations and two application-level 
 | `crypto_hmac` | Algorithm- and key-bound HMAC object. It supports one-shot `mac()` and incremental `init` / `update` / `finalize` usage. |
 | `crypto_hmac_builder` | Selects the hash algorithm and key, then builds the `crypto_hmac` object. |
 | `crypto_cbc_hmac` | Combined CBC encryption plus HMAC construction used for specific compatibility/protocol suites; it is not another name for standalone HMAC. |
-| `hmac_otp` | HOTP: computes a truncated numeric code from an HMAC and counter. |
-| `time_otp` | TOTP: derives a counter from time steps and delegates code generation/verification to HOTP. |
-
-### Builder and backend path
-
-```text
-crypto_hmac_builder.set(hash).set(key).build()
-                    ↓
-                crypto_hmac
-           ├─ mac(message)
-           └─ init → update* → finalize
-                    ↓
-               openssl_hash / OpenSSL HMAC
-
-hmac_otp (HOTP) ── uses HMAC over counter bytes
-time_otp (TOTP) ── maps time to counter ──► HOTP
-```
-
-The builder records algorithm and key for the higher-level object. The backend owns OpenSSL HMAC context and update/finalize operations. Use `crypto_hmac` for a reusable keyed object and incremental updates; use `openssl_mac` for one-shot helper calls where input/output are already available. `openssl_mac` is not itself the lower-level stateful-context API—the context-level interface is `openssl_hash`.
+| `hmac_otp` | HOTP configuration and counter-based code operation: shared secret/HMAC choice, counter and requested decimal digit count. |
+| `time_otp` | TOTP configuration: time-step interval and digit policy; derives a counter from time and delegates code generation/verification to HOTP. |
 
 ## 3. Behavior Model
+
+### 3.1 HMAC lifecycle
+
+```text
+hash algorithm + secret key
+            |
+            v
+ crypto_hmac_builder
+            |
+            v
+       crypto_hmac
+        /       \
+       /         \
+mac(message)   init → update(chunk)* → finalize
+       \         /
+        \       /
+         openssl_hash / OpenSSL HMAC
+```
+
+The builder binds the selected hash and secret key to the higher-level object. A one-shot `mac()` call consumes a complete message; the incremental path retains keyed hash state across `update()` calls until finalization. `openssl_mac` is a separate one-shot helper, while `openssl_hash` is the context-level interface used for stateful backend work.
+
+### 3.2 HOTP and TOTP data flow
+
+```text
+HOTP:
+secret key + counter
+        |
+        v
+       HMAC
+        |
+        v
+ dynamic truncation → numeric value → decimal digits
+
+TOTP:
+supplied time + configured time-step interval
+        |
+        v
+   time-step counter
+        |
+        v
+       HOTP
+        |
+        v
+     decimal code
+```
+
+HOTP's counter and digit count are operation inputs. TOTP first maps the supplied time to a time-step counter and then uses the HOTP mechanism. Verification additionally depends on the caller's accepted counter/time window and replay policy; those policies are not encoded by the primitive itself.
 
 ### HMAC and CBC-HMAC are different contracts
 
@@ -60,7 +90,7 @@ HMAC authenticates a message with a secret key and hash function. CBC-HMAC combi
 
 HMAC's digest choice is resolved through common hash metadata/backend operations. CMAC and CBC-HMAC have distinct construction requirements. An algorithm appearing in advisor metadata does not guarantee that the active OpenSSL/provider build offers it.
 
-## 4. Relationships
+## 5. Relationships
 
 - `../digest/README.md` explains the shared hash backend and the difference between an unkeyed digest and keyed HMAC.
 - `../sign/README.md` exposes HMAC through a common sign/verify facade for consumers that share interfaces.
@@ -82,7 +112,7 @@ HMAC's digest choice is resolved through common hash metadata/backend operations
 - `testcase_hmac.cpp` exercises the signing/MAC integration path.
 - These are source-level coverage references; they do not claim the tests were executed in the current environment.
 
-## 5. References
+## 6. References
 
 - RFC 2104 — HMAC: Keyed-Hashing for Message Authentication.
 - RFC 4226 — HOTP: An HMAC-Based One-Time Password Algorithm.

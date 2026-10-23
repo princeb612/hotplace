@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -14,59 +14,117 @@
 
 ## 1. Role
 
-`network_session` binds a socket to per-connection state and buffering. It is the unit scheduled between producer and consumer work in `network_server`; it is not the session manager and does not itself define HTTP framing.
+`network_session` binds transport socket state to per-connection buffering and protocol work. It is the unit scheduled between producer and consumer work in `network_server`; it is not the session manager and does not itself define HTTP framing.
 
 ## 2. Data Model
 
-A session owns/references socket information, `_stream` for raw received data, `_request` for protocol-composed messages, `network_session_data` for application/session key-value state, an associated server socket, and optional HTTP/2 state. It is reference-counted because manager lookups, queues, and callbacks may overlap in lifetime.
+### Per-session state
 
-For TCP/TLS, `network_session_manager::connected()` creates/registers one session per accepted socket, keyed by socket handle. The manager indexes and coordinates sessions; each session owns its per-connection buffers and state.
+```text
+network_session
+  ├─ session metadata
+  │    ├─ event socket / socket context
+  │    ├─ peer address
+  │    ├─ priority
+  │    └─ platform read buffer (netbuffer_t)
+  ├─ _stream  : raw transport input (network_stream)
+  ├─ _request : protocol-composed messages (network_stream)
+  ├─ network_session_data : application/session key-value state
+  ├─ server_socket reference
+  └─ optional HTTP/2 session state
+```
 
-UDP/DTLS differs because a listening socket is shared. UDP carries peer address alongside datagram data. DTLS uses a cookie/per-peer session path and performs DTLS handshake processing for the peer-specific state. It should not be modeled as one accepted TCP-like socket per peer.
+`_stream` and `_request` are both `network_stream` objects but have different roles: `_stream` is the raw transport-input queue, while `_request` stores protocol-composed message units. They are separate buffers because transport read boundaries and protocol message boundaries are not equivalent.
+
+A session is reference-counted because the manager, producer/consumer queue, and callback work can overlap in lifetime. The reference count protects object lifetime; it does not replace correct ordering of manager deregistration, multiplexer unbinding, and socket release.
+
+### Stream versus datagram session identity
+
+The session identity model differs by transport:
+
+- **TCP/TLS:** the stream session is associated with the accepted event socket and its peer/socket context.
+- **Plain UDP:** the listener session is keyed by the shared listening socket; datagram peer addresses travel with queued input rather than creating a TCP-like session per peer.
+- **DTLS:** peer-specific security state is tracked separately from the listener-level datagram session, using a peer-address-derived cookie and a dedicated datagram-session map.
+
+The creation and lookup operations that establish these identities are described in Behavior Model.
 
 ## 3. Behavior Model
+
+### Accepted stream connection
+
+```text
+server_socket accept / successful TLS accept
+  -> network_session_manager::connected(event_socket, peer, ...)
+  -> allocate network_session(server_socket)
+  -> apply configured TCP buffer size
+  -> network_session::connected(...)
+       store socket context + peer address
+  -> register/bind session with multiplexer
+  -> producer can find session by event socket
+```
+
+The session manager serializes map operations under its session lock. A successful lookup increments the session reference before returning it to producer/consumer work. Duplicate registration for the same event socket is rejected rather than silently replacing an existing stream session.
 
 ### Producer to consumer
 
 ```text
-accepted socket
-  -> session_manager.connected()
-  -> network_session::connected()
-  -> multiplexer binding
-
-read event
-  -> session_manager.find(socket)
-  -> network_session::produce(...)
-  -> _stream queues raw bytes
-  -> session scheduled by priority
+read event/completion
+  -> session_manager.find(event socket)
+  -> network_session::produce(queue, ...)
+  -> choose stream or datagram path by socket type
+       stream: read bytes (TLS may repeat SSL reads)
+       datagram: retain peer address with received datagram
+  -> _stream.produce(bytes, peer-if-present)
+  -> schedule session by its priority
   -> network_session::consume(protocol_group, ...)
-  -> network_stream frames bytes
-  -> completed data appended to _request
+  -> _stream.read(protocol_group, _request)
+  -> completed protocol units become available in _request
   -> consumer callback
 ```
 
-`produce()` records input; it does not promise that one call equals one request. `consume()` delegates message framing to registered protocols. See [network-stream-and-protocol.md](network-stream-and-protocol.md) for how partial messages are retained and complete messages extracted.
+The Linux producer path reads into the session's configured buffer; the Windows completion path can supply the transferred bytes and size. For TLS stream sockets, the session uses the socket wrapper's readiness/read mode and drains available SSL plaintext before scheduling the session. `produce()` buffers transport data; it does not promise that one invocation equals one request. The stream/protocol layer owns message boundaries.
+
+### Datagram and DTLS session lookup
+
+Plain UDP input retains the peer address with the datagram but uses the listener-level session keyed by the shared listening socket. It does not allocate a TCP-like connected session for every sender.
+
+For DTLS, `get_dgram_cookie_session()` derives a cookie from the peer address and checks `_dgram_session_map` for the corresponding peer-specific session. If no session exists, the manager creates and opens the DTLS session state, then advances the handshake through the DTLS path. This peer-specific security session is distinct from the listener-level datagram session.
+
+### Send path
+
+`send()` writes through the session's associated server socket and event socket context. `sendto()` supplies an explicit peer address for datagram output. The choice follows the transport model: a connected stream session sends to its established peer, while datagram output needs a destination address. The method does not itself construct HTTP or other application framing.
 
 ### Lifetime and close
 
-The close path removes a session from the manager's normal lookup path before the remaining socket/multiplexer resources are released. This ordering matters because producer work and queued consumer callbacks can overlap. Reference counting protects the object's lifetime across those concurrent references; it does not eliminate the need to order deregistration and resource release correctly.
+```text
+manager.find(stream socket) -> addref -> producer work -> release
+manager-held reference remains in _session_map
+session_closed()
+  -> ready_to_close(socket): erase lookup entry, return manager-held pointer
+  -> multiplexer unbind
+  -> mux_disconnect callback
+  -> release manager-held reference
+other in-flight references -> release independently
+```
 
-### Send and datagram identity
+`find()` increments the reference count while holding the manager lock. `ready_to_close()` removes the map entry under the same lock but does not itself release the returned session; `session_closed()` unbinds the socket, dispatches the disconnect callback, and then releases that manager-held reference. Removing the entry prevents later normal lookups from acquiring the session through that key, but it does not invalidate references already held by in-flight work.
 
-`send()` writes through the associated server socket; `sendto()` supplies an explicit peer address for datagram output. UDP input preserves peer identity in `network_stream_data`; DTLS additionally tracks per-peer security state. Session priority affects producer/consumer scheduling, while protocol parsing can also assign priority to message data.
+The manager destructor calls `shutdown()`, which releases entries in both `_session_map` and `_dgram_session_map` and clears the maps. `network_server::close()` does not call this method directly: the manager cleanup occurs as the context is deleted, after the explicit worker-stop, protocol-registry, server-socket-reference, and multiplexer-close steps. This order matters when reading lifetime behavior; the reference count protects object lifetime, while the server coordinates lookup removal and transport deregistration.
 
-`get_session_data()` exposes application/session state. `get_http2_session()` exposes optional HTTP/2-specific state; neither is required for every generic session.
+### Session extensions
 
-## 4. Relationships
+`get_session_data()` exposes application/session key-value state without forcing application data into the generic transport buffers. `get_http2_session()` exposes optional HTTP/2-specific state; generic TCP/TLS sessions do not require it.
 
-- `network_session.hpp/.cpp` — session lifecycle, buffering and send path.
-- [Network server](README.md) — session manager, workers and event lifecycle.
-- [Network server model](network-server-model.md) — orchestration path.
+## 5. Relationships
+
+- `network_session.hpp/.cpp` — session lifecycle, buffering, reference counting, and send path.
+- [Network server](README.md) — manager, workers, and event lifecycle.
+- [Network server execution model](network-server-model.md) — orchestration path.
 - [Network stream and protocol](network-stream-and-protocol.md) — raw bytes to framed messages.
-- [Basic socket layer](../basic/README.md) — transport backend.
+- [Basic socket layer](../basic/README.md) — transport backend and socket contract.
 - [DTLS record arrangement](../tls/dtls_record_arrange.md), [DTLS publisher](../tls/dtls_record_publisher.md), [QUIC packet publisher](../tls/quic_packet_publisher.md), and [TLS session support](../tls/session/README.md).
 - `sdk/net/http/` — HTTP/2 state and HTTP message semantics layered above generic session buffering.
 
-## 5. References
+## 6. References
 
 No external references are currently listed.

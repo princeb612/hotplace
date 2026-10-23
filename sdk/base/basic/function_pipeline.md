@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -39,6 +39,8 @@ struct error_traits;
 
 Its specializations define the meaning of result values for the pipeline. The important contract includes success, exception, invalid-parameter and internal-error values, success/failure predicates, conversion to and from `return_t`, and comparison across result conventions. The `category` tag distinguishes otherwise identical C++ types whose values have different meanings.
 
+## 3. Behavior Model
+
 ### Current specializations
 
 - `error_traits<return_t>` uses hotplace's `errorcode_t` values. Its `is_success()` treats both `success` and `expect_failure` as success for pipeline classification. Its `is_not_fail()` asks `error_advisor` for the error category and accepts anything other than `error_category_severe`.
@@ -53,42 +55,7 @@ When a callback returns `T`, the pipeline stores that result as `_lastcode` and 
 
 Consequently, `result()` returns the pipeline-native `T` value, whereas `result_to_return_t()` returns the remembered non-success `return_t` when one was supplied; otherwise it converts `_lastcode` through `to_return_t()`. This distinction matters when a pipeline mixes native library results with hotplace callbacks: conversion of a native error may be intentionally coarser than a specific `return_t` error supplied by a later callback.
 
-## 3. Behavior Model
-
-### Continuation and failure handling
-
-The pipeline's fluent methods configure when callbacks are eligible to run:
-
-- `run()` and `run_trycatch()` execute normal steps when the current state passes the selected discriminant. `run_trycatch()` converts a caught exception to the policy's `value_exception()`; without the try/catch variant, an exception is rethrown as hotplace's `exception`.
-- `walk()` and `walk_trycatch()` provide the corresponding void-callback forms. A walk does not replace `_lastcode` with a callback result; it returns the current state from its wrapper.
-- `run_failed()` and `walk_failed()` are eligible when the current state fails the discriminant.
-- `walk_always()` runs without regard to the current discriminant, making it useful for finalization or unconditional bookkeeping.
-- `test_parameter()` sets the current result to the policy's `value_invalid_parameter()` when its checker returns false.
-- `goahead_if_not_fail()` changes the continuation predicate to `error_traits<T, category>::is_not_fail`. With `return_t`, this allows a non-severe result (such as the `debug` category used in the testcase) to continue, even though it is not classified as success.
-
-The predicate is therefore part of the error policy: the same pipeline control flow can work with different native result types, while the category specialization determines what “success” and “not failure” mean.
-
-### Tracing and counts
-
-`run_pipe()` expands to a source-location-aware `run()` overload in debug builds and to ordinary `run()` otherwise. When a tracer is installed with `set_tracer()`, the debug path can report a failing result together with the source file and line. The `processed()` and `size()` counters describe pipeline progress; failure-handling steps are not counted the same way as ordinary expected-success steps.
-
-### Implementation consistency note
-
-In the current source snapshot, `function_pipeline::goahead_if_success()` refers to `error_traits<T, category>::_discriminant`, but the specializations shown in `sdk/base/system/error.hpp` expose `is_success()` and `is_not_fail()`, not a member named `_discriminant`. The intended role is clear from the method name and the constructor's use of `is_success`, but the symbol mismatch should be reconciled in source before claiming that this path has been verified to compile.
-
-### Source-level verification
-
-`test/testcase/base/basic/testcase_pipeline.cpp` exercises the control-flow and conversion contract:
-
-- Parameter validation skips normal steps and reaches `walk_failed()`, followed by `walk_always()`.
-- A successful arithmetic callback chain runs the ordinary walks and callback; an unexpected result routes execution to the failure walk.
-- `goahead_if_not_fail()` permits the `errorcode_t::debug` result to continue to the next callback.
-- `function_pipeline<int, osslerror_category>` treats `0` as failure, checks the converted `error_openssl_inside` result, and verifies `result_to_return_t()`.
-- `function_pipeline<int, errno_category>` mixes an `int` callback and a `return_t` callback, checking that the explicit hotplace `errorcode_t::unknown` is preserved by `result_to_return_t()`.
-
-These are source-level assertions in the testcase; this document does not claim a new runtime test execution.
-
-## 4. Relationships
+### Policy and callback result flow
 
 ```text
 operation / callback
@@ -111,6 +78,58 @@ error_advisor::categoryof()
   ▼
 error_category_hint (category, test color/name)
 ```
+
+
+### Continuation and failure handling
+
+The pipeline's fluent methods configure when callbacks are eligible to run:
+
+- `run()` and `run_trycatch()` execute normal steps when the current state passes the selected discriminant. `run_trycatch()` converts a caught exception to the policy's `value_exception()`; without the try/catch variant, an exception is rethrown as hotplace's `exception`.
+- `walk()` and `walk_trycatch()` provide the corresponding void-callback forms. A walk does not replace `_lastcode` with a callback result; it returns the current state from its wrapper.
+- `run_failed()` and `walk_failed()` are eligible when the current state fails the discriminant.
+- `walk_always()` runs without regard to the current discriminant, making it useful for finalization or unconditional bookkeeping.
+- `test_parameter()` sets the current result to the policy's `value_invalid_parameter()` when its checker returns false.
+- `goahead_if_not_fail()` changes the continuation predicate to `error_traits<T, category>::is_not_fail`. With `return_t`, this allows a non-severe result (such as the `debug` category used in the testcase) to continue, even though it is not classified as success.
+
+The predicate is therefore part of the error policy: the same pipeline control flow can work with different native result types, while the category specialization determines what “success” and “not failure” mean.
+
+### Tracing and counts
+
+`run_pipe()` expands to a source-location-aware `run()` overload in debug builds and to ordinary `run()` otherwise. When a tracer is installed with `set_tracer()`, the debug path can report a failing result together with the source file and line. The `processed()` and `size()` counters describe pipeline progress; failure-handling steps are not counted the same way as ordinary expected-success steps.
+
+### Source-level verification
+
+`test/testcase/base/basic/testcase_pipeline.cpp` exercises the control-flow and conversion contract:
+
+- Parameter validation skips normal steps and reaches `walk_failed()`, followed by `walk_always()`.
+- A successful arithmetic callback chain runs the ordinary walks and callback; an unexpected result routes execution to the failure walk.
+- `goahead_if_not_fail()` permits the `errorcode_t::debug` result to continue to the next callback.
+- `function_pipeline<int, osslerror_category>` treats `0` as failure, checks the converted `error_openssl_inside` result, and verifies `result_to_return_t()`.
+- `function_pipeline<int, errno_category>` mixes an `int` callback and a `return_t` callback, checking that the explicit hotplace `errorcode_t::unknown` is preserved by `result_to_return_t()`.
+
+These are source-level assertions in the testcase; this document does not claim a new runtime test execution.
+
+### Control-flow trace
+
+```text
+callback result
+  └─ handle_result()
+       ├─ native T ──────────────► _lastcode = result
+       └─ hotplace return_t ─────► convert to T for _lastcode
+                                   preserve explicit return_t in _returncode
+
+next pipeline step
+  ├─ discriminant allows run ───► run / walk
+  ├─ discriminant rejects run ──► run_failed / walk_failed
+  └─ walk_always ───────────────► execute regardless of current result
+
+result() ───────────────► pipeline-native T
+result_to_return_t() ───► preserved return_t, or convert _lastcode
+```
+
+This is why the policy type matters: `error_traits<T, category>` classifies the current result and supplies conversions. The same numeric value can mean success under one category and failure under another; the callback return type alone is not enough to infer continuation behavior.
+
+## 4. Relationships
 
 - `sdk/base/system/error.hpp` owns the `error_traits` policy specializations and the `error_advisor` / `error_category_hint` lookup model. `function_pipeline.hpp` consumes those policies; it does not independently define what a category-specific native result means.
 - `error_advisor` and `error_category_hint` explain hotplace error-code categories and their descriptive/test metadata. The `return_t` specialization's `is_not_fail()` uses the advisor's category classification; this is how a non-severe category can be distinguished from a severe error.

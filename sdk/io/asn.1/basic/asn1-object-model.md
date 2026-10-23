@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -15,7 +15,7 @@
 
 The semantic layer under `sdk/io/asn.1/basic/semantic` is the main in-memory representation of ASN.1 types and values used by the runtime, visitors, constraints, and DER encoding paths.
 
-At revision 1095 it contains the bulk of the ASN.1 type model: built-in types, constructed types, tagging, references, constraints, object classes, and container forms.
+The semantic model contains the ASN.1 type families used by the runtime: built-in types, constructed types, tagging, references, constraints, object classes, and container forms.
 
 ## 2. Data Model
 ### Central abstraction: `asn1_object`
@@ -125,23 +125,47 @@ The semantic objects are consumed by visitor implementations:
 The same object model therefore serves both the human-readable ASN.1 representation and binary encoding paths.
 
 ## 3. Behavior Model
-### Constraints
 
-Constraints are owned by `asn1_object` and exposed through `asn1_constraints`.
+### Constructing and linking a type
 
-The semantic model therefore carries both:
+A semantic type can be created directly or reconstructed by publisher handlers from a parse tree. The important stages are definition/reference creation, attachment of child or inner objects, and linkage propagation for structures whose meaning depends on nested tagged or referenced types.
 
 ```text
-ASN.1 type
-   +
-tagging
-   +
-DEFAULT / OPTIONAL
-   +
-constraints
+parse_tree / direct model construction
+              |
+              v
+       semantic type object
+              |
+       +------+------+
+       |             |
+       v             v
+   tag / inner    reference name
+     object           |
+       |              v
+       |         module lookup
+       |              |
+       +-------+------+
+               v
+        update_linkage()
+               |
+               v
+       linked semantic model
+               |
+       +-------+--------+
+       |                |
+       v                v
+ notation visitor   DER visitor
 ```
 
-rather than treating constraints as a separate post-processing feature.
+For referenced types, `define(name, object/entity)` creates a definition and `refer(name, reference)` records a reference. These are distinct states: the reference must still be resolved through runtime/module lookup, and linkage propagation is not a substitute for name resolution.
+
+### Schema and value are separate
+
+`asn1_object` describes a schema/type; `asn1_value` carries values associated with that schema. The value representation uses the schema pointer plus named variant values, so repeated or named components do not turn the schema object itself into the value store.
+
+### Constraints and output operations
+
+Constraints remain attached to the semantic type model. Visitors then perform distinct operations over that model: notation representation, DER representation, AST traversal, or constraint evaluation. Constraint evaluation derives an allowed value domain; it is not the same operation as encoding the object.
 
 ### Related tests
 
@@ -150,9 +174,9 @@ rather than treating constraints as a separate post-processing feature.
 - `test/testcase/asn.1/testcase_constraints.cpp`
 - `test/testcase/asn.1/runtime/`
 
-These tests demonstrate the transition from manually constructed/parsed schema objects to runtime values and strongly typed use.
+These are source-level examples of semantic model behavior; this documentation update did not execute them.
 
-## 4. Relationships
+## 5. Relationships
 ### Runtime relationship
 
 The current high-level relationship is:

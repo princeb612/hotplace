@@ -3,8 +3,8 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 1 · Revision 1105                     │
-│ Source basis: Revision 1105                   │
+│ Edition 1 · Revision 1107                     │
+│ Source basis: Revision 1107                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -24,6 +24,8 @@
 | `unicode/string_wcs.cpp` | Unicode-build implementation variant of the shared string helpers | [string.md](string.md) |
 | `url.cpp` | percent escaping/unescaping and URL decomposition into `url_info_t` | [url.md](url.md) |
 
+## 3. Behavior Model
+
 ### URL decomposition path
 
 ```text
@@ -40,7 +42,6 @@ split_url()
 HTTP URI/request handling and other URL consumers
 ```
 
-## 3. Behavior Model
 
 `tokenize()` advances a caller-owned position through delimiter-separated text; `gettoken()` selects a token by index and is implemented using tokenization. The API is intentionally lightweight and should not be mistaken for a grammar-aware parser.
 
@@ -50,7 +51,7 @@ HTTP URI/request handling and other URL consumers
 
 URL decomposition, percent escaping/unescaping, tokenization, and character conversion are related string utilities but have different contracts. URL tests do not establish the behavior of the platform-specific character-conversion paths; check the relevant implementation selected by the build.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/string/` — general string helpers; names such as `tokenize`/`gettoken` may look similar, so confirm the namespace and header being used.
 - `sdk/base/encoding/base16` — percent-escape hexadecimal representation.
@@ -60,7 +61,7 @@ URL decomposition, percent escaping/unescaping, tokenization, and character conv
 - `sdk/crypto/authenticode/` — uses URL decomposition when processing CRL URLs.
 - Implementation entry points are `string.hpp`, `string_charset.cpp`, and `url.cpp`, with platform variants under `windows/` and `unicode/`; check these when determining which conversion path a build selects.
 
-## 5. References
+## 6. References
 
 - RFC 2396 — URI syntax referenced by the implementation comments.
 - RFC 2068 — historical HTTP syntax reference in the source comments.

@@ -3,10 +3,10 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
+│ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
@@ -14,129 +14,120 @@
 
 ## 1. Role
 
-Describes conversion between encoded CBOR data and the project’s object representation.
+Describes conversion between encoded CBOR data and the project's object representation, including the direct value-to-binary encoding path.
 
 ## 2. Data Model
-### Role
 
-`cbor_reader` and `cbor_encode` provide the binary boundary of the CBOR implementation.
+### Reader context
 
-```text
-CBOR binary
-    │
-    ▼
-cbor_reader
-    │
-    ▼
-cbor_object tree
-    │
-    ▼
-cbor_encode
-    │
-    ▼
-CBOR binary
-```
+`cbor_reader` works with a `cbor_reader_context_t`. The implementation's context separates completed root objects from temporary construction state:
 
-The reader also accepts a diagnostic-expression path used by the test/sample layer.
+| State | Purpose |
+|---|---|
+| `roots` | Completed root object references retained by the reader context |
+| `temp.indef` | Tracks open indefinite-length nesting |
+| `temp.parents` | Current container/parent stack used while attaching parsed items |
+| `temp.items` | Pending parsed items used by the construction path |
+| `temp.tag_value`, `temp.tag_flag` | Temporary tag state while the next item is being formed |
 
-### Reader
+The public context is opaque to callers. `open()` allocates it; `close()` clears retained roots and deletes it; `clear()` releases roots and clears the temporary queues.
 
-`cbor_reader` manages a `cbor_reader_context_t` while parsing.
+### Major type and additional information
 
-The main entry points include:
+The first byte is split into the 3-bit major type and 5-bit additional-information field:
 
-- `open()` / `close()`
-- `parse()` from binary data
-- `parse()` from a diagnostic expression
-- `publish()` into an object tree or binary/stream representation
-- `push()` / `pop()` for parser construction
-- `insert()` for object insertion
-- `clear()`
+| Major type | Meaning |
+|---:|---|
+| 0 | Unsigned integer |
+| 1 | Negative integer (encoded magnitude represents `-1 - n`) |
+| 2 | Byte string |
+| 3 | Text string |
+| 4 | Array |
+| 5 | Map |
+| 6 | Tag |
+| 7 | Simple value or floating-point value |
 
-The parser builds the hierarchical object representation as it encounters CBOR major types and their payloads.
+Additional-information values 24–27 introduce a following 1-, 2-, 4-, or 8-byte argument. Value 31 marks an indefinite-length form where that form is supported. These fields are parsing controls, not separate logical child objects.
 
-### CBOR major types
+### Encoder and output boundaries
 
-The reader follows the CBOR major-type model:
-
-```text
-0  unsigned integer
-1  negative integer
-2  byte string
-3  text string
-4  array
-5  map
-6  tag
-7  simple / floating-point
-```
-
-The first byte carries both the major type and the additional-information/control field. Additional bytes are consumed when the encoded value requires a larger integer or length representation.
-
-### Encoder
-
-`cbor_encode` converts hotplace values and `cbor_object` structures into CBOR binary.
-
-Its overloads cover:
-
-- signed/unsigned integers
-- floating-point values
-- byte strings
-- text strings
-- `variant`
-- CBOR objects
-- simple values
-- tagged objects
-
-The encoder also handles the CBOR additional-information encoding used for lengths and integer values.
-
-### Object publication
-
-`cbor_publisher` provides a higher-level publishing boundary:
-
-```text
-cbor_object / reader context
-          │
-          ▼
-   cbor_publisher
-      ├── binary_t
-      └── stream_t
-```
-
-This keeps callers from having to operate the low-level encoder directly for common object-tree publication.
+`cbor_encode` has overloads for integer and floating-point types, byte/text strings, `variant`, simple values, and `cbor_object` instances. It writes to a caller-supplied `binary_t`. `cbor_publisher` is a higher-level output interface for publishing an object or reader result as binary or stream text.
 
 ## 3. Behavior Model
-### Definite and indefinite lengths
 
-The implementation recognizes the indefinite-length forms for:
+### Binary parse path
 
-- byte strings
-- text strings
-- arrays
-- maps
+```text
+open(context)
+   │
+parse(bytes)
+   ├── clear prior roots and temporary construction queues
+   ├── read initial byte: major type + additional information
+   ├── consume argument bytes / string payload when present
+   ├── dispatch by major type
+   │     ├── scalar or simple value ──► create item
+   │     ├── array/map ───────────────► establish container context
+   │     ├── tag ────────────────────► retain tag for tagged item
+   │     └── indefinite form ────────► track nesting until break
+   └── push/insert items into parent containers and roots
+```
 
-These use the CBOR break marker to terminate the logical sequence.
+The diagnostic-expression overload converts the supplied hexadecimal text to bytes and then uses the binary parse path. It is therefore a convenience input form for encoded bytes, not a separate diagnostic-notation parser.
 
-The reader therefore has to maintain container context while processing nested data.
+The parser has explicit checks for some malformed payload boundaries and returns errors such as invalid parameter or bad format along the parse path. Do not infer from those checks that every truncated argument, malformed UTF-8 string, duplicate map key, or RFC-level semantic constraint is comprehensively validated.
 
-### Example: vector input through the reader
+### Binary encode path
 
-A vector-driven round trip is the clearest trace: encoded bytes become an object tree and are then published back to bytes. Keep byte-level decoding/encoding separate from logical value assertions and diagnostic rendering. This documentation update did not execute the tests.
+```text
+hotplace value / cbor_object
+          │
+          ▼
+select overload / value type
+          │
+          ├── choose major type or simple-value code
+          ├── choose compact additional-information width
+          ├── write argument in network byte order when multi-byte
+          └── append string or binary payload when applicable
+          │
+          ▼
+       binary_t
+```
 
-## 4. Relationships
-### Test relationship
+For negative integers, the CBOR argument is based on `-1 - value`. Integer and length arguments use the shortest width selected by the relevant overload. The encoder also has specialized paths for floating-point representations, tags, and big numbers; do not treat every `variant` type as equivalent to a scalar integer.
 
-The main implementation evidence is under:
+### Publish and compare representations
 
-- `test/testcase/cbor/testvector_cbor.cpp`
-- `test/testcase/cbor/testcase_rfc7049.cpp`
-- `test/testcase/cbor/sample.cpp`
+The vector testcase reads encoded bytes, publishes the resulting value both as diagnostic text and as binary, and compares the published bytes with the original vector. It permits a diagnostic comparison in cases where equivalent floating-point values have distinct legal encodings (for example, Infinity encoded with different float widths).
 
-The test vectors provide encoded/decoded CBOR examples while the RFC-oriented testcase exercises the older RFC 7049 reference material retained by the project.
+```text
+test vector bytes ─► reader.parse()
+                          │
+                          ▼
+                      object tree
+                       /       \
+                      ▼         ▼
+              publish binary  publish diagnostic
+                      │         │
+            compare bytes   compare notation when needed
+```
+
+This is the source-level test path described by `testvector_cbor.cpp`; this documentation update did not execute it.
+
+## 5. Relationships
 
 ### Related source
 
-- `cbor_reader.*`
-- `cbor_encode.*`
-- `cbor_publisher.*`
-- `cbor.hpp`
+- `cbor_reader.*` — parse context and major-type dispatch.
+- `cbor_encode.*` — direct value/object-to-binary encoding.
+- `cbor_publisher.*` — higher-level binary and stream publication.
+- `cbor.hpp` — shared CBOR types and major/simple-type definitions.
 
+### Related tests
+
+- `test/testcase/cbor/testvector_cbor.cpp` — encoded input → object → binary/diagnostic comparison.
+- `test/testcase/cbor/testcase_rfc7049.cpp` — direct encoder and object publisher expected-byte assertions.
+- `test/testcase/cbor/sample.cpp` — sample construction and output.
+
+## 6. References
+
+- [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), especially major types, additional information, and encoding considerations.

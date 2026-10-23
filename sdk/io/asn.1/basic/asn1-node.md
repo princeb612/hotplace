@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -54,6 +54,12 @@ The structural node describes what was encountered in an encoded ASN.1 stream.
 
 The semantic object describes what the ASN.1 type means.
 
+Keeping these representations separate allows a decoded TLV tree to exist before schema-specific interpretation is applied.
+
+## 3. Behavior Model
+
+### From decoded structure to semantic interpretation
+
 ```text
 DER / TLV
    |
@@ -68,31 +74,38 @@ semantic construction
 asn1_object
 ```
 
-Keeping these representations separate allows a decoded TLV tree to exist before schema-specific interpretation is applied.
 
-## 3. Behavior Model
-### Operations
+### Build and traverse the structural tree
 
-`asn1_node` supports:
+The structural node layer provides the generic operations needed to assemble and inspect a TLV tree: assign parent relationships, insert children, iterate descendants, count children, clone, clear, and manage shared lifetime.
 
-- parent assignment
-- child insertion
-- iteration with `for_each`
-- child count
-- cloning
-- reference counting
-- clearing the child tree
+```text
+encoded ASN.1 TLV
+       |
+       v
+asn1_primitive_node / asn1_constructed_node
+       |
+       +-- set parent / add child
+       +-- traverse with for_each()
+       +-- clone or clear
+       |
+       v
+structural tree
+       |
+       v
+schema-aware interpretation (separate step)
+       |
+       v
+asn1_object model
+```
 
-The node therefore acts as a generic tree container rather than a full ASN.1 schema object.
+A structural tree can exist before a schema has been selected or references resolved. It records tag/length and tree relationships; it does not by itself know the named ASN.1 type or all constraints implied by a schema.
 
 ### Related tests
 
-Structural parsing is exercised as part of the ASN.1 parser/DER testcase set under:
+Structural parsing and DER behavior are exercised across `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/`. Those directories contain the relevant source-level test paths; this documentation update did not run them.
 
-- `test/testcase/asn.1/`
-- `test/testcase/asn.1/runtime/`
-
-## 4. Relationships
+## 5. Relationships
 ### Related documents
 
 - `structural/README.md` — distinction between the structural TLV tree and schema-driven semantic objects, including tagging examples

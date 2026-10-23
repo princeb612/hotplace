@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -18,29 +18,14 @@
 The file format is not the grammar itself and does not serialize lexical recognition rules or ASN.1 semantic objects. Those must still be supplied by the corresponding consumer.
 
 ## 2. Data Model
-### Generation and consumption
 
-```text
-cfg_grammar
-    │
-    ▼
-table generation
-    │
-    ▼
-binary_parsing_table
-    │
-    ├── write → parsing-table binary file
-    │
-    └── read/import
-          │
-       ┌──┴──┐
-       ▼     ▼
-     LALR    GLR
-```
+### Logical table and file representation
+
+The logical table contains symbols, terminal registrations, productions, ACTION entries and GOTO entries. The .ptb file stores these as five blocks behind a fixed 20-byte header. IDs in the blocks refer to the serialized string table; they are not raw C++ pointers or stable IDs across arbitrary grammar revisions.
 
 ### File layout
 
-> ASN.1 grammar/table revision: 3 (source snapshot: Revision 1105)
+> ASN.1 grammar/table revision: 3 (source snapshot: Revision 1104)
 
 ```
 +-------------------------------------------------------+
@@ -97,17 +82,81 @@ binary_parsing_table
 +-------------------------------------------------------+
 ```
 
+### Intermediate data used by import/export
+
+| Data | Role |
+|---|---|
+| Ordered string index | Assigns reproducible IDs to symbol spellings |
+| Terminal ID sequence | Records serialized terminal symbols |
+| Production records | Reconstruct LHS and ordered RHS symbol lists |
+| ACTION records | Reconstruct action choice for state/lookahead |
+| GOTO records | Reconstruct next-state transitions for non-terminals |
+| Header version | Compared with the receiving grammar's required revision |
+| CRC32 and body size | Integrity and framing checks |
+
 ## 3. Behavior Model
-- `write()` serializes five blocks, computes CRC32 over the concatenated block body, and prefixes the 20-byte header. The string table is based on the ordered `_string_index` map, so symbol IDs are assigned from that ordering rather than from arbitrary hash iteration.
-- `read()` clears the table and the destination parser's grammar/state before loading. A failed import therefore should not be treated as leaving the previous parser ready for use.
-- The reader checks the `HPT\0` magic, endian marker `0x1234`, total body size, and CRC32. It then reconstructs the string lookup maps, terminals, productions, ACTION entries, and GOTO entries.
-- The header version is checked against `parser.get_cfg_grammar().get_revision()`: a table version lower than the receiving grammar revision returns `low_version`. This is a compatibility floor check, not a guarantee that every semantically incompatible table will be detected.
-- Block lengths, counts, IDs, and symbol references are structural data. When changing the layout, update both read and write paths and preserve the header/version contract; do not update only the diagram in this document.
+
+### Write path
+
+```text
+binary_parsing_table::write()
+          │
+          ▼
+collect symbols / productions / ACTION / GOTO
+          │
+          ▼
+build ordered string table and symbol IDs
+          │
+          ▼
+serialize BLOCK1 through BLOCK5
+          │
+          ▼
+compute CRC32 over concatenated block body
+          │
+          ▼
+write 20-byte header + body size + CRC
+          │
+          ▼
+.ptb artifact
+```
+
+### Read/import path
+
+```text
+binary_parsing_table::read(file, parser)
+          │
+          ▼
+clear table + destination parser grammar/state
+          │
+          ▼
+read and validate header
+  ├─ magic == "HPT\0"
+  ├─ endian marker == 0x1234
+  ├─ body size matches
+  └─ CRC32 matches
+          │
+          ▼
+read blocks; validate counts / IDs / references
+          │
+          ▼
+reconstruct string index, terminals, productions,
+ACTION and GOTO entries
+          │
+          ▼
+compare table version with grammar revision
+  ├─ older than required ─► low_version
+  └─ accepted ────────────► usable parser table
+```
+
+Import clears the destination parser/table before reconstruction. A failed read should not be assumed to preserve a previously ready parser. The revision check is a compatibility floor, not proof that every semantically incompatible artifact is detected.
+
+### Failure and maintenance boundary
+
+Malformed header, inconsistent body framing, checksum mismatch, invalid symbol references and insufficient table version belong to the import boundary. When changing the format, update writer and reader together and review the version contract. The .ptb artifact does not carry lexer configuration, token-to-terminal mapping or semantic builder.
 
 ### Source-level evidence
-`test/testcase/io/parser/testcase_parser.cpp::test_load_parsingtable()` reads `asn1notation.ptb` into a `lalr1_parser` via `binary_parsing_table::read()`, checks the result, and then parses `Type1 ::= VisibleString`. In `test_asn1_notation()`, the ASN.1 advisor also supplies imported parser instances alongside runtime-built instances, giving a broader comparison of the generated and serialized paths.
 
-To trace the bytes, start at `binary_parsing_table_write.cpp::write()` for BLOCK1–BLOCK5 and the header, then follow `binary_parsing_table_read.cpp::read()` in the reverse direction. The reader uses `payload` to read fixed-size fields and length-referenced symbol bytes, and rejects bad format, checksum mismatch, or an insufficient table version.
+test/testcase/io/parser/testcase_parser.cpp::test_load_parsingtable() imports asn1notation.ptb into a lalr1_parser, checks the result, and parses Type1 ::= VisibleString. test_asn1_notation() also compares runtime-built and imported parser instances. Follow binary_parsing_table_write.cpp::write() and binary_parsing_table_read.cpp::read(); the reader uses payload for fixed-width and length-referenced fields.
 
 ## 4. Relationships
 - `parser-generation.md` — produces the logical table entries serialized here.

@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -49,6 +49,26 @@ The source interface separates the public operators from internal representation
 Constructors and assignment operators accept built-in integral values, variants, byte sequences, hexadecimal binary data, and numeric strings. Comparison operators compare bignumber values, allowing equivalent decimal and hexadecimal inputs to be checked for equality. Explicit conversion operators are provided for bool, uint8, uint16, and uint32; callers should not assume that every built-in width has an implicit conversion.
 
 The byte-stream operators provide the serialization boundary between the internal integer and external byte/string buffers. Use the documented big-endian form when relating these operations to protocol values.
+
+### Representation-to-operation flow
+
+```text
+constructor / assignment
+  ├─ built-in integral value
+  ├─ decimal or hexadecimal text
+  ├─ big-endian byte sequence
+  └─ variant_t
+       └─ normalize into sign + 32-bit magnitude limbs
+
+arithmetic / comparison / shifts
+  └─ operate on arbitrary-length limb representation
+
+conversion / serialization
+  ├─ str() / hex() ─► textual representation
+  └─ byte-stream operators ─► binary_t / byte sequence
+```
+
+The sign is represented separately from the magnitude limbs, and the number of limbs grows with the value. Consequently, named fixed-width boundary cases are useful test inputs, not limits on the representable integer range. When serialized for a protocol, the caller must still honor the protocol's specified byte order and signedness.
 
 ## 4. Relationships
 

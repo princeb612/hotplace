@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -18,27 +18,25 @@
 
 ## 2. Data Model
 
-```text
-operation detects error
-        |
-        v
-hotplace error code / exception
-        |
-        v
-caller handles or propagates it
-```
-
-Do not infer that every API throws: several utility methods return `return_t` error codes, while other paths explicitly construct or throw `exception` objects. The call site determines which contract applies.
+The `exception` object stores an `errorcode_t` and an optional caller-provided description string. It does not derive from `std::exception`; APIs that return `return_t` use a separate result representation rather than storing it in this object.
 
 ## 3. Behavior Model
 
-### Stored error and message
+### Error propagation boundary
 
-The exception stores an errorcode_t and an optional description string. get_errorcode() returns the code, get_description() returns the caller-supplied description, and get_error_message() asks error_advisor to map the code to a human-readable message.
+```text
+operation detects error
+        ├─ return-code API ─► return_t ─► caller checks result
+        └─ exception path ─► exception ─► caller catches or propagates
+```
 
-This class does not derive from std::exception and does not expose a what() method. Catching it therefore requires the project exception type (or an appropriate catch-all), not a std::exception reference.
+Do not infer that every API throws: the call site determines which contract applies.
 
-Copy/move operations preserve the error code and copy or move the description. Throwing the object is a caller decision; APIs that return return_t remain a separate error path.
+### Access and propagation
+
+`get_errorcode()` returns the stored code, `get_description()` returns the caller-supplied description, and `get_error_message()` asks `error_advisor` to map the code to a human-readable message.
+
+Copy/move operations preserve the error code and copy or move the description. Throwing the object is a caller decision; this utility does not force callers to use exceptions.
 
 ## 4. Relationships
 

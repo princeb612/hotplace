@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -22,24 +22,9 @@ This directory provides a common `sign` / `verify` interface over several signat
 |---|---|
 | `openssl_sign` | Backend that dispatches by key type and signature category and invokes OpenSSL signing/verification operations. |
 | `crypto_sign` | Common operation object exposing `sign()` and `verify()` for byte streams or `binary_t`, with signature category, digest and RSA-PSS salt-length configuration. |
-| `crypto_sign_builder` | Selects signature category, digest, TLS signature scheme or JOSE `jws_t` identifier, then builds the appropriate `crypto_sign` implementation. |
+| `crypto_sign_builder` | Holds the requested signature category/scheme, digest and any scheme-specific options, then builds the appropriate `crypto_sign` implementation. The selected key and backend availability remain separate inputs/constraints. |
 | `crypto_sign_digest` / `crypto_sign_digestsign` | Separate the conventional digest-then-sign path from the backend's combined DigestSign-style path. |
 | Algorithm-specific classes | Implement RSA PKCS#1 v1.5, RSA-PSS, DSA, ECDSA, EdDSA, HMAC, ML-DSA and SLH-DSA behavior. |
-
-```text
-caller / protocol identifier
-    ├─ signature category + digest
-    ├─ TLS signature-scheme ID
-    └─ JOSE JWS algorithm
-              ↓
-       crypto_sign_builder
-              ↓
-          crypto_sign
-              ↓
-        openssl_sign
-              ↓
-      key-type-specific EVP operation
-```
 
 ### Why the implementations are separate
 
@@ -51,13 +36,43 @@ caller / protocol identifier
 
 ## 3. Behavior Model
 
+### 3.1 Resolve the requested scheme, then dispatch
+
+```text
+caller / protocol identifier
+    ├─ signature category + digest
+    ├─ TLS signature-scheme ID
+    └─ JOSE JWS algorithm
+              |
+              v
+       crypto_sign_builder
+              |
+              v
+          crypto_sign
+              |
+              v
+        openssl_sign
+              |
+              v
+ resolve signature hint/category + digest
+              |
+              v
+ combine scheme with actual key type
+              |
+              v
+ key-type-specific EVP sign / verify operation
+              |
+              v
+ signature bytes or verification status
+```
+
 The builder resolves the requested identifier into a primitive configuration; the backend still needs compatible key material and an available implementation. A scheme name in a protocol registry is not proof that the current OpenSSL/provider build can execute it.
 
 Signing and verification must use compatible algorithm parameters and intended public/private key material. Digest-sign and message-sign paths differ in where hashing is performed, so callers must not accidentally hash input twice or assume all algorithms accept pre-hashed input.
 
 For TLS, the selected signature scheme constrains key type and digest/version semantics. For JOSE, the `jws_t` identifier is part of the JWS algorithm contract; this module does not serialize the JWS signing input or produce compact/JSON JOSE messages.
 
-### 3.1 Comparative map
+### 3.2 Comparative map
 
 The directory names mix three different dimensions: operation/API path, cryptographic family, and signature encoding. They should not be read as ten unrelated signature algorithms.
 
@@ -74,7 +89,7 @@ The directory names mix three different dimensions: operation/API path, cryptogr
 | `mldsa` | ML-DSA key (post-quantum public-key signature) | Uses the combined signing path and the algorithm's own parameter set; the hotplace builder enables this category only when compiled against OpenSSL 3.5 or later. | Checks an ML-DSA signature using the matching ML-DSA key and parameter set. |
 | `slhdsa` | SLH-DSA key (post-quantum, hash-based public-key signature) | Uses the combined signing path and the selected SLH-DSA variant. It is also guarded in the builder by the OpenSSL 3.5 version check. | Checks an SLH-DSA signature using the matching variant and key. Its hash-based construction differs from ML-DSA; the two are not interchangeable. |
 
-### 3.2 Verification dispatch: signature algorithm first, key type second
+### 3.3 Verification dispatch: signature algorithm first, key type second
 
 The primary decision is the requested signature algorithm, not the key type alone. In the source, `sig` is resolved through `hintof_signature(sig)`; the resulting hint supplies both the signature category and digest. Only then does the backend combine that category with the actual key type to choose an operation or reject the request.
 
@@ -129,7 +144,7 @@ This is a two-dimensional dispatch: **the signature identifier selects the inten
 
 The same separation matters in TLS. A TLS signature-scheme identifier (such as an RSA-PSS or ECDSA scheme) determines the signature operation and associated digest rules, while the peer's key and negotiated protocol constraints determine whether that scheme is usable. In TLS 1.3, this is distinct from the cipher suite: the cipher suite selects the record-protection algorithms and hash, whereas CertificateVerify uses a signature scheme. Avoid using “cipher suite” as a synonym for the signature algorithm.
 
-### 3.3 What is actually different during verification?
+### 3.4 What is actually different during verification?
 
 The common `verify()` interface hides the dispatch, not the mathematics. In `openssl_sign.cpp`, hotplace selects the operation from the key type and signature category:
 
@@ -141,7 +156,7 @@ The common `verify()` interface hides the dispatch, not the mathematics. In `ope
 
 The caller must provide the original message bytes expected by the selected path, not a pre-hashed digest unless that specific API contract explicitly calls for one. The wrapper's digest setting, the algorithm's own message-processing rules, and protocol-level signing input are separate concepts.
 
-### 3.4 OpenSSL 3 support: version and provider matter
+### 3.5 OpenSSL 3 support: version and provider matter
 
 The following is an upstream capability guide, not a guarantee that every hotplace build can execute every operation. The concrete hotplace code has its own compile-time gates, and runtime availability also depends on the OpenSSL build, provider configuration, key encoding, and parameters.
 
@@ -155,7 +170,7 @@ The following is an upstream capability guide, not a guarantee that every hotpla
 
 For operational compatibility notes, record the exact OpenSSL minor version and provider (for example, default or FIPS), rather than a single “OpenSSL 3: yes/no” flag. Provider presence, FIPS approval, compile-time availability, and successful execution are four different claims.
 
-## 4. Relationships
+## 5. Relationships
 
 - `../../advisor/README.md` maps signature names, key types, TLS signature schemes, JOSE identifiers and backend metadata.
 - `../key/README.md` supplies key objects and key-generation/serialization facilities.
@@ -180,7 +195,7 @@ For operational compatibility notes, record the exact OpenSSL minor version and 
 - `testcase_mldsa.cpp` and `testcase_slhdsa.cpp` cover post-quantum signature paths. Availability depends on the build/provider used for those tests.
 - The source paths establish coverage targets, not execution in the current environment.
 
-## 5. References
+## 6. References
 
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 8032 — Edwards-Curve Digital Signature Algorithm (EdDSA).

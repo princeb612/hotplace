@@ -3,8 +3,8 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 2 · Revision 1105                     │
-│ Source basis: Revision 1105                   │
+│ Edition 2 · Revision 1107                     │
+│ Source basis: Revision 1107                   │
 │ Documented with GPT-6                         │
 │ — OS-facing APIs and implementation boundaries│
 └───────────────────────────────────────────────┘
@@ -40,7 +40,7 @@
 
 A common wrapper does not automatically join worker threads or transfer ownership of native resources. Callers must coordinate callback completion before releasing socket/session contexts, wait for MLFQ consumers before freeing their work context, and close Registry handles explicitly. Platform-specific error and access rules still apply.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/net/basic/` — higher-level socket/client/server abstractions.
 - `sdk/net/server/` — uses the multiplexer and may compose event dispatch with work scheduling.
@@ -55,7 +55,10 @@ A common wrapper does not automatically join worker threads or transfer ownershi
 
 These are source-level examples, not a claim that the tests ran during this documentation update or that they cover every platform branch.
 
-## 5. References
+## 6. References
 
-- Linux epoll API: https://man7.org/linux/man-pages/man2/epoll_create.2.html
-- Microsoft Win32 API reference for Winsock, IOCP, Registry, and PE/COFF.
+- [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) — Linux event notification API.
+- [Microsoft Learn: Windows Sockets](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2) — Winsock API.
+- [Microsoft Learn: I/O completion ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports) — IOCP model.
+- [Microsoft Learn: Registry functions](https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-functions) — Windows Registry API.
+- [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE image layout.

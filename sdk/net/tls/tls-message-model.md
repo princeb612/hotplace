@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -33,115 +33,78 @@ The classes are primarily responsible for representing, encoding and decoding pr
 
 ## 2. Data Model
 
-### Record layer
+### Representation layers
 
-The record classes represent TLS record content and the DTLS-specific ciphertext path.
+~~~text
+Wire/transport representations
+  TLS  -> tls_record / tls_records
+  DTLS -> DTLS records + handshake-fragment metadata
+  QUIC -> QUIC packets / frames, including CRYPTO data
 
-Important implementation areas include:
+Logical message representation
+  tls_handshake(s)
+    ├─ handshake type + body length
+    ├─ message-specific fields
+    └─ tls_extensions (where defined)
+         ├─ extension type
+         └─ extension-specific payload
+~~~
 
-- `tls_record` / `tls_records`
-- `tls_record_handshake`
-- `tls_record_application_data`
-- `tls_record_alert`
-- `tls_record_change_cipher_spec`
-- `dtls13_ciphertext`
-- record builders
+- **Record objects** represent content type, protocol version, record length, and record content. Content may be handshake, alert, application data, or ChangeCipherSpec; not every record contains a handshake.
+- **Handshake objects** represent a typed message and its fields. A tls_handshakes collection is a message-level grouping; it is not equivalent to a record collection because record boundaries and handshake boundaries can differ.
+- **Extension objects** represent typed negotiation values nested in messages that permit extensions. The extension type selects the interpretation of its payload; the advisor supplies identifier metadata, while the extension class owns payload encoding/decoding.
+- **DTLS handshake fragments** add message-sequence, fragment-offset, and fragment-length information around a slice of the original handshake body. Fragmentation is not a new TLS handshake type; it is the DTLS transport representation of an existing handshake message.
+- **QUIC CRYPTO frames** carry TLS handshake bytes but are not tls_record objects. QUIC's packet/frame model owns transport framing for those bytes.
 
-Conceptually:
+### Important intermediate data
 
-```text
-handshake / application / alert
-             │
-             ▼
-        TLS record
-             │
-       protection
-             │
-             ▼
-       wire ciphertext
-```
+| Representation | Owner | Meaning / boundary |
+|---|---|---|
+| Typed handshake fields and extension collection | Message-specific handshake and extension objects | Logical message state; distinct from encoded bytes |
+| Serialized handshake bytes | Handshake writer / collection | Encoded message representation that can be carried by TLS records, DTLS fragments, or QUIC CRYPTO data |
+| Transcript bytes/digest | Protection layer | Protocol-defined handshake input and digest/checkpoint state |
+| Negotiated version/cipher suite/group | `protection_context` and `tls_protection` | Selected protocol parameters, distinct from the original offers |
+| Record/fragment layout | Record builder or DTLS publisher | Record or fragment representation, distinct from transport delivery |
+| QUIC frame layout | QUIC frame objects / packet publisher | Encoded frame representation, distinct from packet protection and UDP delivery |
 
-DTLS adds transport-specific sequencing and fragmentation concerns; those are complemented by the session-level DTLS record arrangement/publishing code.
-
-### Handshake layer
-
-The handshake model is divided into a common collection and message-specific classes. The implementation contains both TLS 1.2-era messages and TLS 1.3 messages, including:
-
-- ClientHello / ServerHello
-- HelloRetryRequest-related handling
-- EncryptedExtensions
-- Certificate / CertificateVerify
-- Finished
-- NewSessionTicket
-- ClientKeyExchange / ServerKeyExchange
-- DTLS HelloVerifyRequest
-- fragmented DTLS handshake support
-
-The builder/collection classes provide the common construction and dispatch boundary.
-
-A useful implementation view is:
-
-```text
-record
-  ↓
-handshake collection
-  ↓
-message-specific handshake object
-  ↓
-extension / key / certificate fields
-```
-
-The RFC documents in this directory remain the protocol-study references; this document records how those concepts map to hotplace classes.
-
-### Extension layer
-
-TLS extensions are represented independently so that ClientHello, ServerHello and related messages can compose extension objects without embedding every extension into the handshake class itself.
-
-Implemented examples include:
-
-- SNI
-- ALPN / ALPS
-- supported_versions
-- supported_groups
-- key_share
-- signature_algorithms
-- pre_shared_key
-- psk_key_exchange_modes
-- early_data
-- QUIC transport parameters
-- encrypted_client_hello
-- certificate compression
-- status_request
-
-The extension builder/collection classes form the common dispatch boundary.
+These are different representations of the same handshake progression. Do not assume an in-memory handshake object, serialized handshake bytes, a protected TLS record, and a QUIC CRYPTO frame are interchangeable.
 
 ## 3. Behavior Model
 
-The record, handshake and extension objects are different representation layers. A record carries a content type and version/length framing; a handshake record can contain a sequence of handshake messages; each handshake message has its own type-specific fields, some of which contain an extension collection. Builders/collections provide the construction and dispatch boundary, while message-specific classes own field encoding/decoding.
+### Receive path
 
-Do not confuse the message object model with handshake state: whether a message is expected, which keys protect it, and what state transition follows are session/protection concerns. DTLS fragmentation/reordering is also a session/transport concern even though it carries the same handshake message family.
+1. **Frame the incoming wire unit.** TLS reads record headers and declared lengths from the stream; DTLS works from datagram boundaries and DTLS record headers. The framing layer must establish available record content before interpreting it.
+2. **Apply protection where required.** The record/protection path selects the directional key/IV and sequence context, authenticates/decrypts protected content, and returns plaintext content for parsing. Failure prevents plaintext from being treated as a successfully decoded message.
+3. **Dispatch by content type.** Handshake content is passed to the handshake collection/parser; alert, application-data, and ChangeCipherSpec content use their own record representations.
+4. **Dispatch each handshake by type.** The handshake builder/collection selects a message-specific class. That class decodes its fields and, where applicable, delegates extension payloads to extension-specific classes.
+5. **Apply state separately.** The decoded object supplies message data; tls_session and tls_protection determine handshake stage, transcript updates, negotiation decisions, and the next protection state. Parsing a Finished or ServerHello object alone does not perform every state transition implied by the protocol.
 
-## 4. Relationships
+### Send path
 
+1. Construct message-specific handshake fields and any applicable extension objects.
+2. Serialize the handshake message and its handshake header.
+3. Select the wire boundary: ordinary TLS record construction, DTLS handshake fragmentation/record publication, or QUIC CRYPTO-frame construction.
+4. For TLS/DTLS, apply the corresponding record protection and record framing; for QUIC, let the QUIC packet path frame/protect the packet using TLS-derived secrets.
+5. Deliver serialized output through the selected container/callback to transport integration.
 
+### Boundary conditions
 
-- `sdk/net/tls/tls/record/`
-- `sdk/net/tls/tls/handshake/`
-- `sdk/net/tls/tls/extension/`
-- `sdk/net/tls/protection/`
-- `sdk/net/tls/session/`
-- [TLS/DTLS/QUIC overview](README.md)
-- [TLS protection/session model](tls-protection-and-session.md)
-- [TLS 1.2 summary](rfc5246.md)
-- [TLS 1.3 summary](rfc8446.md)
-- [DTLS 1.3 summary](rfc9147.md)
-- `tls/record/`, `tls/handshake/`, and `tls/extension/` — concrete message representations.
-- `protection/` — transcript hash, key schedule and record protection.
-- `session/` — session state and DTLS/QUIC publication/arrangement.
-- `advisor/` — protocol identifier and parameter lookup.
-- `test/testcase/tls/` — construction, alert, HelloRetryRequest and TLS 1.2/1.3 source examples.
+A handshake message may span record boundaries, and a record may carry multiple handshake messages. DTLS can fragment handshake messages and receive records out of order. QUIC carries TLS handshake bytes in CRYPTO frames and uses QUIC packet-number spaces and packet protection. Those differences belong to the session/transport path even though the underlying TLS handshake types overlap.
 
-## 5. References
+## 5. Relationships
+
+- [TLS/DTLS/QUIC overview](README.md) — directory-level protocol and transport model.
+- [Record model](tls/record/README.md) — record header/body framing and content dispatch.
+- [Handshake model](tls/handshake/README.md) — typed handshake objects and their read/write lifecycle.
+- [Extension model](tls/extension/README.md) — nested extension envelopes and typed payloads.
+- [TLS protection](protection/README.md) — transcript processing, key schedule, and record protection.
+- [TLS session](session/README.md) — directional handshake state and transport-specific helpers.
+- [TLS protection/session model](tls-protection-and-session.md) — cross-layer state and lifecycle.
+- [TLS advisor](advisor/README.md) — protocol identifier and parameter lookup.
+- [QUIC integration](quic/README.md) — TLS handshake bytes carried in CRYPTO frames.
+- `test/testcase/tls/` — construction, alert, HelloRetryRequest, and TLS 1.2/1.3 source examples.
+
+## 6. References
 
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)

@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,17 +20,20 @@ The base string module provides small helpers for processing strings and bounded
 
 The scanning APIs use an explicit buffer pointer and length, a starting offset, and an output break position. This makes the scan boundary part of the call rather than relying on a null terminator. `getline()` follows the same bounded-buffer shape. `format()` returns a `std::string`; `replace()` modifies its source string in place.
 
-```text
-bounded buffer + start position
-          |
-          +--> scan(predicate or match) --> break position
-          +--> getline ------------------> line boundary
-
-format(arguments) -----------------------> std::string
-replace(source, old, new) ---------------> modified source
-```
+The interfaces distinguish bounded input views, returned formatted strings, and in-place mutation of an existing string.
 
 ## 3. Behavior Model
+
+### Operation flow
+
+```text
+bounded buffer + start position
+          ├─ scan(predicate or match) ─► break position
+          └─ getline ─────────────────► line boundary
+
+format(arguments) ────────────────────► std::string
+replace(source, old, new) ────────────► modified source
+```
 
 ### Important behavior
 
@@ -40,15 +43,9 @@ replace(source, old, new) ---------------> modified source
 - `gettoken()` and `tokenize()` are exercised by the testcase source and should not be confused with the range-based `split_context_t` API documented in [split.md](split.md).
 - These APIs do not by themselves define protocol-specific token grammar; callers supply delimiters or predicates.
 
-### Tests
-
-- Source: `test/testcase/base/string/testcase_string.cpp`
-- Test entry: `testcase_string()`
-- Relevant functions: `test_string_format()`, `test_string_gettoken()`, `test_string_getline()`, `test_string_scan()`, `test_string_scan2()`, `test_string_replace()`, `test_string_tokenize()`
-- Test analysis and recorded execution result: [`README.md`](../../../test/testcase/base/string/README.md)
-
 ## 4. Relationships
 
+- `test/testcase/base/string/testcase_string.cpp` — `testcase_string()` exercises formatting, tokenization, line scanning, bounded scanning, and replacement; see the [testcase guide and recorded result](../../../test/testcase/base/string/README.md).
 - [`split.md`](split.md) describes the separate context-based splitting API.
 - [`obfuscation.md`](obfuscation.md) and [`constexpr-obfuscation.md`](constexpr-obfuscation.md) cover string obfuscation, not general scanning.
 - `sdk/base/stream/` provides stream and formatted-output abstractions; `sdk/io/string/` provides I/O-facing string processing. Public string declarations are in `string.hpp`.

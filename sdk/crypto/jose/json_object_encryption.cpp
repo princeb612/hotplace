@@ -209,7 +209,12 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, const std::stri
             }
         }
     }
-    __finally2 { json_object_signing_encryption::clear_context(handle); }
+    __finally2 {
+        json_object_signing_encryption::clear_context(handle);
+        if (errorcode_t::success == ret) {
+            result = true;
+        }
+    }
     return ret;
 }
 

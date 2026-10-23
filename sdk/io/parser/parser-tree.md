@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -29,112 +29,98 @@ parser action
 It is the bridge between parser mechanics and higher-level semantic construction. In the current GLR path, the parser reports reductions while GSS paths are being reduced, so the parse tree is the first shared representation after parser execution and before domain-specific semantic objects are built.
 
 ## 2. Data Model
-### parse_treenode
 
-Each `parse_treenode` stores:
+### parse_treenode: grammar-shaped node
 
-- grammar symbol
-- optional token/value text
-- child nodes
-- terminal/non-terminal distinction
+A node records a grammar symbol, optional token/value text, terminal/non-terminal identity and an ordered child list. A terminal's value comes from the shifted input token. A non-terminal's children are the RHS nodes consumed by a reduction, kept in grammar order.
 
-A node can report whether it is terminal and the number of RHS children represented by the reduction.
+A completed reduction may carry the rule ID when the parser calls the overload that supplies it. Rule ID, LHS symbol and RHS child count are distinct: the rule ID identifies a production, while the child sequence represents one recognized instance.
 
-### Building the tree
+### parse_tree: working stack and root
 
-The parser reports two fundamental operations:
+The tree builder maintains nodes needed to assemble reductions and exposes the completed root through get_root(). The root and descendants belong to the tree; callers should not delete them independently. clear() releases nodes still held by the working stack and the parser reference registered through set_parser().
 
-- `on_shift(token_symbol, token_value)`
-- `on_reduce(lhs_symbol, rhs_count)`
+### Visitor interface
 
-The resulting tree mirrors the grammar reductions.
+parse_tree_visitor receives terminal SHIFT events and non-terminal REDUCE events. This permits printing, traversal or transformation without embedding grammar-specific semantic rules into the parser engine.
 
-For example, the ASN.1 test trace for:
-
-```text
-Type1 ::= VisibleString
-```
-
-produces a structure equivalent to:
-
-```text
-Statement
-  Assignment
-    id
-    ::=
-    TypeSpec
-      TypeBase
-        SimpleType
-          VisibleString
-```
-
-This is more than a debug display: semantic construction can use the resulting grammar structure as input to the next stage.
-
-### Visitor
-
-`parse_tree_visitor` provides callbacks for SHIFT and REDUCE events.
-
-The tree can therefore be:
-
-- printed
-- traversed
-- transformed
-- consumed by higher-level processing
-
-without making the parser engine itself responsible for semantic interpretation.
-
-### Parser → semantic construction
-
-The parse tree deliberately stops at syntax. It records grammar symbols, token values and child relationships; it does not know ASN.1-specific concepts such as `SEQUENCE`, `DEFAULT`, tags, references or constraints.
-
-```text
-generic parser
-      │
-      ▼
-  parse_tree
-      │
-      ├── ASN.1 publisher/builder
-      │       ▼
-      │   asn1_object
-      │
-      └── other grammar consumers
-```
-
-This boundary is important for keeping `sdk/io/parser` reusable. ASN.1 semantic construction belongs under `sdk/io/asn.1`, while `parse_tree` remains a generic parser result.
-
-### Parser → semantic construction
-
-The important architectural boundary is:
-
-```text
-source
-  ↓
-lexer
-  ↓
-parser
-  ↓
-parse_tree
-  ↓
-semantic construction
-  ↓
-domain object
-```
-
-For ASN.1 this is the boundary between generic parsing infrastructure and the ASN.1 semantic model described under `sdk/io/asn.1/basic/`.
+The tree is a syntax representation. ASN.1 types, tags, references, defaults and constraints are interpreted by the ASN.1 semantic layer, not encoded as intrinsic node types here.
 
 ## 3. Behavior Model
-- `on_shift()` pushes a terminal node containing the token symbol and value. `on_reduce()` creates a non-terminal node and splices the last `rhs_count` nodes from the working stack into its children in their existing order. The tree is therefore assembled from parser actions rather than by reparsing the original text.
-- A completed reduction may retain a rule ID when the parser calls the overload that supplies it; the simpler overload records the LHS and RHS count without a rule ID.
-- `parse_tree::clear()` deletes nodes still on its working stack and releases the parser reference registered through `set_parser()`. The root returned by `get_root()` belongs to the tree; callers should not independently delete its nodes.
-- `accept(visitor)` walks children before calling the reduction visitor for a non-terminal, while terminal nodes trigger the shift callback. A visitor error stops traversal. This traversal order is post-order for reductions and can be used to inspect or transform syntax without embedding domain semantics in the parser engine.
-- The tree is generic syntax. It does not resolve ASN.1 references, apply constraints, or build the ASN.1 runtime module; those responsibilities belong to the higher-level consumer.
+
+### Building nodes from parser events
+
+```text
+SHIFT token ──► terminal parse_treenode
+                         │
+REDUCE(lhs, rhs_count) ──┴──► non-terminal node
+                                  ├─ child 0
+                                  ├─ child 1
+                                  └─ ... in RHS order
+                                           │
+                                           ▼
+                                       parse_tree root
+```
+
+
+### Build nodes from parser actions
+
+```text
+parser SHIFT(symbol, token_value)
+             │
+             ▼
+   create terminal node
+             │
+             ▼
+      push onto work stack
+
+parser REDUCE(rule_id, lhs, rhs_count)
+             │
+             ▼
+   create non-terminal node
+             │
+             ▼
+ remove last rhs_count nodes from work stack
+             │
+             ▼
+ attach nodes as children in original order
+             │
+             ▼
+ push reduced node back onto work stack
+             │
+             ▼
+     completed root available
+```
+
+The tree is assembled incrementally from parser actions; it does not need to rescan the original source.
+
+### Visitor traversal
+
+```text
+accept(visitor)
+    │
+    ├─ terminal node ─► shift callback
+    │
+    └─ non-terminal node
+           │
+           ▼
+       visit children in order
+           │
+           ▼
+       reduce callback after children
+```
+
+The traversal is post-order for reductions. If a visitor returns an error, traversal stops and propagates that error.
+
+### Semantic boundary
+
+The syntax tree is the hand-off point between generic parser execution and domain-specific construction. A consumer walks the grammar-shaped tree and builds its own semantic objects. A syntactically valid tree is not proof that input meets ASN.1 type, reference or constraint rules.
 
 ### Source-level evidence
-The parser test path begins in `test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation()`, where each notation is sent through `test_asn1parser()`. To follow the tree-building mechanism itself, inspect `parse_tree.cpp`: SHIFT calls `on_shift(typestring, current_token.value)` and REDUCE calls `on_reduce(rule_id, rule.lhs, rule.rhs.size())` from the parser engines. The test's `Type1 ::= VisibleString` case is a compact input for tracing the chain from tokenization and parser actions to a `Statement → Assignment → TypeSpec`-style syntax tree.
 
-For the consumer boundary, compare that generic tree with the ASN.1 test helpers in `test/testcase/io/parser/asn1module.hpp` and the ASN.1 semantic model under `sdk/io/asn.1/`. The tree records grammar shape; the consumer interprets that shape as ASN.1 meaning.
+test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In parse_tree.cpp, SHIFT calls on_shift(typestring, current_token.value) and REDUCE calls on_reduce(rule_id, rule.lhs, rule.rhs.size()). The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
 
-## 4. Relationships
+## 5. Relationships
 ### Related areas
 
 - `../asn.1/basic/`

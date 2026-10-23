@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — Linux process-event pipeline and limits    │
 └──────────────────────────────────────────────┘
@@ -18,7 +18,7 @@ The Linux-only `netlink` component subscribes to the kernel process connector an
 
 ## 2. Data Model
 
-The public flow is `netlink::open(handle, cooldown, consumer_handler, parameter)`, followed by `close(handle)`. Internally the context owns:
+The runtime context owns:
 
 - a `NETLINK_CONNECTOR` socket bound to `CN_IDX_PROC`;
 - a producer thread that receives kernel messages;
@@ -26,9 +26,13 @@ The public flow is `netlink::open(handle, cooldown, consumer_handler, parameter)
 - a consumer thread that removes queued events and calls the user handler;
 - separate producer/consumer loop flags and a caller-provided cooldown delay for an empty queue.
 
-The implementation uses the process connector's multicast control message to enable or disable notifications. Opening the socket binds to the process connector group; this may require elevated privileges and can fail due to kernel/configuration restrictions.
 
 ## 3. Behavior Model
+
+### Open and subscribe
+
+Opening the socket binds to the process connector group and uses the process connector's multicast control message to enable notifications. This may require elevated privileges and can fail due to kernel/configuration restrictions. The public lifecycle is `netlink::open(handle, cooldown, consumer_handler, parameter)`, followed by `close(handle)`.
+
 
 ### Which events reach the callback?
 
@@ -44,7 +48,7 @@ A process event is not a complete process record. The testcase uses `/proc/<pid>
 
 `test/testcase/io/system/testcase_netlink.cpp` registers a handler, waits for SIGINT, then closes the component. The handler distinguishes fork, exec, exit, UID and GID changes; the testcase also queries `/proc` for executable and command-line details. It is compiled only for the Linux/glibc condition in the source. This is not portable coverage and was not executed as part of this documentation update.
 
-## 4. Relationships
+## 5. Relationships
 
 - [System integration overview](README.md) — platform boundary.
 - [Socket utilities](socket.md) — generic socket helper layer; netlink uses its own kernel protocol socket path.
@@ -56,7 +60,8 @@ A process event is not a complete process record. The testcase uses `/proc/<pid>
 - `sdk/io/system/linux/netlink.hpp`
 - `sdk/io/system/linux/netlink.cpp`
 
-## 5. References
+## 6. References
 
-- Linux kernel process connector / netlink UAPI definitions (`NETLINK_CONNECTOR`, `CN_IDX_PROC`, `PROC_EVENT_*`).
-- Linux `/proc` filesystem documentation.
+- [Linux kernel documentation: Netlink](https://docs.kernel.org/userspace-api/netlink/intro.html) — Netlink userspace/kernel communication model.
+- [Linux kernel UAPI: connector](https://github.com/torvalds/linux/blob/master/include/uapi/linux/connector.h) — connector identifiers and process-event definitions.
+- [Linux man-pages: proc(5)](https://man7.org/linux/man-pages/man5/proc.5.html) — /proc filesystem interface.

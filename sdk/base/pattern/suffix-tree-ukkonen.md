@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -65,6 +65,31 @@ Walks edge intervals while matching the query. Once the query is exhausted, coll
 Deletes the old tree and initializes an empty root and construction state.
 
 The key trade-off is explicit suffix paths versus compressed edge intervals. The former is easier to follow as a reference implementation; the latter is designed to avoid rebuilding every suffix path independently.
+
+### Construction and query traces
+
+```text
+t_suffixtree::add(source)
+  ├─ retain normalized source
+  └─ for each suffix start i
+       └─ insert source[i..end] as an explicit root-to-leaf path
+
+t_ukkonen::add(source)
+  ├─ reset old tree and initialize active point
+  └─ for each source position pos: extend(pos)
+       ├─ resolve active edge/length
+       ├─ walk down a complete edge when possible
+       ├─ create leaf or split edge on mismatch
+       └─ link successive internal nodes through suffix links
+            └─ after all extensions, assign leaf suffix_index values
+
+search(query)
+  ├─ explicit trie: follow one symbol transition at a time
+  └─ Ukkonen: compare query against source intervals on edges
+       └─ collect descendant leaf suffix indices and sort
+```
+
+The storage difference is visible in the edge labels: the explicit suffix trie materializes a path for each suffix, while Ukkonen nodes refer to intervals in the retained source. In the compressed tree, a query may finish partway through an edge; all leaves below that matched locus still identify occurrences of the query.
 
 ## 4. Relationships
 

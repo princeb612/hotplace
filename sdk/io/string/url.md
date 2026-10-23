@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -28,11 +28,15 @@
 - `query` — query text without the leading `?`
 - `fragment` — fragment text without the leading `#`
 
-The implementation first unescapes the input and then uses the project's regex helper to identify components. The source currently supplies default ports for `http` (80), `https` (443), and `ftp` (21) when the port is omitted.
+The `url_info_t` fields and default-port values describe the result contract. The order in which the implementation unescapes and splits the input is part of the execution path described under Behavior Model.
 
 ### Percent escaping
 
 `escape_url()` writes escaped output to a `stream_t`; `unescape_url()` decodes percent-escaped byte pairs into a stream. Escaped bytes are represented with hexadecimal digits through the base16 helper.
+
+## 3. Behavior Model
+
+### Conversion behavior
 
 ```text
 text ──escape_url──> percent-escaped bytes
@@ -40,7 +44,6 @@ text ─unescape_url─> decoded bytes
 URL  ──split_url───> url_info_t fields
 ```
 
-## 3. Behavior Model
 The output is intended for the specific URL forms consumed by this codebase. The function does not claim to normalize every URI form or validate every rule of current URL standards. In particular, preserve this distinction when documenting `uri` versus `uripath`: the testcase expects `uri` to retain query/fragment text while `uripath` contains only the path.
 
 ### Source-level evidence
@@ -50,7 +53,7 @@ The same test also covers an HTTPS URL without an explicit port (expected defaul
 
 The HTTP layer consumes `url_info_t` for URI/request handling, and Authenticode CRL handling also uses `split_url()`.
 
-## 4. Relationships
+## 5. Relationships
 - `sdk/base/encoding/base16` — hexadecimal representation used by percent escaping.
 - `sdk/base/pattern/` — regular-expression matching used by URL decomposition.
 - `sdk/base/stream/` — output target for escaped/unescaped text.
@@ -62,8 +65,7 @@ The HTTP layer consumes `url_info_t` for URI/request handling, and Authenticode 
 - `sdk/io/string/string.hpp`
 - `test/testcase/io/string/testcase_string.cpp`
 
-## 5. References
-- RFC 2396 — URI syntax referenced by implementation comments.
-- RFC 2068 — historical HTTP syntax reference in implementation comments.
+## 6. References
 
-These are historical source references. They should not be presented as evidence that the implementation fully conforms to either document or to later URL/URI standards.
+- [RFC 2396 — Uniform Resource Identifiers (URI): Generic Syntax](https://www.rfc-editor.org/rfc/rfc2396) — historical URI syntax referenced by implementation comments.
+- [RFC 2068 — Hypertext Transfer Protocol — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc2068) — historical HTTP syntax reference in source comments.

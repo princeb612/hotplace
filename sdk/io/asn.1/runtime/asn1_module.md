@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -79,6 +79,8 @@ A module-capable runtime contains:
 
 The module state is created by `as_module()` and populated through the publisher's module handlers and the runtime import/export APIs.
 
+## 3. Behavior Model
+
 ### Linkage update
 
 `update_linkage()` propagates runtime linkage through semantic objects. It updates tagged-type linkage and follows referenced objects while also propagating constructed/explicit relationships through parent objects.
@@ -138,7 +140,6 @@ range_set  string_set
 
 The runtime stores the semantic result; constraint evaluation and generic value-domain operations remain in their respective layers. The ASN.1 provider used by this path is `asn1_advisor`, which supplies the shared publisher and parser providers.
 
-## 3. Behavior Model
 ### Module representation
 
 `represent()` can now regenerate module notation as well as individual object notation.
@@ -224,7 +225,7 @@ resolve()
 reference dependency validation
 ```
 
-## 4. Relationships
+## 5. Relationships
 - `asn1_parser` and `asn1_publisher` provide syntax parsing and semantic publication.
 - `asn1_modules` owns the module registry; each `asn1_module` resolves local and imported definitions.
 - `sdk/io/asn.1/basic/semantic/` supplies the semantic objects whose references are linked into modules.

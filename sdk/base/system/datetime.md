@@ -60,14 +60,6 @@ Both local-time and UTC conversion are supported. The static conversion function
 
 The Windows FILETIME conversion preserves the sub-second portion of the internal `timespec` rather than reducing the conversion to whole seconds.
 
-### Implementation
-
-Main files:
-
-- `sdk/base/system/datetime.hpp`
-- `sdk/base/system/datetime.cpp`
-- `sdk/base/system/datetime_api.cpp`
-
 ## 3. Behavior Model
 
 ### Arithmetic and comparison
@@ -123,22 +115,10 @@ One of the practical purposes of this module is to hide platform differences beh
 
 This is consistent with hotplace's broader goal of keeping the base system layer usable across older environments.
 
-### Tests
-
-Primary test:
-
-- `test/testcase/base/system/testcase_datetime.cpp`
-
-The testcase exercises construction/conversion through `timespec`, `datetime_t`, `time_t`, and system-time related paths, as well as `timespan_t` arithmetic.
-
-It also verifies `time_diff()` and `time_sum()` with nanosecond values that require carry/borrow normalization.
-
-### Status
-
-`datetime` is a system-level time abstraction rather than a general-purpose date/time framework. Its main role is to provide a stable hotplace interface across platform time representations and clock APIs.
-
 ## 4. Relationships
 
+- `test/testcase/base/system/testcase_datetime.cpp` exercises construction/conversion through `timespec`, `datetime_t`, `time_t`, and system-time paths, as well as `timespan_t` arithmetic and `time_diff()` / `time_sum()` nanosecond carry/borrow normalization.
+- `sdk/base/system/datetime.hpp`, `datetime.cpp`, and `datetime_api.cpp` — public representation, core conversions/arithmetic, and API-level helpers.
 - `sdk/base/system/linux/` and `sdk/base/system/windows/` — platform-specific clock and system-time adapters.
 - `sdk/base/system/uint.hpp` and endian helpers — separate wire-width conversion facilities; datetime conversion does not itself define protocol timestamp encoding.
 - `test/testcase/base/system/testcase_datetime.cpp` — source-level conversions and nanosecond carry/borrow cases.

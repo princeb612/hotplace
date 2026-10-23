@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -50,7 +50,7 @@ The semantic ASN.1 object owns/associates its constraints, so a type and its res
 
 ### Concrete constraint forms
 
-The current implementation represents individual constraint forms as semantic nodes under `asn1_constraint`, rather than encoding every form directly into the evaluator. The rev1096 source tree contains concrete nodes for: 
+The current implementation represents individual constraint forms as semantic nodes under `asn1_constraint`, rather than encoding every form directly into the evaluator. The source tree contains concrete nodes for: 
 
 - `asn1_constraint_range` — ordered/range restrictions
 - `asn1_constraint_single_value` — a single permitted value
@@ -62,7 +62,7 @@ The current implementation represents individual constraint forms as semantic no
 - `asn1_constraint_all_except` — complement-style restriction
 - `asn1_constraint_from` / related container forms — subtype/alphabet-style composition
 
-The evaluator does not replace these nodes. It visits them and accumulates their meaning in `t_set_runtime<T>`. This is the important implementation boundary: **constraint classes describe the semantic operation; the evaluator executes that operation against a value-domain representation**.
+The evaluator does not replace these nodes. Constraint classes describe the semantic operations; the evaluator's traversal and conversion into a value-domain representation are covered under Behavior Model.
 
 ### Constraint categories
 
@@ -198,7 +198,7 @@ Related ASN.1 tests include:
 - `testcase_basic3.cpp`
 - DER test vectors under `test/testcase/asn.1/`
 
-## 4. Relationships
+## 5. Relationships
 ### Visitor relationship
 
 Constraint traversal is separated from evaluation.

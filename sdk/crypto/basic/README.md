@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -20,28 +20,58 @@ This layer supplies operations and key abstractions. It does not decide the full
 
 ## 2. Data Model
 
-The actual source directories are the authoritative homes for implementation-level documentation:
+This directory is a **module map**, not a single runtime data model. Each child owns its concrete objects and state; the table below identifies those models and the data each one carries.
 
-- [`crypt/`](crypt/README.md) — symmetric encryption, AEAD and public-key encryption facades.
-- [`digest/`](digest/README.md) — message digests and incremental transcript hashing.
-- [`kdf/`](kdf/README.md) — KDF families, parameters and protocol label helpers.
-- [`key/`](key/README.md) — key objects, key collections, import/export, generation, parameter access and key exchange.
-- [`mac/`](mac/README.md) — HMAC/MAC operations, CBC-HMAC and OTP helpers.
-- [`sign/`](sign/README.md) — digital-signature and verification abstractions.
-- `prng/` — pseudo-random number generation.
-- `pqc/` — common post-quantum cryptographic operation support.
-- `sdk/` — OpenSSL SDK/backend support.
+| Module | Main data model | Data that matters to the caller |
+|---|---|---|
+| [`crypt/`](crypt/README.md) | Cipher contexts, operation facades and builders | Algorithm/mode or scheme, key, IV/nonce, AAD and authentication tag |
+| [`digest/`](digest/README.md) | Digest objects and transcript-hash state | Selected hash algorithm, accumulated byte sequence and checkpoint state |
+| [`kdf/`](kdf/README.md) | Algorithm-specific derivation inputs | IKM/password, salt, context/info, cost parameters and requested output length |
+| [`key/`](key/README.md) | Key objects, metadata and collections | Key material, `kid`, algorithm/use/group metadata, family-specific parameters and ownership |
+| [`mac/`](mac/README.md) | Keyed MAC objects and OTP parameters | Secret key, hash/MAC choice, counter or time-step, digit count and construction-specific byte layout |
+| [`sign/`](sign/README.md) | Signature operation configuration | Signature scheme/category, digest, key type, PSS parameters and message/signature bytes |
+| [`backend.md`](backend.md) | OpenSSL SDK, PRNG and PQC integration | Startup reference counts, random-byte/encoded-string outputs, key encoding, KEM capsule/shared-secret and signature data |
+
+The source tree also contains pseudo-random generation, post-quantum operation support and OpenSSL SDK/backend support. These are directory responsibilities rather than fields in one shared object; consult [`backend.md`](backend.md) and its source entry points for the concrete state and interfaces.
 
 The interfaces/builders separate caller-facing operation contracts from concrete OpenSSL implementations. The key layer provides common key representation and family-specific construction; higher-level formats and protocols supply their own identifiers, message structures and operation timing.
 
 ## 3. Behavior Model
 
-- **Backend availability:** an interface or metadata entry does not guarantee that the selected OpenSSL build/provider can perform the operation. Check the concrete implementation and handle unsupported algorithms or unavailable backend methods.
-- **Key ownership:** key wrappers and accessors have explicit reference-count and borrowed-pointer behavior. Follow the key-layer contract rather than assuming that a returned pointer extends the owner's lifetime; see [`key/README.md`](key/README.md).
-- **Operation contracts differ:** an unkeyed digest, keyed MAC, digital signature, AEAD tag and KDF output serve different purposes and are not interchangeable.
-- **Protocol boundary:** transcript hashing and TLS-related derivation primitives may be used by `sdk/net/tls`, but this directory does not own the TLS handshake or complete key schedule.
+### 3.1 Common primitive-selection path
 
-## 4. Relationships
+The child modules use different public APIs, but many follow the same broad route from a caller's intent to a concrete operation:
+
+```text
+protocol/application intent
+  (algorithm ID, name, parameters, key material)
+                   |
+                   v
+        advisor / input decoding
+                   |
+                   v
+          builder or key facade
+                   |
+                   v
+      operation-specific data model
+                   |
+                   v
+       OpenSSL/backend operation
+                   |
+                   v
+       bytes, status, or verification result
+```
+
+This is a navigation model, not a claim that every child uses every stage. For example, `crypto_keygen` decodes named key parameters before family-specific construction; a one-shot digest may need only algorithm selection and a backend context; a TLS label helper serializes protocol-defined inputs before calling HKDF.
+
+### 3.2 Cross-cutting behavior boundaries
+
+- **Algorithm resolution is not backend availability.** Advisor metadata maps names and protocol identifiers to internal categories or methods. The selected OpenSSL version, provider and key parameters still determine whether the operation can execute.
+- **Data representation is not operation policy.** A key object may carry a public key, private key or certificate, but the caller/protocol determines whether that material is suitable and which representation should be exported.
+- **Primitive output is not protocol completion.** Digest/MAC/signature bytes, a shared secret or KDF output are inputs to higher-level state machines. TLS, JOSE and COSE remain responsible for their message formats, ordering and protocol-specific validation.
+- **Ownership follows the concrete API.** OpenSSL reference counts, borrowed pointers, byte-buffer lifetimes and builder reuse rules are defined by each child module; they should not be inferred from the common facade alone.
+
+## 5. Relationships
 
 - [`sdk/crypto/README.md`](../README.md) — crypto subsystem overview and backend boundaries.
 - [`sdk/crypto/advisor/README.md`](../advisor/README.md) — algorithm and parameter lookup.
@@ -53,11 +83,20 @@ The interfaces/builders separate caller-facing operation contracts from concrete
 
 The module READMEs link to the relevant source and testcase entry points for each primitive family. Testcase references describe source-level coverage and must not be read as proof that the tests ran in a particular environment.
 
-## 5. Developer Notes
+## 6. References
+
+- [OpenSSL EVP overview](https://docs.openssl.org/3.0/man7/evp/) — common high-level interfaces for cryptographic operations.
+- [OpenSSL EVP_PKEY](https://docs.openssl.org/3.0/man7/EVP_PKEY/) — public-key objects and key-operation interfaces.
+- [RFC 5869: HMAC-based Extract-and-Expand Key Derivation Function (HKDF)](https://www.rfc-editor.org/rfc/rfc5869) — HKDF construction and its extract/expand stages.
+- [RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446) — transcript hashes, key schedule, and TLS key-share use.
+- [RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA)](https://www.rfc-editor.org/rfc/rfc8032) — Ed25519 and Ed448 signature schemes.
+- [RFC 7748: Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.
+
+## 7. Developer Notes
 
 These notes preserve cross-directory inventories, reference examples, and study material that do not belong to one implementation directory's README. They are intentionally not presented as complete API specifications or universal support claims.
 
-### 5.1 Cipher inventory
+### 6.1 Cipher inventory
 
 The inventory below records combinations represented in the source-maintained table. It does not guarantee availability in every OpenSSL build/provider.
 
@@ -93,7 +132,7 @@ Source-maintained key/IV-size examples (bytes):
 
 Mode and parameter requirements are algorithm-specific; this table is an orientation aid, not a substitute for the operation's contract. See [`crypt/README.md`](crypt/README.md) for symmetric, AEAD and public-key encryption boundaries.
 
-### 5.2 Digest, HMAC and CMAC inventory
+### 6.2 Digest, HMAC and CMAC inventory
 
 Digest output lengths and the source-maintained HMAC combinations are listed here for quick comparison. Provider support may differ by build; SHAKE output length, for example, is caller-selected rather than a fixed digest size.
 
@@ -133,7 +172,7 @@ Digest output lengths and the source-maintained HMAC combinations are listed her
 
 The original CMAC note identifies AES-CBC-MAC as a related source-tested construction. See [`digest/README.md`](digest/README.md) for digest/transcript behavior and [`mac/README.md`](mac/README.md) for HMAC, CMAC, CBC-HMAC and OTP semantics.
 
-### 5.3 Elliptic-curve taxonomy
+### 6.3 Elliptic-curve taxonomy
 
 This classification is a conceptual map, not a statement that every named curve is supported by every backend or platform.
 
@@ -149,7 +188,7 @@ This classification is a conceptual map, not a statement that every named curve 
 
 The mathematical curve form, the cryptographic operation, the wire/key representation and provider availability are distinct dimensions. X25519/X448 and Ed25519/Ed448 are not interchangeable simply because their constructions are related. The implementation-facing curve and alias lookup is in [`advisor/README.md`](../advisor/README.md); key construction and exchange are in [`key/README.md`](key/README.md).
 
-### 5.4 Object Identifiers (OID) examples
+### 6.4 Object Identifiers (OID) examples
 
 OIDs identify algorithm or parameter arcs; they are not operations and do not prove backend support. The following are preserved as reference examples; validate aliases against the actual advisor/resource tables before relying on them.
 
@@ -164,6 +203,6 @@ An OID can be rendered as a dotted string, ASN.1 name/value sequence, OID-IRI or
 
 In hotplace, OIDs, OpenSSL NIDs and protocol-specific identifiers meet at different lookup/conversion boundaries. See [`sdk/io/basic/oid.md`](../../io/basic/oid.md) for generic OID conversion and [`advisor/README.md`](../advisor/README.md) for crypto-specific metadata. The original examples included RFC 3279 as a general algorithm-identifier reference.
 
-### 5.5 CBC-HMAC study note
+### 6.5 CBC-HMAC study note
 
 [`mac/cbc-hmac-survey.md`](mac/cbc-hmac-survey.md) remains a separate developer note because it compares construction-specific input layouts: TLS MAC-then-encrypt (MtE), TLS encrypt-then-MAC (EtM), and JOSE AES-CBC-HMAC. It is useful for understanding protocol differences, but should not be treated as a generic recipe for designing a new authenticated-encryption scheme.

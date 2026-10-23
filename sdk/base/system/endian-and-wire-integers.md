@@ -57,14 +57,9 @@ The conversion helpers are:
 
 Both validate the input buffer and reject values that cannot fit in the target width.
 
-### Tests
-
-`test/testcase/base/system/testcase_endian.cpp` checks host/network conversion and endian detection, including 64-bit and optional 128-bit values.
-
-The custom-width integer implementations are exercised indirectly by protocol code and should be documented alongside the protocol users when their concrete wire layout matters.
-
 ## 4. Relationships
 
+- `test/testcase/base/system/testcase_endian.cpp` checks host/network conversion and endian detection, including 64-bit and optional 128-bit values. The custom-width integer implementations are also exercised indirectly by protocol code; document concrete wire layouts alongside those protocol users.
 ### Protocol relationships
 
 The source comments explicitly identify protocol uses:

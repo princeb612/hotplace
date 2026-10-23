@@ -19,13 +19,15 @@
 ## 2. Data Model
 
 - `byte_t` is the unsigned byte type; `binary_t` derives from `std::vector<byte_t>` and inherits its constructors and assignment operators.
-- `loglevel_t` provides ordered logging levels. `loglevel_helper` converts numeric or textual values to levels and levels back to uppercase names.
+- `loglevel_t` provides ordered logging levels.
 - `encoding_t` identifies encoding families such as Base16, RFC-style Base16, Base64, Base64URL, and HTTP/2 Huffman.
 - The header also centralizes common integer, container, and platform-related definitions used by other base headers.
 
 The Linux and Windows branches include their corresponding platform type headers and OS/network headers. Consequently, including this file can bring platform declarations into a translation unit; it is not a minimal, platform-neutral type-only header.
 
 ## 3. Behavior Model
+
+`loglevel_helper` converts numeric or textual values to levels and levels back to uppercase names. The string path normalizes input and handles recognized aliases; unknown values use the documented default/`UNKNOWN` behavior.
 
 **Binary representation**
 

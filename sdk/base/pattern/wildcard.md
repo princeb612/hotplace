@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -37,6 +37,21 @@ When the pattern reaches `_wild_any`, the matcher remembers that wildcard's posi
 After the input is consumed, trailing zero-or-more wildcards may be skipped. The match succeeds only if the pattern is then exhausted. This is a greedy backtracking strategy centered on the most recently encountered `*`; it does not expose captures or implement regular-expression syntax.
 
 The longest-common-prefix helper found in the testcase is test-local code, not part of `t_wildcards`.
+
+### Source flow: greedy expansion of the most recent `*`
+
+```text
+input cursor i, pattern cursor p
+  ├─ literal equal or `?` ─► i++, p++
+  ├─ `*` ──────────────────► remember star position and current i; p++
+  ├─ mismatch with saved `*` ─► restore p after `*`; expand saved match by i++
+  └─ mismatch without saved `*` ─► fail
+
+input exhausted
+  └─ skip trailing `*` ─► success only if pattern exhausted
+```
+
+The saved wildcard is a backtracking checkpoint, not a set of active automaton states. When a later literal fails, the matcher gives the latest `*` one more input element and retries the remaining pattern. This keeps the implementation small, but it is a different search strategy from the queue of active states used by `t_aho_corasick_wildcard`.
 
 ## 4. Relationships
 

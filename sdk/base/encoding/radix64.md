@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -16,47 +16,61 @@
 
 ### Introduction
 
-`radix64` implements the additional processing needed by RFC 4880 Radix-64 representations.
-
-The Base64 conversion itself is reused from the existing Base64 implementation. Radix-64 adds CRC-24 and armor-oriented processing around that encoding.
+`radix64` implements the CRC/checksum and armor-oriented processing associated with RFC 4880 Radix-64. The payload alphabet and byte packing are reused from Base64 rather than implemented as a separate encoding.
 
 ## 2. Data Model
 
-Radix-64 armor combines Base64-encoded payload bytes with a CRC-24 checksum representation. It reuses the existing Base64 alphabet and bit-packing rules rather than defining a separate encoding alphabet.
+- `encoded` holds the Base64 representation of the payload.
+- `crc` holds the Base64 representation of the three CRC-24 bytes.
+- `decoded` receives the payload bytes during armor decoding.
+- `crc24()` calculates the checksum over the original or decoded byte sequence.
 
-The basic `radix64_encode()` and `radix64_decode()` names alias the corresponding Base64 operations. The armor-specific entry points are `radix64_armor_encode()` and `radix64_armor_decode()`.
-
+The public names `radix64_encode`, `radix64_decode`, and the multiline aliases map to the Base64 APIs. Armor-specific validation is provided by `radix64_armor_encode()` and `radix64_armor_decode()`.
 
 ## 3. Behavior Model
 
-### Armor processing
+### Armor encoding
 
 ```text
-binary data
-    ├── Base64 encode ───────┐
-    └── CRC-24 checksum ─────┴──► Radix-64 armor data
+input bytes
+   ├── Base64 encode ───────────────────► encoded payload
+   └── CRC-24
+         │
+         ▼
+      network-byte-order 32-bit value
+         │ select the three checksum bytes
+         ▼
+      Base64 encode ────────────────────► checksum text
 ```
 
-`crc24()` calculates the checksum. `radix64_armor_encode()` returns the encoded payload and CRC representation; `radix64_armor_decode()` decodes the payload and verifies the supplied checksum against a newly calculated value.
+The encoder calculates CRC-24 over the original payload. It converts the checksum to network byte order and encodes the three checksum bytes, returning payload text and checksum text separately.
 
-RFC 4880 sections 6.5 and 6.6 provide the executable reference for this format and are covered in `testcase_base64.cpp`.
+### Armor decoding and verification
 
-### Tests
+```text
+encoded payload ──► Base64 decode ──► decoded bytes
+                                          │
+                                          ▼
+                                       CRC-24
+                                          │
+                              encode calculated checksum
+                                          │
+supplied checksum ────────────────────────┤
+                                          ▼
+                                      compare text
+                                 ┌────────┴────────┐
+                               equal             unequal
+                                 │                  │
+                              success     errorcode_t::mismatch
+```
 
-`test/testcase/encode/testcase_base64.cpp`
-
-The testcase includes:
-
-- RFC 4880 section 6.5 Radix-64 conversion vectors
-- CRC-24 values
-- encode/decode round trips
-- RFC 4880 section 6.6 ASCII-armored message decoding
+A successful Base64 decode is not sufficient: the checksum must also match. The checksum detects accidental corruption but is not a cryptographic integrity/authentication mechanism.
 
 ## 4. Relationships
 
-- `sdk/base/encoding/base64.*` — provides the alphabet/bit packing used by Radix-64.
-- `sdk/base/basic/crc.cpp` — `crc24()` computes the checksum appended by the Radix-64 armor format.
-- `test/testcase/encode/testcase_base64.cpp` — includes source-level Radix-64 vectors for the combined Base64-plus-checksum representation.
+- `sdk/base/encoding/base64.*` provides payload and checksum encoding.
+- `sdk/base/basic/crc.cpp` implements `crc24()`.
+- `test/testcase/encode/testcase_base64.cpp` covers RFC 4880 section 6.5 vectors, CRC-24 values, round trips, and section 6.6 ASCII-armored message processing.
 
 ## 5. References
 

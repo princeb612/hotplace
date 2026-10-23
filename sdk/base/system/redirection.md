@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -39,6 +39,23 @@ The caller supplies the memory buffer for `read_stdout()` and the byte range for
 **Closing**
 
 `close()` owns the platform resource cleanup. Because the child and parent use different ends of each pipe, the concrete implementation must close the correct handles at the correct lifecycle stage. Callers should not use the redirection object after its owner/process has closed it.
+
+### Pipe/handle lifecycle
+
+```text
+initialize() ─► prepare pipe/handle pairs before process creation
+      │
+      ▼
+spawn child ─► event_spawned() ─► close or mark ends unused by each side
+      │
+      ├─ parent writes bytes ─► child stdin
+      └─ parent reads bytes  ◄─ child stdout
+      │
+      ▼
+close() ─► release remaining platform handles
+```
+
+The API transfers bytes only; it does not add line boundaries, character encoding, or message framing. The parent must interpret the byte count returned by reads and must not keep using the redirection object after its owning process/lifecycle has closed it.
 
 ## 4. Relationships
 

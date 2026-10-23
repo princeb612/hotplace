@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -36,7 +36,7 @@ The data model preserves the distinction between a JWE content-encryption key (C
 
 `json_object_signing_encryption` manages context lifecycle through `open`, `close`, and `clear_context`; callers should follow that lifecycle instead of assuming the context is a stateless value object.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Source-test evidence
 

@@ -73,19 +73,9 @@ The public API provides:
 
 The distinction between these operations matters for ASN.1 constraints: a literal value, a permitted string range, a `FROM` restriction, and a `PATTERN` restriction are different semantic forms even though they ultimately describe allowed strings.
 
-### Tests
-
-`test/testcase/base/nostd/testcase_set.cpp` covers:
-
-- literal membership
-- `FROM` substring behavior
-- string ranges such as `"a".."z"`
-- open/closed range removal
-- regular-expression matching
-- `t_set_runtime<std::string>` integration
-
 ## 4. Relationships
 
+- `test/testcase/base/nostd/testcase_set.cpp` covers literal membership, `FROM` matching, string ranges, open/closed range removal, regex matching, and `t_set_runtime<std::string>` integration.
 ### ASN.1 relationship
 
 ```text

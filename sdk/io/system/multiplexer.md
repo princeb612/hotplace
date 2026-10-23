@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — callback contract and epoll/IOCP behavior  │
 └──────────────────────────────────────────────┘
@@ -27,16 +27,16 @@ This is a callback and event-dispatch boundary, not a cross-platform socket stat
 
 `multiplexer_event_type_t` defines the vocabulary shared with callback consumers:
 
-| Value | Meaning in the API | Implementation notes |
-|---|---|---|
-| `mux_tryconnect = 0` | Try SSL accept / connection-related follow-up | Declared for consumers; not emitted directly by the two event loops described here |
-| `mux_connect = 1` | Stream/listener connection event | epoll emits it when the registered listening stream socket becomes readable and `SO_ACCEPTCONN` identifies it as a listener |
-| `mux_read = 2` | Stream read readiness/completion | epoll means readable; IOCP means a completion was dequeued with a nonzero transferred-byte count for a stream socket |
-| `mux_write = 3` | Stream send | Reserved; the shown event loops do not emit it |
-| `mux_disconnect = 4` | Stream closed / disconnect | epoll maps HUP/RDHUP/ERR when no EPOLLIN branch wins; IOCP maps a completion with zero transferred bytes |
-| `mux_dgram = 5` | Datagram read | Selected when the socket passed as `listenfd` is identified as `SOCK_DGRAM` and an input event/completion arrives |
+| Value | API-level meaning |
+|---:|---|
+| `mux_tryconnect = 0` | Try SSL accept / connection-related follow-up |
+| `mux_connect = 1` | Stream/listener connection event |
+| `mux_read = 2` | Stream read readiness/completion |
+| `mux_write = 3` | Stream send |
+| `mux_disconnect = 4` | Stream closed / disconnect |
+| `mux_dgram = 5` | Datagram read |
 
-These names do not erase the difference between *readiness* and *completion*. A callback must interpret its event in the context of the backend and the operations the caller has posted.
+These names do not erase the difference between *readiness* and *completion*. A callback must interpret its event in the context of the backend and the operations the caller has posted. Backend-specific emission and mapping rules are described under Behavior Model.
 
 ### Callback signature and payload vectors
 
@@ -55,16 +55,7 @@ The meaning of `data_vector` is backend-specific. Do not cast the same index to 
 
 #### IOCP — four entries
 
-The Windows event loop constructs:
-
-```cpp
-void* data_vector[4] = {nullptr};
-data_vector[0] = (void*)handle;                         // multiplexer context
-data_vector[1] = (void*)(arch_t)size_transfered;         // bytes transferred
-data_vector[2] = (void*)completion_key;                 // key supplied to bind()
-data_vector[3] = (void*)overlapped;                     // LPOVERLAPPED
-event_callback_routine(type, 4, data_vector, nullptr, parameter);
-```
+The callback payload contract is four entries; the behavior section compares how IOCP populates and dispatches them.
 
 - `count == 4`.
 - `data_vector[0]` is the multiplexer context, not the socket.
@@ -77,16 +68,7 @@ The application must retain the memory backing `OVERLAPPED` and any operation co
 
 #### epoll — two entries
 
-The Linux event loop constructs:
-
-```cpp
-void* data_vector[4] = {nullptr};
-data_vector[0] = handle;                                  // multiplexer context
-data_vector[1] = (void*)(arch_t)context->events[i].data.fd; // event-source fd
-
-CALLBACK_CONTROL callback_control = CONTINUE_CONTROL;
-event_callback_routine(type, 2, data_vector, &callback_control, parameter);
-```
+The callback payload contract is two populated entries; the behavior section compares how epoll populates and dispatches them.
 
 - `count == 2`; only indexes 0 and 1 are populated for the callback contract.
 - `data_vector[1]` is the file descriptor registered with epoll. The `data` argument passed to `bind()` is not stored by this implementation; `ev.data.fd` is used instead.
@@ -160,7 +142,7 @@ The event-loop API is cooperative. The controller's flag is checked during the l
 
 The API comment examples show the intended server flow, but they are not evidence that every lifecycle race or backend-specific error path has a dedicated test.
 
-## 4. Relationships
+## 5. Relationships
 
 - `multiplexer_controller` manages event-loop thread stop flags; it does not manage per-connection protocol state.
 - `sdk/net/server/` consumes the multiplexer as part of the server/session flow.
@@ -174,7 +156,7 @@ The API comment examples show the intended server flow, but they are not evidenc
 - `sdk/io/system/windows/multiplexer_iocp.cpp`
 - `sdk/net/server/network-server-model.md`
 
-## 5. References
+## 6. References
 
-- Linux `epoll_create` / `epoll_wait` API documentation: https://man7.org/linux/man-pages/man2/epoll_create.2.html
-- Windows `GetQueuedCompletionStatus` and `CreateIoCompletionPort` documentation: Microsoft Win32 API reference.
+- [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) and [epoll_wait(2)](https://man7.org/linux/man-pages/man2/epoll_wait.2.html) — Linux event notification APIs.
+- [Microsoft Learn: CreateIoCompletionPort](https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-createiocompletionport) and [GetQueuedCompletionStatus](https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus) — Windows I/O completion ports.

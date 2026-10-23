@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -16,96 +16,71 @@
 
 ### Introduction
 
-`huffman_coding` is the generic Huffman coding implementation used by hotplace for learning, importing, exporting, encoding, and decoding Huffman code tables.
-
-The implementation can derive codes from sample data or load a pre-trained table.
+`huffman_coding` implements generic Huffman code-table construction and use: it can learn codes from sample data or import a predefined table, then use the resulting mappings for encoding and decoding. HTTP/2 Huffman coding builds on this concept but uses a fixed table specified by RFC 7541.
 
 ## 2. Data Model
 
-### Two ways to obtain codes
+### Code-construction and decoding structures
 
-```text
-sample data
-    │
-    ├── load()
-    ├── learn()
-    └── infer()
-          │
-          ▼
-      code table
-```
+The generic implementation keeps symbol-frequency measurements, a weighted binary tree used to construct codes, symbol-to-code and code-to-symbol maps, and a trie used by the decoding path. These structures serve different stages: frequency/tree structures construct the table; the maps retain the resulting code mappings; the trie supports matching bit sequences during decoding.
 
-or:
+### Bit-oriented representation
 
-```text
-pre-trained table
-       │
-       ▼
-    imports()
-       │
-       ▼
-    code table
-```
+Huffman codes have variable bit lengths, so a symbol is not necessarily aligned to a byte boundary. The stream APIs retain partial bit state across chunk boundaries; the encoding and finalization rules are described in the Behavior Model.
 
-The latter is the path used for protocol-defined Huffman tables such as HTTP/2.
-
-The implementation uses frequency measurement and a binary-tree representation to construct codes. It also keeps a reverse code table for decoding.
-
-### Encoding
-
-Huffman codes are bit-oriented rather than byte-oriented. The encoder therefore accumulates bits and emits complete bytes as they become available.
-
-If the final code does not end on an octet boundary, padding can be inserted before the final byte.
-
-The implementation exposes `expect()` to calculate the expected encoded size before performing the actual encoding.
-
-### Decoding
-
-The decoder supports both direct/manual and stream-oriented paths. The implementation keeps enough bit state to decode symbols even when symbol boundaries do not coincide with byte boundaries.
-
-This is important for HTTP/2 Huffman because RFC 7541 defines codes with different bit lengths and an EOS-related padding rule.
+The HTTP/2 implementation stores its fixed table in `detail/http_huffman_codes.*` and exposes it through `http_huffman_coding`. It does not learn a new table from each header field.
 
 ## 3. Behavior Model
 
-### HTTP/2 Huffman
-
-`http_huffman_coding` derives from `huffman_coding` and loads the static code table defined by RFC 7541 Appendix B.
-
 ```text
-huffman_coding
-      ▲
-      │
-http_huffman_coding
-      │
-      └── RFC 7541 static table
+sample bytes ─► frequency measurement ─► weighted tree ─► code table
+predefined table ────────────────────────────────────────► code table
+                                                           │
+                                     ┌─────────────────────┴──────────────────┐
+                                     ▼                                        ▼
+                                encode bits                             decode bits
 ```
 
-The singleton returned by `http_huffman_coding::get_instance()` provides the protocol-specific table without requiring each caller to construct it manually.
+### Learn or import a code table
 
-The actual table is kept in `detail/http_huffman_codes.*`.
+For data-driven construction, callers load sample input, learn symbol frequencies, and infer the code table. Alternatively, `imports()` loads a supplied table.
 
-### Tests
+```text
+learned path: load(samples) ─► learn() ─► infer() ─► code mappings
+fixed path:   imports(table) ──────────────────────► code mappings
+```
 
-`test/testcase/encode/testcase_huffman.cpp`
+The learned and imported paths both prepare mappings for subsequent encoding/decoding; importing does not run the frequency-learning algorithm.
 
-The testcase covers:
+### Encoding and decoding
 
-- learning a Huffman table from sample data
-- importing a pre-trained table
-- exporting generated codes
-- encoding/decoding
-- RFC 7541 Appendix B vectors
-- HTTP/2 Huffman through encoder/decoder streams
-- different stream chunk sizes
+Encoding looks up each symbol's bit code and accumulates bits until a complete output byte can be emitted. When the final bit sequence does not end on an octet boundary, the relevant caller/path must apply its required padding convention. For HTTP/2, the fixed-table wrapper uses the protocol's EOS-related one-bit padding rule.
 
-The RFC 7541 testcase is the important interoperability reference; the learning path demonstrates the generic algorithm separately.
+Decoding consumes bits and identifies symbols through the decoding structure, preserving enough state to continue matching a code across byte/chunk boundaries. The trie matches bit-string codes; it does not calculate code lengths. Manual and stream-oriented flags select decoder behavior, while the HTTP/2 wrapper supplies the fixed protocol table.
+
+### HTTP/2 path
+
+```text
+http_huffman_coding::get_instance()
+                │
+                ▼
+      fixed RFC 7541 code table
+                │
+       ┌────────┴────────────────────────────────┐
+       ▼                                         ▼
+  ymbol lookup                       bit-sequence decode
+       │                                         │
+       └──── encoder_stream / decoder_stream ────┘
+```
+
+The singleton exposes the protocol-specific table to stream wrappers. Generic Huffman learning remains a separate capability.
 
 ## 4. Relationships
 
-- `sdk/base/pattern/trie.hpp` — the generic Huffman decoder indexes bit-string codes in a trie and scans the input bits to identify the longest matching code; the trie does not calculate Huffman code lengths.
-- `http_huffman_coding.*` and `detail/http_huffman_codes.*` — load the fixed RFC 7541 code table on top of the generic implementation.
-- `encoder_stream` / `decoder_stream` — preserve bit-oriented state when encoded data arrives in chunks.
-- `test/testcase/encode/testcase_huffman.cpp` — learning/import/export behavior and RFC 7541 vector coverage.
+- `sdk/base/pattern/trie.hpp` supports bit-string matching in the generic decoder.
+- `http_huffman_coding.*` and `detail/http_huffman_codes.*` provide the fixed RFC 7541 table.
+- `encoder_stream` and `decoder_stream` preserve bit-oriented state across chunks.
+- `test/testcase/encode/testcase_huffman.cpp` provides source-level algorithm and RFC-vector coverage, including RFC 7541 Appendix B vectors and stream chunk-boundary cases.
 
 ## 5. References
 

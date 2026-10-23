@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,27 +20,28 @@
 
 The context stores a queue of allocated blocks. Each block tracks its base address, current offset, and capacity (`limit`). The context also tracks the configured block size, padding size, total content size, flags, and a critical-section lock.
 
-```text
-caller
-  | open()
-  v
-bufferio_context_t
-  +-- block_size / pad_size / flags
-  +-- bufferio_size
-  +-- lock
-  +-- queue of bufferio_t blocks
-          | write() / printf() / vprintf()
-          v
-      buffered bytes
-          | get() / compare() / find_*()
-          | insert() / cut() / replace() / clear()
-          v
-      caller-visible content
-```
-
-This is a conceptual model derived from `bufferio.hpp` and `bufferio.cpp`. `get()` may return the only queued block directly; when multiple blocks exist, the implementation consolidates them into a newly allocated block and clears the old queue.
+This is a conceptual model derived from `bufferio.hpp` and `bufferio.cpp`. The context stores a queue of allocated blocks, each with a base address, current offset, and capacity (`limit`). It also tracks block size, padding size, total content size, flags, and a critical-section lock.
 
 ## 3. Behavior Model
+
+### Block and retrieval lifecycle
+
+```text
+open() ─► bufferio_context_t + block queue
+                   │
+        write() / printf() / vprintf()
+                   ▼
+              buffered blocks
+                   │
+        get() / compare() / find_*
+                   │
+        get() with multiple blocks
+                   └─► consolidate into one block; clear old queue
+
+insert() / cut() / replace() / clear() ─► mutate or reset content
+```
+
+`get()` may return the only queued block directly; when multiple blocks exist, it consolidates them into a newly allocated block and clears the old queue. The returned pointer is backed by internal storage and may become invalid after mutation or consolidation.
 
 - `open()` creates a context. A requested block size of zero is replaced with the default block size of 1024 bytes.
 - `write()` appends bytes into blocks, allocating another block when the last block has no remaining capacity.

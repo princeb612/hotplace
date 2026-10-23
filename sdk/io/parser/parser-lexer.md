@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -31,92 +31,97 @@ lexical_token[]
 The parser itself consumes parser tokens; the lexer is responsible for recognizing source-level words/symbols and preserving their positions.
 
 ## 2. Data Model
-### lexical_analyzer
 
-`lexical_analyzer` manages the registered token vocabulary and performs tokenization.
+### lexical_analyzer: vocabulary and configuration
 
-Important operations include:
+The analyzer holds the registered token vocabulary and lookup structures prepared from it. The vocabulary maps token spelling to lexer token IDs and supports reverse lookup. Configuration flags alter how the same source bytes are segmented; they are part of the lexical input contract, not grammar productions.
 
-- `add_token()` — register a token string and token ID
-- `prepare()` — prepare lookup structures
-- `parse()` — tokenize raw memory, `std::string`, or `basic_stream`
-- `lookup()` / `rlookup()` — map between token text and token ID
-- `dump()` — inspect a lexical context
+- add_token() registers a token spelling and ID.
+- prepare() prepares built-in vocabulary and lookup support.
+- lookup() / rlookup() convert between token spelling and lexer ID.
+- get_config() exposes lexical options.
+- parse() accepts source memory, std::string or basic_stream input.
 
-The analyzer also exposes configuration through `get_config()` and parser flags for tokenization behavior.
+### lexical_token: a source span
 
-### lexical_token
+A token stores its lexical ID and coordinates into the original source.
 
-A `lexical_token` is a lightweight reference to a region of the original source.
+| Field | Meaning |
+|---|---|
+| Token ID | Vocabulary entry recognized by the lexer |
+| Position / length | Byte range of the lexeme in the source |
+| Line | Source line associated with the token |
+| Token index | Position in the lexical sequence |
 
-It records:
+The token need not own a copy of the lexeme. as_string() materializes text from the source span when required.
 
-- token ID
-- source position
-- token length
-- source line
-- token index
+### lexical_context: token sequence and source anchor
 
-It does not need to own a copy of the source text.
-
-```text
-source buffer
-    │
-    ├──────── token range ────────┐
-    │                             │
-    ▼                             ▼
-"Type1 ::= INTEGER"        lexical_token
-                           pos / size / line / type
-```
-
-`as_string()` can materialize the token text when needed.
-
-### lexical_context
-
-`lexical_context` owns the token sequence and retains the original source pointer/size.
-
-It provides:
-
-- indexed token lookup
-- forward/reverse traversal
-- source-position information
-- token insertion hooks
-- access to the last token
-
-This makes the lexical result reusable by parser/test/debug code without repeatedly rescanning the input.
-
-### Parser boundary
-
-Higher-level parser code maps lexical tokens to grammar terminal symbols.
-
-For ASN.1 this distinction is important:
+The context owns the token objects in sequence and retains the source pointer and size used by those spans. It supports indexed lookup, forward/reverse traversal, insertion hooks, last-token access and source-position inspection.
 
 ```text
-lexical token
-   │
-   │ token translation / mapping
-   ▼
-grammar terminal
-   │
-   ▼
-LALR / GLR parser
+source buffer (caller-owned lifetime)
+       ▲
+       │ token position + length
+       │
+lexical_context
+  ├─ source pointer / size
+  └─ ordered lexical_token objects
+       ├─ lexer ID
+       ├─ source offset / length
+       ├─ line
+       └─ token index
 ```
 
-The test documentation explicitly treats lexer-token registration, token precedence, and lexer-to-parser mapping as separate maintenance points.
+The token sequence can outlive the immediate scan operation, but token text remains valid only while the referenced source storage remains valid.
+
+### Separate token namespaces
+
+A lexer token ID identifies a recognized source token. A grammar terminal identifies a symbol in a production/table. The consumer's mapping between them must be maintained explicitly; the IDs are not interchangeable.
 
 ## 3. Behavior Model
-- A `lexical_token` stores an offset and length into the source rather than owning a copy of the lexeme. `lexical_context` retains the source pointer and size, so callers must keep the backing bytes valid while token text may be read.
-- Token IDs are assigned by the lexer vocabulary. The grammar parser consumes terminal symbols from its own grammar; consumers must map lexer IDs/names to those terminals rather than assuming that a lexical token ID is already a parser state or production ID.
-- `prepare()` establishes the built-in token vocabulary and lookup support. `add_token()` extends or overrides the vocabulary for the language being recognized; call `prepare()` and configure language-specific tokens in the order expected by the consumer.
-- Configuration changes tokenization behavior. For example, `handle_lvalue_usertype` affects assignment-left-hand-side recognition, while `handle_hexstring` enables ASN.1-style quoted hex-string handling. Token counts and kinds can therefore change with configuration even for the same source text.
-- A lexical context is a tokenization result, not a complete parse result. It preserves positions and token boundaries for later parsing and diagnostic output.
+
+### Source scan to token sequence
+
+```text
+lexical_analyzer::parse(source, size, context)
+          │
+          ▼
+apply prepared vocabulary + lexical configuration
+          │
+          ▼
+scan source and recognize token spans
+          ├─ token spelling/kind ─► lexer token ID
+          ├─ source cursor ────────► position + length
+          ├─ line tracking ────────► line
+          └─ emission order ───────► token index
+                                         │
+                                         ▼
+                              lexical_context token sequence
+                                         │
+                                         ▼
+                              consumer maps tokens to grammar
+```
+
+### Vocabulary preparation and language-specific options
+
+1. Prepare the built-in vocabulary and lookup structures.
+2. Register or override language-specific tokens required by the consumer.
+3. Set lexical configuration before scanning.
+4. Parse the source with that vocabulary/configuration.
+5. Inspect token IDs and source spans when verifying tokenization behavior.
+
+Options can change both token kind and token boundaries. In ASN.1-oriented tests, handle_lvalue_usertype affects assignment-left-hand-side recognition and handle_hexstring enables quoted hexadecimal-string handling. Token counts therefore describe a particular configuration, not an invariant of the source text.
+
+### Failure and verification boundary
+
+A lexical context represents tokenization, not grammar acceptance. The next stage can still reject the token sequence because its terminal mapping or grammar differs. Lexer tests should separately assert token IDs, positions/lengths and configuration-sensitive token counts.
 
 ### Source-level evidence
-`test/testcase/io/parser/testcase_lexer.cpp::test_lexer()` feeds a multi-line `PersonnelRecord` fragment to the lexer. The first pass uses the basic vocabulary and asserts 105 tokens. The second registers ASN.1 tokens, enables `handle_lvalue_usertype`, and registers `::=` and `--`, then asserts 93 tokens. The callback prints token type/name, line, index, offset, length, and source slice; these fields are useful when investigating why a lexical option changes token boundaries.
 
-`test_lexer_hexstring()` enables `handle_hexstring`, registers `::=` and `IA5String`, and checks the exact token-ID sequence for `Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String }`. This is a stronger example than a token dump alone because the expected sequence is compared with the actual sequence.
+test/testcase/io/parser/testcase_lexer.cpp::test_lexer() feeds a multi-line PersonnelRecord fragment to the lexer. The basic pass asserts 105 tokens; the ASN.1-configured pass registers ::= and --, enables handle_lvalue_usertype, and asserts 93 tokens. test_lexer_hexstring() enables handle_hexstring and compares the actual token-ID sequence for Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String } against an expected sequence.
 
-## 4. Relationships
+## 5. Relationships
 ### Related document
 
 - `parser-generation.md` — grammar symbols and parser table construction

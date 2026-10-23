@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — priority selection, cancellation, ownership│
 └──────────────────────────────────────────────┘
@@ -51,7 +51,7 @@ Do not use `mlfq_nonshared_binder` as if it were automatic memory management: in
 
 `test/testcase/io/system/testcase_mlfq.cpp` creates producer and consumer threads. The producer posts 100 heap-allocated integers at random priorities in the range 0–9; the consumer retrieves an item, logs the priority/value and deletes the returned integer. A non-shared binder is used. This demonstrates concurrent queue use and priority ordering, but this document update did not execute the testcase.
 
-## 4. Relationships
+## 5. Relationships
 
 - [Event multiplexer](multiplexer.md) — event notification, distinct from work scheduling.
 - `sdk/net/server/` — related asynchronous producer/consumer architecture.
@@ -62,6 +62,6 @@ Do not use `mlfq_nonshared_binder` as if it were automatic memory management: in
 
 - `sdk/io/system/mlfq.hpp`
 
-## 5. Development Notes
+## 7. Developer Notes
 
 The type is described as a multi-level *feedback* queue, but this implementation's visible selection policy is priority-map ordering plus FIFO per priority. The class does not itself calculate priority changes from service time; priority assignment and any feedback policy belong to the caller.

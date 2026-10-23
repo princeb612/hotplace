@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -29,6 +29,33 @@
 | Diagnostics | `error-handling`, `trace` | Error-convention adaptation and category-aware debug/control-flow tracing |
 | OS integration | `process`, `redirection`, `dir` | Child-process lifecycle, standard-I/O pipes/handles, and directory creation |
 
+## 3. Behavior Model
+
+### Source-flow overview
+
+```text
+numeric input ─► bignumber limbs ─► decimal/rational layer ─► floating_point
+native float ─► IEEE-754 classify / convert / format helpers
+host integer ─► endian conversion OR uint24_t / uint48_t ─► wire-width bytes
+
+operation result ─► error_traits / error_advisor ─► return classification and description
+trace event ─► trace category/configuration ─► registered handler ─► logger or caller
+parent process ─► redirection setup ─► child process ─► read/write pipes ─► cleanup
+thread group ─► create workers ─► signal/wait coordination ─► join / release
+```
+
+These paths share the `system` directory but not a common runtime object. Each has its own representation and cleanup contract: for example, wire-width conversion is not protocol framing, error classification is not diagnostic output, and process pipes have a different lifetime from thread synchronization primitives.
+
+These modules do not share one lifecycle contract. Numeric representation and conversion rules are separate from OS-backed time/thread operations; shared-instance ownership should not be confused with ordinary raw-pointer lifetime; and trace output depends on the active category/configuration.
+
+Wire-width helpers are particularly relevant at protocol boundaries, but protocol-specific field definitions and interpretation belong in TLS, DTLS, HTTP/2, ASN.1, or QUIC documentation rather than being duplicated here.
+
+Platform-dependent facilities must be reviewed against their actual implementation branches and target environment. Process creation, standard-I/O redirection, synchronization, and time conversion can expose different native APIs and ownership constraints on Windows and POSIX systems.
+
+The numeric modules also have distinct purposes: `bignumber` supplies arbitrary-width integer operations, decimal/rational helpers build higher-level numeric representations, and IEEE-754 helpers concern binary floating-point formats. These should not be collapsed into a single generic “number” abstraction.
+
+## 4. Relationships
+
 ### Focused module notes
 
 - [Big number](bignumber.md) — arbitrary-width integer representation and operations
@@ -44,21 +71,6 @@
 - [Standard-I/O redirection](redirection.md) — parent/child pipe and handle operations.
 - [Directory creation](dir.md) — single and prefix-based directory creation helpers.
 
-## 3. Behavior Model
-
-These modules do not share one lifecycle contract. Numeric representation and conversion rules are separate from OS-backed time/thread operations; shared-instance ownership should not be confused with ordinary raw-pointer lifetime; and trace output depends on the active category/configuration.
-
-Wire-width helpers are particularly relevant at protocol boundaries, but protocol-specific field definitions and interpretation belong in TLS, DTLS, HTTP/2, ASN.1, or QUIC documentation rather than being duplicated here.
-
-Platform-dependent facilities must be reviewed against their actual implementation branches and target environment. Process creation, standard-I/O redirection, synchronization, and time conversion can expose different native APIs and ownership constraints on Windows and POSIX systems.
-
-The numeric modules also have distinct purposes: `bignumber` supplies arbitrary-width integer operations, decimal/rational helpers build higher-level numeric representations, and IEEE-754 helpers concern binary floating-point formats. These should not be collapsed into a single generic “number” abstraction.
-
-## 4. Relationships
-
-- [System testcase directory](../../../test/testcase/base/system/README.md) and [system testcase note](../../../test/testcase/base/system/testcase_system.md) own the source-level coverage descriptions for these modules. The shared [base testcase report snapshot](../../../test/testcase/test-report-status.md) should be interpreted only with its stated revision/environment limitations.
-
-
 ```text
 base/system
   ├─ bignumber ──> decimal_float / rational_float / floating_point
@@ -69,3 +81,5 @@ base/system
   ├─ error_traits / error_advisor ──> return handling and diagnostics
   └─ trace / trace_advisor ──> debug event output
 ```
+
+- [System testcase directory](../../../test/testcase/base/system/README.md) and [system testcase note](../../../test/testcase/base/system/testcase_system.md) own the source-level coverage descriptions for these modules. The shared [base testcase report snapshot](../../../test/testcase/test-report-status.md) should be interpreted only with its stated revision/environment limitations.

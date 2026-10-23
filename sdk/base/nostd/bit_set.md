@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -31,7 +31,7 @@ configured low..high integer domain
         binary_t storage
 ```
 
-Construction normalizes the supplied bounds and allocates storage for the span. The implementation rejects allocations larger than its fixed 1 MiB threshold by throwing `exception(errorcode_t::too_large_data)`. Values outside the configured domain return `out_of_range` from `add`/`subtract`; `has` returns false for out-of-range values.
+The configured domain is represented as a contiguous span of integer values packed into `binary_t` storage. The fixed lower and upper bounds determine the bit offset for each value.
 
 ## 3. Behavior Model
 

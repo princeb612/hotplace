@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -20,26 +20,55 @@ This directory provides message-digest operations and a stateful transcript-hash
 
 | Type | Responsibility |
 |---|---|
+| `hash_context_t` | Opaque backend handle representing the active hash-family operation state. The concrete state belongs to the OpenSSL backend, not to the caller's transcript byte buffer. |
 | `openssl_hash` | Backend API over an opaque `hash_context_t`. Opens a digest/HMAC/CMAC context, accepts incremental updates, finalizes or duplicates state, and closes the handle. |
 | `crypto_hash` | Algorithm-bound digest facade; `digest(input, result)` calls the backend for the selected `hash_algorithm_t`. |
 | `crypto_hash_builder` | Selects a digest by enum or name and creates a `crypto_hash`; it centralizes selection but does not perform the digest itself. |
 | `transcript_hash` | Stateful wrapper around a hash context, supporting `update`, `digest`, `reset`, and `dup`. |
 | `transcript_hash_builder` | Selects the hash algorithm for a transcript-hash instance. |
 
-```text
-one-shot digest:
-crypto_hash_builder → crypto_hash → openssl_hash → EVP_MD
+## 3. Behavior Model
 
-incremental protocol transcript:
-transcript_hash_builder → transcript_hash
-                              ├─ update(message 1)
-                              ├─ update(message 2)
-                              └─ digest(checkpoint) / dup() / reset()
-                                         ↓
-                                    openssl_hash
+### 3.1 One-shot digest lifecycle
+
+```text
+algorithm enum/name
+       |
+       v
+crypto_hash_builder
+       |
+       v
+    crypto_hash
+       |
+       v
+  openssl_hash
+       |
+       v
+open hash_context_t → update(input) → finalize → digest bytes
 ```
 
-## 3. Behavior Model
+The builder chooses the algorithm-bound facade; it does not hash the input. The backend opens the selected digest context, consumes the bytes, finalizes the digest and releases the context according to the concrete API path.
+
+### 3.2 Incremental transcript lifecycle
+
+```text
+transcript_hash_builder
+          |
+          v
+    transcript_hash
+          |
+          +-- update(message 1) --> retained hash state
+          |
+          +-- update(message 2) --> retained hash state
+          |
+          +-- digest(checkpoint) --> update supplied message, then snapshot result
+          |
+          +-- dup() -------------> independent copy of current state
+          |
+          +-- reset() ------------> fresh state for selected algorithm
+```
+
+The transcript object's retained state represents the ordered bytes accepted so far. In this API, `digest(message, result)` first adds the supplied message to that state and then returns the resulting digest; it is not an independent one-shot digest of `message`. `dup()` allows a branch/checkpoint to continue without mutating the original state. `reset()` starts a new accumulation for the configured algorithm.
 
 ### Digest versus transcript hash
 
@@ -55,7 +84,7 @@ TLS handshake processing hashes handshake messages in protocol-defined order. In
 
 The advisor's algorithm metadata does not guarantee that the active OpenSSL build/provider offers a particular digest. Keep the selected algorithm, context lifecycle and backend availability separate in diagnostics.
 
-## 4. Relationships
+## 5. Relationships
 
 - `../../advisor/README.md` maps digest names/aliases and resolves backend methods.
 - `../mac/README.md` documents keyed HMAC/CMAC contracts that share hash-context machinery.
@@ -77,7 +106,7 @@ The advisor's algorithm metadata does not guarantee that the active OpenSSL buil
 - `testcase_transcript_hash.cpp` hashes `client hello` followed by `server hello` in one incremental context, then repeats the sequence while capturing intermediate hashes. It compares the final incremental result with the result produced through `transcript_hash_builder`, demonstrating agreement for the same accumulated transcript.
 - The hash testcase directory also contains HMAC/CMAC RFC groups; those are related backend coverage, not all direct tests of `crypto_hash`.
 
-## 5. References
+## 6. References
 
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.
 - RFC 2104 — HMAC: Keyed-Hashing for Message Authentication (related keyed-hash backend, not the unkeyed digest contract).

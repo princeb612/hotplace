@@ -22,18 +22,36 @@ The implementation is a small low-level utility in `sdk/base/basic`; it is not a
 
 ## 2. Data Model
 
-### Algorithms
+### Inputs and result representation
 
-`crc.cpp` implements two checksum helpers:
+Both helpers accept a pointer to an octet sequence and its length, and return the checksum in `uint32`. `crc32()` exposes a 32-bit result; `crc24()` masks the result to 24 bits. The implementation's algorithm parameters are fixed constants rather than caller-supplied state:
 
-- `crc32()` uses the reflected IEEE 802.3 polynomial `0xEDB88320`, initializes to `0xFFFFFFFF`, processes each byte bitwise, and complements the final value.
-- `crc24()` initializes to `0x00B704CE`, uses polynomial `0x01864CFB`, processes bytes into the high 8 bits of the running checksum, and returns the low 24 bits.
+| Helper | Initial value | Polynomial | Output width / finalization |
+|---|---:|---:|---|
+| `crc32()` | `0xFFFFFFFF` | `0xEDB88320` | 32-bit result, bitwise complement |
+| `crc24()` | `0x00B704CE` | `0x01864CFB` | Low 24 bits |
 
-These details are taken from the implementation and matter when comparing values with an external CRC implementation: polynomial, bit direction, initialization, final XOR, and output width must all match.
+These parameters form the checksum contract; the generic name “CRC-24” alone does not identify a unique algorithm.
 
-### Relationship with encoding
+## 3. Behavior Model
 
-The Radix-64 implementation is a visible consumer of `crc24()`, which supplies the CRC-24 checksum associated with that format.
+### Per-byte checksum flow
+
+`crc32()` XORs each input byte into the low end of the accumulator, applies eight reflected polynomial steps, then complements the accumulator. `crc24()` XORs each byte into bits 16–23, shifts left eight times while reducing with the 24-bit polynomial when bit 24 is set, then returns the low 24 bits. The implementation guards the `crc24()` loop for a non-null pointer and nonzero length; `crc32()` iterates over the supplied length directly, so callers must provide a valid byte range for nonzero lengths.
+
+```text
+octets + length
+  ├─ crc32: init FFFFFFFF → XOR byte → 8 right-shift/reduce steps → complement → uint32
+  └─ crc24: init 00B704CE → byte into high 8 bits → 8 left-shift/reduce steps → mask 24 bits
+```
+
+When reviewing a change, verify polynomial, bit direction, initialization/finalization, and output width against the intended format.
+
+A CRC detects accidental corruption according to its specified checksum scheme; it does not provide collision resistance or authenticity and must not be used as a cryptographic security primitive. No dedicated direct CRC testcase was identified in this revision's source tree, so verification should follow the Radix-64 consumer and distinguish end-to-end format coverage from a standalone `crc24()` unit test.
+
+## 4. Relationships
+
+- `crc24()` is consumed by Radix-64 encoding to supply its CRC-24 checksum; `crc32()` is a separate 32-bit checksum helper.
 
 ```text
 base/basic/crc.cpp
@@ -44,17 +62,6 @@ base/basic/crc.cpp
                               │
                     base/encoding/radix64
 ```
-
-## 3. Behavior Model
-
-### Checksum contract
-
-CRC behavior is defined by the algorithm implemented in `crc.cpp` and by the caller's format requirements. When reviewing a change, verify the polynomial and initialization/finalization choices in the code rather than relying on the generic term “CRC-24”.
-
-A CRC detects accidental corruption according to its specified checksum scheme; it does not provide collision resistance or authenticity and must not be used as a cryptographic security primitive. No dedicated direct CRC testcase was identified in this revision's source tree, so verification should follow the Radix-64 consumer and distinguish end-to-end format coverage from a standalone `crc24()` unit test.
-
-## 4. Relationships
-
 - `crc24()` is a low-level checksum helper consumed by Radix-64-related encoding code.
 - The encoding layer owns the format-specific decision about when and how to include the checksum.
 - CRC is not a substitute for a cryptographic digest, MAC, or digital signature.

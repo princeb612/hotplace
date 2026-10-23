@@ -3,18 +3,18 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
 
-# Developer Note: Historical JOSE Implementation Status
+# Developer Notes - Historical JOSE Implementation Status
 
 ## Purpose and status boundary
 
-This is a preserved developer-maintenance note, not a current support guarantee. Its tables and TODOs record an older status snapshot and have not all been re-audited. For the current source-based mapping inventory and the distinction between metadata, test coverage and runtime availability, use the [JOSE README](README.md).
+This is a preserved developer-maintenance note, not a current support guarantee. Its tables record an older status snapshot and have not all been re-audited. The old unchecked checklist is tracked separately from this historical reference. For the current source-based mapping inventory and the distinction between metadata, test coverage and runtime availability, use the [JOSE README](README.md).
 
 ## Historical algorithm-status tables
 The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE key management, JWE content encryption, and JWK key types. Use the focused records for the architectural model: [object model](jose-object-model.md), [JWS/JWE flow](jose-signing-encryption.md), and [JWK/algorithm mapping](jose-key-and-algorithms.md).
@@ -83,7 +83,7 @@ The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE k
 ## Interpretation notes
 These tables are a snapshot from the existing document, not a normative declaration of current backend support. Actual behavior also depends on provider/build configuration and key availability. The presence of source tests is useful evidence but does not by itself establish support in every build environment.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Implementation and test sources
 
@@ -96,7 +96,7 @@ The direct source-level examples are mapped in [`testcase_jose.md`](../../../tes
 - [JWK and algorithm mapping](jose-key-and-algorithms.md)
 - [JOSE object model and context](jose-object-model.md)
 
-## 5. References
+## 6. References
 
 - RFC 7515 — JSON Web Signature (JWS).
 - RFC 7516 — JSON Web Encryption (JWE).
@@ -108,12 +108,4 @@ The direct source-level examples are mapped in [`testcase_jose.md`](../../../tes
 
 ## Development Notes (for maintainer review)
 
-The explicit TODO checklist and older status matrix are preserved below as historical notes, not as a verified statement that each item remains outstanding. The current source includes an RFC 7638 thumbprint testcase and an AKP/ML-DSA testcase, despite TODO entries mentioning thumbprints and post-quantum work. Conversely, presence of a testcase does not establish broad interoperability or runtime availability in every build.
-
-## TODO
-
-- [ ] disable RSA1_5
-- [ ] JWK SHA-256 Thumbprint
-- [ ] draft-ietf-jose-fully-post-quantum-03
-- [ ] draft-prorock-cose-post-quantum-key-agreement
-- [ ] enc (Edwards-curve)
+The older status matrix is preserved as historical material, not as a verified statement of current support. Earlier unchecked items included thumbprints and post-quantum work; the current source includes an RFC 7638 thumbprint testcase and an AKP/ML-DSA testcase. Presence of a testcase does not establish broad interoperability or runtime availability in every build.

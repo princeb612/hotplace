@@ -10,7 +10,7 @@ This is a developer study note, not a module reference. Its value is the side-by
 | --                       | --   | --               | --                                                       |
 | JOSE                     | EtM  | separated tag    | JOSE A128CBC-HS256, A192CBC-HS384, A256CBC-HS512         |
 | TLS w/o encrypt_then_mac | MtE  | nested tag       | TLS 1.2 w/o encrypt_then_mac extension                   |
-| TLS encrypt_then_mac     | EtM  | concatenated tag | TLS 1.2 encrypt_then_mac extension, TLS 1.3 ciphersuites |
+| TLS encrypt_then_mac     | EtM  | concatenated tag | TLS 1.2 `encrypt_then_mac` extension (RFC 7366) |
 
 * JOSE
   * EtM encrypt-then-mac
@@ -37,7 +37,8 @@ This is a developer study note, not a module reference. Its value is the side-by
     * image = ciphertext
     * for more details
       * https://tls12.xargs.org
-  * EtM encrypt-then-mac (encrypt_then_mac extension)
+  * EtM encrypt-then-mac (TLS 1.2 `encrypt_then_mac` extension, RFC 7366)
+    * TLS 1.3 does not use this CBC-HMAC record-protection construction; TLS 1.3 removed CBC suites and uses AEAD record protection.
     * ciphertext = CBC(plaintext)
     * AAD = uint64(sequence) || uint8(type) || uint16(version) || uint16(ciphertext.length)
     * concatenated tag = CBC-HMAC(AAD || ciphertext)

@@ -3,8 +3,8 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 1 · Revision 1105                     │
-│ Source basis: Revision 1105                   │
+│ Edition 1 · Revision 1107                     │
+│ Source basis: Revision 1107                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -29,29 +29,53 @@ The directory does not attempt to provide one universal serialization model. `pa
 | `json` | Parse JSON text or a file into a Jansson `json_t*` | Caller owns the resulting Jansson reference; see [json.md](json.md) |
 | `types.hpp` | Shared declarations/types for this I/O area | Supporting header rather than a separate feature |
 
-### Typical use paths
+### Shared data concepts
 
-```text
-protocol field layout ──> payload ──> binary_t / stream_t
-OID text ───────────────> oid nodes ──> dictionary or ASN.1 encoder
-JSON text/file ─────────> json_open_* ──> Jansson json_t*
-content bytes ──────────> zlib_deflate / zlib_inflate ──> output bytes/stream
-```
+The components do not share one universal I/O object. Their main intermediate representations are:
 
-These paths are related by their use in I/O and protocol code, but they are not interchangeable abstractions.
+| Data | Meaning | Produced or consumed by |
+|---|---|---|
+| Ordered `payload_member` sequence | Field layout plus current field values, group membership, and optional length references | `payload` |
+| `oid_t` (`std::vector<uint32>`) | Numeric OID arcs, not BER/DER bytes | OID conversion and dictionary lookup |
+| `oid_metadata` | Dictionary result containing a name and description | `oid_dictionary` |
+| Jansson `json_t*` | Parsed JSON value tree with Jansson reference-counted ownership | `json_open_stream()`, `json_open_file()` |
+| Byte buffer / `stream_t` | Compressed or decompressed content bytes | `zlib_deflate()`, `zlib_inflate()` |
+| `zlib_windowbits_t` | Framing choice used to initialize zlib's DEFLATE state | zlib wrappers |
+
+These representations are intentionally distinct: an OID node vector is not an encoded OID, a JSON tree is not owned by a hotplace wrapper type, and the zlib framing option is separate from the payload being compressed.
 
 ## 3. Behavior Model
 
-- `payload` keeps the field description and field values together so the same description can be used for encoding and decoding. Variable-size fields may use a reference to another field, and groups can enable or suppress optional portions.
-- OID conversion operates on node values. It does not validate or encode every ASN.1 OBJECT IDENTIFIER rule by itself; format-specific encoding is implemented by the ASN.1 subsystem.
-- `json_open_stream()` and `json_open_file()` return a Jansson object through an output pointer. A successful parse creates a reference the caller must eventually release with `json_decref()`.
-- `zlib` format selection matters: zlib wrapper, raw DEFLATE, and gzip are distinct byte-stream framings even though they use DEFLATE internally.
+### Component flow map
 
-### Representative flows
+```text
+field definitions + field values
+            │
+            ▼
+      payload / payload_member
+            │ write                         read
+            ▼                                ▲
+       binary_t  ◄── ordered fields ─────────┘
 
-`payload` maps named members to an ordered binary layout; callers can use that layout to write or read fields through the relevant stream interface. OID dictionary lookup is a separate path: textual identifiers are resolved through the dictionary rather than encoded as ASN.1 BER/DER values here.
+OID dotted text ──► numeric token scan ──► oid_t ──► dictionary trie lookup
+ASN.1 braced text ─► decimal token scan ──► oid_t
 
-## 4. Relationships
+JSON text or file ──► Jansson parser ──► json_t* ──► caller's JSON operations
+                                           │
+                                           └── json_decref() when finished
+
+input bytes + framing mode ──► zlib state ──► 1 KiB output chunks ──► output bytes/stream
+```
+
+### Flow boundaries
+
+- **Payload:** member order defines the binary field order. Group state and length references affect which bytes are consumed or emitted; specialized `payload_encoded` fields delegate their internal format to the implementing type.
+- **OID:** conversion produces numeric nodes. Dictionary lookup is a subsequent operation, and ASN.1 BER/DER encoding belongs to `sdk/io/asn.1`.
+- **JSON:** the wrapper validates its output/input pointers, delegates parsing to Jansson, returns a hotplace status, and leaves successful JSON-reference ownership with the caller.
+- **Compression:** the caller chooses zlib-wrapped, raw DEFLATE, or gzip framing. The wrapper resets its destination and accumulates generated output; it does not choose a format from HTTP or JOSE metadata itself.
+
+
+## 5. Relationships
 
 - `sdk/base/basic/` — `variant` and common value representations used by payload members.
 - `sdk/base/system/` — numeric and runtime helpers.
@@ -61,13 +85,12 @@ These paths are related by their use in I/O and protocol code, but they are not 
 - `sdk/crypto/jose/` and `sdk/net/http/` — concrete consumers of JSON parsing and compression.
 - Implementation navigation: `payload.hpp/.cpp` and `payload_member.cpp` define the field-layout path; `oid.hpp/.cpp` and `oid_dictionary*` implement OID conversion/dictionary lookup; `zlib.hpp/.cpp` wraps compression; and `json.hpp` plus `types.hpp` provide JSON and shared declarations.
 
-## 5. References
+## 6. References
 
 ### Standards and external libraries
 
-- RFC 1951 — DEFLATE Compressed Data Format.
-- RFC 1952 — gzip file format.
-- RFC 7520 — JOSE examples, including the `zip: DEF` compressed-content example.
-- RFC 2616 — historical HTTP/1.1 content-coding context used by the source comments.
-- Jansson — JSON parsing library included through `jansson.h`.
-
+- [RFC 1951 — DEFLATE Compressed Data Format](https://www.rfc-editor.org/rfc/rfc1951).
+- [RFC 1952 — gzip file format](https://www.rfc-editor.org/rfc/rfc1952).
+- [RFC 7520 — JOSE examples](https://www.rfc-editor.org/rfc/rfc7520), including the zip DEF compressed-content example.
+- [RFC 2616 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc2616) — historical content-coding context used by source comments.
+- [Jansson documentation](https://jansson.readthedocs.io/en/latest/) — JSON parsing library included through jansson.h.

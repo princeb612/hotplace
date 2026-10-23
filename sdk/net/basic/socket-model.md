@@ -17,7 +17,7 @@ The basic network socket layer separates the common socket contract from concret
 
 ## 2. Data Model
 
-### Class hierarchy
+### Common socket state and contracts
 
 ```text
 basic_socket
@@ -31,16 +31,9 @@ basic_socket
     └── trial servers
 ```
 
-`basic_socket` exposes the properties shared by the implementations:
+`basic_socket` exposes shared TLS capability, native socket type (`SOCK_STREAM` / `SOCK_DGRAM`), reference-counted object lifetime and `socket_scheme_t` transport/security/backend/role bits.
 
-- whether TLS is supported
-- socket type (`SOCK_STREAM` / `SOCK_DGRAM`)
-- reference counting
-- `socket_scheme_t`-based scheme identification
-
-`client_socket` provides the common client operations (`connect`, `open`, `read`, `send`, `recvfrom`, `sendto`, and close) while `server_socket` provides listen/accept and server-side I/O operations.
-
-The concrete class therefore selects transport and security without changing the common caller-facing model.
+`client_socket` defines client-side connect/open/read/send/receive/close contracts. `server_socket` defines listener setup, listen/accept and server-side I/O. The exact native handle and secure-context state belongs to each concrete backend, not to a universal protocol-session object.
 
 ### Scheme model
 
@@ -58,19 +51,35 @@ This scheme information is useful to higher layers when they need to distinguish
 
 ## 3. Behavior Model
 
-### Common contract versus backend behavior
+### 3.1 Common operation path
 
-The common socket classes expose the caller-facing operations and scheme identity, while concrete implementations decide how native sockets and secure backends are created and driven. A caller should not assume that every operation is meaningful for both stream and datagram sockets; for example, peer-address-oriented `sendto`/`recvfrom` belongs to datagram use, while connected stream operations follow the connected endpoint.
+```text
+caller selects scheme / configures endpoint
+                 |
+                 v
+     concrete client_socket or server_socket
+                 |
+                 v
+          open / connect / listen
+                 |
+                 v
+     native stream or datagram operations
+                 |
+                 v
+     close / backend-specific cleanup
+```
 
-### Resource lifetime
+The common API hides the concrete implementation, not transport semantics. Connected stream operations read/write an ordered byte stream; datagram operations preserve message boundaries and may require an explicit peer address. Callers must use operations supported by the selected concrete socket.
 
-The native socket and any TLS/DTLS backend context have resource lifetimes that must be respected by the wrapper's open/close path. Reference counting allows higher-level code to retain socket objects across callbacks or session handling, but it does not by itself imply that an already-closed native handle remains usable.
+### 3.2 Resource lifetime
 
-### Backend distinction
+The native socket and any TLS/DTLS backend context have lifetimes that must be respected by the wrapper's open/close path. Reference counting allows higher-level code to retain a socket object across callbacks or session handling, but it does not imply that an already-closed native handle remains usable.
 
-`naive/` implements direct TCP/UDP operations, `openssl/` integrates secure socket operations with OpenSSL, and `trial/` is an experimental composition area. Keep capability claims tied to the concrete backend and build configuration.
+### 3.3 Backend distinction
 
-## 4. Relationships
+`naive/` implements direct TCP/UDP operations, `openssl/` integrates secure socket operations with OpenSSL, and `trial/` is an experimental composition area. Capability claims belong to the concrete backend and build configuration, not the shared interface alone.
+
+## 5. Relationships
 
 
 
@@ -82,8 +91,8 @@ The native socket and any TLS/DTLS backend context have resource lifetimes that 
 - [Network basic testcases](../../../test/testcase/net/basic/README.md)
 - [Basic socket overview](README.md)
 - [Naive socket wrappers](naive/README.md)
-- [OpenSSL socket adapter](openssl-socket-adapter.md)
-- [Trial socket composition](trial-socket-composer.md)
+- [OpenSSL socket adapter](openssl/openssl-socket-adapter.md)
+- [Trial socket composition](trial/trial-socket-composer.md)
 - [Network server](../server/README.md)
 ### Boundary with higher layers
 
@@ -103,6 +112,6 @@ OS socket API
 
 The diagram is a responsibility stack, not a required call sequence for every application.
 
-## 5. References
+## 6. References
 
 No external references are currently listed.

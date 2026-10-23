@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -16,86 +16,71 @@
 
 ### Introduction
 
-`base64` implements RFC 4648 Base64 and Base64URL encoding and decoding.
-
-The same API is used for ordinary Base64 (`+` and `/`) and Base64URL (`-` and `_` without padding), selected through `encoding_t`.
+`base64` implements RFC 4648 Base64 and Base64URL encoding and decoding. The caller selects the representation through `encoding_t`; the two forms are not interchangeable text strings.
 
 ## 2. Data Model
 
-### Main operations
+### Representations
 
-```text
-binary / string
-      │
-      ├── base64_encode(..., encoding_base64)
-      │                     └── standard Base64
-      │
-      └── base64_encode(..., encoding_base64url)
-                            └── Base64URL
-```
+| Variant | Alphabet / padding convention |
+|---|---|
+| Base64 | Uses `+` and `/`; ordinary Base64 padding rules apply. |
+| Base64URL | Uses `-` and `_`; the URL-oriented API uses the unpadded representation. |
 
-The corresponding decode functions accept both forms according to the selected encoding.
+The API accepts raw byte ranges and common hotplace containers. The low-level routines under `lowlevel/base64.*` implement the conversion; public overloads provide string/byte-vector results and `encoder_stream_traits` output-buffer integration.
 
-The public implementation uses the low-level Base64 implementation and `encoder_stream_traits` to support output containers such as `std::string`, `binary_t`, and `basic_stream`.
+### Streaming units
 
-### Streaming
-
-`encoder_stream` and `decoder_stream` maintain incomplete 3-byte/4-character units between `write()` calls.
-
-Consequently, an encoded value does not have to arrive as one complete buffer:
-
-```text
-input chunks
-   │
-   ├── write(chunk 1)
-   ├── write(chunk 2)
-   ├── write(chunk 3)
-   └── flush()
-          │
-          ▼
-       complete output
-```
-
-The tests deliberately vary the chunk size to verify that the result is independent of the input boundaries.
+`encoder_stream` and `decoder_stream` retain the incomplete suffix across `write()` calls.
 
 ## 3. Behavior Model
 
+### One-shot conversion
+
+Base64 encoding consumes three input bytes per complete group and emits four encoded characters. Decoding consumes four encoded characters per complete group and emits up to three bytes.
+
+The caller selects Base64 or Base64URL and supplies a byte range. The conversion routine applies that variant's alphabet and representation conventions. For templated output-buffer overloads, the wrapper first requests the required capacity from the low-level routine, reserves output storage, performs the conversion, and commits the written length on success. Unless `encoding_notrunc` is set, the destination is truncated before processing.
+
+### Stateful stream flow
+
+```text
+encoder_stream::write(chunk)
+      │
+      ├── complete pending 3-byte group, if possible
+      ├── encode remaining complete 3-byte groups
+      └── retain 0–2 trailing input bytes
+                    │
+             str() / flush()
+                    └── encode pending tail
+
+decoder_stream::write(chunk)
+      │
+      ├── complete pending 4-character group, if possible
+      ├── decode remaining complete groups
+      └── retain incomplete suffix
+                    │
+             data() / flush()
+                    └── process final suffix
+```
+
+Chunk boundaries therefore do not have to align with Base64 groups. Finalization is still important: the decoder's current implementation discards a one-character retained suffix, while other non-empty suffixes are passed to the Base64 decoder. Callers should check `write()` status and not assume that every arbitrary trailing fragment is valid.
+
 ### Multiline Base64
 
-`base64_encode_multiline()` and `base64_decode_multiline()` provide line-oriented processing for data represented across multiple lines.
-
-The encoder accepts a requested column width. A zero width disables wrapping.
-
-This is useful for formats where Base64 is presented as text rather than as a single uninterrupted string.
+`base64_encode_multiline()` uses an `encoder_stream` to encode the payload, then inserts line breaks at the requested column width; zero disables wrapping. `base64_decode_multiline()` scans line breaks, trims surrounding whitespace on each line, and feeds line content into a `decoder_stream`. This is a text-wrapping helper, not a different Base64 alphabet.
 
 ### Relation to Radix-64
 
-Radix-64 support is implemented separately in `radix64.*`, but its encoding layer is Base64. Radix-64 adds CRC-24 and armor processing around the Base64 representation.
-
-See [radix64.md](radix64.md).
-
-### Tests
-
-`test/testcase/encode/testcase_base64.cpp`
-
-The testcase covers:
-
-- ordinary Base64 encode/decode
-- Base64URL
-- encoder/decoder streams with different chunk sizes
-- multiline encoding and decoding
-- RFC 4880 section 6.5 Radix-64 vectors
-- RFC 4880 section 6.6 ASCII-armored message processing
+Radix-64 reuses Base64 for its payload and adds CRC-24 checksum processing.
 
 ## 4. Relationships
 
-- `lowlevel/base64.*` — byte-level conversion primitives used by the public overloads.
-- `encoder_stream` and `decoder_stream` — preserve incomplete Base64/Base64URL units across chunk boundaries.
-- `radix64.*` — composes Base64 with CRC-24 and ASCII-armored framing; it is not a separate Base64 alphabet.
-- `test/testcase/encode/testcase_base64.cpp` — round-trip, Base64URL, chunked streaming, and Radix-64 vector source coverage.
-
-- `base64.hpp/.cpp` and `lowlevel/base64.hpp/.cpp` implement the public and byte-level paths; `encoder_stream.*` and `decoder_stream.*` add chunked processing, and `radix64.*` adds CRC-24 armor. `testcase_base64.cpp` covers round trips, URL-safe form, streaming, and Radix-64 behavior.
+- `lowlevel/base64.*` provides byte-level conversion used by public overloads.
+- `encoder_stream` and `decoder_stream` preserve incomplete units across chunk boundaries.
+- `radix64.*` composes Base64 with CRC-24 and armor-oriented processing.
+- `test/testcase/encode/testcase_base64.cpp` provides source-level coverage for ordinary Base64, Base64URL, chunked streaming, multiline processing, and RFC 4880 Radix-64 vectors/armor examples.
 
 ## 5. References
 
 - [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)
+- [RFC 7515 — JSON Web Signature (JWS), Appendix C](https://www.rfc-editor.org/rfc/rfc7515)

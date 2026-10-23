@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -31,7 +31,7 @@ Provider handles and the library context have an explicit lifetime. `close()` un
 
 Algorithm discovery is not equivalent to uniform support: the existing tests gate full operation attempts on `oqs_alg_oid_registered`, and classify other enumerated entries as `not_supported`.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Source-test evidence
 

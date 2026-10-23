@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -18,18 +18,20 @@
 
 ## 2. Data Model
 
-```text
-key + value
-    |
-    v
-keyvalue representation
-    |
-    +--> parsed or decoded name/value data
-```
-
-The main type is t_stringkey_value<TYPE>. It stores values by string key, protects access with a critical_section, and maintains separate ordering maps alongside the value map. The default value type is std::string; operator[] uses string-specific conversion, so callers should not assume every TYPE behaves as a fully generic mapped value.
+The main type is `t_stringkey_value<TYPE>`. It stores values by string key, protects access with a `critical_section`, and maintains separate ordering maps alongside the value map. The default value type is `std::string`; `operator[]` uses string-specific conversion, so callers should not assume every `TYPE` behaves as a fully generic mapped value.
 
 ## 3. Behavior Model
+
+### Lookup and mutation flow
+
+```text
+set(name, value, mode) ─► value map + ordering metadata
+          │
+          ├─ exist() / query() / get() / operator[] ─► lookup result
+          └─ remove() / clear() ─► update or reset stored state
+```
+
+Duplicate-key behavior depends on the selected mode; see the operation rules below.
 
 ### Lookup and mutation
 
@@ -40,9 +42,6 @@ The main type is t_stringkey_value<TYPE>. It stores values by string key, protec
 - copy(), copyfrom(), and copyto() transfer entries between maps. kv_move clears the destination before copying, kv_update overwrites duplicate keys, and kv_keep preserves existing destination values.
 - key_value_case_sensitive controls whether lookup keys are normalized to lowercase. The default constructor enables case-sensitive keys.
 
-## 4. Relationships
+## 5. Relationships
 
-- `keyvalue.hpp` implements the value map and ordering indexes; it uses `critical_section.hpp` to serialize access. No dedicated source testcase was found under `test/testcase/base/nostd/`, so the behavior and caveats in the developer note below are not backed by a focused testcase.
-
-## 6. Development Notes (for maintainer review)
-The header keeps the normalized lookup key in `_keyvalues`, but inserts the original `name` into `_reverse_order_map`. In case-insensitive mode, `remove()` normalizes the lookup key before searching that reverse map, then dereferences the iterator without checking for `end()`. Removing a key with different casing (or a missing key) therefore deserves a source-level fix and a dedicated testcase. The generic `TYPE` parameter also needs review because `operator[]` assigns `iter->second.c_str()`, which assumes a string-like mapped type.
+- `keyvalue.hpp` implements the value map and ordering indexes; it uses `critical_section.hpp` to serialize access.

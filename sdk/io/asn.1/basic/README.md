@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -16,44 +16,65 @@
 `asn.1/basic` contains the ASN.1 type/tag/constraint definitions, semantic and structural node models, parameterized-type support, and visitor interfaces used by the higher-level loader/runtime. The linked study documents preserve notation and encoding details; this directory is the implementation model, not the grammar parser or runtime module registry.
 
 ## 2. Data Model
-### Detailed documents
 
-- [Prefixed type encoding](prefixed-type-encoding.md) — X.690 8.14, IMPLICIT/EXPLICIT tagging, and encoding experiments
-- [Structural representation](structural/README.md) — structural TLV nodes, semantic objects, and concrete tagging examples
-- [Subtype notation](semantic/constraints/subtype-notation.md) — subtype notation and value sets
+### Main model layers
 
-### Implementation records
+| Layer | Representation | Purpose |
+|---|---|---|
+| Semantic | `asn1_object` hierarchy and semantic type/value classes | Express ASN.1 types, references, tags, constraints, and values |
+| Structural | Structural nodes under `structural/` | Preserve notation-oriented node relationships and TLV-oriented structure |
+| Constraints | Constraint model and evaluator interfaces | Represent subtype/value-set constraints and evaluate them through dedicated machinery |
+| Traversal | Visitors under `visitor/` | Traverse or interpret semantic/structural nodes without making the parser own every operation |
 
-- [ASN.1 object model](asn1-object-model.md)
-- [ASN.1 structural node model](asn1-node.md)
-- [ASN.1 visitor architecture](asn1-visitor.md)
-- [ASN.1 semantic constraints](semantic/constraints/asn1_constraints.md)
+### Follow the detailed implementation records
 
-- `semantic/` — semantic type/object hierarchy
-- `structural/` — structural node hierarchy
-- `visitor/` — traversal and interpretation visitors
+- [ASN.1 object model](asn1-object-model.md) — common object/type/reference relationships.
+- [Structural node model](asn1-node.md) — structural nodes and their relationships.
+- [Visitor architecture](asn1-visitor.md) — visitor roles and dispatch boundaries.
+- [Prefixed type encoding](prefixed-type-encoding.md) — X.690 tagging and encoded representations.
+- [Structural representation](structural/README.md) — structural TLV nodes and tagging examples.
+- [Subtype notation](semantic/constraints/subtype-notation.md) — notation and value-set model.
+- [Constraint evaluator](semantic/constraints/asn1_constraints.md) — constraint processing and set-runtime connections.
+
+The semantic and structural models are related but not interchangeable. A structural node records a parsed/encoded shape; a semantic object expresses the ASN.1 meaning that later runtime and encoding operations use.
 
 ## 3. Behavior Model
-Keep semantic and structural representations distinct. Semantic objects capture type/value relationships and constraints; structural nodes represent the parsed notation tree and support traversal/interpretation. Visitors provide a way to process those structures without collapsing every operation into the parser itself. Constraint evaluation and parameterized syntax have their own submodules and should be traced through their specific documents.
 
+### From syntax to model
 
-## 4. Relationships
-### Related areas
+```text
+generic parser
+    |
+    v
+parse_tree
+    |
+    v
+asn1_publisher
+    |
+    +-- semantic handlers ------> semantic ASN.1 objects
+    |
+    +-- structural operations --> structural nodes / TLV-oriented forms
+    |
+    +-- constraint handlers ---> constraint model objects
+```
 
-- `../runtime/` — runtime ASN.1 types and objects
-- `../../parser/` — parser implementation used to construct ASN.1 syntax structures
+The generic parser produces syntax-level data. ASN.1-specific publisher handlers reconstruct semantic objects, while structural and visitor components support separate structural representation and interpretation tasks. Constraint construction is not the same as evaluating a constraint against a value.
 
-### Implementation source navigation
-- `semantic/` — semantic type/object hierarchy and constraints
-- `structural/` — structural node hierarchy
-- `visitor/` — traversal/interpretation visitors
-- [ASN.1 object model](asn1-object-model.md)
-- [Structural node model](asn1-node.md)
-- [Visitor architecture](asn1-visitor.md)
-- [Constraint evaluator](semantic/constraints/asn1_constraints.md)
-- `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/`
+### Constraint processing boundary
 
-## 5. Development Notes
+Constraint notation is represented in ASN.1 semantic objects, while reusable value-domain operations are provided by the constraint evaluator and set/range utilities. Follow the specific constraint documents when tracing how a subtype expression becomes an evaluable range or set; the existence of a grammar production alone does not imply that every constraint form is fully evaluated.
+
+The test tree includes focused semantic-object, structural, visitor, and constraint cases. Those source assertions should be read as scoped coverage, not as a blanket claim of full X.680 conformance.
+
+## 5. Relationships
+
+- [ASN.1 Runtime](../runtime/README.md) — module definitions, references, and runtime objects.
+- [Generic parser](../../parser/README.md) — lexer, grammar parser, parse tree, and parser engines.
+- [ASN.1 parser adapter](../runtime/asn1_parser.md) — maps notation to generic parser tokens and trees.
+- [ASN.1 publisher](../runtime/asn1_publisher.md) — reconstructs semantic objects from parse trees.
+- `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/` — source-level model, parser, and publisher cases.
+
+## 7. Developer Notes
 
 ### ASN.1 notation boundary (ITU-T X.680)
 

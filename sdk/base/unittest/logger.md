@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -41,19 +41,6 @@ The available configuration includes:
 
 The default builder configuration enables stdout and uses a consumer interval of 100 ms, while file output and explicit flush thresholds are disabled until configured.
 
-```text
-logger_builder
-      │
-      ├── configuration
-      │
-      └── build()
-            │
-            ▼
-          logger
-            │
-            └── consumer thread
-```
-
 ### Output interfaces
 
 The logger exposes several equivalent output forms:
@@ -77,28 +64,9 @@ Messages can be supplied as:
 
 This keeps callers independent of the final output destination.
 
-`consoleln()` writes to the console path, while `write()` and `writeln()` use the configured general output path. `colorln()` adds explicit console color handling.
+### Buffered output state
 
-### Buffered output and consumer
-
-The logger maintains per-thread logger streams and uses a consumer thread for output processing.
-
-```text
-caller thread
-     │
-     ▼
- logger item / stream
-     │
-     ▼
- consumer thread
-     │
-     ├── stdout
-     └── file
-```
-
-`flush()` can force pending output to be processed. Time-, size-, and interval-related settings control when buffered data is flushed during normal operation.
-
-The implementation uses synchronization around the shared logger state and retains per-thread output context.
+The logger maintains per-thread logger streams and uses a consumer thread for output processing. The implementation uses synchronization around the shared logger state and retains per-thread output context.
 
 ### File output and rotation
 
@@ -114,6 +82,18 @@ The builder also exposes configuration for:
 These settings allow the same logger abstraction to be used for short-lived test programs as well as longer-running diagnostic output.
 
 ## 3. Behavior Model
+
+### Buffered output lifecycle
+
+`flush()` can force pending output to be processed. Time-, size-, and interval-related settings control when buffered data is flushed during normal operation.
+
+```text
+per-thread message context ─► buffered output ─► consumer / explicit flush
+```
+
+### Output routing
+
+`consoleln()` writes to the console path, while `write()` and `writeln()` use the configured general output path. `colorln()` adds explicit console color handling.
 
 ### Log levels
 
@@ -132,8 +112,6 @@ message level >= configured log level
 ```
 
 The distinction between explicit and implicit levels allows callers to set a default verbosity while still selecting a level for individual messages.
-
-`testcase_loglevel.cpp` systematically exercises the level combinations and records the expected filtering behavior.
 
 ### Binary dumps
 
@@ -155,21 +133,26 @@ This is complementary to `dump_memory`: the latter is the reusable formatting pr
 
 `setcolor()` changes the current style, foreground color, and background color, while `colorln()` emits explicitly colored output.
 
-The test suite contains a separate console-color testcase because color handling is a distinct terminal concern from ordinary logging.
+### Message-to-output lifecycle
 
-### Tests
+```text
+caller writes message
+  └─ logger applies effective log level
+       ├─ below threshold ─► suppress
+       └─ accepted ─────────► format / optional dump
+                                └─ enqueue or buffer output
+                                     └─ consumer / flush
+                                          ├─ console destination
+                                          └─ file destination ─► rotation policy
+```
 
-The main logging tests are:
-
-- `test/testcase/base/unittest/testcase_loglevel.cpp`
-- `test/testcase/base/unittest/testcase_consolecolor.cpp`
-- `test/testcase/base/unittest/testcase_unittest.cpp`
-
-Together they demonstrate log-level filtering, console color support, formatted output, and logger/test-case integration.
+Log-level filtering and output delivery are separate stages. A message that passes the threshold can still be waiting in a buffer until the consumer or an explicit flush processes it. File rotation and console color affect presentation/output handling, not test pass/fail accounting.
 
 ## 4. Relationships
 
 - `test_case` can attach a logger for diagnostic output, but the test-case object owns the pass/fail/result accounting.
+- `test/testcase/base/unittest/testcase_loglevel.cpp`, `testcase_consolecolor.cpp`, and `testcase_unittest.cpp` — source-level coverage for log-level filtering, console colors, formatted output, and logger/test-case integration.
+- `testcase_consolecolor.cpp` keeps terminal-color behavior distinct from ordinary logging.
 - `basic_stream` and the project's formatting helpers provide message construction; logger routes and flushes the resulting output.
 - `dump_memory` provides the common byte-to-hex/ASCII formatting primitive; logger dump APIs expose that capability through the configured output path.
 - `console_color.hpp` handles terminal styling, which is independent of file output and log-level filtering.

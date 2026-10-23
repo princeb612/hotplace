@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -26,6 +26,12 @@ The object owns a `binary_t` buffer and an endian flag. The default is big-endia
 - Byte pointers, `std::string`, and `binary_t` can be appended as byte sequences; `binary_t` can also be prefixed.
 - `get()` exposes the underlying buffer by reference; `size()`, `empty()`, and `clear()` provide basic state operations.
 
+
+
+## 3. Behavior Model
+
+### Append and prefix operations
+
 ```text
 binary_stream
    ├── endian policy ──► integer byte conversion
@@ -34,16 +40,13 @@ binary_stream
    └── get() ───────────► binary_t
 ```
 
-## 3. Behavior Model
-
 - The builder's endian flag affects integer conversion overloads; callers should not assume it transforms raw byte buffers already supplied by the caller.
 - `get()` exposes the owned `binary_t` object by reference, so the reference is tied to the lifetime of the `binary_stream` instance and its contained object.
 - The class assembles primitive bytes only. It does not automatically add field lengths, tags, nested structure boundaries, or protocol framing.
-- No direct `binary_stream` use was identified in `test/testcase/base/stream/testcase_stream.cpp` or `testcase_bufferio.cpp`. Tests of `binary_t` or other stream helpers must not be represented as direct `binary_stream` coverage.
 
 ## 4. Relationships
 
 - `sdk/base/stream/binary_stream.hpp` implements the stream; `sdk/base/nostd/binary.hpp` defines `binary_t` and related byte-buffer helpers.
 - `sdk/base/system/endian-and-wire-integers.md` — byte-order helpers and wire-format integer context.
 - [`basic_stream.md`](basic_stream.md) — text formatting rather than primitive binary assembly.
-- `test/testcase/base/stream/testcase_stream.cpp` — related stream tests, but no direct `binary_stream` test was found in the reviewed source.
+- `test/testcase/base/stream/testcase_stream.cpp` and `testcase_bufferio.cpp` — related stream tests; no direct `binary_stream` use was identified in the reviewed source, so tests of `binary_t` or other stream helpers are not treated as direct coverage.

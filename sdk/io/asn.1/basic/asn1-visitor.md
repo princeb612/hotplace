@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -15,7 +15,7 @@
 
 The visitor layer provides operations over ASN.1 semantic/structural objects without embedding every traversal or representation operation into the node classes themselves.
 
-At revision 1095 the visitor family includes:
+The visitor family includes:
 
 - `asn1_visitor`
 - `asn1_ast_visitor`
@@ -29,18 +29,6 @@ At revision 1095 the visitor family includes:
 ### Main visitor paths
 
 The visitors serve different interpretations of the same ASN.1 model.
-
-```text
-                  ASN.1 objects
-                       |
-          +------------+------------+
-          |            |            |
-          v            v            v
-       notation       DER       constraints
-          |            |            |
-          v            v            v
-   human-readable    binary      evaluation
-```
 
 ### AST visitor
 
@@ -82,7 +70,46 @@ outside the core semantic object classes.
 That matters because the same `asn1_object` hierarchy is used by runtime construction, schema inspection, encoding, and validation.
 
 ## 3. Behavior Model
-The visitor family has distinct output and evaluation paths. `asn1_object::publish(stream_t*)` dispatches to notation representation, while `publish(binary_t*)` dispatches to DER encoding. Constraint evaluation uses `asn1_constraint_evaluator` and should not be conflated with either notation rendering or byte encoding.
+
+### Operation dispatch
+
+```text
+                  ASN.1 objects
+                       |
+          +------------+------------+
+          |            |            |
+          v            v            v
+       notation       DER       constraints
+          |            |            |
+          v            v            v
+   human-readable    binary      evaluation
+```
+
+
+### Dispatch by requested operation
+
+The visitor family shares the ASN.1 object model but has distinct output or evaluation paths. The selected operation determines how the model is traversed and what the traversal produces.
+
+```text
+asn1_object / constraint tree
+             |
+       visitor dispatch
+             |
+     +-------+---------+----------------+
+     |                 |                |
+     v                 v                v
+notation visitor   DER visitor    constraint evaluator
+     |                 |                |
+     v                 v                v
+ASN.1 text         DER bytes      allowed-value set
+                                      |
+                                      v
+                                value membership
+```
+
+`asn1_object::publish(stream_t*)` routes to notation representation, while `publish(binary_t*)` routes to DER representation. Constraint evaluation traverses constraint nodes and constructs a runtime allowed-value set; it is neither notation rendering nor byte encoding.
+
+The AST visitor provides traversal-oriented access. The constraint notation visitor renders constraint expressions, while the evaluator executes their meaning against the value-domain abstraction. Keeping these paths separate lets the same model support inspection, serialization, and validation without combining those responsibilities into each semantic class.
 
 ### Related tests
 
@@ -91,7 +118,9 @@ The visitor family has distinct output and evaluation paths. `asn1_object::publi
 - `test/testcase/asn.1/testcase_constraints.cpp`
 - `test/testcase/asn.1/testvector_der.cpp`
 
-## 4. Relationships
+These are source-level verification paths; this documentation update did not execute them.
+
+## 5. Relationships
 ### Related areas
 
 - `../semantic/` — semantic object hierarchy

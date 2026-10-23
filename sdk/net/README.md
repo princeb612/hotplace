@@ -28,51 +28,76 @@ This directory is responsible for network and protocol behavior. Cryptographic o
 
 ## 2. Data Model
 
-### Directory map
-
-The main components can be read as this text-based relationship map:
+### Cross-layer entities and ownership boundaries
 
 ```text
-Application / protocol consumer
-  ├─ may use server/
-  │    └─ uses basic/ for socket and backend operations
-  ├─ may use basic/ directly
-  └─ may use http/ for HTTP protocol processing
-       ├─ uses io/ for representations and parsing
-       └─ uses tls/ when the selected HTTP version/transport requires it
+Native transport resource
+  └─ socket object (sdk/net/basic)
+       ├─ endpoint / scheme / backend state
+       └─ used by server orchestration when applicable
 
-basic/ ── may integrate with ──> tls/
-tls/   ── uses ──> sdk/crypto/ for cryptographic operations
-tls/   ── uses ──> sdk/io/     for payloads, parsing and streams
-server/ and basic/ ── use ──> sdk/base/ common types and utilities
+Server coordination state (sdk/net/server)
+  ├─ multiplexer and worker configuration
+  ├─ session manager
+  └─ per-session state
+       ├─ peer / transport metadata
+       ├─ raw transport input
+       ├─ protocol-composed messages
+       └─ application/session key-value data
+
+Secure transport state (sdk/net/tls)
+  ├─ handshake messages and extensions
+  ├─ negotiated session/protection state
+  └─ transport-specific wire state
+       ├─ TLS records
+       ├─ DTLS epoch + record sequence
+       └─ QUIC packet-number spaces and frames
+
+HTTP semantic state (sdk/net/http)
+  ├─ request / response
+  ├─ URI / header / body
+  └─ version-specific framing and compression state
 ```
 
-This is a conceptual relationship map, not a complete include graph or a mandatory call sequence. A plain TCP client, for example, does not need to traverse the TLS or HTTP layers.
+These entities have different ownership and lifetimes. A socket is a platform transport resource; a network session retains per-connection or per-peer processing state; TLS protection retains negotiated and directional cryptographic state; HTTP request/response objects represent semantic messages rather than raw socket buffers. UDP/DTLS peer state and QUIC connection state must not be reduced to the TCP accepted-socket model.
 
-### Responsibilities by subdirectory
-
-| Area | Main responsibility | Questions to answer in its component documents |
-|---|---|---|
-| `basic/` | Socket lifecycle, transport backends, address access control | Who owns the native socket? How are connect/accept/read/write and close represented? |
-| `server/` | Multiplexer/event handling and session orchestration | How does an accepted socket become a session, and how is protocol work scheduled? |
-| `tls/` | TLS/DTLS records and handshakes; QUIC packet/frame-related processing | Which state belongs to the secure session, record, or packet? How are transport differences handled? |
-| `http/` | HTTP protocol processing and version-specific framing/compression | Which HTTP version and framing rules does a given implementation path handle? |
+The model is intentionally conceptual: each component document identifies the concrete fields, ownership rules, and lifetime details for its own types.
 
 ## 3. Behavior Model
 
-### Socket, session, and protocol are separate concerns
+### TCP server path
 
-A socket represents a transport endpoint and its platform resources. A server session represents a higher-level unit of connection or protocol state. TLS/DTLS/QUIC processing adds security and transport-specific state, while HTTP adds application-protocol semantics. These concepts interact, but should not be documented as if they were one object with one lifetime.
+```text
+server configuration
+  -> server_socket_adapter selects backend-qualified scheme
+  -> server_socket_builder creates/configures concrete listener
+  -> network_server opens listener and event workers
+  -> accept event
+  -> accepted socket
+  -> network_session registration + multiplexer binding
+  -> producer/consumer processing
+  -> protocol framing
+  -> application/protocol handler
+```
 
-When tracing an implementation, establish these points from the source:
+For a secure stream listener, TCP accept and TLS handshake are separate stages: the accepted socket may pass through the TLS-accept queue/worker before normal session processing. The server layer coordinates these stages; the concrete socket backend performs the transport operation, and the protocol layer interprets completed messages.
 
-1. **Resource creation:** which object opens, accepts, or wraps the native socket.
-2. **State ownership:** where connection/session state and protocol state are stored.
-3. **Event handoff:** how readable/writable/timeout events reach the relevant session or protocol handler.
-4. **Data boundary:** whether bytes are raw transport data, TLS records, DTLS records, QUIC packets/frames, or HTTP messages.
-5. **Shutdown:** which component closes native resources and which component releases protocol/session state.
+### Transport and protocol paths diverge at the wire boundary
 
-Do not infer a universal lifecycle from class names alone; confirm the concrete path in the relevant implementation and tests.
+```text
+TCP  -> ordered bytes -> [optional TLS records] -> protocol messages
+UDP  -> datagrams     -> [optional DTLS records] -> peer/session processing
+UDP  -> QUIC packets -> frames -> CRYPTO bytes / STREAM payload
+                                      |                 |
+                                      v                 v
+                                 TLS handshake      application data
+```
+
+HTTP processing follows the protocol selected by the application and available implementation path: HTTP/1.x frames byte messages, HTTP/2 assembles frames and stream state, and HTTP/3 consumes HTTP frames over QUIC streams. These paths can converge on shared HTTP request/response semantics, but do not share one wire format.
+
+### Lifecycle boundary
+
+Creation, event delivery, protocol processing, and shutdown are coordinated across separate objects. When following a concrete call path, distinguish (1) opening/accepting the native socket, (2) registering and scheduling a session, (3) transforming transport bytes into protocol units, and (4) closing the transport resource versus releasing session/protocol state. The exact order and cleanup owner are backend- and path-dependent; use the component documents rather than assuming one universal lifecycle.
 
 ### TLS, DTLS, and QUIC need a shared view without erasing their differences
 
@@ -88,7 +113,24 @@ The source components `dtls_record_arrange`, `dtls_record_publisher`, and `quic_
 
 A directory's presence does not guarantee that every backend, protocol version, extension, or optional feature is enabled in every build. Use the relevant CMake configuration and source guards when stating platform or feature support. Keep implementation claims separate from protocol-standard requirements.
 
-## 4. Relationships
+## 5. Relationships
+
+```text
+Application / protocol consumer
+  ├─ server/ ── coordinates ──> basic/ socket backends
+  │      └─ manages sessions / events / protocol hand-off
+  ├─ may use basic/ directly
+  └─ http/ ── uses ──> server/session integration as configured
+          ├─ sdk/io/ for representation and parsing
+          └─ tls/ or QUIC path when required by selected protocol
+
+basic/ ── secure backends may integrate with ──> tls/
+tls/   ── cryptographic operations ──> sdk/crypto/
+tls/   ── payloads, parsing and streams ──> sdk/io/
+server/ and basic/ ── common types/utilities ──> sdk/base/
+```
+
+This is a conceptual dependency map, not a complete include graph or mandatory call sequence. A plain TCP client need not traverse TLS or HTTP; HTTP/3 uses QUIC streams rather than the TLS record path.
 
 - `sdk/base/` — shared data types, strings, in-memory streams, algorithms, and platform-adjacent helpers.
 - `sdk/io/` — payload field layouts, parsing infrastructure, CBOR/ASN.1 and other representation facilities.
@@ -103,7 +145,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [TLS/DTLS/QUIC area](tls/README.md)
 - [HTTP area](http/README.md)
 
-## 5. References
+## 6. References
 
 ### Protocol specifications
 
@@ -131,7 +173,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 6. Developer Notes
+## 7. Developer Notes
 
 - Preserve the original protocol/reference material when reorganizing the document; move it under References rather than deleting it.
 - Keep detailed TLS/DTLS/QUIC state and record/packet relationships in `tls/` component documents. This README should provide orientation and boundaries, not duplicate the implementation walkthrough.

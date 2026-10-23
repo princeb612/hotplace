@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -62,26 +62,6 @@ ALL EXCEPT     → complement of S
 
 The evaluator can construct and combine these sets through one type-independent interface.
 
-```text
-ASN.1 constraint tree
-          |
-          v
-asn1_constraint_evaluator<T>
-          |
-          | get_result_set()
-          v
-   t_set_runtime<T>
-          |
-     +----+----+
-     |         |
- numeric      string
-     |         |
-     v         v
- range_set  string_set
-```
-
-This is the key connection between `sdk/base/nostd` and the ASN.1 semantic layer: the set implementation remains a generic `nostd` facility, while ASN.1 supplies the meaning of the operations.
-
 ### ASN.1 constraint composition
 
 Nested constraints are evaluated into temporary runtime sets and then combined.
@@ -116,15 +96,9 @@ The same pattern is used for `intersect_with()` and `erase_from()` for the corre
 
 This keeps the semantic evaluator aware of the ASN.1 value category while the concrete set implementation remains hidden behind `_target`.
 
-### Tests
-
-The common runtime façade is exercised together with both concrete implementations in:
-
-- `test/testcase/base/nostd/testcase_set.cpp`
-
-The test covers `t_set_runtime<int>`, `t_set_runtime<double>`, and `t_set_runtime<std::string>`, including union, subtraction, intersection, range operations, and membership.
-
 ## 4. Relationships
+
+- `test/testcase/base/nostd/testcase_set.cpp` provides source-level coverage for runtime set selection and set operations.
 
 ### Relationship with the lower-level sets
 
@@ -142,7 +116,7 @@ See [string_set](string_set.md).
 
 ### Source-level evaluator boundary
 
-The evaluator stores a `t_set_runtime<T>` directly and returns it through `get_result_set()`. This makes the dependency direction explicit:
+The evaluator stores a `t_set_runtime<T>` and exposes it through `get_result_set()`. This shows the dependency boundary without repeating the concrete-backend selection already described in the Data Model:
 
 ```text
 sdk/io/asn.1/basic/visitor
@@ -150,15 +124,12 @@ sdk/io/asn.1/basic/visitor
         ▼
 asn1_constraint_evaluator<T>
         │
+        │ get_result_set()
         ▼
 sdk/base/nostd/t_set_runtime<T>
-        │
-   ┌────┴────┐
-   ▼         ▼
-range_set  string_set
 ```
 
-The `nostd` layer knows how to construct and combine sets. The ASN.1 visitor layer decides what a `UNION`, `INTERSECTION`, `EXCEPT`, `ALL EXCEPT`, `SIZE`, `FROM` or other supported constraint means.
+The `nostd` layer constructs and combines sets through the runtime facade. The ASN.1 visitor layer decides what a `UNION`, `INTERSECTION`, `EXCEPT`, `ALL EXCEPT`, `SIZE`, `FROM` or other supported constraint means. The facade then selects `t_range_set` or `string_set` according to the value type, as shown above.
 
 
 The facade is implemented in `set.hpp`; its numeric backend is `range_set.hpp`, and its string backend is `string_set.hpp`. The ASN.1 visitor connects to the facade through `asn1_constraint_evaluator.hpp`.

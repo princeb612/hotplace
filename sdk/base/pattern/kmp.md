@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -43,6 +43,25 @@ Returns the starting index of the first occurrence, or `npos` when no occurrence
 Learns the supplied pattern and searches the source beginning at `pos`. The `pos` value is a source offset, not a pattern offset.
 
 The intended time complexity is (O(n+m)) for source length (n) and pattern length (m), including failure-table construction. Callers should provide a non-empty pattern rather than relying on unspecified empty-pattern behavior.
+
+### Source flow: build once, reuse for each scan
+
+```text
+learn(pattern)
+  ├─ copy pattern into _pattern
+  └─ build _failure
+       └─ for each pattern position, retain the longest proper prefix
+          that is also a suffix of the prefix already examined
+
+search(data)
+  ├─ compare data[i] with _pattern[j]
+  ├─ equal ───────────────► i++, j++
+  ├─ mismatch and j > 0 ──► j = _failure[j - 1], keep i
+  └─ mismatch and j == 0 ─► i++
+       └─ j == pattern length ─► return first match start
+```
+
+The important state transition is the mismatch branch: the source cursor `i` does not retreat. Only the pattern cursor `j` falls back through the failure table. The implementation therefore reuses comparisons already implied by the matched prefix instead of rescanning the same source region.
 
 ## 4. Relationships
 

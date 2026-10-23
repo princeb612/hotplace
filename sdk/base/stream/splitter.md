@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -18,24 +18,23 @@
 
 ## 2. Data Model
 
-Each `add()` registers a source block and a caller-provided descriptor. `run()` walks the registered blocks and calls a callback for each fragment.
+The callback contract carries flags, the current block pointer and size, fragment offset and size, and the descriptor associated with that block. `splitter_new_segment` marks the first fragment of a new output segment; `splitter_new_group` marks the first fragment from a source group.
+
+### Stored state and lifetime
+
+`splitter` retains a list of `item_t` records and a configured `_segment_size` (default 128 bytes), protected by `_lock`.
 
 ```text
-add(block A, descriptor A) --+
-add(block B, descriptor B) --+--> queued source groups
-add(block C, descriptor C) --+             |
-                                           v
-                              splitter::run(callback)
-                                           |
-                               fixed-size boundaries
-                                           |
-                                           v
-                         callback(data, offsets, flags, descriptor)
+splitter<DESCRIPTOR_T>
+├── _list: list<item_t>
+│    ├── bin: owned bytes when copied/moved
+│    ├── stream: borrowed pointer for splitter_noalloc
+│    ├── size
+│    ├── desc: source-group descriptor
+│    └── flags
+├── _segment_size
+└── _lock
 ```
-
-The callback receives flags, the current block pointer and size, fragment offset and size, and the descriptor associated with that block. `splitter_new_segment` marks the first fragment of a new output segment; `splitter_new_group` marks the first fragment from a source group. The default segment size is 128 bytes; `set_segment_size()` clamps values less than or equal to 1 to 2.
-
-### Storage and lifetime model
 
 - `add(binary_t&&, descriptor, flags)` moves the byte buffer into the splitter.
 - `add(pointer, size, descriptor, flags)` normally copies the bytes into owned storage.
@@ -43,6 +42,23 @@ The callback receives flags, the current block pointer and size, fragment offset
 - The implementation guards list operations and `run()` with a critical-section guard. `run()` clears the registered list after traversal, so the object behaves as a batch collector.
 
 ## 3. Behavior Model
+
+### Registration and dispatch
+
+`add()` registers a source block and caller-provided descriptor. `run()` walks the registered blocks and calls the callback for each fragment. `set_segment_size()` clamps values less than or equal to 1 to 2.
+
+### Fragment generation flow
+
+```text
+add(block, descriptor) ─► queued source groups
+                                  │
+                                  ▼
+                         splitter::run(callback)
+                                  │
+                         fixed-size boundaries
+                                  ▼
+                 callback(data, offsets, flags, descriptor)
+```
 
 The ownership rules above are central to safe use: the normal pointer overload copies its input, while `splitter_noalloc` retains a non-owning pointer. `run()` consumes the queued batch and clears the registered list after traversal. The documented boundary case uses input groups of 100, 210, and 30 bytes with an 80-byte segment size; group boundaries therefore do not coincide with output segment boundaries, and the callback's fragment/group metadata is needed to reconstruct the relationship.
 

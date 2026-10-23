@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1106
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -17,30 +17,54 @@ Documented with GPT-6
 ## 2. Data Model
 
 ```text
-odbc_query (async_query)
-       |
-       v
-  odbc_sinker
-       |
-       +-- ready()
-       +-- configured timeout
-       +-- retained query reference
+odbc_sinker
+  +-- retained odbc_query reference
+  +-- timeout threshold : _tmo_seconds
+  +-- monotonic start timestamp : _timestamp
+
+odbc_query
+  +-- execution mode : sync_query | async_query
+  +-- native statement / execution state
 ```
 
-The class is declared in `odbc_query.hpp`, stores a query pointer and timeout in seconds, and records a monotonic timestamp when constructed. It expects a non-null query; construction throws if none is supplied.
+The sinker retains a reference to an existing query and stores the timeout threshold and a monotonic start timestamp used for elapsed-time checks. It does not own an independent HDBC or HSTMT; those native resources remain governed by the query lifecycle. Readiness, busy status, and timeout are outcomes of the polling behavior described in the Behavior Model, not additional persistent data containers.
 
 ## 3. Behavior Model
 
-For synchronous query mode, `ready()` returns success immediately. For asynchronous mode it calls `execute_statement()`. If execution remains busy, the sinker checks elapsed monotonic time; when the elapsed seconds exceed the configured timeout, it returns `errorcode_t::timeout` and closes the query to cancel the statement. Other execution results are passed through.
+### Readiness polling
 
-The destructor releases the retained query reference. The checked-in ODBC sample does not instantiate this adapter, so its behavior is described from the implementation rather than claimed as covered by the sample.
+1. Construction rejects a null query and records the current monotonic timestamp.
+2. `ready()` inspects the query's `sql_query_mode_t`.
+3. In `sync_query` mode, it immediately returns success; it does not execute the statement itself in this branch.
+4. In `async_query` mode, it calls `execute_statement()`. A non-busy result is returned directly.
+5. If execution remains busy, the sinker calculates elapsed monotonic time. When elapsed seconds are greater than the configured timeout, it returns `errorcode_t::timeout` and calls `close()` on the query.
+6. Destruction releases the retained query reference.
 
-## 4. Relationships
+```text
+ready()
+  |
++-- synchronous? -- yes --> success
+  |
+  no
+  v
+execute_statement()
+  |
++-- complete/error --> propagate result
+  |
++-- busy --> compare monotonic elapsed time
+                 |
++-- within timeout --> busy
++-- exceeded --> timeout + query close/cancel
+```
+
+The timeout condition is strictly greater than the configured seconds, not greater-than-or-equal. This is polling around the driver's async execution mode; it does not create a scheduler or convert a synchronous driver call into asynchronous work.
+
+## 5. Relationships
 
 - [`odbc_query.md`](odbc_query.md) — owns statement execution and exposes the query mode
 - [`../README.md`](README.md) — class-level model
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample coverage boundary
 
-## 5. References
+## 6. References
 
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

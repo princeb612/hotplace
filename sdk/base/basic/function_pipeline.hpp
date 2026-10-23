@@ -116,7 +116,7 @@ class function_pipeline {
         return *this;
     }
     function_pipeline& goahead_if_success() {
-        _discriminant = error_traits<T, category>::_discriminant;
+        _discriminant = error_traits<T, category>::is_success;
         return *this;
     }
     function_pipeline& goahead_if_not_fail() {

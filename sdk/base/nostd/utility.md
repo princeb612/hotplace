@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -18,17 +18,7 @@ This page groups small, cross-cutting helpers that do not form a single data str
 
 ## 2. Data Model
 
-```text
-text / generic value
-       |
-       v
-conversion, cast or helper API
-       |
-       v
-caller-specific value or operation
-```
-
-These helpers are infrastructure. Their exact contracts are defined by each function and should not be generalized into one shared error or ownership policy.
+This page groups stateless helpers rather than defining one shared stored representation. The functions operate on caller-provided values, strings, enums, and pointers; ownership is relevant only to the memory helpers documented separately in [memory.md](memory.md).
 
 ## 3. Behavior Model
 

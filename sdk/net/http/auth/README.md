@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1107                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
@@ -74,7 +74,7 @@ The router owns the high-level decision to resolve the provider before invoking 
 
 Credential containers use locks around their in-memory maps/sets. This protects those container operations; it does not define credential rotation, persistence, rate limiting, lockout, or revocation policy for an application.
 
-## 4. Relationships
+## 5. Relationships
 
 - `basic_credentials.hpp/.cpp`, `basic_authentication_provider.hpp/.cpp`
 - `digest_credentials.hpp/.cpp`, `digest_access_authentication_provider.hpp/.cpp`, `rfc2617_digest.hpp/.cpp`
@@ -86,13 +86,9 @@ Credential containers use locks around their in-memory maps/sets. This protects 
 - [HTTP core model](../http-core-model.md) and [server/client flow](../http-server-client.md) — request routing and callback boundary.
 - `sdk/crypto/` — cryptographic primitives used by Digest and related code where applicable.
 
-## 5. References
+## 6. References
 
 - [RFC 7617 — The 'Basic' HTTP Authentication Scheme](https://www.rfc-editor.org/rfc/rfc7617)
 - [RFC 7616 — HTTP Digest Access Authentication](https://www.rfc-editor.org/rfc/rfc7616)
 - [RFC 6750 — The OAuth 2.0 Authorization Framework: Bearer Token Usage](https://www.rfc-editor.org/rfc/rfc6750)
 - [RFC 6749 — The OAuth 2.0 Authorization Framework](https://www.rfc-editor.org/rfc/rfc6749)
-
-## 6. Developer Notes
-
-The source contains a TODO referring to RFC 9258 (external PSKs for TLS 1.3). Treat it as a maintainer note only; it is not evidence that external-PSK authentication is implemented by this HTTP module.

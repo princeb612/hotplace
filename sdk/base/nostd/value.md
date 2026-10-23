@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,31 +20,25 @@
 
 ## 2. Data Model
 
-### State and flow
+### State representation
+
+The object tracks whether it is deferred, whether the local value is cached, and an optional name. It combines a cached `T` value with `std::promise<T>` / `std::future<T>` state. Copying intentionally does not copy the promise/future: the copy captures the source's current value state instead.
+
+## 3. Behavior Model
+
+### State transitions
 
 ```text
 t_value<T>
-  |
-  +-- immediate value
-  |     `-- set_value(value) -> cached value
-  |
-  `-- deferred value
-        |
-        +-- defer(name)
-        |     `-- reset promise/future, mark uncached
-        |
-        +-- get_future()
-        |
-        +-- set_value(value)
-        |     `-- fulfill promise and cache value
-        |
-        `-- value()
-              `-- retrieve/cache future result when available
+  ├─ immediate value ─► set_value(value) ─► cached value
+  └─ deferred value
+       ├─ defer(name) ─► reset promise/future; mark uncached
+       ├─ get_future() ─► obtain future view
+       ├─ set_value(value) ─► fulfill promise and cache value
+       └─ value() ─► retrieve/cache future result when available
 ```
 
-The object tracks whether it is deferred, whether the local value is cached, and an optional name. `value()` returns the cached/current value; if a deferred future is valid, it attempts to obtain the result and cache it. Copying intentionally does not copy the promise/future: the copy captures the source's current value state instead.
-
-## 3. Behavior Model
+`value()` returns the cached/current value; if a deferred future is valid, it attempts to obtain the result and cache it.
 
 ### Exception behavior
 

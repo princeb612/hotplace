@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -116,6 +116,7 @@ load_resource()
 The naming `load_resource()` is retained internally because the advisor still materializes static ASN.1 resource tables. The externally visible component identity is nevertheless `asn1_advisor`.
 
 ## 3. Behavior Model
+
 `get_instance()` calls `load_resource()`, which populates the dictionaries and prepares provider objects under a lock. The advisor retains these resources through its singleton lifetime. The current `asn1_parser` path selects the imported GLR parser, while other prepared parser instances remain available through the advisor; do not assume every prepared provider is selected by every caller.
 
 ### Related tests
@@ -125,9 +126,10 @@ The naming `load_resource()` is retained internally because the advisor still ma
 - `test/testcase/asn.1/runtime/testcase_parser.cpp`
 - `test/testcase/asn.1/runtime/testcase_publish.cpp`
 
-The tests normally reach advisor functionality through parser, publisher, runtime, and loader operations rather than treating the advisor as an independent application-level API.
+The tests normally reach advisor functionality through parser, publisher, runtime, and loader operations rather than treating the advisor as an independent application-level API. These are source-level verification paths; this document update did not execute them.
 
-## 4. Relationships
+## 5. Relationships
+
 - `../runtime/asn1_parser.*` — parser entry point that uses advisor-provided parser providers.
 - `../runtime/asn1_publisher.*` — publication/semantic reconstruction.
 - `../../parser/` — LALR(1)/GLR parser implementations.
@@ -135,6 +137,7 @@ The tests normally reach advisor functionality through parser, publisher, runtim
 - `test/testcase/asn.1/` — parser, loader and publisher tests that indirectly exercise the advisor.
 
 ### Implementation source navigation
+
 - `asn1_advisor.hpp`
 - `sdk/io/asn.1/advisor/asn1_advisor.cpp`
 - `sdk/io/asn.1/runtime/asn1_publisher.*`

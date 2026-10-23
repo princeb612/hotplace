@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1106
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -17,36 +17,54 @@ Documented with GPT-6
 ## 2. Data Model
 
 ```text
-ODBC operation on a native handle
-             |
-             v
-       SQLGetDiagRec
-             |
-             v
-       odbc_diagnose
-             |
-             +-- native error code
-             +-- SQLSTATE
-             +-- message
-             |
-             v
-       registered callbacks
+odbc_diagnose (singleton)
+  +-- registered handler list
+          +-- callback
+          +-- opaque caller context
+
+diagnostic record (native ODBC data)
+  +-- native error code
+  +-- SQLSTATE
+  +-- driver message
+
+diagnostic request context
+  +-- native handle type
+  +-- native handle
 ```
 
-The class is a singleton. Each handler registration stores a callback and caller-supplied context pointer. The callback receives the native error code, state, message, a control flag, and the context.
+Handler registrations pair a callback with an opaque caller-supplied context pointer. A diagnostic record contains native ODBC error information and is distinct from the hotplace return_t / errorcode_t summary of an operation. The handle type and handle identify the native diagnostic source for a request; they are inputs to collection, not persistent diagnostic payload fields.
 
 ## 3. Behavior Model
 
-`diagnose()` iterates diagnostic records using `SQLGetDiagRec` until ODBC returns `SQL_NO_DATA` or `SQL_INVALID_HANDLE`. Each record is passed to `run_handlers()`, which invokes registered callbacks while holding the handler-list critical section. A callback can set the control flag to false to stop dispatching the current diagnostic record to later handlers.
+### Diagnostic collection and dispatch
 
-This is diagnostic reporting, not a replacement for checking the return value of the original ODBC call. The diagnostic path runs only when code asks the singleton to inspect a handle, commonly after a native operation fails.
+1. The caller supplies the native handle type and handle to `diagnose()`, typically after an operation fails.
+2. The implementation advances through diagnostic record numbers using `SQLGetDiagRec`.
+3. Collection stops when ODBC reports `SQL_NO_DATA` or `SQL_INVALID_HANDLE`; each available record carries its native code, SQLSTATE, and message.
+4. `run_handlers()` dispatches the record to registered callbacks while holding the handler-list critical section.
+5. A callback can change the control flag to stop dispatching the current record to subsequent handlers.
 
-## 4. Relationships
+```text
+failed native ODBC operation
+          |
+          v
+diagnose(handle type, handle)
+          |
+          v
+SQLGetDiagRec: record 1, 2, ... until stop status
+          |
+          v
+run_handlers(code, state, message, control, context)
+```
+
+This is an explicitly requested diagnostic path, not automatic enrichment of every failed call. Callers should first interpret the original operation's return status, then request diagnostics when native driver detail is needed. Since callbacks execute while the handler-list critical section is held, callback behavior should account for that synchronization boundary.
+
+## 5. Relationships
 
 - [`odbc_connector.md`](odbc_connector.md) and [`odbc_query.md`](odbc_query.md) — native handles whose failures may have diagnostic records
 - [`../README.md`](README.md) — shared ODBC wrapper model
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample registers a callback that logs diagnostic details
 
-## 5. References
+## 6. References
 
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

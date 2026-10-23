@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,23 +20,21 @@
 
 `split_context_t` owns a copy of the input in `source` and records each fragment as a `{begin, length}` pair in `info`. It does not store a separate `std::string` for every fragment at initialization; `split_get()` or callback iteration materializes fragment strings/data when requested.
 
-```text
-split_begin(source, delimiter)
-        |
-        v
-split_context_t
-  source: owned string copy
-  info: vector of {begin, length}
-        |
-        +--> split_count()
-        +--> split_get(index, binary_t|string)
-        +--> split_foreach(callback)
-        +--> split_chained_foreach(callback)
-        |
-     split_end()
-```
 
 ## 3. Behavior Model
+
+### Context lifecycle
+
+```text
+split_begin(source, delimiter) ─► split_context_t
+                                      ├─ owned source string
+                                      └─ vector of {begin, length} ranges
+
+split_count() / split_get() / split_foreach() / split_chained_foreach()
+                                      │
+                                      ▼
+                               split_end()
+```
 
 ### API flow
 

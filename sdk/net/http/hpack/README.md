@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -16,6 +16,28 @@
 `hpack` implements HPACK, the header compression format used by HTTP/2. It encodes/decodes header fields and maintains HPACK static/dynamic table state. It does not parse HTTP/2 frame boundaries, route requests, or own the network connection.
 
 ## 2. Data Model
+
+### Encoder and table state
+
+The principal classes are `hpack_encoder`, `hpack_static_table`, and `hpack_dynamic_table`.
+
+| Component | Model / state |
+|---|---|
+| `hpack_static_table` | Protocol-defined, fixed HPACK entries |
+| `hpack_dynamic_table` | Mutable entries and capacity/insertion state for the relevant HTTP/2 compression context |
+| `hpack_encoder` | Indexed and literal field representations plus encoder options |
+| `http2_session` | Owns the HPACK dynamic-table state used while assembling per-stream request headers |
+| `http_header` | Shared HTTP header collection receiving decoded name/value fields |
+
+The encoder uses the shared `http_header_compression` interface and common table infrastructure, but HPACK static entries and dynamic-table semantics are protocol-specific. The table state is associated with the corresponding HTTP/2 compression context; it is not a global dictionary to reuse across unrelated connections.
+
+## 3. Behavior Model
+
+### Encoding and decoding
+
+HPACK can represent a field using an exact static/dynamic table index, a name reference plus a literal value, or a literal name/value. The chosen representation depends on the available entries and encoder flags. Dynamic-table insertions and evictions change the compression context, so encoded header blocks must be decoded against the matching state and in the proper order.
+
+The HTTP/2 layer owns frame/stream boundaries: HEADERS may begin a header block and CONTINUATION may carry the remaining fragment. HPACK owns the field representation and table updates within that block. A frame is not itself a compressed field and a compressed header block is not a complete HTTP request.
 
 ```text
 HTTP/2 HEADERS / CONTINUATION frames
@@ -33,28 +55,11 @@ HTTP/2 HEADERS / CONTINUATION frames
             http_request headers
 ```
 
-The principal classes are `hpack_encoder`, `hpack_static_table`, and `hpack_dynamic_table`. The encoder uses the shared `http_header_compression` interface and common table infrastructure, but the static table entries and dynamic-table semantics are HPACK-specific. In the HTTP/2 server path, `http2_session` holds the HPACK dynamic table used while assembling per-stream request headers.
-
-## 3. Behavior Model
-
-### Encoding and decoding
-
-HPACK can represent a field using an exact static/dynamic table index, a name reference plus a literal value, or a literal name/value. The chosen representation depends on the available entries and encoder flags. Dynamic-table insertions and evictions change the compression context, so encoded header blocks must be decoded against the matching state and in the proper order.
-
-The HTTP/2 layer owns frame/stream boundaries: HEADERS may begin a header block and CONTINUATION may carry the remaining fragment. HPACK owns the field representation and table updates within that block. A frame is not itself a compressed field and a compressed header block is not a complete HTTP request.
-
-```text
-http2_protocol / frame layer
-  -> identify HEADERS and CONTINUATION sequence
-  -> pass compressed field block to HPACK
-  -> HPACK decode + dynamic table state
-  -> http2_session combines stream state
-  -> http_request headers when complete
-```
+The diagram follows the decode path: `hpack_encoder` exposes both encoding and decoding operations despite its class name. The HTTP/2 session supplies the relevant dynamic-table state and adds decoded name/value pairs to the request being assembled for that stream. The diagram omits frame parsing and request-completion checks, which remain the responsibility of the HTTP/2 layer.
 
 HPACK's dynamic table is associated with the relevant HTTP/2 compression context; do not reuse it as a generic dictionary across unrelated connections. This stateful behavior is why table updates and decoder state matter in addition to the byte-level encoder.
 
-## 4. Relationships
+## 5. Relationships
 
 - `hpack_encoder.hpp/.cpp` — field encoding and decoding.
 - `hpack_static_table.hpp/.cpp`, `hpack_dynamic_table.hpp/.cpp` — HPACK-specific tables.
@@ -64,6 +69,6 @@ HPACK's dynamic table is associated with the relevant HTTP/2 compression context
 - [QPACK](../qpack/README.md) — related goal for HTTP/3, but different wire format and state coordination.
 - `test/testcase/net/hpack/testcase_huffman.cpp`, `testcase_rfc7541.cpp`, and `testvector_hpack.cpp` — source-level HPACK/Huffman vectors and assertions.
 
-## 5. References
+## 6. References
 
 - [RFC 7541 — HPACK: Header Compression for HTTP/2](https://www.rfc-editor.org/rfc/rfc7541)

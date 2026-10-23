@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -32,6 +32,17 @@ binary_stream ────────────► primitive binary assembly
 These are related utilities within the same directory, not one inheritance hierarchy. The root-level [`stream_t` interface](../stream.md) defines the common operations; `basic_stream` specializes in text formatting, `binary_stream` assembles primitive bytes, and `splitter` divides byte sequences into fragments while retaining group descriptors.
 
 ## 3. Behavior Model
+
+### Mutation and retrieval flow
+
+```text
+caller
+  ├─ basic_stream ─► append / format / insert / cut ─► in-memory text buffer
+  ├─ binary_stream ─► endian-aware integer conversion ─► binary_t
+  ├─ bufferio ─► append blocks ─► get() may consolidate blocks ─► returned bytes
+  └─ splitter ─► registered source groups ─► fixed-size fragments
+                                          └─ callback(data, offset, size, flags, descriptor)
+```
 
 - Stream classes in this directory are primarily in-memory abstractions; they should not be confused with OS file streams.
 - `bufferio` may reallocate or consolidate storage during mutation or retrieval, so callers should not assume a returned data pointer remains stable across subsequent operations.

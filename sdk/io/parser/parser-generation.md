@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -13,7 +13,7 @@
 
 ## 1. Role
 
-The generation layer turns a context-free grammar into parser states and ACTION/GOTO tables. A grammar's declared revision is serialized into the binary parsing-table header and is checked during import; the ASN.1 LALR and GLR providers declare revision 3 in Revision 1105.
+The generation layer turns a context-free grammar into parser states and ACTION/GOTO tables. A grammar's declared revision is serialized into the binary parsing-table header and is checked during import; the ASN.1 LALR and GLR providers declare revision 3 in the Revision 1107 source snapshot.
 
 ```text
 cfg_grammar
@@ -32,127 +32,92 @@ binary_parsing_table
 ```
 
 ## 2. Data Model
-### cfg_grammar
 
-`cfg_grammar` is the grammar description used by the parser engines.
+### cfg_grammar: symbol and production source
 
-It stores:
+The grammar stores terminal symbols, non-terminal symbols and production rules independently of any source input. A production relates an LHS non-terminal to an ordered RHS symbol sequence. The consumer must use terminal names that agree with its token-mapping layer.
 
-- production rules
-- terminal symbols
-- non-terminal symbols
+### Generation intermediates
 
-The main construction operations are:
+The generation code in cfg_grammar.cpp, cfg_grammar_lalr1.cpp and cfg_grammar_glr.cpp constructs intermediate grammar information:
 
-- `add_production(lhs, rhs)`
-- `add_terminal(term)`
+- FIRST/FOLLOW sets used by lookahead-related steps;
+- LR items and closure/goto results;
+- discovered parser states and transitions;
+- candidate ACTION entries, including competing actions where the GLR path permits them;
+- GOTO transitions from a state and non-terminal to a next state.
 
-The parser therefore receives grammar structure independently of the input token stream.
+These are generation-time structures. They are not the runtime input token stream or the runtime parser stack.
 
-### Temporary generation context
+### ACTION/GOTO table
 
-`cfg_grammar.cpp`, `cfg_grammar_lalr1.cpp`, and `cfg_grammar_glr.cpp` implement the grammar helpers and LALR/GLR table-generation paths. `parser_temporary_context_t` and the table types are declared in `types.hpp`.
+| Entry | Key | Result |
+|---|---|---|
+| ACTION | Parser state + lookahead terminal | SHIFT, REDUCE, ACCEPT or error/conflict representation |
+| GOTO | Parser state + non-terminal | Next parser state |
+| Production | Rule ID | LHS symbol and ordered RHS symbols |
+| Symbol index | Symbol spelling | Internal ID connecting terminals, rules and table entries |
 
-The implementation includes operations for:
+The LALR engine uses deterministic action selection. GLR's table/execution path can preserve multiple actions so ambiguity is represented as runtime paths rather than forced into one stack.
 
-- FIRST/FOLLOW computation
-- LR(0) closure
-- LR(0) state construction
-- LALR(1) table generation
-- GLR table generation
+### binary_parsing_table: reusable artifact
 
-This keeps table-generation algorithms separate from the concrete parser engine classes.
+The table object bridges generated in-memory structures and the serialized .ptb representation. Its logical contents include symbol strings/IDs, terminal registrations, productions, ACTION entries and GOTO entries. The file layout and integrity fields are documented separately in parsing-table-binary-format.md.
 
-### LALR generation
-
-The LALR path uses LR item/state information and lookahead propagation to produce deterministic ACTION/GOTO tables.
-
-Conceptually:
-
-```text
-CFG
- │
- ├── FIRST / FOLLOW
- │
- ├── LR(0) closure / goto
- │
- └── LR(1) lookahead information
-          │
-          ▼
-       LALR table
-```
-
-The generated actions include:
-
-- SHIFT
-- REDUCE
-- ACCEPT
-- ERROR
-
-and GOTO entries map a state plus non-terminal to the next state.
-
-### GLR generation
-
-GLR keeps the table representation suitable for ambiguous/conflicting grammar paths rather than requiring the deterministic LALR engine to resolve every conflict.
-
-The execution side uses a graph-structured stack, documented with the GLR engine.
-
-### LALR and GLR as one generation pipeline
-
-The important source-tree distinction is that LALR and GLR share the grammar and table-generation infrastructure, but their execution semantics differ:
-
-```text
-                         cfg_grammar
-                             │
-                             ▼
-                    table-generation code
-                       │            │
-                       ▼            ▼
-                 LALR actions   GLR actions
-                       │            │
-                       └──────┬─────┘
-                              ▼
-                    binary_parsing_table
-                              │
-                    ┌─────────┴─────────┐
-                    ▼                   ▼
-                lalr1_parser        glr_parser
-                                        │
-                                        ▼
-                                      GSS
-```
-
-The binary table is therefore a reusable execution artifact, not a separate parser algorithm.
-
-### Binary parsing table
-
-`binary_parsing_table` provides a reusable serialized representation of generated grammar tables.
-
-It can:
-
-- learn from a parser
-- register productions and terminals
-- build ACTION/GOTO entries
-- write a table file
-- read a table file into a parser
-
-This separates expensive table construction from later parser execution.
-
-See [Parsing table binary format](parsing-table-binary-format.md) for the file representation.
+The serialized table does not contain the source lexer's vocabulary/configuration, the consumer's token-to-terminal mapper or semantic builders. Those must be reconstructed by the application.
 
 ## 3. Behavior Model
-- Grammar construction is independent of the source text being parsed. A production describes the relationship between a left-hand non-terminal and its RHS symbols; the lexer and parser consumer must agree on terminal names.
-- Table generation is a separate phase from execution. A built table can be copied into a `binary_parsing_table` and serialized so later runs can import it instead of repeating generation.
-- The grammar revision is part of the serialized-table compatibility check. `binary_parsing_table::read()` clears the destination parser/grammar before loading, checks the magic and endian marker, validates the body size and CRC, and compares the table version with the grammar revision required by the receiving parser. Treat table files as generated artifacts tied to the grammar definition, not as timeless data files.
-- LALR and GLR use the same broad grammar/table infrastructure but differ in how conflicts and competing actions are handled during execution. A grammar that is accepted by one path should not be assumed to have identical behavior in the other without exercising both paths.
-- ASN.1 grammar maintenance crosses lexer token registration, production rules, parser table revision, and downstream parse-tree/semantic handling. A local grammar edit can therefore require coordinated updates rather than a change to one production alone.
+
+### Grammar to parser table
+
+```text
+register terminals + productions in cfg_grammar
+                    │
+                    ▼
+            compute grammar sets
+              FIRST / FOLLOW
+                    │
+                    ▼
+         construct LR(0) closure / goto
+                    │
+                    ▼
+            discover parser states
+                    │
+           ┌────────┴─────────┐
+           ▼                  ▼
+  LALR lookahead/action   GLR action construction
+           │                  │
+           ▼                  ▼
+ deterministic ACTION   competing ACTION paths
+           └────────┬─────────┘
+                    ▼
+             ACTION / GOTO table
+                    │
+             ┌──────┴───────┐
+             ▼              ▼
+          execute          serialize
+       parser engine      .ptb artifact
+```
+
+The generation path is independent of any particular input string. It transforms grammar symbol and production structure into a table reusable across inputs.
+
+### Build once, execute later
+
+1. The consumer configures cfg_grammar and its revision.
+2. The selected generation path computes state and table entries.
+3. The table can be retained in memory or written through binary_parsing_table.
+4. Later, the consumer imports the artifact rather than regenerating the table.
+5. Import checks artifact structure and compatibility against the receiving grammar revision. It does not restore lexer configuration or token mapping.
+
+### Revision and maintenance boundary
+
+The table version is compared with the receiving grammar revision as a compatibility floor. A table older than the required revision returns low_version; passing this check does not prove every semantically incompatible table is safe. A grammar change should be reviewed across token registration/mapping, productions, generated artifact, parser behavior and downstream tree/semantic handling.
 
 ### Source-level evidence
-`test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation()` is the clearest end-to-end table-generation comparison. It asks `asn1_advisor` for LALR and GLR parser instances in both build and import forms, checks `ready()`, and then feeds the same notation table to all four instances. The test vectors include type assignments, tagging, nested constructed types, constraints, and standalone type notation.
 
-The imported-table path is made explicit by `test_load_parsingtable()`: it calls `binary_parsing_table::read("asn1notation.ptb", parser)` and then parses `Type1 ::= VisibleString`. Read this alongside `binary_parsing_table_read.cpp` and `binary_parsing_table_write.cpp` to follow the artifact lifecycle from file header and blocks to reconstructed grammar/table state.
+test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation() compares LALR and GLR parser instances in both runtime-built and imported-table forms against shared notation vectors. test_load_parsingtable() imports asn1notation.ptb and parses Type1 ::= VisibleString. Follow binary_parsing_table_write.cpp and binary_parsing_table_read.cpp for the serialization boundary.
 
-## 4. Relationships
+## 5. Relationships
 ### ASN.1 maintenance relationship
 
 ASN.1 grammar changes typically cross several boundaries:

@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -70,6 +70,24 @@ The source contains trace calls before the handler is installed, but event deliv
 ### Event delivery and error context
 
 trace_debug_event* routes an event to the registered handler only when the trace option is enabled and the category is not filtered. Leave-trace helpers additionally consult the configured debug level and use error_advisor to attach the symbolic error-code name; variants requesting a backtrace call trace_backtrace().
+
+### Event activation and delivery
+
+```text
+debug build + command-line options
+  └─ set_trace_debug(handler)
+       ├─ set_trace_option(mask)
+       └─ set_trace_level(level)
+
+trace macro / trace_debug_event
+  ├─ debug-build and option checks
+  ├─ category / level filter
+  ├─ attach source location and error description when applicable
+  ├─ optional backtrace
+  └─ registered handler ─► logger or caller
+```
+
+Compiling with `DEBUG` only enables the diagnostic macro implementations; it does not automatically enable event delivery. The option mask, category/level checks, and registered handler must also permit the event. In non-debug builds, leave-trace macros retain their control-flow role without the same diagnostic output.
 
 ## 4. Relationships
 

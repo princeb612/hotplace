@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -63,6 +63,27 @@ The backend selection is compile-time and follows compiler support rather than r
 - MSVC selects `std::regex`.
 
 On older GCC toolchains, PCRE is therefore a compatibility fallback, not an alternative chosen dynamically at runtime.
+
+### Source flow: opaque context and source-coordinate results
+
+```text
+regex::open(expr)
+  └─ compile-time backend ─► std::regex or PCRE context
+
+regex::search(context, input, size, pos, tokens)
+  ├─ clear prior output
+  ├─ search from pos using backend match offsets
+  ├─ append non-empty full-match range(s)
+  └─ advance pos from the match end
+
+regex_tokens(...)
+  └─ for each match: group 0 = full match; later groups = captures
+
+regex::close(context)
+  └─ release compiled backend state
+```
+
+The wrapper exposes `range_t` coordinates rather than backend match objects. That makes results usable after the search call, but it also means the caller must preserve the original input when interpreting those coordinates. The context has a separate lifetime from the input and from the returned ranges; a successful `open()` must be paired with `close()`.
 
 ## 4. Relationships
 

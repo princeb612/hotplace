@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -53,6 +53,26 @@ The reducer adds token-oriented state on top of the automaton:
 This extra state is rule metadata for token matching and reduction; it is not part of the base literal-pattern automaton.
 
 ## 3. Behavior Model
+
+### Control-flow overview
+
+```text
+Base automaton
+  insert patterns ─► build failure/output links ─► scan with one active state
+                                                  └─ emit every output ID
+
+Wildcard extension
+  insert wildcard markers ─► build inherited links ─► scan active-state queue
+                                                    └─ resolve original ranges
+
+Reduction extension
+  token stream + rules ─► match candidates ─► map to original spans
+                                           └─ collapse virtual token / block / repeat
+                                                └─ restart on shorter working stream
+```
+
+The three paths share trie/failure-link machinery, but their per-input-step state differs: the base automaton follows one state, wildcard matching explores a set of viable states, and reduction repeatedly transforms a token stream while preserving coordinates into the original input.
+
 
 ### A. Base Aho-Corasick
 

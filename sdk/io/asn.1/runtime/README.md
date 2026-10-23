@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -19,67 +19,86 @@ The runtime layer represents ASN.1 modules and their types, resolves references 
 The current module representation is `asn1_module`; `asn1_modules` is the registry for named module instances. `asn1_module_context` is historical terminology, not the current type name.
 
 ## 2. Data Model
-```text
-ASN.1 source
-    |
-    v
-sdk/io/parser lexer + grammar parser
-    |
-    v
-parse_tree
-    |
-    v
-asn1_publisher::build()
-    |
-    +-- module defaults / EXPORTS / IMPORTS
-    +-- type assignments and references
-    +-- constraints and semantic type objects
-    |
-    v
-asn1_module  <---- lookup / reference resolution ----> imported modules
-    |
-    +-- weakly typed object path
-    +-- strongly typed object path
-    +-- BER/DER byte-oriented operations
-```
 
-The diagram separates syntax parsing, semantic publishing, module storage, and value/byte processing. The existence of runtime types does not mean every ASN.1 notation feature or every compiler/code-generation path is complete.
+### Main data boundaries
 
-### Documents
-
-- [Module implementation record](asn1_module.md) — local/imported symbol lookup, reference resolution, and module registry
-- [ASN.1 parser](asn1_parser.md) — grammar/parser entry points
-- [ASN.1 publisher](asn1_publisher.md) — parse-tree visitor and semantic reconstruction
+| Data | Meaning | Handled by |
+|---|---|---|
+| `parser_token` sequence | Lexical items mapped to the generic parser token model | `asn1_parser` adapter |
+| `parse_tree` | Grammar-level structure and parser events | `sdk/io/parser` |
+| `asn1_semantic_node` | Temporary semantic value while a production is reconstructed | Publisher context |
+| `asn1_object` hierarchy | ASN.1 type/value/tag/constraint relationships | Basic semantic model and publisher handlers |
+| `asn1_module` | Module identity, defaults, assignments, imports/exports, lookup context | Runtime |
+| `asn1_modules` | Named module collection used for cross-module resolution | Runtime registry |
 
 ## 3. Behavior Model
-- A module/schema describes type definitions and constraints; a runtime object instance carries values; encoded BER/DER bytes are a separate representation.
-- Module-aware `search()` can consult local definitions and imported symbol modules. `resolve()` uses that lookup to validate referenced-type dependencies; local definitions are preferred.
-- The shared publisher is provided through `asn1_advisor`. Its preparation phase registers grammar handlers; each build operation reconstructs semantic objects from a parse tree.
-- Parameterized notation handlers are not equivalent to a complete template-instantiation engine. See the publisher implementation notes and current testcase dispatch before describing support as end-to-end.
 
-### Source-level evidence
-`test/testcase/asn.1/runtime/testcase_parser.cpp::test_asn1parser()` sends ASN.1 assignments and constraint notation through the parser and checks the parse result. `testcase_publish.cpp::test_publish_babystep()` follows the staged parser → parse tree → semantic publishing path; related cases split basic and constraint publishing. The loader testcase at `test/testcase/asn.1/loader/testcase_loader.cpp` provides a more integrated example: it loads a file, inspects the parse-tree stages, calls the shared publisher, and checks imported-symbol resolvability.
+### Notation-to-runtime path
 
-These are source-level paths. Their presence here does not establish that they were executed during this documentation update.
+```text
+ASN.1 notation
+    |
+    v
+asn1_loader (optional file/memory entry)
+    |
+    v
+asn1_parser -- tokens --> parse_tree
+                              |
+                              v
+                     asn1_publisher::build()
+                              |
+                +-------------+-------------+
+                v             v             v
+          module metadata  type/reference  constraints
+          IMPORTS/EXPORTS  assignments    semantic nodes
+                +-------------+-------------+
+                              v
+                         asn1_module
+                              |
+                              v
+                        asn1_modules
+                              |
+                    local/imported lookup
+                              |
+                              v
+                    runtime type/object paths
+```
 
-## 4. Relationships
-- `../basic/` — notation, type, tag, constraint, and structural models
-- `../loader/` — file-loading and parse-tree entry point
-- `../compiler/` — compiler-oriented direction; do not assume complete code generation
-- `../../parser/` — generic lexer, grammar, parse tree, and parser engines
-- `test/testcase/asn.1/runtime/` and `test/testcase/asn.1/loader/` — runtime and integration examples
+The generic parse tree, temporary semantic nodes, and completed runtime module/object graph are different data layers. The diagram is an architectural route, not a claim that every ASN.1 production has complete semantic handling.
 
-### Related implementation and verification sources
-- [Module implementation record](asn1_module.md)
-- [ASN.1 parser](asn1_parser.md)
-- [ASN.1 publisher](asn1_publisher.md)
-- [ASN.1 Basic](../basic/README.md)
-- [Loader](../loader/README.md)
-- `asn1_module.hpp/.cpp`, `asn1_modules.hpp/.cpp`, `asn1_publisher*.cpp`
+
+### Parse-tree reconstruction
+
+1. `asn1_parser::to_tokens()` invokes the configured lexical analyzer, skips comments, maps lexical descriptions into parser tokens, and appends the generic EOF token.
+2. `to_parsetree()` selects the ASN.1 parser provider and passes tokens to the generic parser engine. The current source uses the imported GLR parser path.
+3. `to_result()` obtains the shared publisher through `asn1_advisor` and calls `asn1_publisher::build()`.
+4. The publisher visitor processes shift/reduce events. Shift creates temporary semantic nodes; reduce selects a production handler that consumes stack entries and constructs the semantic result.
+5. The publisher populates module metadata, assignments, references, and constraint objects. Module-aware lookup then checks local definitions and imported symbol modules.
+
+### Module and reference resolution
+
+Declaration and resolution are separate. Creating a referenced-type node does not alone prove that its target is linked. Module-aware `search()` can consult local definitions and imported-symbol modules; `resolve()` uses those lookups to validate reference dependencies.
+
+### Completion boundaries
+
+- The shared publisher/handler set is prepared through `asn1_advisor`; each build uses its own context and temporary module state.
+- Constraint handlers construct constraint model objects; reusable range/set evaluation machinery lives separately, including under `sdk/base/nostd`.
+- Parameterized notation has grammar productions and direct semantic prototypes, but the disabled end-to-end probe means parameter binding/substitution should not be represented as complete.
+- Parser, publisher, imported-symbol resolution, and notation representation are exercised in distinct test stages. This documentation update did not execute those tests.
+
+## 5. Relationships
+
+- [ASN.1 Basic](../basic/README.md) — semantic types, structural nodes, tagging, and constraints.
+- [ASN.1 parser adapter](asn1_parser.md) — tokenization and generic parse-tree construction.
+- [ASN.1 publisher](asn1_publisher.md) — grammar-event handling and semantic reconstruction.
+- [ASN.1 module](asn1_module.md) — module data, lookup, imports/exports, and reference resolution.
+- [ASN.1 loader developer notes](../loader/asn1_loader.md) — source file to parser stages.
+- [Generic parser](../../parser/README.md) — lexer, parser engines, and parse-tree infrastructure.
 - `test/testcase/asn.1/runtime/testcase_parser.cpp`
 - `test/testcase/asn.1/runtime/testcase_publish.cpp`
+- `test/testcase/asn.1/loader/testcase_loader.cpp`
 
-## 5. Development Notes
+## 7. Developer Notes
 
 The examples below preserve the earlier DER/TLV/semantic-object comparison study. They are illustrative traces for selected schemas and tag combinations, not evidence of complete ASN.1 feature coverage.
 

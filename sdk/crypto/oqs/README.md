@@ -3,9 +3,9 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1107                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1105                  │
+│ Source basis: Revision 1107                  │
 │ Documentation scope: implementation navigation│
 └──────────────────────────────────────────────┘
 ```
@@ -36,7 +36,7 @@ The `oqs_alg_oid_registered` flag records whether an algorithm can be mapped thr
 
 The adapter delegates key generation and serialization to `crypto_keychain`, and KEM/signature operations to the common OpenSSL PQC helpers. The implementation is guarded for OpenSSL 3 provider APIs; older OpenSSL versions return `not_supported`.
 
-## 4. Relationships
+## 5. Relationships
 - `../basic/` provides common key, serialization, and crypto operations.
 - `../advisor/` provides algorithm and OID-related metadata.
 - `../../../test/testcase/crypto/pqc/` contains provider-backed and common PQC tests.

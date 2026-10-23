@@ -1,119 +1,127 @@
 ## Publication
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & behavior│
-└──────────────────────────────────────────────┘
-```
+~~~text
+hotplace source tree
+Edition 1 · Revision 1107
+Source basis: Revision 1107
+Documented with GPT-6
+— source structure, implementation & behavior
+~~~
 
 # Graph-Structured Stack
 
 ## 1. Role
 
-### Introduction
+gss.hpp implements t_gss<STATE, VALUE>, a graph-structured stack used to preserve multiple stack histories with shared ancestry. It is a generic data structure rather than a parser-specific implementation; the GLR parser supplies the state and value types it needs.
 
-`gss.hpp` implements `gss<STATE, VALUE>`, a graph-structured stack used by the hotplace GLR parser. Unlike an ordinary LR stack, a GSS can retain several active heads and connect them to shared parent nodes so that alternative parser paths do not have to be copied into independent stacks.
+An ordinary stack has one predecessor for each entry. A GSS node can have multiple parents, so diverging parse paths can share ancestry without copying every preceding stack entry.
 
 ## 2. Data Model
 
-```text
-                 GSS
-                  │
-          ┌───────┴──────────┐
-          ▼                  ▼
-       head A            head B
-          │                  │
-          └── shared path ───┘
-                  │
-               parent
-                  │
-                root
-```
+### Node and stack indexes
 
-Each `gss_node<STATE, VALUE>` stores a parser/application state, an associated value, and zero or more parent nodes. `gss` maintains active `heads` and an index of nodes by state.
+t_gss_node<STATE, VALUE> contains:
 
-### Operations used by GLR
+- state — caller-defined state label.
+- value — caller-defined associated value.
+- parents — zero or more shared_ptr links to predecessor nodes.
 
-The GLR parser currently uses the following operations:
+t_gss contains two indexes:
 
-- `push_root()` — create the initial state-0 node.
-- `push()` — create a new state/value node connected to an ancestor and add it as a head.
-- `get_heads()` — obtain the active parser paths.
-- `pop()` — retrace parent paths for a reduction depth.
-- `retrace_paths()` — enumerate paths of a requested depth without flattening the graph into separate stacks.
-- `traverse_*()` — generic graph traversal helpers.
+- heads — the list of currently registered head nodes.
+- node_map — an unordered_multimap from state to every node created with that state.
 
-The important parser operation is `pop()`: a GLR REDUCE action needs every relevant ancestor path of the production's RHS length. The parser then looks up the GOTO state from each ancestor and pushes the reduced node back into the GSS.
+~~~text
+t_gss<STATE, VALUE>
+├── heads: vector<shared_ptr<node>>
+├── node_map: state → node (multiple nodes per state)
+└── node
+    ├── state
+    ├── value
+    └── parents: vector<shared_ptr<node>>
+~~~
 
-```text
-GLR REDUCE
-    │
-    ▼
-gss::pop(head, rhs_len)
-    │
-    ▼
-ancestor paths
-    │
-    ├── path 1 → GOTO → new head
-    ├── path 2 → GOTO → new head
-    └── ...
-```
+Nodes are allocated with std::make_shared. Parent links share node lifetime across paths. The GSS owns VALUE according to its normal value semantics; if VALUE is a raw pointer such as parse_treenode*, the shared pointer manages the GSS node, not the pointed-to parse-tree object.
+
+
 
 ## 3. Behavior Model
 
-### Shared ancestry and path depth
+### Path enumeration and traversal
 
-A GSS node can have multiple parents, and multiple active heads can share ancestors. Consequently, a reduction of depth `n` must enumerate all reachable ancestor paths of the requested depth rather than repeatedly popping one mutable linear stack.
+`retrace_paths(start, depth, callback)` supplies a vector ordered from the selected start node toward its ancestors. Depth is the number of parent-link steps, so a complete path at depth n contains n + 1 nodes. A shared ancestor can appear in more than one reported path when the paths differ above it.
 
-`push()` and parent-link operations affect the graph shape; `pop()` / `retrace_paths()` observe that shape. A bug can therefore appear as a missing or duplicated reduction path even when each individual node's state/value looks valid. The base testcase models this with a root, two alternative nodes that both link to the root, and a merge node whose parents are both alternatives; traversal from the merge must retain both histories.
+Traversal and retracing therefore differ: traversal visits each reachable node once per visited set; retracing enumerates parent paths at the requested depth.
 
-### Ownership and value type
+### Create heads and extend ancestry
 
-The stack is templated over `STATE` and `VALUE`. The GSS stores those values and parent relationships, but parser-specific interpretation belongs to the caller. Inspect the node ownership and cleanup policy in the active implementation before changing lifetime behavior; do not assume the generic GSS owns pointed-to `VALUE` objects merely because the value type is a pointer.
+~~~text
+push_root(state0, value0)
+          │
+          ▼
+        root ───────────────► heads
+          │
+          │ push(root, state1, value1)
+          ▼
+        child ──────────────► heads
+          │
+          └── add_parent(other_parent)
+                   │
+                   ▼
+             shared ancestry
+~~~
+
+create_node() creates and indexes a node but does not register it as a head. push(parent, state, value) creates a node, optionally adds one parent, and appends it to heads; push_root() calls push() with a null parent. add_head() can register an existing node, while clear_heads() clears only the head list and does not clear the node index or destroy nodes still referenced elsewhere.
+
+The GSS does not automatically deduplicate heads or parent links. The caller decides which nodes represent active parser paths and when to change the head set.
+
+### Traverse reachable nodes
+
+~~~text
+traverse_all()
+    │ for each registered head
+    ▼
+node.traverse(visitor, visited)
+    │ visit current node once
+    ▼
+visit each parent recursively
+~~~
+
+traverse_all() shares a visited set across all heads, so a shared ancestor is visited once during that call. traverse_from() uses a fresh visited set for the selected node. traverse_where() searches from heads until it finds the first node satisfying the predicate, then traverses from that node. traverse_by_state() finds every indexed node with the requested state and traverses from each; each traverse_from() call has its own visited set.
+
+### Retrace paths for a reduction
+
+~~~text
+             Merge (head)
+              /        \
+             ▼          ▼
+          branch A   branch B
+              \        /
+               ▼      ▼
+                 Root
+
+retrace_paths(Merge, 2, callback)
+    ├── [Merge, branch A, Root]
+    └── [Merge, branch B, Root]
+~~~
+
+retrace_paths() delegates to the start node's recursive retrace(). Each step appends the current node, follows each parent, and calls the callback when the requested depth reaches zero. The resulting vector starts at the selected head and proceeds toward ancestors. pop() is a wrapper around this operation; it does not remove nodes or mutate the head list.
+
+The implementation uses a path-local visited set to avoid cycles during deeper retracing while allowing separate branches to be enumerated. A missing parent before the requested depth yields no complete path at that depth.
+
+### Backtrack string
+
+backtrack_string() walks from the supplied node toward its first parent until it reaches a node without parents, then prints states in root-to-head order. When a node has multiple parents, this helper follows only parents[0]; it is a single-path diagnostic and is not a complete representation of all GSS branches.
 
 ## 4. Relationships
 
-### Hotplace parser relationship
+- `test/testcase/base/graph/testcase_gss.cpp` builds a four-node fork-and-merge graph and checks that `traverse_all()` visits all four unique nodes, a linear retrace returns `[B, A, Root]` at depth two, and a fork-and-merge retrace returns two three-node paths. It does not assert every intermediate state of every traversal helper; the testcase README records those limits.
+- [Graph module overview](README.md) distinguishes the GSS from the general weighted graph t_graph<T>.
+- [Graph testcase suite](../../../test/testcase/base/graph/README.md) explains the exact node/path assertions and the unconditional assertions used for some traversal calls.
+- sdk/io/parser/glr_parser.cpp is the parser-side GLR implementation; the GSS remains generic and has no dependency on parse-tree semantics.
+- When VALUE is parse_treenode*, GSS node lifetime and parse-tree object lifetime are separate concerns.
 
-The concrete GLR value type is currently a `parse_treenode*`:
+## 5. References
 
-```cpp
-using parse_gss = gss<uint32, parse_treenode*>;
-```
-
-This keeps the generic GSS independent of parsing semantics while allowing `glr_parser` to associate parser states with parse-tree nodes.
-
-```text
-sdk/base/graph/gss.hpp
-        │
-        │ generic STATE / VALUE
-        ▼
-sdk/io/parser/glr_parser.cpp
-        │
-        │ STATE = parser state
-        │ VALUE = parse_treenode*
-        ▼
-parse-tree construction
-```
-
-### Why it belongs in `base/graph`
-
-The GSS is not an ASN.1-specific structure. It is a graph-shaped stack primitive whose immediate consumer is the GLR parser. Keeping it in `base/graph` makes the dependency direction explicit:
-
-```text
-base/graph
-     ▲
-     │
- io/parser/glr
-     ▲
-     │
- io/asn.1
-```
-
-The parser therefore depends on the graph infrastructure; the graph module does not depend on the parser.
-
-The implementation is in `gss.hpp`; `testcase_gss.cpp` tests the generic stack structure. The GLR consumer is `glr_parser.cpp`, with higher-level consumer coverage under `test/testcase/io/parser/` and `test/testcase/asn.1/`. These tests show how the shared structure is used without making parser semantics part of GSS itself.
+- [Graph-structured stack](https://en.wikipedia.org/wiki/Graph-structured_stack) — background on the shared-ancestry stack model.
+- [Cloning a directed acyclic graph](https://www.geeksforgeeks.org/dsa/clone-directed-acyclic-graph/) — graph traversal and shared-node background referenced by the source header.

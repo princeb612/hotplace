@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -26,7 +26,7 @@ The OQS tests are integration tests around provider discovery and OpenSSL key/op
 
 `testcase_oqs_dsa.cpp` checks key generation, serialization, public-key decoding, signing, and verification.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Source-test evidence
 

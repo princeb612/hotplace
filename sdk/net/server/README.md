@@ -14,9 +14,13 @@
 
 ## 1. Role
 
-`sdk/net/server` is the transport/session orchestration layer between concrete sockets in `sdk/net/basic` and protocol/application handlers such as HTTP. It coordinates platform events, accept and TLS-accept work, producer/consumer queues, session lifetime, raw byte buffering, protocol framing, and callbacks. It is not itself an HTTP parser or TLS record implementation.
+`sdk/net/server` is the transport/session orchestration layer between concrete sockets in `sdk/net/basic` and protocol/application handlers such as HTTP. It coordinates platform events, accept and TLS-accept work, producer/consumer queues, session lifetime, raw-byte buffering, protocol framing, and callbacks. It is not itself an HTTP parser or a TLS record implementation.
+
+The directory README is the integrated view. [Network server execution model](network-server-model.md) details worker orchestration; [network session](network_session.md) details per-connection state; [network stream and protocol](network-stream-and-protocol.md) details buffering, protocol selection, and framing.
 
 ## 2. Data Model
+
+### Server composition overview
 
 ```text
 network_server
@@ -32,87 +36,149 @@ network_server
        └─ network_protocol implementations
 ```
 
-The multiplexer reports readiness/completion; it does not parse messages. The session manager indexes and coordinates session lifetime. Each session owns per-connection state and buffers. The stream/protocol layer turns arbitrary transport reads into protocol-framed messages, and the consumer callback receives interpreted data.
+This is the composition overview: the following sections describe the shared server context and worker coordination, then the per-session buffers and protocol-framing model. The accept and worker execution paths are detailed in the Behavior Model below; UDP/DTLS follows a shared-listener datagram path rather than one accepted stream socket per peer.
 
-### Platform multiplexer inventory
+### Server context and worker coordination
 
-The implemented server paths use `multiplexer_epoll` on Linux and `multiplexer_iocp` on Windows. A `multiplexer_kqueue` class/reference exists, but that alone does not establish a supported macOS/BSD server path. This is an implementation-status note, not a platform support promise.
+```text
+network_multiplexer_context_t
+  ├─ listening socket context + server_socket
+  ├─ platform multiplexer context
+  ├─ callback routine + callback parameter
+  ├─ event concurrency
+  ├─ accept queue + accept queue lock
+  ├─ TLS-accept / producer / consumer worker groups
+  ├─ event_queue : priority scheduling of network_session
+  ├─ network_session_manager
+  └─ network_protocol_group
+```
+
+The context is the shared coordination object passed to worker routines. `server_conf` stores keyed settings such as event, TLS-accept, producer/network, and consumer concurrency plus TCP/UDP buffer sizes. It also carries HTTP-facing options, but those are interpreted by the HTTP layer. With no explicit configuration, `network_server::open()` uses event concurrency 1024, TLS-accept concurrency 1, producer concurrency 1, and consumer concurrency 2. `http_server_builder` initializes its own defaults, so the effective values depend on the construction path.
+
+The implemented multiplexer paths are `multiplexer_epoll` on Linux and `multiplexer_iocp` on Windows. A kqueue class/reference exists, but it does not by itself establish a supported macOS/BSD server path.
+
+### Session and message data
+
+```text
+network_session (per stream connection)
+  ├─ socket/session metadata, peer address, priority
+  ├─ netbuffer_t : platform read buffer
+  ├─ _stream    : queued raw transport input
+  ├─ _request   : protocol-composed messages
+  ├─ network_session_data : application/session key-value state
+  └─ optional http2_session
+
+network_stream_data
+  ├─ owned byte buffer + size
+  ├─ optional UDP peer address
+  ├─ priority + linked-list/reference-count state
+  └─ queue membership
+
+network_protocol_group
+  └─ protocol_id -> reference-counted network_protocol
+       ├─ is_kind_of(prefix)
+       ├─ read_stream(buffer, message_size, state, priority)
+       └─ framing constraints
+```
+
+The multiplexer reports readiness/completion; it does not parse messages. The session manager indexes sessions and coordinates lifetime. A session owns per-connection state and the two streams; the raw stream stores received bytes, while the request stream stores complete protocol units produced by framing. Protocol implementations determine message boundaries and can report parsing state and priority.
+
+TCP/TLS uses a session associated with an accepted socket. UDP/DTLS uses a shared listening socket and preserves peer identity with datagram data; DTLS additionally creates peer-specific security state. Do not model UDP/DTLS as one accepted TCP-like socket per peer.
 
 ## 3. Behavior Model
 
-### End-to-end stream path
+### TCP accept and secure accept
+
+```text
+listening socket
+  -> platform-specific accept/event path
+  -> optional accept-control callback
+       STOP -> reject and close accepted socket
+       CONTINUE -> continue
+  -> clear TCP: session_accepted(...)
+     TLS: accept_queue -> TLS-accept worker
+                       -> server_socket::tls_accept(...)
+                       -> session_accepted(...)
+  -> session manager registration
+  -> multiplexer binding
+  -> ordinary producer/consumer path
+```
+
+On Windows, the source has a dedicated accept-thread path for stream sockets; other event/accept details depend on the platform backend. For secure stream sockets, TCP accept and TLS handshake are distinct stages. The TLS-accept queue isolates handshake work from ordinary event handling. The configured worker count permits independent handshake concurrency; if handshakes arrive faster than workers complete them, queued sockets can accumulate. More workers increase concurrent handshake resource use as well as processing capacity.
+
+### Read, queue, frame, callback
 
 ```text
 socket readiness/completion
-  -> platform multiplexer callback
   -> producer work
-       session_manager.find(socket)
-       session.produce(...)
-       network_stream::produce(raw bytes)
-       enqueue session by priority
+       session_manager.find(event socket)
+       network_session::produce(...)
+       read transport/TLS bytes
+       network_stream::produce(...)
+       schedule session by priority
   -> consumer work
        dequeue session
-       session.consume(protocol_group, ...)
-       network_stream frames buffered bytes
-       network_protocol_group selects a protocol
-       network_protocol::read_stream identifies a message boundary
-       completed message is placed in _request
-  -> consumer callback (message + session context)
+       network_session::consume(protocol_group, ...)
+       _stream -> network_stream framing loop
+       protocol_group selects interpreter
+       protocol::read_stream determines message size/state
+       complete message -> _request
+  -> user callback with message and session context
   -> HTTP/application dispatch
 ```
 
-The three detailed documents below are complementary views of this same path. [Network server model](network-server-model.md) describes worker and lifecycle orchestration; [network session](network_session.md) explains per-connection state and lifetime; [network stream and protocol](network-stream-and-protocol.md) explains byte buffering, protocol selection, and message framing.
+One read is not one message. TCP can split a message across reads or combine several messages into one read. The stream layer accumulates queued nodes, invokes protocol framing, emits complete messages, and retains any trailing bytes needed for a subsequent message. If a protocol reports an incomplete prefix/message, the stream waits for more input; malformed, failed, or oversized states follow the stream's invalid-input cleanup path.
 
-A TCP read can split a message or coalesce multiple messages. The protocol layer—not the multiplexer and not the socket read size—defines message boundaries. UDP/DTLS differs because peer identity accompanies datagrams and DTLS maintains per-peer secure state rather than one accepted TCP-like socket per peer.
+With no protocol registered, the stream can transfer queued data directly. With protocols registered, the protocol group selects an interpreter and framing controls how data is placed in the request stream. The consumer callback is the boundary where completed transport data is handed to higher-level behavior.
 
-### Session manager and lifetime
-
-For TCP/TLS, `network_session_manager::connected()` creates/registers a session for the accepted socket; the server binds the session to the multiplexer. Producer work finds the session by socket, while consumer work processes its buffered stream. Close handling removes the session from the manager's normal lookup path before releasing remaining bindings/resources. The manager indexes sessions; a session owns per-connection buffers and state. Reference counting covers overlap between manager lookups, queues, and callbacks.
-
-### TLS accept queue and concurrency
+### Session lifetime and shutdown
 
 ```text
-accept -> optional accept-control callback -> accept_queue
-       -> tls_accept_threads (1..*)
-       -> server_socket::tls_accept
-       -> session accepted / manager registration
-       -> multiplexer binding
-       -> normal producer -> session -> consumer path
+accepted connection
+  -> session manager registers session
+  -> manager lookup returns a referenced session
+  -> producer/consumer queues and callbacks may hold references
+  -> close path removes normal lookup entry
+  -> socket/multiplexer/session resources are released
 ```
 
-TCP accept and TLS handshake are separate stages. A dedicated TLS-accept worker group keeps handshake work out of the ordinary event callback and can be scaled independently. With no explicit configuration, `network_server::open()` defaults TLS accept concurrency to 1; `http_server_builder` supplies a default of 2. Accepted sockets may accumulate in the queue if handshakes arrive faster than workers complete them. Raising concurrency may improve throughput but also increases simultaneous handshake resource use.
+The manager is an index, not the owner of protocol semantics. Session references can overlap across manager lookups, queues, and callbacks, so reference counting and deregistration order both matter. `network_server::close()` closes the listener, signals and joins worker groups, clears registered protocols, releases the server socket, closes the multiplexer, invalidates the context signature, and deletes the context. Shutdown must also account for pending TLS-accept queue entries and in-flight session work.
+
+### Datagram and DTLS path
+
+A datagram read preserves its source address in `network_stream_data`. The session manager maintains a listening-socket datagram session path; DTLS cookie handling derives a peer-specific key/session and drives the DTLS handshake. This differs from TCP/TLS's accepted-socket lifecycle. QUIC is not implemented as DTLS: it uses UDP transport but has its own packet/session processing in the trial TLS/QUIC layer.
 
 ### HTTP connection
 
-`http_server` owns/configures a `network_server`, registers HTTP protocol handling, and provides HTTP-specific callbacks and routing. `http_server_builder` selects the socket adapter, configures addresses, TLS/certificates, protocol options and concurrency, then builds/starts the server. The network layer handles socket/session/event work; the HTTP layer interprets requests and dispatches application behavior.
+`http_server` configures and owns the `network_server` integration, registers HTTP protocol handling, and supplies HTTP-specific callbacks and routing. `http_server_builder` chooses the socket adapter, addresses, TLS/certificates, protocol options, and concurrency settings. The network layer handles socket/session/event work; the HTTP layer interprets requests and dispatches application behavior.
 
-### Applet progression: multiplexer to network_server
+### Applet progression
 
-The runnable examples show the integration boundary in stages. `test/applet/tcpserver1` and `udpserver1` register sockets with the platform multiplexer and handle events directly. `tcpserver2` and `udpserver2` use `network_server` for listener contexts, event loops, and callbacks. `tlsserver` and `dtlsserver` configure secure socket implementations through that server path. `httpserver1` and `httpserver2` then use `http_server` to add HTTP request handling and routing. These applets are source examples of the layers working together; their presence alone does not state that every runtime combination was tested.
+`test/applet/tcpserver1` and `udpserver1` show direct multiplexer handling. `tcpserver2` and `udpserver2` introduce `network_server` for listener contexts, event loops, and callbacks. `tlsserver` and `dtlsserver` configure secure socket implementations through the server path. `httpserver1` and `httpserver2` add HTTP handling and routing. These are source examples of layer integration, not a claim that every runtime combination has been executed.
 
-## 4. Relationships
+## 5. Relationships
 
-- `network_server.hpp/.cpp` — multiplexer, worker loops, protocol registration, shutdown.
-- [Network server model](network-server-model.md) — detailed worker/lifecycle view.
-- [Network session](network_session.md) — session ownership, stream/datagram state, lifetime.
-- [Network stream and protocol](network-stream-and-protocol.md) — buffering, protocol selection and framing.
-- `network_protocol.hpp/.cpp`, `network_protocol_group.hpp/.cpp` — protocol abstraction and registry.
-- [Basic socket layer](../basic/README.md) — socket backends and adapters.
-- [HTTP server and protocol layer](../http/README.md) — HTTP server, builder, routing and protocol-specific handling.
+- `network_server.hpp/.cpp` — context, worker loops, protocol registration, and shutdown.
+- [Network server execution model](network-server-model.md) — worker and lifecycle orchestration.
+- [Network session](network_session.md) — per-connection state, buffering, and lifetime.
+- [Network stream and protocol](network-stream-and-protocol.md) — raw bytes to framed messages.
+- [Basic socket layer](../basic/README.md) and [socket model](../basic/socket-model.md) — transport contracts and backend selection.
+- [HTTP server and protocol layer](../http/README.md) — HTTP server, builder, routing, and protocol handling.
 - [TLS/DTLS/QUIC](../tls/README.md) — secure protocol/session processing.
-- `test/testcase/net/sample.cpp`, `test/applet/tcpserver1/`, `test/applet/tcpserver2/` — source examples, not a runtime verification claim.
+- `test/testcase/net/sample.cpp`, `test/applet/tcpserver1/`, `test/applet/tcpserver2/` — source examples.
 
-## 5. References
+## 6. References
 
 No external references are currently listed.
 
-## 6. Developer Notes
+## 7. Developer Notes
 
 The class relationship is a responsibility map, not an inheritance diagram:
 
 ```text
 network_server
-  ├─ multiplexer
+  ├─ multiplexer + callback context
+  ├─ worker groups + event_queue
   ├─ network_protocol_group -> network_protocol
   └─ network_session_manager -> network_session -> network_stream
 

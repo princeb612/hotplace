@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — actual platform boundaries and semantics   │
 └──────────────────────────────────────────────┘
@@ -50,7 +50,7 @@ Native sockets, multiplexer contexts, registry keys, and worker-thread contexts 
 
 `test/testcase/io/system/testcase_mlfq.cpp` exercises concurrent producer/consumer use of the queue. `testcase_netlink.cpp` is guarded for Linux/glibc and exercises process events plus `/proc` lookups. These examples do not establish coverage of all socket or multiplexer branches, and this documentation update did not execute them.
 
-## 4. Relationships
+## 5. Relationships
 
 - [System integration overview](README.md) — component map.
 - [Socket utilities](socket.md), [event multiplexer](multiplexer.md), [MLFQ](mlfq.md), [netlink](netlink.md), [Windows Registry](windows_registry.md), and [PE helpers](winpe.md) — component-level contracts.
@@ -70,7 +70,10 @@ Native sockets, multiplexer contexts, registry keys, and worker-thread contexts 
 - `test/testcase/io/system/testcase_mlfq.cpp`
 - `test/testcase/io/system/testcase_netlink.cpp`
 
-## 5. References
+## 6. References
 
-- Linux epoll API: https://man7.org/linux/man-pages/man2/epoll_create.2.html
-- Microsoft Win32 socket, IOCP, Registry and PE/COFF API documentation.
+- [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) — Linux event notification API.
+- [Microsoft Learn: Winsock](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2) — socket APIs and lifecycle.
+- [Microsoft Learn: I/O completion ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports) — IOCP model.
+- [Microsoft Learn: Registry functions](https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-functions) — Windows Registry API.
+- [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE image layout.

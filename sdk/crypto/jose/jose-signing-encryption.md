@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -47,7 +47,7 @@ For multi-recipient JSON serialization, recipient-specific key-management result
 
 The combined `json_object_signing_encryption` API exposes signing, verification, encryption and decryption through one JOSE-facing context. The focused signing and encryption classes contain the specific processing logic and composer paths.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Source-test evidence
 

@@ -47,5 +47,5 @@ Because the Linux branch rejects Unicode mode, code that requires UTF-16/UTF-32 
 
 ## 5. References
 
-- Linux `strings.h` functions: `strcasecmp`, `strncasecmp`
-- Windows `tchar.h` text mapping
+- [Linux man-pages: strcasecmp(3)](https://man7.org/linux/man-pages/man3/strcasecmp.3.html) — POSIX-style case-insensitive string comparison.
+- [Microsoft Learn: Generic-text mappings in tchar.h](https://learn.microsoft.com/en-us/cpp/text/generic-text-mappings-in-tchar-h?view=msvc-170) — Windows generic-text compatibility macros.

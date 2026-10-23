@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -37,6 +37,25 @@ Scans the supplied path for slash or backslash separators and attempts to create
 
 The helper accepts both separator characters when splitting prefixes, but the underlying path and permission semantics remain platform-specific.
 
+### Prefix-creation flow
+
+```text
+makedir(path)
+  ├─ empty path ──────────────► false
+  ├─ platform mkdir succeeds ─► true
+  └─ mkdir fails ─────────────► check existing path
+                                  ├─ already a directory ─► true
+                                  └─ otherwise ────────────► false
+
+makedirp(path)
+  └─ scan slash/backslash separators
+       └─ create each accumulated prefix
+            └─ skip treating drive prefix such as C: as a directory
+                 └─ create final path
+```
+
+`makedirp()` is a prefix-creation helper, not a path canonicalizer. It does not establish symlink safety or normalize all platform-specific path semantics.
+
 ## 4. Relationships
 
 - `sdk/base/system/process.hpp` — accepts a working-directory string for child-process launch; it does not call `makedirp()` automatically.
@@ -45,5 +64,5 @@ The helper accepts both separator characters when splitting prefixes, but the un
 
 ## 5. References
 
-- Linux `mkdir(2)`
-- Windows `_mkdir`
+- [Linux man-pages: mkdir(2)](https://man7.org/linux/man-pages/man2/mkdir.2.html) — POSIX directory creation.
+- [Microsoft Learn: _mkdir, _wmkdir](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/mkdir-wmkdir?view=msvc-170) — Microsoft CRT directory creation functions.

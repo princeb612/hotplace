@@ -23,36 +23,40 @@ client_socket                    server_socket
   └─ naive_udp_client_socket       └─ naive_udp_server_socket
 ```
 
-- TCP uses a stream socket. The server opens a listener and accepts a connected socket; client/server reads and writes operate on the byte stream.
-- UDP uses datagrams. There is no TCP-style accepted stream connection; send/receive operations may carry a peer address, and message boundaries remain significant.
-
-These classes are the transport implementation, not the server's session manager or application protocol.
+The model distinguishes stream endpoints from datagram endpoints. TCP's ordered byte stream and UDP's message boundaries are transport semantics; neither is an application-protocol session model.
 
 ## 3. Behavior Model
 
-### Server path
+### 3.1 TCP server accept and session hand-off
 
 ```text
-network_server
-  │ configure/open listener through server_socket
-  ▼
+network_server configures listener
+             |
+             v
 naive_tcp_server_socket
-  │ listen socket registered with multiplexer
-  ▼
-TCP accept event
-  │ accept() -> connected client socket + peer address
-  ▼
-network_server accept/session flow
-  │ associate socket with session / stream processing
-  ▼
+             |
+         listen()
+             |
+             v
+multiplexer reports accept readiness
+             |
+             v
+accept() -> connected socket + peer address
+             |
+             v
+network_server attaches socket to session/stream
+             |
+             v
 network_stream -> protocol consumer
 ```
 
-This is the architectural hand-off: `naive_tcp_server_socket` performs the native listener/accept/read/write operations, while `network_server` coordinates event registration, accepted-socket lifecycle, sessions, buffering, and protocol dispatch. The naive class does not itself decide which HTTP or other application protocol consumes the bytes.
+`naive_tcp_server_socket` performs native listener/accept/read/write operations. `network_server` coordinates event registration, accepted-socket lifecycle, sessions, buffering and protocol dispatch. The socket wrapper does not decide which HTTP or other application protocol consumes the bytes.
 
-For UDP, do not project the TCP accept flow onto the datagram path. UDP uses socket readiness and datagram receive/send operations rather than creating one accepted stream socket per peer. Higher-level session behavior depends on the caller and selected server implementation.
+### 3.2 UDP datagram path
 
-## 4. Relationships
+UDP has no TCP-style accept step and does not create one connected stream socket per peer. The server reacts to socket readiness, receives a datagram with its peer-address context, and sends datagrams according to the selected API. Any peer/session association is a higher-level caller/server decision; do not infer a TCP session lifecycle from the UDP wrapper.
+
+## 5. Relationships
 
 - `naive_tcp_client_socket.hpp/.cpp`, `naive_tcp_server_socket.hpp/.cpp`
 - `naive_udp_client_socket.hpp/.cpp`, `naive_udp_server_socket.hpp/.cpp`
@@ -62,6 +66,6 @@ For UDP, do not project the TCP accept flow onto the datagram path. UDP uses soc
 - [Trial socket composer](../trial-socket-composer.md) — contrast with the experimental prosumer/handshake path.
 - `../../../../test/testcase/net/basic/` — basic network socket testcase sources.
 
-## 5. References
+## 6. References
 
 No external references are currently listed.

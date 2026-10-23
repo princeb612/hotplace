@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1106
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -18,39 +18,57 @@ Documented with GPT-6
 
 ```text
 odbc_connector
-   |
-   +-- HENV  environment handle
-   |
-   +-- connect(connection string)
-          |
-          +-- HDBC connection handle
-                 |
-                 +-- odbc_query
-                        +-- HSTMT statement handle
+  +-- _env_handle : HENV
+  +-- environment configuration
+        +-- connection-pooling attribute
+        +-- ODBC version attribute
+
+odbc_query
+  +-- _dbc_handle : HDBC
+  +-- _stmt_handle : HSTMT
+  +-- _sql_mode : sync_query | async_query
 ```
 
-The connector stores the environment handle (`HENV`). The returned `odbc_query` is associated with the connection handle (`HDBC`) and manages the statement handle. The query destructor closes the statement and disconnects/frees its connection handle, so callers should release the query through its lifetime mechanism rather than assume the connection is independent.
+odbc_connector owns the environment handle (HENV). A query is associated with a connection handle (HDBC) and manages statement operations through HSTMT; the query lifetime is the boundary for releasing those native resources. The connector's environment lifetime is separate from an individual query's lifetime.
+
+The connection string is passed to the native driver manager rather than represented as a parsed hotplace data structure. Connection-pooling and ODBC-version settings are environment attributes, not fields in the connection string model.
 
 ## 3. Behavior Model
 
-Construction calls `odbc_startup()`, which requests connection pooling, allocates an environment handle, and selects ODBC 3. The startup path reports failure if the relevant ODBC setup calls fail and attempts to free an allocated environment handle during cleanup. The destructor calls `odbc_cleanup()` to free the environment.
+### Startup and teardown
 
-- `connect()` accepts an ANSI connection string and provides a wide-string overload in Unicode builds; it returns the created query through an output parameter.
-- `disconnect()` calls `SQLDisconnect` and frees the native connection handle.
-- `is_connected()` checks `SQL_ATTR_CONNECTION_DEAD`.
-- `close()` releases the query reference; it does not itself implement a second native connection lifecycle.
-- `is_connection_pooled()` reads the process/driver-manager pooling setting.
+1. Construction calls `odbc_startup()`.
+2. Startup requests connection pooling with `SQL_ATTR_CONNECTION_POOLING`, allocates `HENV`, then sets `SQL_ATTR_ODBC_VERSION` to ODBC 3.
+3. If environment setup fails, the cleanup path diagnoses and frees an allocated environment handle and returns the native failure code.
+4. Destruction calls `odbc_cleanup()`, which frees `HENV` if it exists.
 
-The class uses hotplace's shared-reference mechanism for its own lifetime management, while database resources remain native ODBC handles. Success depends on the installed ODBC driver manager and the supplied connection string.
+### Connecting and releasing
 
-## 4. Relationships
+1. `connect()` uses the configured environment and supplied connection string to create a native `HDBC`, then creates an `odbc_query` associated with that handle.
+2. `is_connected()` reads `SQL_ATTR_CONNECTION_DEAD`; it reports connected only when the driver manager successfully reports `SQL_CD_FALSE`.
+3. `disconnect()` requests `SQLDisconnect` and frees `HDBC`.
+4. `close(query)` validates the pointer and releases the query's shared reference. Native statement/connection teardown follows the query's lifetime, rather than being an independent second lifecycle in `close()`.
 
-- [`../README.md`](../README.md) — module data flow
+```text
+connector construction -> HENV setup
+                             |
+connect(string) -> HDBC -> odbc_query/HSTMT
+                             |
+query release -> HSTMT close -> HDBC disconnect/free
+                             |
+connector destruction -> HENV free
+```
+
+Connection success and status depend on the installed driver manager, driver, and connection string. Native diagnostic detail is available through `odbc_diagnose`; the boolean/status helpers do not themselves expose a complete diagnostic record.
+
+## 5. Relationships
+
+- [`README.md`](README.md) — module data flow
 - [`odbc_query.md`](odbc_query.md) — statement and connection-associated query lifetime
 - [`odbc_diagnose.md`](odbc_diagnose.md) — environment and statement diagnostics
 - [`../../types.md`](../../types.md) — shared return-code conversion and query modes
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample's caller-supplied connection configuration
 
-## 5. References
+## 6. References
 
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

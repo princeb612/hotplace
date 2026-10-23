@@ -3,9 +3,9 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
+│ Edition 2 · Revision 1107                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1105                  │
+│ Source basis: Revision 1107                  │
 │ Documentation scope: protocol layers         │
 └──────────────────────────────────────────────┘
 ```
@@ -19,7 +19,38 @@ This directory is not just a collection of RFC notes. The implementation represe
 
 ## 2. Data Model
 
-The local implementation is organized around protocol units, session state, and construction helpers. The hierarchy below is a text map of the main object families, not a claim that every class participates in every connection.
+The directory is best understood as three connected kinds of state: protocol-message objects, connection/session state, and cryptographic state. This map is conceptual; a QUIC connection does not pass through the TLS record layer.
+
+~~~text
+Logical message objects
+  tls_handshake(s)
+    ├─ message-specific fields
+    └─ tls_extensions -> typed extension values
+
+Transport/wire objects
+  TLS  -> tls_record(s)
+  DTLS -> DTLS records + epoch/record-sequence state
+  QUIC -> packets / frames + packet-number-space state
+
+tls_session
+  ├─ aggregate status + per-direction session_info
+  ├─ tls_protection
+  │    ├─ negotiated version / cipher suite
+  │    ├─ negotiation context
+  │    ├─ transcript hash
+  │    └─ derived secrets / key material
+  └─ transport helpers
+       ├─ TLS composer
+       ├─ DTLS record publisher / arranger
+       └─ QUIC session / packet publisher
+
+tls_advisor -> protocol metadata
+crypto_advisor -> primitive-level metadata
+~~~
+
+### Protocol object inventory
+
+The following tree is a quick inventory of representative protocol objects and message families implemented in this directory. It is a navigation aid, not an exhaustive list of every RFC-defined message or a claim that every feature is fully supported.
 
 ```text
 TLS / DTLS
@@ -51,56 +82,123 @@ QUIC
     └─ frame collections and builders
 ```
 
-The protocol families share selected session and cryptographic concepts, but QUIC packets/frames are not TLS records. QUIC integrates TLS handshake and key-schedule behavior while carrying handshake bytes through QUIC CRYPTO frames.
+The TLS/DTLS tree groups session-associated record, handshake, and extension representations. QUIC is shown separately because it protects packets and carries TLS handshake bytes in CRYPTO frames rather than passing through the TLS record layer.
+
+### Principal state and data ownership
+
+- **Negotiation context:** offered and selected cipher suites, signature schemes, supported groups and versions, EC point formats, and key-share groups. The `protection_context` represents negotiation parameters; it is not the cryptographic key store.
+- **Transcript state:** protocol-defined handshake input and its digest/checkpoints. This state is distinct from transport bytes, record headers, and the serialized message objects that supplied the handshake input.
+- **Protection material:** master secret and key-block fields for TLS 1.2; staged secrets and directional traffic key/IV material for TLS 1.3; QUIC Initial and TLS-derived QUIC key/IV/header-protection material. These are different state classes with different derivation inputs.
+- **Independent sequence state:** TLS record sequence numbers, DTLS epoch/record-sequence pairs, and QUIC packet numbers grouped by packet-number space. They are not one shared connection counter.
+- **Pending output:** DTLS record fragments and QUIC queued handshake/frame/stream content are intermediate representations owned by their publication paths, not yet serialized wire units.
+
+The objects above are related through the session/protection boundary, but they are not interchangeable. Session state tracks handshake progress and directional status; protection state retains negotiation, transcript, and key-schedule data; transport helpers maintain the record/packet-specific state required by their wire format.
 
 ## 3. Behavior Model
 
-### Session and protection state
+### Quick architecture map
 
-The session/protection layer owns state that spans individual messages: negotiated parameters, handshake progress, transcript/key-schedule material, and record-protection context. A record or handshake object represents a particular protocol unit; it should not be mistaken for the lifetime owner of the entire secure connection. Use the [protection/session model](tls-protection-and-session.md) for the detailed state boundary and [TLS message model](tls-message-model.md) for record/handshake/extension construction.
-
-### DTLS record publication and arrangement
-
-DTLS uses datagrams, so one handshake flight may need fragmentation and received records may arrive out of sequence. The source exposes two complementary responsibilities:
-
-- `dtls_record_publisher` publishes records from a record/handshake representation and supports a fragment-size setting and an option to place multiple handshakes in a record.
-- `dtls_record_arrange` accepts incoming datagram data and maintains packet state grouped by peer cookie/address and epoch/sequence information so records can be consumed in order.
-
-These components solve opposite sides of the datagram boundary: publication adapts outbound protocol data to record/fragment limits; arrangement makes inbound records available in the required order. They are associated with `tls_session`, so they should be explained as session facilities rather than unrelated standalone utilities.
-
-### QUIC packet publication
-
-`quic_packet_publisher` works at a different wire boundary. It combines QUIC packet/frame material with TLS handshake messages through QUIC CRYPTO-related processing, supports payload-size and packet flags, and publishes packet bytes through a callback/container. Its payload-size setting is not equivalent to DTLS record fragment size: the two publishers operate on different protocol units and overhead rules.
-
-### Shared session abstraction, distinct wire units
+Read this map top-down to locate a responsibility before opening the detailed sections.
 
 ```text
-TLS session
-  └─ TLS record / handshake / extension
-
-DTLS session
-  ├─ record publisher: handshake/record → datagram-sized output
-  └─ record arranger: datagram input → ordered record data
-
-QUIC session
-  └─ packet publisher: handshake/frame material → QUIC packet output
+                  TLS / DTLS / QUIC session
+                             |
+              +--------------+--------------+
+              |                             |
+       handshake messages              negotiated state
+       + extensions                   version / suite / group
+              |                             |
+              +-------------+---------------+
+                            |
+                    tls_protection
+              transcript / key schedule
+                /            |            \
+               /             |             \
+        TLS 1.2 keys    TLS 1.3 secrets    QUIC Initial
+        + key block     + traffic keys    salt + DCID
+               \             |             /
+                \            |            /
+                 +-----------+-----------+
+                             |
+                 +-----------+-----------+
+                 |           |           |
+              TLS record  DTLS record  QUIC packet
+              sequence    epoch + seq  packet number
+              AEAD/CBC    datagram     AEAD + HP
+                 |           |           |
+                TCP          UDP         UDP
 ```
 
-This diagram shows the shared session association and distinct publication boundaries. It does not mean that QUIC carries ordinary TLS records: QUIC integrates TLS handshake/key-schedule behavior while carrying handshake bytes through QUIC's own packet/frame transport.
+**Boundary to remember:** TLS and DTLS use record protection; QUIC uses packet protection. TLS handshake bytes enter QUIC through CRYPTO frames, not through TLS records. The three sequence-number domains are independent.
 
-### Compatibility and implementation boundary
 
-The directory's topic map includes multiple TLS/DTLS generations and QUIC features. The presence of a class or RFC reference does not establish full conformance to every version or extension. Confirm capability claims against the concrete implementation, build guards, and relevant testcase assertions.
+### State and data transformation overview
 
-## 4. Relationships
+```text
+handshake message / extension objects
+        |
+        v
+negotiation context -----> selected version / suite / group
+        |                               |
+        v                               v
+handshake transcript ----------> key schedule / traffic secrets
+                                        |
+                    +-------------------+------------------+
+                    |                   |                  |
+                    v                   v                  v
+              TLS record state   DTLS epoch/sequence   QUIC packet space
+                    |                   |                  |
+                    v                   v                  v
+              record protection   fragment/arrange     packet + frame
+                    |                   |                  |
+                    v                   v                  v
+                 TCP bytes          UDP datagrams       UDP datagrams
+```
+
+This flow describes data dependencies, not a single shared wire format. TLS and DTLS protect records; QUIC protects packets, and carries TLS handshake bytes in CRYPTO frames rather than TLS records.
+
+### Negotiation to protected traffic
+
+1. **Build or parse message objects.** Record classes frame content; handshake classes encode/decode typed messages; extension classes hold typed extension payloads. A message collection can contain multiple handshakes, and record framing is distinct from the handshake message header.
+2. **Resolve identifiers.** Handshake/session code reads cipher-suite, extension, group, signature-scheme, version, or QUIC identifiers. tls_advisor returns metadata from its resource tables; crypto_advisor supplies lower-level algorithm/key metadata. A known hint is not proof that the full algorithm path is usable in every build.
+3. **Negotiate and retain state.** protection_context collects offered parameters and chooses a compatible version/cipher suite/group according to the session negotiation path. The result is retained by tls_protection and session status/configuration; message objects alone do not represent handshake progress.
+4. **Advance transcript and derive material.** As the handshake advances, protocol-defined handshake bytes feed the transcript hash. TLS 1.2 calculation paths derive the master secret/key block; TLS 1.3 paths derive stage-specific secrets and traffic key/IV values. HelloRetryRequest and PSK/early-data branches change which transcript checkpoint and derivation inputs apply.
+5. **Protect the correct wire unit.** TLS/DTLS record paths construct the appropriate record context and encrypt/authenticate content. QUIC Initial protection derives from its version-specific salt and destination connection ID, while Handshake/Application protection uses TLS-derived secrets; packet-number-space-specific AEAD and header protection are applied to QUIC packets. The cryptographic material is shared by purpose, not by wire format.
+6. **Adapt to transport boundaries.** DTLS publication fragments oversized handshake bodies and segments records for datagram output; the receive arranger validates datagram records and buffers them by peer and epoch/sequence until the next expected record is available. QUIC publication maps TLS handshakes to CRYPTO frames and application/HTTP/3/QPACK content to STREAM frames, then packs frames into packets within a payload target.
+7. **Return output to the caller.** Publisher callbacks or output containers receive serialized protocol units. Socket transmission, retransmission/loss recovery, and full peer interoperability are separate responsibilities and should not be inferred merely from a successful serialization path.
+
+### Session lifecycle and state boundaries
+
+tls_session owns the tls_protection object and lazily creates the relevant composer/publisher/arranger/session helpers. Each direction has its own session_info, including handshake status, protection activation, alert queue, and record-number state keyed by protection space. DTLS and QUIC helpers are session-associated because their decisions depend on negotiated state and transport-specific numbering.
+
+The shared abstraction is therefore **session and cryptographic state**, not a shared record format:
+
+~~~text
+TLS:  handshake → TLS record → TLS record protection → stream transport
+DTLS: handshake → DTLS fragmentation/record → datagram transport
+                 receive: datagram → validate/order records → session
+QUIC: handshake → CRYPTO frame ─┐
+       app/HTTP3/QPACK → STREAM ├→ QUIC packet protection → UDP datagram
+                                ┘
+~~~
+
+### Implementation boundary
+
+These flows describe responsibilities visible in source. The presence of a message class, hint, RFC note, or construction test does not establish complete conformance to every TLS/DTLS version or QUIC feature. Keep protocol requirements, implemented code paths, and actually executed test evidence separate.
+
+## 5. Relationships
 
 
 
 - [TLS advisor implementation](tls_advisor.md)
-- [DTLS record arrangement](dtls_record_arrange.md)
-- [DTLS record publisher](dtls_record_publisher.md)
-- [QUIC packet publisher](quic_packet_publisher.md)
+- [DTLS record arrangement](session/dtls_record_arrange.md)
+- [DTLS record publisher](session/dtls_record_publisher.md)
+- [QUIC packet publisher](session/quic_packet_publisher.md)
 - [Protection and session](protection/README.md) and [session model](session/README.md) — connection-spanning state and record protection.
+- [TLS key schedule](protection/tls_key_schedule.md), [transcript hash](protection/tls_transcript_hash.md), and [MtE vs EtM](protection/tls_mte_etm.md) — focused implementation/study notes for the cryptographic stages described in the protection overview.
+- [Protection/session flow](tls-protection-and-session.md) — source call order for transcript checkpoints, Finished verification, derivation, and directional activation.
+- [QUIC/TLS integration](quic-tls-integration.md) — TLS handshake bytes and derived secrets crossing into QUIC CRYPTO frames and packet protection.
+- `sslkeylog_importer` / `sslkeylog_exporter` in `session/` — optional key-log import/export hooks for named session secrets; key-log material is sensitive.
 - [TLS message model](tls-message-model.md) — record, handshake, and extension representations.
 - [QUIC integration](quic/README.md) and [QUIC/TLS integration model](quic-tls-integration.md) — packet/frame transport and TLS 1.3 handshake integration.
 - [TLS advisor](advisor/README.md) — identifier and parameter mapping for protocol choices.
@@ -108,8 +206,9 @@ The directory's topic map includes multiple TLS/DTLS generations and QUIC featur
 - `sdk/net/basic/` — socket/secure-socket integration beneath protocol processing.
 - `sdk/net/http/` — HTTP/2 and HTTP/3 consumers above the relevant transport path.
 - `test/testcase/tls/` — source-level test entry points and protocol test vectors.
+- `test/testcase/quic/` — QUIC packet/number/protection vectors and PCAP SIMPLE paths; see its testcase README for explicit source-level and runtime-evidence boundaries.
 
-## 5. References
+## 6. References
 
 ### Protocol specifications
 
@@ -129,9 +228,11 @@ The directory's topic map includes multiple TLS/DTLS generations and QUIC featur
 - [Cipher suite information](https://ciphersuite.info/cs/)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
+## 7. Developer Notes
+
 ### RFC figures transcribed as plain text
 
-The following text diagrams are retained as quick-reading aids. The authoritative wording and any corrections should be checked against the linked RFCs.
+The following diagrams are retained as quick-reading aids. The authoritative wording and any corrections should be checked against the linked RFCs.
 
 #### RFC 8446 Figure 1: Message Flow for Full TLS Handshake
 ````
@@ -354,7 +455,6 @@ Auth | {CertificateVerify*}
                      Figure 4: DTLS 1.3 Header Examples
 ````
 
-## 6. Developer Notes
 
 ### Key exchange and key-schedule calculation notes
 

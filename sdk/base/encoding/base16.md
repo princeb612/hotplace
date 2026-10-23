@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -16,75 +16,65 @@
 
 ### Introduction
 
-`base16` implements hexadecimal encoding and decoding based on RFC 4648 Base16.
-
-The public API accepts common hotplace data types such as `std::string`, `binary_t`, `basic_stream`, and raw byte buffers. It can also write through `encoder_stream_traits`, allowing the same implementation to target different stream-like containers.
+`base16` implements hexadecimal encoding and decoding based on RFC 4648 Base16. Public overloads accept strings, `binary_t`, `basic_stream`, and raw byte ranges; templated overloads can write to supported stream-like containers through `encoder_stream_traits`.
 
 ## 2. Data Model
 
-### Main operations
+### Input and output
 
-```text
-binary / string
-      │
-      ├── base16_encode() ──> hexadecimal string
-      │
-      └── base16_decode() <── hexadecimal string
-```
+The low-level routines under `lowlevel/base16.*` perform byte conversion. The public `base16.*` layer supplies container overloads and output-buffer integration. `base16_encode_rfc()` and `base16_decode_rfc()` are separate helpers for RFC-style textual byte representations with separators or whitespace.
 
-The low-level implementation lives under `lowlevel/base16.*`; `base16.*` provides the higher-level overloads and stream-buffer integration.
+### Streaming units
 
-`base16_compare()` is provided for hexadecimal string comparison.
-
-### Streaming
-
-`encoder_stream(encoding_base16)` and `decoder_stream(encoding_base16)` retain partial input/output units between calls. This allows Base16 data to be processed when the input arrives in arbitrary chunks.
-
-The Base16 stream path is exercised by the encoding testcase with deliberately different chunk boundaries.
+A Base16 byte is represented by two hexadecimal characters. `encoder_stream` can encode each input chunk immediately. `decoder_stream` retains a single trailing character until another character arrives, so a byte split across two input chunks can be decoded as one unit.
 
 ## 3. Behavior Model
 
-### RFC-style helper
-
-Hotplace also provides `base16_encode_rfc()` and `base16_decode_rfc()` for textual hexadecimal forms used by RFC examples and test material.
-
-The RFC-style parser accepts representations containing separators or spaces, which is useful when an RFC presents bytes in a human-readable form such as:
+### One-shot conversion
 
 ```text
-00:01:02:03:04:05
+byte range / binary_t / basic_stream
+       │
+       └── base16_encode() ──► hexadecimal text
+
+hexadecimal text
+       │
+       └── base16_decode() ──► binary_t
 ```
 
-or:
+The input representation selects the appropriate overload; the low-level conversion operates on a byte range and the wrapper materializes the output representation.
+
+For the templated output-buffer overload, the wrapper asks the low-level encoder/decoder for the required output size, reserves destination capacity, runs the conversion, and commits the written length on success. Unless `encoding_notrunc` is set, the destination is truncated first. Convenience overloads return a string or byte vector around the same conversion path.
+
+### RFC-style textual bytes
+
+The RFC-oriented helpers accept human-readable byte lists such as `00:01:02:03:04:05` or `00 01 02 03 04 05`. This is a parsing/formatting convenience for displayed vectors, not a different Base16 alphabet. Ordinary `base16_decode()` expects the ordinary hexadecimal representation.
+
+### Streaming decode flow
 
 ```text
-00 01 02 03 04 05
+write(encoded chunk)
+      │
+      ├── combine with pending character, if any
+      ▼
+decode complete pairs
+      │
+      ├── save one trailing character
+      └── append decoded bytes
+                │
+             data()/flush()
 ```
 
-This helper is distinct from ordinary Base16 encoding and should not be confused with another Base16 alphabet.
-
-### Tests
-
-`test/testcase/encode/testcase_base16.cpp`
-
-The testcase covers:
-
-- ordinary encode/decode
-- stream-buffer overloads
-- encoder/decoder streams
-- odd-size input handling
-- RFC-style encode/decode examples
-- RFC-style textual byte representations
-
-The RFC cases are particularly useful as executable examples of the distinction between the normal Base16 API and the project's RFC-oriented helper.
+The current `decoder_stream::flush()` decodes a retained suffix only when it contains two characters. A lone final hexadecimal character is not a complete byte. The stream decoder's RFC-style Base16 selector currently returns `not_supported`; the existence of the RFC helper functions does not mean that mode is implemented by `decoder_stream`.
 
 ## 4. Relationships
 
-- `lowlevel/base16.*` implements the byte-level conversion; `base16.*` exposes overloads for strings, byte buffers, and streams.
-- `base16rfc.cpp` contains the RFC-oriented human-readable byte parser/formatter. It accepts separator-oriented forms and is distinct from the ordinary two-hex-digits-per-byte API.
-- `encoder_stream` and `decoder_stream` reuse the Base16 implementation while retaining incomplete units across chunk boundaries.
+- `test/testcase/encode/testcase_base16.cpp` covers ordinary conversion, stream-buffer overloads, encoder/decoder streams, odd-sized chunks, and RFC-style examples.
+- `lowlevel/base16.*` implements byte-level conversion; `base16.*` exposes higher-level overloads.
+- `base16rfc.cpp` handles RFC-oriented human-readable byte forms.
+- `encoder_stream` and `decoder_stream` reuse Base16 conversion while handling chunk boundaries.
 - `sdk/base/basic/dump_memory.*` formats diagnostic hex dumps; it is not an alternative Base16 encoder.
-
-- `base16.hpp/.cpp` and `base16rfc.cpp` provide the public/RFC-oriented paths, while `lowlevel/base16.hpp/.cpp` implements byte conversion. `testcase_base16.cpp` exercises the caller-visible behavior.
+- `test/testcase/encode/testcase_base16.cpp` provides source-level coverage.
 
 ## 5. References
 

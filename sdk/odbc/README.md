@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1106
+Edition 2 · Revision 1107
+Source basis: Revision 1107
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -16,32 +16,45 @@ The ODBC module provides a thin hotplace-oriented wrapper over the native ODBC h
 
 ## 2. Data Model
 
-The public boundary in `types.hpp` defines the query mode, shared class declarations, and conversion from `SQLRETURN` to hotplace `return_t`. Concrete wrappers are implemented under `basic/`.
+The ODBC wrapper exposes native handles and result state rather than hiding them behind an ORM. The important retained objects and intermediate data are:
 
-```text
-odbc_connector
-  environment (HENV) / connection (HDBC)
-       |
-       v
-odbc_query
-  statement (HSTMT), execution and result metadata
-       |
-       v
-odbc_record
-  one fetched row
-       |
-       v
-odbc_field
-  column metadata and retrieved value
+| Object / data | Contents | Lifetime and meaning |
+|---|---|---|
+| `odbc_connector` | ODBC environment handle (`HENV`) and environment configuration | Owns the environment handle; its lifetime is distinct from an individual query. |
+| `odbc_query` | Connection handle (`HDBC`), statement handle (`HSTMT`), query mode, execution state, current result metadata | Governs statement cleanup and the associated connection lifetime. |
+| `_field_information` | One `odbc_field` descriptor per result column | Query-owned metadata for the current result set; not a fetched row. |
+| `odbc_record` | Ordered references to `odbc_field` objects | Caller-provided destination for one fetched row; it does not buffer the full result set. |
+| `odbc_field` | Column ordinal/type/size plus a typed scalar, buffer, or `datetime_t` value | Represents one column's value and optional column-description metadata. |
+| Diagnostic request/result | Native handle type and handle; SQLSTATE, native code, message | Request context identifies the handle; diagnostic records are collected on demand and dispatched to registered callbacks. |
+| `odbc_sinker` state | Retained query reference, timeout threshold, monotonic start timestamp | Polling state only; the sinker does not own a separate connection or statement. |
+| Prepared parameter input | Caller-provided data pointer and size bound to a statement | Parameter storage is not necessarily copied into durable query-owned memory; caller lifetime must cover the driver's use of it. |
 
-Cross-cutting:
-  odbc_diagnose  -> SQL diagnostic records -> registered callbacks
-  odbc_sinker    -> readiness / timeout handling for async query
-```
-
-The main path is connector → query → record → field. Diagnostics and asynchronous readiness are supporting mechanisms rather than additional steps in every query.
+`types.hpp` supplies the query-mode selector and maps native `SQLRETURN` values to hotplace `return_t`. That summary status does not preserve SQLSTATE or the full diagnostic record.
 
 ## 3. Behavior Model
+
+The usual query path and its supporting paths are distinct:
+
+```text
+HENV / odbc_connector
+        |
+ connect(connection string)
+        v
+HDBC / odbc_query / HSTMT
+        |
+ SQLExecDirect or prepare -> bind -> execute
+        v
+result-column metadata (_field_information)
+        |
+ SQLFetch -> SQLGetData per column
+        v
+caller-owned odbc_record -> odbc_field values for one row
+        |
+ more() -> SQLMoreResults -> rebuild metadata for next result set
+
+Failure detail: native handle -> SQLGetDiagRec -> registered callback(s)
+Async mode: odbc_query::execute_statement() -> odbc_sinker::ready() polling / timeout
+```
 
 ### Connection and statement lifecycle
 
@@ -55,7 +68,7 @@ Direct execution uses `SQLExecDirect`. Prepared execution follows `SQLPrepare`, 
 
 Native return codes are converted into coarse hotplace error categories by `error_traits<SQLRETURN, odbc_category>`. Detailed SQLSTATE, native error code, and message are retrieved separately through `odbc_diagnose`. The build links the platform ODBC library and includes Windows Unicode-specific sources selected by the module's CMake configuration. Actual connectivity and data behavior depend on the installed driver manager, driver, connection string, and database.
 
-## 4. Relationships
+## 5. Relationships
 
 - [`types.md`](types.md) — shared ODBC types, query modes, and return-code conversion
 - [`basic/README.md`](basic/README.md) — concrete wrapper classes
@@ -66,6 +79,6 @@ Native return codes are converted into coarse hotplace error categories by `erro
 - [`basic/odbc_sinker.md`](basic/odbc_sinker.md) — async readiness and timeout bridge
 - [`test/testcase/odbc/testcase_odbc.md`](../../test/testcase/odbc/testcase_odbc.md) — sample behavior and verification limits
 
-## 5. References
+## 6. References
 
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

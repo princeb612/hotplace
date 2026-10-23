@@ -8,8 +8,6 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 1106-1107
-    * source tree documents
   * Revision 1086-
     * ASN.1 loader
   * Revision 1031-1084 (Tag 1.139, Revision 1084)
@@ -39,7 +37,7 @@
     * CBOR
 
 * details
-  * Revision 1107
+  * Revision 1108
   * Revision 1105
     * fixed
       * authenticode_verifier - restored the 'revocation check'

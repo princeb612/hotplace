@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -87,38 +87,15 @@ The PEM loader scans for public keys and private keys rather than promising exac
 
 `crypto_keygen` is a convenience layer over the family-specific key builders. Callers identify the algorithm by name (for example, `"P-256"`, `"X25519"`, `"rsaEncryption"`, or `"ffdhe2048"`) and provide key components using familiar parameter names. They do not need to memorize the internal `crypt_item_t` values.
 
-The constructor takes a destination `crypto_key*`, an algorithm name, and an optional text encoding. The encoding defaults to base16. `set(keydesc(...))` supplies the resulting key's description/identifier; subsequent `set(...)` calls supply parameters. `build()` constructs a key from those supplied parameters, while `gen()` asks the keychain to generate new material for the selected algorithm.
+The constructor binds a destination `crypto_key*`, an algorithm identity and a text-encoding choice. The parameter collection can represent encoded text, already-decoded bytes, or boolean metadata such as EC `ybit`. The default text encoding is base16; base16 RFC form, base64 and base64url are also available through `encoding_t`.
 
-```cpp
-crypto_key key;
-
-// Generate a fresh EC key pair.
-crypto_keygen(&key, "P-256")
-    .set(keydesc("p256-generated"))
-    .gen();
-
-// Build an X25519 key from encoded public/private components.
-// The default encoding is base16.
-crypto_keygen(&key, "X25519")
-    .set(keydesc("x25519-imported"))
-    .set("x", "...")
-    .set("d", "...")
-    .build();
-
-// Build an EC key from an uncompressed point representation.
-crypto_keygen(&key, "P-256")
-    .set(keydesc("p256-point"))
-    .set("uncompressed", "04...")
-    .build();
-```
-
-The string overload resolves each name through `crypto_advisor::itemof()`, then stores it internally as a `crypt_item_t`. The enum overload is available for code that already works with the internal identifiers; it is not required for ordinary use. Binary overloads accept already-decoded bytes, while string overloads decode text according to the configured encoding. The `ybit` parameter is a boolean, not encoded bytes.
+The algorithm may be supplied as a readable name or an internal `crypt_item_t`. Names such as `"P-256"`, `"X25519"`, `"rsaEncryption"` and `"ffdhe2048"` identify different key families or named groups; parameter names are interpreted within that selected family rather than as a universal key schema.
 
 #### Parameter quick reference
 
 Parameter names are interpreted in the context of the selected algorithm. A name that is meaningful for one family is not automatically valid for another.
 
-| Algorithm family / representation | Parameters accepted by the generic `build()` dispatch | Meaning |
+| Algorithm family / representation | Key-component parameters | Meaning |
 |---|---|---|
 | RSA (`rsaEncryption`) | `n`, `e`, optional `d` | Modulus, public exponent, and private exponent. Public-only construction needs `n` and `e`; `d` adds private material. |
 | RSA-PSS (`RSASSA-PSS`) | `n`, `e`, optional `d` | RSA-PSS key representation. The generic builder dispatches through the RSA parameter set, but RSA-PSS construction uses a distinct OpenSSL 3 path. |
@@ -127,39 +104,14 @@ Parameter names are interpreted in the context of the selected algorithm. A name
 | DH | `y` + optional `x`; or domain parameters `p`, `q`, `g` plus optional `x` | Public value `y`, private value `x`, and finite-field domain parameters when constructing the group/key from explicit parameters. The algorithm name may identify a named group such as FFDHE. |
 | DSA | `y`, optional `x`, and `p`, `q`, `g` | Public/private values and DSA domain parameters. |
 | Symmetric octet key | `k` | Raw symmetric key bytes. This case is available through the builder's internal dispatch when the selected name resolves to the octet key type. |
-| ML-KEM, ML-DSA, SLH-DSA | No generic parameter set in `build()` currently | The cases exist in the switch but are empty. Use the dedicated OpenSSL 3 named-algorithm/key encoding APIs where supported; do not assume `.set(...).build()` imports these key families. |
+| ML-KEM, ML-DSA, SLH-DSA | Family-specific key material; no shared coordinate/component tuple | These algorithms use algorithm-specific named-key or encoding representations rather than the generic RSA/EC/DH parameter sets. The supported construction route is described in the Behavior Model. |
 
-For EC points, the dispatch priority is significant: if `x` is present and `y` is present, the builder uses the coordinate form; if `x` is present without `y`, it looks for boolean `ybit` and uses the compressed form; if `x` is absent, it looks for `uncompressed`. Supplying an incomplete or mismatched combination does not cause the builder to infer missing coordinates.
+The accepted names describe data supplied to each family builder, not an automatic inference mechanism. The branch priority for EC point representations and the distinct DH construction routes are described in the Behavior Model.
 
-For DH, the current dispatcher first looks for `y`. If present, it calls the public/private-value builder with `y` and `x`; otherwise, it calls the explicit-parameter builder with `p`, `q`, `g`, and `x`. DSA always passes its five available values to the family builder. Required components and algorithm-specific validity are ultimately checked by the family construction path and OpenSSL.
-
-#### Encoding and lifecycle
+#### Encoding inputs
 
 - The default text encoding is base16. The constructor also accepts base16 RFC form, base64, or base64url through `encoding_t`.
 - `set(name, const char*)` stores text for decoding during `build()`; `set(name, binary_t&&)` supplies bytes directly; `set(name, bool)` is used for boolean metadata such as `ybit`.
-- `build()` clears its internal parameter maps after dispatch. Treat a builder as a one-shot parameter collection for each build rather than assuming its supplied values remain available for another call.
-- `gen()` resolves the algorithm name to an NID and invokes the keychain's generation path. The input parameters are not used to construct the key on this path.
-- These methods return the builder for chaining; check the resulting key collection and operation status through the surrounding API/logging conventions rather than interpreting the returned builder reference as a success result.
-
-The core flow is:
-
-```text
-algorithm name ──> crypto_advisor (kty + NID)
-                         |
-       +-----------------+------------------+
-       |                                    |
-     gen()                                build()
-       |                                    |
- keychain generation               collect named parameters
-                                            |
-                                   decode text to bytes
-                                            |
-                                    dispatch by key type
-                                            |
-                         RSA / EC / OKP / DH / DSA / octet
-                                            |
-                                    crypto_key collection
-```
 
 ### 2.6 Algorithm families and construction paths
 
@@ -192,24 +144,75 @@ Compressed and uncompressed are public-point representations, not different EC a
 
 The distinction matters at protocol boundaries. In the TLS key-share path, group metadata determines the algorithm and the expected representation. The hybrid key-exchange implementation explicitly uses uncompressed EC point encoding when an EC component is part of the combined share/capsule buffer.
 
-### 2.8 `crypto_keyexchange`: group-specific key agreement and KEM operations
+### 2.8 `crypto_keyexchange`: group and local-key state
 
-A `crypto_keyexchange` instance stores a `tls_group_t` and a local `crypto_key` collection. Group metadata obtained through `crypto_advisor` describes the algorithm family or families, support flags, and component sizes.
+A `crypto_keyexchange` instance stores a `tls_group_t` and a local `crypto_key` collection. Group metadata obtained through `crypto_advisor` describes the algorithm family or families, support flags, component key types, public-share sizes and—where a KEM is involved—capsule sizes.
 
-The API separates distinct protocol actions:
-
-- `keygen()`: create local key material and produce a public share;
-- `keyshare()`: extract the public share from locally retained key material;
-- `exchange()`: combine a peer share with local private material to derive a shared secret for classical key agreement;
-- `encaps()`: encapsulate to a peer's public key and return a capsule plus shared secret;
-- `decaps()`: use locally retained private material and a capsule to recover the matching secret.
-
-For a classical group, the private key remains local while the public share crosses the endpoint boundary. The peer's share is processed together with the local private key. The convenience `keygen(key, kid, share)` path combines group-specific key generation and share extraction. Existing material matching the identifier and expected component can result in `already_exist` rather than silently generating another key.
-
-A KEM is not symmetric ECDHE: the public key is used for encapsulation, and the private-key holder decapsulates the resulting capsule. A hybrid group may contain multiple components, so its metadata determines component order and lengths. The implementation calls out a historical ordering exception for `x25519mlkem768`; callers must follow the selected group's encoding rules rather than assume every hybrid value uses the same concatenation order.
+The model distinguishes locally retained key material from public share bytes, KEM capsule bytes and the derived shared secret. These values have different roles and are not interchangeable: a share or capsule crosses the endpoint boundary, while the private key remains local and the shared secret is consumed by the protocol's subsequent key schedule. Hybrid groups add an ordered component layout; the exact order and lengths are part of the selected group's metadata.
 
 ## 3. Behavior Model
-### 3.1 Key selection is where protocol vocabulary meets key material
+
+### 3.1 Key construction: named input to family-specific object
+
+```text
+algorithm name ──> crypto_advisor (key type + NID)
+                         |
+              +----------+-----------+
+              |                      |
+            gen()                  build()
+              |                      |
+      keychain generation     collect named parameters
+                                     |
+                           decode text to bytes
+                                     |
+                            dispatch by key type
+                                     |
+                     RSA / EC / OKP / DH / DSA / octet
+                                     |
+                             crypto_key collection
+```
+
+The two routes express different intents. `gen()` asks the keychain to generate fresh material for the resolved algorithm; it does not build from the parameter values collected by `set()`. `build()` decodes the supplied values and dispatches to the selected key-family constructor. After `build()` dispatches, its internal parameter maps are cleared, so the builder should be treated as a one-shot parameter collection for that build. The chained return value is the builder itself, not a success status.
+
+The API distinction is visible in these representative call shapes:
+
+```cpp
+crypto_key key;
+
+// Generate a fresh EC key pair.
+crypto_keygen(&key, "P-256")
+    .set(keydesc("p256-generated"))
+    .gen();
+
+// Build an X25519 key from encoded public/private components.
+crypto_keygen(&key, "X25519")
+    .set(keydesc("x25519-imported"))
+    .set("x", "...")
+    .set("d", "...")
+    .build();
+
+// Build an EC key from an uncompressed point representation.
+crypto_keygen(&key, "P-256")
+    .set(keydesc("p256-point"))
+    .set("uncompressed", "04...")
+    .build();
+```
+
+The string-parameter overload resolves each name through `crypto_advisor::itemof()` and stores the resulting `crypt_item_t` entry. String values are decoded using the configured encoding; binary overloads pass bytes directly; `ybit` is boolean metadata rather than encoded bytes. The generic `.set(...).build()` dispatch currently has empty cases for ML-KEM, ML-DSA and SLH-DSA; use the separate OpenSSL 3 named-algorithm/key-encoding paths where supported rather than assuming those families can be imported through the generic parameter map.
+
+#### EC and DH dispatch are data-dependent
+
+For EC input, the builder chooses one representation in a fixed order:
+
+1. If both `x` and `y` are present, use the affine-coordinate path.
+2. If `x` is present but `y` is absent, look for boolean `ybit` and use the compressed-point path.
+3. If `x` is absent, look for `uncompressed` and use the uncompressed-point path.
+
+It does not infer missing coordinates from an incomplete set of parameters. The curve identity comes from the selected algorithm name; the point representation comes from the supplied parameter combination.
+
+For DH, the dispatcher first checks whether `y` is present. If so, it sends `y` and optional `x` to the public/private-value construction path. Otherwise, it sends `p`, `q`, `g` and optional `x` to the explicit-domain-parameter path. DSA uses its family constructor with the available public/private and domain values. Family constructors and OpenSSL remain responsible for validating whether the resulting key material is valid.
+
+### 3.2 Key selection is where protocol vocabulary meets key material
 
 JWK and COSE_Key carry standard key parameters and format-specific metadata. The key layer is responsible for turning supported representations into common key objects and making those objects available to operations. The protocol layer still determines which algorithm is negotiated or declared and what constraints apply.
 
@@ -222,25 +225,25 @@ The selection overloads make this boundary visible:
 
 A `kid` is a lookup identity, not proof that the key is suitable. Algorithm, key type, usage, group, and available key components must still match the operation. A selection result also does not by itself prove that an encoded key is valid for every use allowed by the surrounding protocol.
 
-### 3.2 Loading and construction are not protocol validation
+### 3.3 Loading and construction are not protocol validation
 
 The load path determines how bytes are decoded and which object type is attempted. The construction path determines whether the supplied components can form a supported OpenSSL key. Neither path alone implements all protocol-level validation, authorization, trust decisions, or algorithm-policy checks.
 
 This matters especially for keys with both public and private components. A public-only JWK or COSE_Key can be appropriate for verification or peer key agreement, while a private key may be required for signing or decapsulation. The key container does not make private material public merely because it can export a public representation; callers must request the intended representation and operation.
 
-### 3.3 Classical key agreement: share bytes are not key objects
+### 3.4 Classical key agreement: share bytes are not key objects
 
 The group-specific key-generation path obtains group metadata, checks support flags, and creates the appropriate local component keys. `keyshare()` extracts public components into the output buffer. For hybrid groups it extracts the additional component and appends it according to that group's layout.
 
 When the peer share arrives, `exchange()` dispatches according to the selected group and combines the peer's encoded public material with local private material. The group metadata determines how the incoming bytes are split and which algorithm implementation handles each component. The resulting shared secret is operation output; it is not the original public share and must be passed into the protocol's subsequent key schedule by the appropriate consumer.
 
-### 3.4 TLS owns handshake orchestration
+### 3.5 TLS owns handshake orchestration
 
 TLS uses `crypto_keyexchange` for key-share operations, but the key layer does not own the TLS handshake. TLS chooses and negotiates supported groups, places key shares in handshake extensions, retains the relevant state, processes peer messages, and feeds the shared secret into the TLS key schedule. The key layer supplies the cryptographic material and group-level operation.
 
 This distinction is particularly important in TLS 1.3: the public key share is handshake data, while traffic secrets and record-protection keys are derived later through the TLS key schedule. The key directory should not be described as if `crypto_keyexchange` alone implements the TLS handshake or the full key schedule.
 
-### 3.5 Hybrid groups: how the three combinations are distinguished
+### 3.6 Hybrid groups: how the three combinations are distinguished
 
 The implementation does not parse a group name to guess its components. It asks `crypto_advisor::hintof_tls_group()` for a `hint_group_t`. The hint contains a `first` component and, for hybrid groups, a `second` component. Each component specifies its key type (`kty`), algorithm NID, public-key size (`keysize`), and—when it is ML-KEM—capsule size (`capsulesize`). The `tls_flag_hybrid` flag selects the two-component path; the component types decide which algorithm is called and where each byte range belongs.
 
@@ -277,13 +280,51 @@ secp384r1mlkem1024
 
 The component order is therefore an explicit property of the group metadata and its implementation, not a convention that can safely be inferred from the group name alone. Keep the metadata, byte offsets, share generation, encapsulation, and decapsulation paths synchronized when adding or changing groups.
 
-### 3.6 Failure handling and sensitive data
+### 3.7 Key-exchange lifecycle
+
+The group metadata selects both the operation family and the layout used to interpret the bytes:
+
+```text
+tls_group_t
+    |
+    v
+crypto_advisor::hintof_tls_group()
+    |
+    v
+component metadata (key type, NID, sizes, hybrid flag)
+    |
+    +-- keygen() ──> local key material
+    |                    |
+    |                    v
+    |               keyshare() ──> public share bytes
+    |
+    +-- classical exchange()
+    |        local private key + peer share
+    |                    |
+    |                    v
+    |              shared secret
+    |
+    +-- KEM encaps()
+    |        peer public key ──> capsule + shared secret
+    |
+    +-- KEM decaps()
+             local private key + capsule
+                         |
+                         v
+                   shared secret
+```
+
+For a classical group, `keygen()` creates local key material and `keyshare()` extracts the public component. The convenience `keygen(key, kid, share)` combines those two steps. `exchange()` consumes the peer's encoded share together with local private material. If matching material already exists for the requested identifier and component, the implementation can return `already_exist` instead of generating another key.
+
+KEM encapsulation is a different exchange shape: the peer's public key produces a capsule and shared secret; the private-key holder uses its private key and that capsule in `decaps()` to derive the corresponding secret. A hybrid group composes multiple component operations, and the group metadata determines each component's byte offset and ordering. The caller passes the resulting shared secret to the protocol's key schedule; this class does not implement the TLS handshake or schedule itself.
+
+### 3.8 Failure handling and sensitive data
 
 The implementation returns status codes for invalid parameters, unsupported algorithms or groups, failed decoding/construction, and OpenSSL operation failures. A non-null output buffer or populated collection is not proof of success; callers must check the result of each operation.
 
 OpenSSL reference counting controls object lifetime; it does not erase application copies of private values or derived secrets. Callers remain responsible for the lifetime and handling of sensitive byte buffers. Borrowed pointers must not outlive the object or collection that owns their reference, and callers that request `up_ref = true` must release the extra reference.
 
-## 4. Relationships
+## 5. Relationships
 
 ### 4.1 Internal implementation boundaries
 
@@ -361,7 +402,9 @@ OKP raw public/private bytes --> add_okp()
 
 This diagram maps the construction interfaces; it does not imply that every family supports every `crypto_keygen::build()` parameter route. In particular, the OpenSSL 3 named-algorithm path and the empty ML-KEM/ML-DSA/SLH-DSA cases in the generic `build()` dispatcher must be treated separately.
 
-### Implementation and source entry points
+### Implementation entry points
+
+The source files listed in §4.1 define the key object, key collection, key construction, key generation, and group exchange boundaries. The links in §4.2 and §4.3 are conceptual maps of those boundaries, not a substitute for the concrete contracts and limitations described in the Data Model and Behavior Model.
 
 ### Local implementation documents
 - [Crypto primitives](../README.md)
@@ -371,18 +414,7 @@ This diagram maps the construction interfaces; it does not imply that every fami
 - [TLS](../../../net/tls/README.md)
 - [Key testcases](../../../../test/testcase/crypto/key/README.md)
 
-### Specifications and implementation references
-
-- [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517) — JWK key parameter names and representation.
-- [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037) — OKP keys in JOSE.
-- [RFC 7748 — Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.
-- [RFC 7919 — Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for TLS](https://www.rfc-editor.org/rfc/rfc7919) — named FFDHE groups.
-- [RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446) — TLS 1.3 named groups, key shares, and key schedule.
-- [RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process](https://www.rfc-editor.org/rfc/rfc9052) — COSE structures and processing.
-- [OpenSSL EVP_PKEY documentation](https://docs.openssl.org/3.0/man7/EVP_PKEY/) — OpenSSL's public-key object abstraction.
-- [OpenSSL encoder context documentation](https://docs.openssl.org/3.5/man3/OSSL_ENCODER_CTX_new_for_pkey/) and [decoder context documentation](https://docs.openssl.org/3.5/man3/OSSL_DECODER_CTX_new_for_pkey/) — OpenSSL 3.x key encoding/decoding paths.
-
-### 4.4 Source-test coverage map
+### Source-test coverage map
 
 The key testcase directory covers several distinct contracts rather than one undifferentiated “key support” claim:
 
@@ -395,3 +427,13 @@ The key testcase directory covers several distinct contracts rather than one und
 
 These are source-level coverage references. They do not mean every algorithm/provider combination runs successfully in every build. In particular, post-quantum key generation and KEM paths depend on the OpenSSL version and provider capabilities described above.
 
+## 6. References
+
+- [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517) — JWK key parameter names and representation.
+- [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037) — OKP keys in JOSE.
+- [RFC 7748 — Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.
+- [RFC 7919 — Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for TLS](https://www.rfc-editor.org/rfc/rfc7919) — named FFDHE groups.
+- [RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446) — TLS 1.3 named groups, key shares, and key schedule.
+- [RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process](https://www.rfc-editor.org/rfc/rfc9052) — COSE structures and processing.
+- [OpenSSL EVP_PKEY documentation](https://docs.openssl.org/3.0/man7/EVP_PKEY/) — OpenSSL's public-key object abstraction.
+- [OpenSSL encoder context documentation](https://docs.openssl.org/3.5/man3/OSSL_ENCODER_CTX_new_for_pkey/) and [decoder context documentation](https://docs.openssl.org/3.5/man3/OSSL_DECODER_CTX_new_for_pkey/) — OpenSSL 3.x key encoding/decoding paths.

@@ -74,20 +74,10 @@ fp64  <-> fp16 / related native conversions
 ```
 
 The source also provides helpers for converting values when a smaller representation is sufficient. `ieee754_as_small_as_possible()` examines a native floating-point value and selects the smallest supported representation according to the implementation's conversion rules.
-### Tests
-
-Primary test:
-
-- `test/testcase/base/system/testcase_ieee754.cpp`
-
-The testcase covers fp16/fp32/fp64 conversion as well as representation classification and special values.
-
-### Status
-
-This is a low-level system utility supporting representation inspection and floating-point format conversion. It is not intended to replace the exact arithmetic types documented in `floating_point.md`.
-
 ## 4. Relationships
 
+- This is a low-level representation utility, not a replacement for the exact arithmetic types documented in `floating_point.md`.
+- `test/testcase/base/system/testcase_ieee754.cpp` — source-level coverage for fp16/fp32/fp64 conversion, representation classification, and special values.
 ### Relationship to `floating_point`
 
 The two facilities solve different problems:

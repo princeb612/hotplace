@@ -53,4 +53,4 @@ The custom-deleter overloads preserve the supplied deleter type in the returned 
 - C++11 compatibility — these helpers should not be mistaken for a new language-standard requirement.
 ## 5. References
 
-- C++14 `std::make_unique` standard-library API
+- [cppreference: std::make_unique](https://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique) — C++14 standard-library API used as a comparison point for the C++11-compatible helper.

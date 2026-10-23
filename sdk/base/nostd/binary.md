@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -23,11 +23,7 @@ The first builds a byte sequence. The second tracks multiple named byte sequence
 
 ## 2. Data Model
 
-### `binary_t` construction
-
-`binary_push()` appends one byte. `binary_append()` overloads append integers, floating-point values, strings, binary buffers, or raw byte ranges. Integral overloads may accept a transformer such as `hton32`; floating-point overloads convert through the IEEE-754 helpers before appending the resulting integer representation.
-
-`binary_append_n()` controls the requested output width. It can emit fewer bytes than the source type or pad a wider requested field. Callers must select the intended wire width and byte-order transformer explicitly.
+`binary_t` is the contiguous byte-sequence representation used by the append helpers. `t_binaries<T, TAG>` is a separate tagged accumulator whose entry layout is described below.
 
 ### `t_binaries<T, TAG>` entries
 
@@ -90,14 +86,11 @@ The overload returning a whole `binary_t` moves the buffer out and then clears o
 
 `reserve()` creates a persistent entry with a tag and the keep-entry flag. `set_tag()` / `get_tag()` update or retrieve metadata, while `for_each()` enumerates entries under the internal lock. The callback therefore runs while the lock is held; avoid re-entering the same `t_binaries` object from that callback.
 
-## 4. Relationships
+## 5. Relationships
 
 - [Shared types](../types.md) — defines `binary_t`.
 - [Endian and wire integers](../system/endian-and-wire-integers.md) — provides the byte-order transformers and custom-width helpers.
 - [IEEE-754](../system/ieee754.md) — converts native floating-point values to their bit representation.
 - [Range set](range_set.md) — `t_binaries` uses a range set to track received/written spans.
 - `sdk/base/system/critical_section.hpp` — protects entry mutations and metadata access.
-- `sdk/base/encoding/` — encoders can consume the byte buffers produced by these helpers. The implementation is split between `binary.hpp` and `binaries.hpp`; `testcase_binary.cpp` provides source-level examples. The developer note below records unresolved questions about `bin_wait_fin` and `produce()` and is intentionally retained.
-
-## 6. Development Notes (for maintainer review)
-The source defines `bin_wait_fin` and stores it through `reserve()`; its operational effect should be checked at the consumer before relying on it as a complete-message guarantee. Also, the sequential `produce()` overloads assign the result of `assign()`/`append()` to a `return_t`, while the corresponding overloads currently return `void`. No in-repository call site for `t_binaries::produce()` was found in this pass; instantiate and verify these overloads before depending on them.
+- `sdk/base/encoding/` — encoders can consume the byte buffers produced by these helpers. The implementation is split between `binary.hpp` and `binaries.hpp`; `testcase_binary.cpp` provides source-level examples.

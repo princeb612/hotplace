@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -41,6 +41,8 @@ This makes the algorithms usable with byte/character arrays and token-like seque
 
 The suffix-related pair is intentionally distinguished: `t_suffixtree` expands every suffix into a trie-like structure, while `t_ukkonen` stores edge intervals and suffix links for an incrementally constructed compressed suffix tree.
 
+## 3. Behavior Model
+
 ### How to choose the matching model
 
 ```text
@@ -58,8 +60,6 @@ Sequence matching / indexing
 
 This is a problem-shape map, not an inheritance diagram: the algorithms have separate APIs and state models. Only the wildcard-aware matcher and reducer are implemented as extensions of Aho-Corasick.
 
-## 3. Behavior Model
-
 The algorithms differ in when they preprocess and what they return:
 
 - **Preprocess then query:** KMP's `learn()` builds a failure table; Aho-Corasick's `insert()` collects patterns and `build()` computes failure links; regex contexts compile an expression before repeated searches.
@@ -67,6 +67,23 @@ The algorithms differ in when they preprocess and what they return:
 - **Interpretation during matching:** Standalone wildcard matching uses caller-selected wildcard symbols. Aho-Corasick's wildcard subclass integrates wildcard transitions into multi-pattern search; it is not the same implementation as `t_wildcards`.
 - **Higher-level token reduction:** `aho_corasick_reducer.hpp` extends the automaton with virtual token groups, sub-pattern rules, repeat rules and block reduction. This is a bridge between token matching and parser-oriented structure, not a generic parser.
 - **Backend-dependent matching:** Regex behavior is selected at compile time. In the current source, older GCC builds use PCRE because the project's supported legacy toolchain cannot rely on a working `std::regex` implementation; newer GCC and MSVC use `std::regex`.
+
+### Source-flow overview
+
+```text
+Caller sequence
+  └─ memberof / element normalization
+       ├─ KMP: learn failure table ─► first-match scan
+       ├─ Trie: follow prefix path ─► terminal-key / longest-prefix result
+       ├─ Aho-Corasick: build failure/output links ─► multi-pattern ranges
+       │    ├─ wildcard: explore several active states
+       │    └─ reducer: map token spans, collapse virtual tokens, rescan
+       ├─ Suffix indexes: build suffix representation ─► occurrence positions
+       ├─ Standalone wildcard: backtrack from saved `*` checkpoint
+       └─ Regex: compile backend context ─► source ranges and capture ranges
+```
+
+The shared element extractor is an adaptation point, not a shared execution engine. After normalization, each algorithm maintains different state and reports a different result shape: a first index, a key/index or prefix length, a collection of ranges and pattern IDs, a set of occurrence positions, or capture ranges. Select the algorithm by the result and matching semantics the caller needs, not by the fact that all of them accept sequences.
 
 ## 4. Relationships
 

@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -22,25 +22,74 @@ file path ─────────────json_open_file─────�
 ```
 
 ## 2. Data Model
-Both helpers accept `json_t** object`, an input pointer, and an optional `suppress` flag. The text form delegates to `json_loads()`; the file form delegates to `json_load_file()`. The wrappers return hotplace `return_t` status values so callers can use the project's normal error-handling conventions while retaining Jansson's object model.
+
+### Inputs, output slot, and status
+
+Both wrappers accept an output slot `json_t** object`, an input pointer, and an optional `suppress` flag. The input is either a NUL-terminated JSON text buffer for `json_open_stream()` or a file path for `json_open_file()`. Despite its name, `json_open_stream()` does not consume hotplace's `stream_t`.
+
+The wrapper's return type is hotplace `return_t`; the parsed value is Jansson's `json_t*`. These are separate outputs with separate responsibilities: the status reports whether the wrapper completed successfully, while the pointer identifies the parsed JSON tree.
+
+### Jansson value and ownership
+
+The parsed object remains a Jansson value tree. The wrapper does not translate it into a hotplace-owned JSON model or perform schema validation. Jansson functions such as `json_unpack()` operate on the returned tree.
+
+A successful parse produces a reference that the caller must release with `json_decref()`. The output pointer is an output slot; the wrapper does not release a pre-existing object stored there before assigning the newly parsed root.
+
+### Error context
+
+When parsing fails, Jansson provides a `json_error_t` containing details such as the line and message. The `suppress` flag controls whether the wrapper emits trace information for that parse failure; it does not turn a failed parse into success or change the return status.
 
 ## 3. Behavior Model
-- A null output pointer or null input pointer returns `errorcode_t::invalid_parameter`.
-- If Jansson fails to parse the input, the wrapper returns `errorcode_t::internal_error`. With `suppress == false`, the implementation emits trace information containing the Jansson error line and message; with `suppress == true`, it skips that detailed trace path.
-- On success, the resulting `json_t*` is assigned to the caller's output pointer. The caller owns the reference and must release it with `json_decref()` when finished.
-- This wrapper does not introduce hotplace-owned JSON value types, schema validation, or a JSON serializer. Operations such as `json_unpack()` remain Jansson operations.
 
-The distinction matters in code review: a caller may suppress parse diagnostics when malformed JSON is an expected test/validation outcome, but should still check the returned status before dereferencing the output pointer.
+### Parse JSON text
 
-### Source-level evidence
-There is no dedicated `test/testcase/io/basic` JSON unit test in this source tree. The helper is exercised by real consumer code instead:
+```text
+json_open_stream(&root, buffer, suppress)
+          │
+          ├─ object == nullptr OR buffer == nullptr
+          │      └─ invalid_parameter
+          ▼
+      json_loads(buffer, 0, &jerror)
+          │
+          ├─ root == nullptr
+          │      ├─ suppress == false ─► trace line + Jansson error text
+          │      └─ suppress == true  ─► skip detailed trace
+          │      └─ return internal_error
+          ▼
+      *object = root
+          │
+          ▼
+      return success
+          │
+          ▼
+caller uses Jansson API, then json_decref(root)
+```
 
-- `test/testcase/jose/testvector_akp.cpp` and `test/testcase/cose/testvector_akp.cpp` load JSON test-vector files with `json_open_file()`.
-- JOSE composer code calls `json_open_stream()` to parse encoded/protected header JSON and related text.
+### Parse a JSON file
 
-A representative ownership sequence is: initialize `json_t* root = nullptr`, call `json_open_file(&root, filename)`, check the return value and `root`, access members using Jansson functions such as `json_unpack()`, and finally call `json_decref(root)`. The source comment in `json.hpp` documents this pattern explicitly.
+```text
+json_open_file(&root, file, suppress)
+          │
+          ├─ object == nullptr OR file == nullptr
+          │      └─ invalid_parameter
+          ▼
+    json_load_file(file, 0, &jerror)
+          │
+          ├─ parse / file-read failure
+          │      ├─ suppress == false ─► trace line + error text
+          │      └─ suppress == true  ─► skip detailed trace
+          │      └─ return internal_error
+          ▼
+    *object = root ─► caller's Jansson operations ─► json_decref(root)
+```
 
-## 4. Relationships
+The wrappers assign the output pointer only after Jansson returns a non-null root. Callers must check the returned status before dereferencing the result, and must release a successfully returned reference when finished. If the caller reuses an output slot that already owns a Jansson reference, it must manage that old reference separately before calling the wrapper.
+
+### Source-level usage boundary
+
+No dedicated JSON testcase is present under `test/testcase/io/basic`. The helper is used by JOSE/COSE test-vector loaders and JOSE header-processing code. Those consumers demonstrate integration and ownership patterns, but they are not a dedicated assertion suite for every invalid-parameter, parse-error, or suppression branch.
+
+## 5. Relationships
 - Jansson — owns parsing, JSON value representation, unpacking, and reference counting.
 - `sdk/base/system/trace.hpp` — supplies trace/error reporting used when parsing fails.
 - `sdk/crypto/jose/` and `sdk/crypto/cose/` — use the helper for test vectors, keys, and JOSE header processing.
@@ -49,6 +98,6 @@ A representative ownership sequence is: initialize `json_t* root = nullptr`, cal
 
 - `sdk/io/basic/json.hpp`
 
-## 5. References
+## 6. References
 
-- Jansson API: `json_loads()`, `json_load_file()`, `json_unpack()`, and `json_decref()`.
+- [Jansson API reference](https://jansson.readthedocs.io/en/latest/apiref.html) — JSON loading, unpacking, and reference-counted value management.

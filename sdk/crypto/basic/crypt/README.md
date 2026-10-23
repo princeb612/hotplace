@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -27,22 +27,93 @@ The key distinction is that symmetric ciphering, AEAD, and public-key encryption
 | `crypto_aead` | Common authenticated-encryption interface accepting key, nonce/IV, plaintext/ciphertext, AAD and authentication tag. | `crypto_aead_builder` selects a `crypto_scheme_t`, such as AES-GCM. |
 | `crypto_encrypt` | Public-key encryption/decryption with an `EVP_PKEY`; not the symmetric cipher API. | `crypto_encrypt_builder` selects `crypt_enc_t`, including RSA PKCS#1 v1.5 and RSA-OAEP variants. |
 
-Typical AEAD path:
-
-```text
-crypto_aead_builder.set_scheme(scheme)
-       └─ build() → crypto_aead
-                      └─ advisor maps scheme → algorithm + mode
-                             └─ openssl_crypt → OpenSSL EVP
-```
-
-For direct low-level use, `openssl_crypt::open()` creates the context and `close()` releases it. The `cipher_encrypt` convenience wrapper owns that sequence internally. Public-key encryption follows the separate path `crypto_encrypt_builder` → `crypto_encrypt` → RSA EVP operation.
+The low-level context is the backend state associated with a selected cipher and its key/IV configuration. The higher-level wrappers keep that context lifecycle behind a simpler operation contract; public-key encryption instead carries an `EVP_PKEY` and uses a distinct EVP public-key operation.
 
 ### Builder purpose
 
 Builders resolve a library/protocol identifier into an operation object and hide concrete implementation selection. They do not generate keys, guarantee provider availability, choose a safe nonce for every use case, or define a security policy. The caller still supplies the key and required per-message parameters.
 
 ## 3. Behavior Model
+
+### 3.1 Symmetric cipher lifecycle
+
+```text
+algorithm + mode + key + IV
+             |
+             v
+    openssl_crypt::open()
+             |
+             v
+       crypt_context_t
+             |
+       encrypt / decrypt
+             |
+             v
+    EVP_CipherUpdate / Final
+             |
+             v
+       output bytes
+             |
+             v
+    openssl_crypt::close()
+```
+
+`cipher_encrypt` owns this open → operation → close sequence internally. With the low-level `openssl_crypt` interface, the caller controls the context lifecycle and must close it on all paths. The context is backend state, not the ciphertext or key material itself.
+
+### 3.2 AEAD path: scheme selection, authenticated inputs and result
+
+```text
+crypto_aead_builder.set_scheme(scheme)
+             |
+             v
+           build()
+             |
+             v
+         crypto_aead
+             |
+             v
+ advisor: scheme → algorithm + mode
+             |
+             v
+ openssl_crypt / OpenSSL EVP
+             |
+    +--------+---------+
+    |                  |
+ encrypt            decrypt
+ key, nonce,        key, nonce,
+ plaintext, AAD     ciphertext, AAD, tag
+    |                  |
+    v                  v
+ ciphertext + tag   authentication check
+                       |
+                 plaintext only on success
+```
+
+The scheme selects the operation family; the caller supplies per-message key/nonce and, for AEAD, AAD. During decryption the supplied tag is checked against the selected ciphertext and AAD. The authentication result is part of the operation contract: successful byte processing alone is not enough to treat unauthenticated plaintext as valid.
+
+### 3.3 Public-key encryption path
+
+```text
+crypt_enc_t
+    |
+    v
+crypto_encrypt_builder
+    |
+    v
+crypto_encrypt + EVP_PKEY
+    |
+    v
+RSA EVP encrypt / decrypt operation
+    |
+    v
+output bytes or operation failure
+```
+
+This path is separate from symmetric encryption: the key is an `EVP_PKEY`, and the builder selects a public-key encryption scheme such as RSA PKCS#1 v1.5 or RSA-OAEP. A symmetric mode/IV configuration is not a substitute for the public-key scheme and its parameters.
+
+### 3.4 Operation result and per-message data
+
+Across the paths, the important data differs by operation: symmetric encryption transforms input bytes under a cipher context; AEAD additionally binds AAD and an authentication tag; public-key encryption dispatches using an `EVP_PKEY` and an encryption scheme. Callers must check the operation status before consuming output, and must supply the exact parameter layout expected by the chosen backend.
 
 ### Symmetric cipher versus AEAD
 
@@ -125,20 +196,13 @@ This is a best-effort pacing mechanism. The threshold is checked after each bloc
 
 One detail worth preserving: the second call passes `unitsize = 0`, but `ossl_set_unitsize(0)` returns `invalid_parameter`. Because the test does not check that setter's return value, the prior 4096-byte threshold remains in place. That does not affect the second run's pacing decision because cooltime is set to zero.
 
-#### Review points for a future change
-
-- Measure CPU utilization and throughput on genuinely large buffers/files; the current test mainly verifies encrypt/decrypt round trips over short input.
-- Decide whether the threshold should be checked with `>=` rather than `>`, and document the actual maximum interval semantics.
-- Check and propagate errors from every chunk-level `EVP_CipherUpdate()` call.
-- Decide whether tuning should remain global or become per-context/per-operation, and define synchronization expectations if settings may change concurrently with encryption.
-- Verify that chunking remains correct for every supported cipher mode, especially AEAD modes and block/padding boundaries.
-- Consider a more explicit pacing policy if the goal is to control CPU pressure rather than merely insert sleeps at byte thresholds.
+The implementation questions identified above are tracked in [`follow-up-workspace/README.md`](../../../../follow-up-workspace/README.md) under **CRYPTO-01**; this document retains the current implementation behavior and limitations.
 
 ### Algorithm inventory caveat
 
 The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records combinations represented by the source. It does not guarantee that every algorithm/mode is enabled by every OpenSSL build or provider.
 
-## 4. Relationships
+## 5. Relationships
 
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.
 - `../digest/README.md` and `../mac/README.md` document related digest/MAC primitives.
@@ -160,7 +224,7 @@ The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records co
 - `testcase_crypto_aead.cpp` and `testcase_aead_ccm.cpp` exercise AEAD behavior.
 - CAVP block-cipher vectors, RFC 3394 key-wrap vectors, RFC 7539 ChaCha20/Poly1305 vectors, and CBC-HMAC TLS/JOSE vectors cover specific algorithm contracts. Vector presence should not be read as support for every algorithm/mode in every build.
 
-## 5. References
+## 6. References
 
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 3394 — Advanced Encryption Standard (AES) Key Wrap Algorithm.

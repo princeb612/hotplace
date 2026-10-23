@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -33,70 +33,6 @@ file_stream
 ```
 
 ## 2. Data Model
-### Memory mapping
-
-Memory mapping is an explicit operation rather than an automatic property of `file_stream`.
-
-```text
-open()
-  │
-  ▼
-begin_mmap()
-  │
-  ├── data() → mapped file bytes
-  └── size() → file size
-  │
-  ▼
-end_mmap()
-```
-
-`begin_mmap()` rejects a closed stream and does nothing when the file is empty or already mapped.
-
-The mapping is useful when a caller needs random access to the entire file as a byte array. The direct testcase uses exactly this path.
-
-### Read/write versus mapped access
-
-The class therefore supports two different access styles:
-
-```text
-stream API
-  ├── read()
-  ├── write()
-  ├── seek()
-  └── truncate()
-
-mapped API
-  ├── begin_mmap()
-  ├── data()
-  └── end_mmap()
-```
-
-They are complementary. The testcase writes through the mapped view, unmaps it, seeks to the beginning, and verifies the data through `read()`.
-
-### Formatting output
-
-`printf()` and `vprintf()` do not call the operating-system formatted I/O API directly.
-
-Instead:
-
-```text
-printf / vprintf
-       │
-       ▼
-    bufferio
-       │
-       ▼
-   formatted bytes
-       │
-       ▼
-    write()
-       │
-       ▼
-      file
-```
-
-This reuses the formatting/buffer machinery already provided by `sdk/base/stream`.
-
 ### Stream state
 
 `file_stream` exposes:
@@ -114,6 +50,48 @@ The stream type is reported as `stream_type_t::file`.
 `data()` is meaningful for the active memory-mapped view; ordinary file access should use `read()`/`write()`.
 
 ## 3. Behavior Model
+
+### Memory-mapped access lifecycle
+
+Memory mapping is explicit rather than an automatic property of `file_stream`. `begin_mmap()` rejects a closed stream and does nothing when the file is empty or already mapped.
+
+```text
+open()
+  │
+  ▼
+begin_mmap()
+  │
+  ├── data() → mapped file bytes
+  └── size() → file size
+  │
+  ▼
+end_mmap()
+```
+
+The mapping is useful when a caller needs random access to the entire file as a byte array. The direct testcase writes through the mapped view, unmaps it, seeks to the beginning, and verifies the data through `read()`.
+
+### Read/write and formatting paths
+
+```text
+stream API: read() / write() / seek() / truncate()
+
+printf / vprintf
+       │
+       ▼
+    bufferio
+       │
+       ▼
+   formatted bytes
+       │
+       ▼
+    write()
+       │
+       ▼
+      file
+```
+
+`printf()` and `vprintf()` reuse the formatting/buffer machinery from `sdk/base/stream`, rather than calling the operating-system formatted I/O API directly. The ordinary stream API and mapped access are complementary ways to access the same file, but their active-state requirements differ.
+
 ### Open flags
 
 `filestream_flag_t` describes the file-open policy.
@@ -228,7 +206,7 @@ The test is therefore also a compact example of the intended mmap/read workflow.
 - `test/testcase/io/sample.cpp`
 - `test/testcase/io/sample.hpp`
 
-## 4. Relationships
+## 5. Relationships
 ### Related modules
 
 - `sdk/base/stream/` — common stream, buffer and formatting layer

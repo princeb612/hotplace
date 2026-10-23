@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1107                    │
+│ Source basis: Revision 1107                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -18,7 +18,7 @@
 
 ## 2. Data Model
 
-- `execparam` stores `executable`, an ordered vector of argument strings, `workdir`, and the `io_redirection` switch. `add()` appends a string or formats an integer argument as decimal text. `clear()` clears the executable, argument list, and working directory, but does not reset `io_redirection`.
+- `execparam` stores `executable`, an ordered vector of argument strings, `workdir`, and the `io_redirection` switch.
 - `process_t` defines `spawn()`, `wait()`, `terminate()`, `isrunning()`, and `get_redirection()`.
 - The Linux implementation tracks a PID, exit code, running state, and optional redirection object.
 - The Windows implementation tracks `PROCESS_INFORMATION`, a process handle, and optional redirection object.
@@ -26,6 +26,8 @@
 The public interface is shared, but the operating-system process handles and launch mechanics remain platform-specific.
 
 ## 3. Behavior Model
+
+`execparam::add()` appends a string or formats an integer argument as decimal text. `clear()` clears the executable, argument list, and working directory, but does not reset `io_redirection`.
 
 **`spawn(param)`**
 
@@ -46,6 +48,23 @@ Reports the implementation's current running-state view. Its result is tied to p
 **`get_redirection()`**
 
 Returns the associated redirection interface when the launch path created one. The interface allows the parent to write to child stdin and read child stdout; the caller must respect the object's lifetime and close semantics.
+
+### Child-process lifecycle
+
+```text
+configure executable / arguments / working directory
+  └─ spawn(param)
+       ├─ platform process creation
+       └─ if requested: initialize redirection and expose interface
+
+parent process
+  ├─ write_stdin() / read_stdout() through redirection
+  ├─ isrunning() ─► observe current lifecycle state
+  ├─ wait() ──────► wait for completion and obtain exit result
+  └─ terminate() ─► request termination (separate from wait/cleanup)
+```
+
+Process termination, output draining, and redirection cleanup are distinct concerns. The caller should follow the platform implementation's close/wait contract and should not assume `terminate()` by itself drains pending output or releases every associated resource.
 
 ## 4. Relationships
 
