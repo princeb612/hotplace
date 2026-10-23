@@ -81,8 +81,7 @@ The base object exposes reference-count operations, and test/sample code commonl
 
 The vector-driven and RFC-oriented test sources contain nested structures and scalar cases that exercise this model. Their presence documents source-level coverage, not a claim that the tests were run during this documentation update.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related source
 
 - `cbor_object.*` — shared object boundary, tags, flags, and reference counting.
@@ -97,6 +96,5 @@ The vector-driven and RFC-oriented test sources contain nested structures and sc
 - `test/testcase/cbor/testcase_rfc7049.cpp` — RFC-oriented scalar, tag, and container examples.
 - `test/testcase/cbor/sample.cpp` — sample object construction and representation.
 
-## 6. References
-
+## 5. References
 - [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), including the data-item model and Appendix A examples.

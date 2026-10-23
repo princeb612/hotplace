@@ -78,8 +78,7 @@ Both protocols use static and dynamic tables, but their indexes, wire representa
 
 The current QPACK classes and testcase vectors show implementation coverage for parts of this format; they do not by themselves establish that the complete HTTP/3 server path is enabled.
 
-## 5. Relationships
-
+## 4. Relationships
 - `qpack_encoder.hpp/.cpp` — QPACK field encoding and decoding.
 - `qpack_static_table.hpp/.cpp`, `qpack_dynamic_table.hpp/.cpp` — QPACK-specific tables.
 - [Shared compression infrastructure](../compression/README.md) — common table and compression abstractions.
@@ -89,6 +88,5 @@ The current QPACK classes and testcase vectors show implementation coverage for 
 - [HPACK](../hpack/README.md) — related header compression for HTTP/2, but a different wire format/state machine.
 - `test/testcase/net/qpack/testcase_rfc9204.cpp`, `testcase_capacity.cpp`, and `testcase_qpack_stream.cpp` — source-level QPACK vectors and state/capacity/stream assertions.
 
-## 6. References
-
+## 5. References
 - [RFC 9204 — QPACK: Field Compression for HTTP/3](https://www.rfc-editor.org/rfc/rfc9204)

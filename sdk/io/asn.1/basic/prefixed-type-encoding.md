@@ -44,14 +44,12 @@ tagged type
 
 The source tests cover low- and high-tag-number identifier forms, including malformed high-tag encodings. The examples in [tagging examples in the structural document](structural/README.md#developer-notes) compare the resulting DER bytes with weakly typed TLV trees and strongly typed semantic representations.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Structural representation and tagging examples](structural/README.md) — concrete DER and object-tree examples.
 - [ASN.1 object model](asn1-object-model.md) — semantic objects and their representation visitors.
 - `sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp/.cpp` — tag replacement, wrapper behavior, and linkage propagation.
 - `sdk/io/asn.1/basic/asn1_encode.hpp` — identifier and length encoding.
 - `test/testcase/asn.1/testcase_basic1.cpp` — X.690 identifier, length, and tagged-type encoding cases.
 
-## 6. References
-
+## 5. References
 - ITU-T X.690, especially clauses 8.1–8.14, for BER/DER identifier, length, and tagged-type encoding rules.

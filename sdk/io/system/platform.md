@@ -50,8 +50,7 @@ Native sockets, multiplexer contexts, registry keys, and worker-thread contexts 
 
 `test/testcase/io/system/testcase_mlfq.cpp` exercises concurrent producer/consumer use of the queue. `testcase_netlink.cpp` is guarded for Linux/glibc and exercises process events plus `/proc` lookups. These examples do not establish coverage of all socket or multiplexer branches, and this documentation update did not execute them.
 
-## 5. Relationships
-
+## 4. Relationships
 - [System integration overview](README.md) — component map.
 - [Socket utilities](socket.md), [event multiplexer](multiplexer.md), [MLFQ](mlfq.md), [netlink](netlink.md), [Windows Registry](windows_registry.md), and [PE helpers](winpe.md) — component-level contracts.
 - `sdk/net/basic/` and `sdk/net/server/` — higher-level consumers.
@@ -70,8 +69,7 @@ Native sockets, multiplexer contexts, registry keys, and worker-thread contexts 
 - `test/testcase/io/system/testcase_mlfq.cpp`
 - `test/testcase/io/system/testcase_netlink.cpp`
 
-## 6. References
-
+## 5. References
 - [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) — Linux event notification API.
 - [Microsoft Learn: Winsock](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2) — socket APIs and lifecycle.
 - [Microsoft Learn: I/O completion ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports) — IOCP model.
