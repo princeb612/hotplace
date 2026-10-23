@@ -113,8 +113,7 @@ parse(notation, result)
 - `test/testcase/asn.1/loader/testcase_loader.cpp` — separately inspects tokenization, parse-tree creation, and result publication.
 
 These links describe source-level test paths; this documentation update did not execute the tests.
-## 5. Relationships
-
+## 4. Relationships
 - [Generic parser](../../parser/README.md) — lexer, parser engines, parse-tree model, and table resources.
 - [ASN.1 publisher](asn1_publisher.md) — semantic reconstruction from the parse tree.
 - [ASN.1 runtime](README.md) — module registry and runtime data model.

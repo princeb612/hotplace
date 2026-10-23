@@ -117,7 +117,7 @@ The table version is compared with the receiving grammar revision as a compatibi
 
 test/testcase/io/parser/testcase_parser.cpp::test_asn1_notation() compares LALR and GLR parser instances in both runtime-built and imported-table forms against shared notation vectors. test_load_parsingtable() imports asn1notation.ptb and parses Type1 ::= VisibleString. Follow binary_parsing_table_write.cpp and binary_parsing_table_read.cpp for the serialization boundary.
 
-## 5. Relationships
+## 4. Relationships
 ### ASN.1 maintenance relationship
 
 ASN.1 grammar changes typically cross several boundaries:

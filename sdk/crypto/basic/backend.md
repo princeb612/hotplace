@@ -128,8 +128,7 @@ The encapsulation output has two separate values: the capsule is transmitted to 
 
 Availability remains conditional on the linked OpenSSL version, provider configuration, key type and operation. A wrapper or an algorithm name in a reference table does not by itself guarantee that the backend can instantiate the operation.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Source-test evidence
 
 `test/testcase/crypto/prng/testcase_random.cpp` is the direct random-generation source path. PQC behavior is exercised by the key/signature tests under `test/testcase/crypto/key/`, `test/testcase/crypto/sign/`, and `test/testcase/crypto/pqc/` where present. These cover specific backend configurations and are not proof of universal provider availability.

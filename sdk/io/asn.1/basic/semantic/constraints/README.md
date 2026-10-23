@@ -70,8 +70,7 @@ The constraint classes describe semantic operations; the evaluator executes thos
 
 Do not assume every constraint becomes one numeric interval, or that a notation example proves the current evaluator implements that form. When extending constraint support, trace both the publisher's construction path and the evaluator's handling of the resulting node.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Constraint implementation](asn1_constraints.md) — concrete nodes, evaluator and runtime-set mapping.
 - [Subtype notation](subtype-notation.md) — developer study note with examples and supported-type matrix.
 - [Semantic ASN.1 model](../README.md) — where type constraints belong in the semantic object model.

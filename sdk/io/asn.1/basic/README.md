@@ -66,8 +66,7 @@ Constraint notation is represented in ASN.1 semantic objects, while reusable val
 
 The test tree includes focused semantic-object, structural, visitor, and constraint cases. Those source assertions should be read as scoped coverage, not as a blanket claim of full X.680 conformance.
 
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 Runtime](../runtime/README.md) — module definitions, references, and runtime objects.
 - [Generic parser](../../parser/README.md) — lexer, grammar parser, parse tree, and parser engines.
 - [ASN.1 parser adapter](../runtime/asn1_parser.md) — maps notation to generic parser tokens and trees.
