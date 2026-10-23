@@ -53,8 +53,7 @@ The container side of `nostd` provides STL-like structures used where hotplace w
 
 `set`, tree and range structures are also used by higher-level matching/search code, so they are infrastructure rather than protocol-specific implementations.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Range set](range_set.md) and [string set](string_set.md) implement range/value-set operations; they are separate from the tree and sequence containers.
 - [Runtime set facade](set.md) selects the numeric or string backend based on the value type.
 - `sdk/base/pattern/trie.hpp` provides a prefix trie for sequence matching; it is distinct from the ordered search trees in this document.

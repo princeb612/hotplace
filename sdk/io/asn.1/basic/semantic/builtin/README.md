@@ -26,7 +26,7 @@ A built-in type carries type-specific value/constraint behavior used by the broa
 ### Source-level evidence
 The current `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/` suites are the starting points for built-in type behavior. No dedicated per-type testcase inventory is recorded in this README, so coverage for a specific primitive should be confirmed from the concrete testcase functions and assertions.
 
-## 5. Relationships
+## 4. Relationships
 ### Related areas
 
 - `../` — ASN.1 semantic type hierarchy

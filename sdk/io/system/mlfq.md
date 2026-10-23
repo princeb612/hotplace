@@ -51,8 +51,7 @@ Do not use `mlfq_nonshared_binder` as if it were automatic memory management: in
 
 `test/testcase/io/system/testcase_mlfq.cpp` creates producer and consumer threads. The producer posts 100 heap-allocated integers at random priorities in the range 0–9; the consumer retrieves an item, logs the priority/value and deletes the returned integer. A non-shared binder is used. This demonstrates concurrent queue use and priority ordering, but this document update did not execute the testcase.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Event multiplexer](multiplexer.md) — event notification, distinct from work scheduling.
 - `sdk/net/server/` — related asynchronous producer/consumer architecture.
 - `sdk/base/system/critical_section.hpp`, `semaphore.hpp` — synchronization primitives used by the queue.

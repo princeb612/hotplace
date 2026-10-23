@@ -36,8 +36,7 @@ The data model preserves the distinction between a JWE content-encryption key (C
 
 `json_object_signing_encryption` manages context lifecycle through `open`, `close`, and `clear_context`; callers should follow that lifecycle instead of assuming the context is a stateless value object.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Source-test evidence
 
 The source tests exercise compact and JSON JWS forms, flattened and general JSON JWE forms, and JWK loading. For a direct JWS example, `test_rfc7515_A1()` signs and verifies the RFC 7515 A.1 HS256 vector in multiple serializations. The testcase map lists the other source functions.

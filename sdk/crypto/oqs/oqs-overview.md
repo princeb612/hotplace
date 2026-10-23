@@ -24,8 +24,7 @@ The current integration boundary is the OpenSSL 3 `oqsprovider` adapter describe
 ## 3. Behavior Model
 Provider availability, OpenSSL version, OID registration, and hotplace's common key/operation support are separate constraints. A family name appearing in a background table does not prove that the corresponding implementation is available or tested in a particular environment.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Implementation and test sources
 
 - Source overview content retained below for maintainer review.

@@ -64,8 +64,7 @@ The major paths connect in different ways; they should not be collapsed into a u
 - **Authenticode** follows the PE-specific image-digest and signed-content verification path, then performs signer/certificate checks. It is not a general-purpose certificate-policy framework.
 
 These paths illustrate module boundaries, not complete conformance or runtime test results.
-## 5. Relationships
-
+## 4. Relationships
 ### Module relationships
 
 ### Source-test evidence
