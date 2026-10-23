@@ -71,8 +71,7 @@ This is a navigation model, not a claim that every child uses every stage. For e
 - **Primitive output is not protocol completion.** Digest/MAC/signature bytes, a shared secret or KDF output are inputs to higher-level state machines. TLS, JOSE and COSE remain responsible for their message formats, ordering and protocol-specific validation.
 - **Ownership follows the concrete API.** OpenSSL reference counts, borrowed pointers, byte-buffer lifetimes and builder reuse rules are defined by each child module; they should not be inferred from the common facade alone.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`sdk/crypto/README.md`](../README.md) — crypto subsystem overview and backend boundaries.
 - [`sdk/crypto/advisor/README.md`](../advisor/README.md) — algorithm and parameter lookup.
 - [`sdk/net/tls/`](../../net/tls/README.md) — protocol use of crypto primitives and transcript hashing.
@@ -83,8 +82,7 @@ This is a navigation model, not a claim that every child uses every stage. For e
 
 The module READMEs link to the relevant source and testcase entry points for each primitive family. Testcase references describe source-level coverage and must not be read as proof that the tests ran in a particular environment.
 
-## 6. References
-
+## 5. References
 - [OpenSSL EVP overview](https://docs.openssl.org/3.0/man7/evp/) — common high-level interfaces for cryptographic operations.
 - [OpenSSL EVP_PKEY](https://docs.openssl.org/3.0/man7/EVP_PKEY/) — public-key objects and key-operation interfaces.
 - [RFC 5869: HMAC-based Extract-and-Expand Key Derivation Function (HKDF)](https://www.rfc-editor.org/rfc/rfc5869) — HKDF construction and its extract/expand stages.

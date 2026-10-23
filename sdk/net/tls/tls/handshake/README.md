@@ -97,8 +97,7 @@ The mutable position is significant: a handshake parser operates on a byte range
 - DTLS adds message fragmentation and ordering/reassembly concerns.
 - QUIC carries TLS handshake bytes in CRYPTO frames and uses QUIC packet-number spaces and packet protection.
 
-## 5. Relationships
-
+## 4. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [TLS records](../record/README.md) — record framing and content dispatch.
 - [Extensions](../extension/README.md) — nested typed extension payloads.
@@ -108,8 +107,7 @@ The mutable position is significant: a handshake parser operates on a byte range
 - [Trial TLS composer](../../../basic/trial-socket-composer.md) — source example for constructing and publishing handshake flights.
 - [QUIC](../../quic/README.md) — TLS handshake bytes carried by CRYPTO frames.
 
-## 6. References
-
+## 5. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)

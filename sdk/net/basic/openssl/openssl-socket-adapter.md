@@ -90,8 +90,7 @@ The current `enable_alpn()` implementation explicitly handles `h2` by enabling H
 
 This document describes the integration boundary. TLS handshake messages, extensions, records, key schedule, and QUIC protection belong under `sdk/net/tls/`.
 
-## 5. Relationships
-
+## 4. Relationships
 - `openssl_tls_context.hpp/.cpp`, `openssl_tls.hpp/.cpp`
 - `openssl_tls_client_socket.hpp/.cpp`, `openssl_tls_server_socket.hpp/.cpp`
 - `openssl_dtls_client_socket.hpp/.cpp`, `openssl_dtls_server_socket.hpp/.cpp`
@@ -104,6 +103,5 @@ This document describes the integration boundary. TLS handshake messages, extens
 - [TLS/DTLS/QUIC layer](../../tls/README.md) — protocol/session behavior.
 - [Certificate setup](self-signed-certificate.md) — local certificate-generation note.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

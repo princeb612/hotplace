@@ -131,8 +131,7 @@ This is the current simple HTTP/1.x client path. It does not automatically negot
 
 The router is an optional application-level dispatcher, not the protocol parser and not the network-server callback itself. If the application's consume callback invokes `http_router::route()`, the router can authenticate, resolve a URI handler, or produce a 404 response. The selected handler composes the `http_response`; the response is then serialized/sent through the associated session and active protocol path. The HTTP/2 path must preserve stream identity from frame/session assembly through response construction; a generic session send call does not, by itself, describe the complete HTTP/2 frame sequence.
 
-## 5. Relationships
-
+## 4. Relationships
 - `http_server.hpp/.cpp`, `http_server_builder.hpp/.cpp`
 - `http_client.hpp/.cpp`, `http_router.hpp/.cpp`
 - `http_response.hpp/.cpp` — response composition and version-specific send path.
@@ -146,7 +145,6 @@ The router is an optional application-level dispatcher, not the protocol parser 
 - `test/testcase/net/http/testcase_http.cpp` — source-level request/response/router coverage.
 - `test/applet/httpserver1/` and `test/applet/httpserver2/` — server applet source paths.
 
-## 6. References
-
+## 5. References
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110) — request/response semantics and status codes.
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113) — stream-aware request/response framing.
