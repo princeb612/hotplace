@@ -113,8 +113,7 @@ test vector bytes ─► reader.parse()
 
 This is the source-level test path described by `testvector_cbor.cpp`; this documentation update did not execute it.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related source
 
 - `cbor_reader.*` — parse context and major-type dispatch.
@@ -128,6 +127,5 @@ This is the source-level test path described by `testvector_cbor.cpp`; this docu
 - `test/testcase/cbor/testcase_rfc7049.cpp` — direct encoder and object publisher expected-byte assertions.
 - `test/testcase/cbor/sample.cpp` — sample construction and output.
 
-## 6. References
-
+## 5. References
 - [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), especially major types, additional information, and encoding considerations.

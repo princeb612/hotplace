@@ -88,8 +88,7 @@ wire/configuration cipher-suite ID
 
 A successful TLS metadata lookup means that the identifier is recognized by the resource tables. It does not prove backend availability, policy suitability, successful negotiation, or end-to-end support. Likewise, a successful crypto metadata lookup is not itself an encryption/signature operation.
 
-## 5. Relationships
-
+## 4. Relationships
 - `tls_advisor.cpp`, `tls_advisor_aead_parameters.cpp`, `tls_advisor_quic.cpp`.
 - `tls_advisor_tls_extensiontype_values.cpp`, `tls_advisor_tls_parameters.cpp`.
 - `resource.cpp`, `resource_aead_parameters.cpp`, `resource_ciphersuite.cpp`, `resource_quic.cpp`, `resource_tls_extensiontype_values.cpp`, `resource_tls_parameters.cpp`.
@@ -99,6 +98,5 @@ A successful TLS metadata lookup means that the identifier is recognized by the 
 - [QUIC](../quic/README.md) — QUIC packet/frame and session integration.
 - [TLS overview](../README.md).
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

@@ -90,8 +90,7 @@ HMAC authenticates a message with a secret key and hash function. CBC-HMAC combi
 
 HMAC's digest choice is resolved through common hash metadata/backend operations. CMAC and CBC-HMAC have distinct construction requirements. An algorithm appearing in advisor metadata does not guarantee that the active OpenSSL/provider build offers it.
 
-## 5. Relationships
-
+## 4. Relationships
 - `../digest/README.md` explains the shared hash backend and the difference between an unkeyed digest and keyed HMAC.
 - `../sign/README.md` exposes HMAC through a common sign/verify facade for consumers that share interfaces.
 - `../crypt/README.md` documents cipher/AEAD constructions with their own authentication-tag contracts.
@@ -112,8 +111,7 @@ HMAC's digest choice is resolved through common hash metadata/backend operations
 - `testcase_hmac.cpp` exercises the signing/MAC integration path.
 - These are source-level coverage references; they do not claim the tests were executed in the current environment.
 
-## 6. References
-
+## 5. References
 - RFC 2104 — HMAC: Keyed-Hashing for Message Authentication.
 - RFC 4226 — HOTP: An HMAC-Based One-Time Password Algorithm.
 - RFC 4231 — Identifiers and Test Vectors for HMAC-SHA-224, HMAC-SHA-256, HMAC-SHA-384, and HMAC-SHA-512.

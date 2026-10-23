@@ -96,8 +96,7 @@ These are separate paths. Payload is for a known field layout; the generic parse
 
 The detailed documents below record the actual component-level flow and supported behavior. A standard reference or a conceptual diagram is not, by itself, evidence of complete conformance or test execution.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Dependency direction
 
 ```text
@@ -125,8 +124,7 @@ This is an architectural orientation map, not a complete include graph or a clai
 - The [CBOR Appendix A examples](cbor/rfc8949-examples.md) and [ASN.1 notation study notes](asn.1/basic/README.md#developer-notes) connect the directory overviews to retained component-level study material.
 - Component-level source references and implementation details are maintained in the corresponding directory documents. Test-specific coverage and run evidence belong in the relevant testcase documentation, which is currently being reviewed separately.
 
-## 6. References
-
+## 5. References
 ### Standards and specifications
 
 - [RFC 8949 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949).
