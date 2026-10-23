@@ -129,8 +129,7 @@ The router is not reached directly by the frame parser. The HTTP server's consum
 
 HTTP/2 frames determine the stream and boundaries of compressed header fragments. HPACK interprets the field representations and updates its compression context. The resulting fields populate the shared HTTP model; the HTTP router works with request semantics, not raw HPACK instructions.
 
-## 5. Relationships
-
+## 4. Relationships
 - `http2_frame.hpp/.cpp`, `http2_frame_builder.hpp/.cpp`, and `http2_frame_*.hpp/.cpp` — frame serialization and parsing.
 - `http2_protocol.hpp/.cpp` — protocol recognition and frame framing.
 - `http2_session.hpp/.cpp` — per-stream state and request assembly.
@@ -140,6 +139,5 @@ HTTP/2 frames determine the stream and boundaries of compressed header fragments
 - [Network session](../../server/network_session.md), [stream/protocol](../../server/network-stream-and-protocol.md), and [network server](../../server/README.md).
 - `test/testcase/net/http/testcase_http2_frame.cpp` and `testvector_http2.cpp` — source-level frame/vector cases.
 
-## 6. References
-
+## 5. References
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)

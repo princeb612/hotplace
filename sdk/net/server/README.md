@@ -156,8 +156,7 @@ A datagram read preserves its source address in `network_stream_data`. The sessi
 
 `test/applet/tcpserver1` and `udpserver1` show direct multiplexer handling. `tcpserver2` and `udpserver2` introduce `network_server` for listener contexts, event loops, and callbacks. `tlsserver` and `dtlsserver` configure secure socket implementations through the server path. `httpserver1` and `httpserver2` add HTTP handling and routing. These are source examples of layer integration, not a claim that every runtime combination has been executed.
 
-## 5. Relationships
-
+## 4. Relationships
 - `network_server.hpp/.cpp` — context, worker loops, protocol registration, and shutdown.
 - [Network server execution model](network-server-model.md) — worker and lifecycle orchestration.
 - [Network session](network_session.md) — per-connection state, buffering, and lifetime.
@@ -167,8 +166,7 @@ A datagram read preserves its source address in `network_stream_data`. The sessi
 - [TLS/DTLS/QUIC](../tls/README.md) — secure protocol/session processing.
 - `test/testcase/net/sample.cpp`, `test/applet/tcpserver1/`, `test/applet/tcpserver2/` — source examples.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.
 
 ## 7. Developer Notes

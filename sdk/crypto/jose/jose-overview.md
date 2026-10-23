@@ -83,8 +83,7 @@ The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE k
 ## Interpretation notes
 These tables are a snapshot from the existing document, not a normative declaration of current backend support. Actual behavior also depends on provider/build configuration and key availability. The presence of source tests is useful evidence but does not by itself establish support in every build environment.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Implementation and test sources
 
 
@@ -96,8 +95,7 @@ The direct source-level examples are mapped in [`testcase_jose.md`](../../../tes
 - [JWK and algorithm mapping](jose-key-and-algorithms.md)
 - [JOSE object model and context](jose-object-model.md)
 
-## 6. References
-
+## 5. References
 - RFC 7515 — JSON Web Signature (JWS).
 - RFC 7516 — JSON Web Encryption (JWE).
 - RFC 7517 — JSON Web Key (JWK).

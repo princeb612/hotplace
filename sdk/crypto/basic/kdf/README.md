@@ -85,8 +85,7 @@ The input model selects the family: password KDFs deliberately impose a configur
 
 A KDF does not generate random salts or nonces, store passwords, or manage key lifetime. Password KDFs should not be substituted for HKDF, and HKDF should not be treated as a password-hardening function.
 
-## 5. Relationships
-
+## 4. Relationships
 - `../../advisor/README.md` resolves digest names used by HMAC/HKDF and backend operations.
 - `../digest/README.md` provides digest primitives used by digest-based KDFs.
 - `../key/README.md` documents key objects that may consume derived bytes in key/session workflows.
@@ -106,8 +105,7 @@ A KDF does not generate random salts or nonces, store passwords, or manage key l
 - `testcase_rfc6070.cpp` covers PBKDF2; `testcase_rfc7914.cpp` covers scrypt; `testcase_rfc9106.cpp` covers Argon2; `testvector_rfc4615.cpp` covers AES-CMAC-related material.
 - These vector/testcase files show source-level coverage, not runtime execution or availability in every build.
 
-## 6. References
-
+## 5. References
 - RFC 4615 — The Advanced Encryption Standard-Cipher-based Message Authentication Code-PRF-128 (AES-CMAC-PRF-128).
 - RFC 5869 — HMAC-based Extract-and-Expand Key Derivation Function (HKDF).
 - RFC 6070 — PKCS #5: PBKDF2 Test Vectors.
