@@ -48,8 +48,7 @@ A process event is not a complete process record. The testcase uses `/proc/<pid>
 
 `test/testcase/io/system/testcase_netlink.cpp` registers a handler, waits for SIGINT, then closes the component. The handler distinguishes fork, exec, exit, UID and GID changes; the testcase also queries `/proc` for executable and command-line details. It is compiled only for the Linux/glibc condition in the source. This is not portable coverage and was not executed as part of this documentation update.
 
-## 5. Relationships
-
+## 4. Relationships
 - [System integration overview](README.md) — platform boundary.
 - [Socket utilities](socket.md) — generic socket helper layer; netlink uses its own kernel protocol socket path.
 - [Event multiplexer](multiplexer.md) — readiness/completion dispatch, separate from the producer/consumer process-event queue.
@@ -60,8 +59,7 @@ A process event is not a complete process record. The testcase uses `/proc/<pid>
 - `sdk/io/system/linux/netlink.hpp`
 - `sdk/io/system/linux/netlink.cpp`
 
-## 6. References
-
+## 5. References
 - [Linux kernel documentation: Netlink](https://docs.kernel.org/userspace-api/netlink/intro.html) — Netlink userspace/kernel communication model.
 - [Linux kernel UAPI: connector](https://github.com/torvalds/linux/blob/master/include/uapi/linux/connector.h) — connector identifiers and process-event definitions.
 - [Linux man-pages: proc(5)](https://man7.org/linux/man-pages/man5/proc.5.html) — /proc filesystem interface.

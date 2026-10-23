@@ -110,7 +110,7 @@ The buffer/stream wrappers explicitly reject null input pointers, and stream-out
 
 The current implementation's hotplace status is not a detailed mapping of every zlib return code: the loop stops when the return code is no longer `Z_OK`, but the wrapper does not consistently translate zlib initialization or terminal error codes into distinct `return_t` values. Callers should therefore not interpret `success` alone as proof that every malformed compressed stream was fully validated; where correctness is security- or protocol-critical, the surrounding caller must account for the exact input and expected framing.
 
-## 5. Relationships
+## 4. Relationships
 - `sdk/base/stream/` — stream abstraction used by stream-oriented overloads.
 - `sdk/net/http/http_response.cpp` — HTTP content compression consumer.
 - `sdk/crypto/jose/json_object_encryption.cpp` — JOSE `DEF` compression consumer.
@@ -119,8 +119,7 @@ The current implementation's hotplace status is not a detailed mapping of every 
 
 - `sdk/io/basic/zlib.hpp/.cpp`
 
-## 6. References
-
+## 5. References
 - RFC 1951 — DEFLATE Compressed Data Format Specification.
 - RFC 1952 — gzip file format.
 - RFC 7520 §5.9 — JOSE compressed content example (`zip: DEF`).

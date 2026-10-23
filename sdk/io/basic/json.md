@@ -89,7 +89,7 @@ The wrappers assign the output pointer only after Jansson returns a non-null roo
 
 No dedicated JSON testcase is present under `test/testcase/io/basic`. The helper is used by JOSE/COSE test-vector loaders and JOSE header-processing code. Those consumers demonstrate integration and ownership patterns, but they are not a dedicated assertion suite for every invalid-parameter, parse-error, or suppression branch.
 
-## 5. Relationships
+## 4. Relationships
 - Jansson — owns parsing, JSON value representation, unpacking, and reference counting.
 - `sdk/base/system/trace.hpp` — supplies trace/error reporting used when parsing fails.
 - `sdk/crypto/jose/` and `sdk/crypto/cose/` — use the helper for test vectors, keys, and JOSE header processing.
@@ -98,6 +98,5 @@ No dedicated JSON testcase is present under `test/testcase/io/basic`. The helper
 
 - `sdk/io/basic/json.hpp`
 
-## 6. References
-
+## 5. References
 - [Jansson API reference](https://jansson.readthedocs.io/en/latest/apiref.html) — JSON loading, unpacking, and reference-counted value management.

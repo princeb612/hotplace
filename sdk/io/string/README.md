@@ -51,8 +51,7 @@ HTTP URI/request handling and other URL consumers
 
 URL decomposition, percent escaping/unescaping, tokenization, and character conversion are related string utilities but have different contracts. URL tests do not establish the behavior of the platform-specific character-conversion paths; check the relevant implementation selected by the build.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/base/string/` — general string helpers; names such as `tokenize`/`gettoken` may look similar, so confirm the namespace and header being used.
 - `sdk/base/encoding/base16` — percent-escape hexadecimal representation.
 - `sdk/base/pattern/` — regular-expression helper used by URL decomposition.
@@ -61,8 +60,7 @@ URL decomposition, percent escaping/unescaping, tokenization, and character conv
 - `sdk/crypto/authenticode/` — uses URL decomposition when processing CRL URLs.
 - Implementation entry points are `string.hpp`, `string_charset.cpp`, and `url.cpp`, with platform variants under `windows/` and `unicode/`; check these when determining which conversion path a build selects.
 
-## 6. References
-
+## 5. References
 - RFC 2396 — URI syntax referenced by the implementation comments.
 - RFC 2068 — historical HTTP syntax reference in the source comments.
 
