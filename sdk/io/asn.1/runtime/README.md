@@ -97,8 +97,7 @@ Declaration and resolution are separate. Creating a referenced-type node does no
 - `test/testcase/asn.1/runtime/testcase_publish.cpp`
 - `test/testcase/asn.1/loader/testcase_loader.cpp`
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 The examples below preserve the earlier DER/TLV/semantic-object comparison study. They are illustrative traces for selected schemas and tag combinations, not evidence of complete ASN.1 feature coverage.
 
 ### Tagged and referenced types

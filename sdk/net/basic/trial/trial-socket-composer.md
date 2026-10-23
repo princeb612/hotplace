@@ -132,6 +132,5 @@ The composer callback is the hand-off for already encoded output. TLS passes rec
 ## 5. References
 No external references are currently listed.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 The `trial` prefix marks an experimental composition path, not guaranteed feature parity with OpenSSL. Review a concrete handshake by following the receive path and state update as carefully as the outgoing composer flight.

@@ -73,8 +73,7 @@ The test tree includes focused semantic-object, structural, visitor, and constra
 - [ASN.1 publisher](../runtime/asn1_publisher.md) — reconstructs semantic objects from parse trees.
 - `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/` — source-level model, parser, and publisher cases.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 ### ASN.1 notation boundary (ITU-T X.680)
 
 This grammar excerpt was retained from the original study note. It is a working reference for notation families that matter when following the parser and semantic model; it is **not** a complete transcription of X.680 or a claim of full conformance. In particular, the excerpt covers type/value families and selected productions from Sections 16–45, including built-in and referenced types, constructed values, tagging, character strings, and constraints. Keep the excerpt intact when reorganizing this note: examples and production details are useful evidence of what the study actually examined.
