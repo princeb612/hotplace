@@ -206,7 +206,7 @@ The test is therefore also a compact example of the intended mmap/read workflow.
 - `test/testcase/io/sample.cpp`
 - `test/testcase/io/sample.hpp`
 
-## 5. Relationships
+## 4. Relationships
 ### Related modules
 
 - `sdk/base/stream/` — common stream, buffer and formatting layer

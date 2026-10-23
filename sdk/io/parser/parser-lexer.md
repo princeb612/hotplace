@@ -121,7 +121,7 @@ A lexical context represents tokenization, not grammar acceptance. The next stag
 
 test/testcase/io/parser/testcase_lexer.cpp::test_lexer() feeds a multi-line PersonnelRecord fragment to the lexer. The basic pass asserts 105 tokens; the ASN.1-configured pass registers ::= and --, enables handle_lvalue_usertype, and asserts 93 tokens. test_lexer_hexstring() enables handle_hexstring and compares the actual token-ID sequence for Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String } against an expected sequence.
 
-## 5. Relationships
+## 4. Relationships
 ### Related document
 
 - `parser-generation.md` — grammar symbols and parser table construction

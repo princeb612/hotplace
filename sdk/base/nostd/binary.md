@@ -86,8 +86,7 @@ The overload returning a whole `binary_t` moves the buffer out and then clears o
 
 `reserve()` creates a persistent entry with a tag and the keep-entry flag. `set_tag()` / `get_tag()` update or retrieve metadata, while `for_each()` enumerates entries under the internal lock. The callback therefore runs while the lock is held; avoid re-entering the same `t_binaries` object from that callback.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Shared types](../types.md) — defines `binary_t`.
 - [Endian and wire integers](../system/endian-and-wire-integers.md) — provides the byte-order transformers and custom-width helpers.
 - [IEEE-754](../system/ieee754.md) — converts native floating-point values to their bit representation.

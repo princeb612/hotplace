@@ -47,8 +47,7 @@ For multi-recipient JSON serialization, recipient-specific key-management result
 
 The combined `json_object_signing_encryption` API exposes signing, verification, encryption and decryption through one JOSE-facing context. The focused signing and encryption classes contain the specific processing logic and composer paths.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Source-test evidence
 
 `testcase_rfc7515.cpp` exercises sign/verify and checks the RFC 7515 A.1 HS256 compact serialization against a known output, with additional flattened/general JSON forms. `testcase_rfc7516.cpp` covers RFC 7516 examples. `testcase_rfc7520.cpp` exercises JWS and JWE examples, including multiple content-encryption and key-management combinations. The provided report lists 164 successful checks under the RFC 7520 group.
