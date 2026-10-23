@@ -20,7 +20,6 @@ The index is for navigation and current disposition. Open the linked per-issue f
 | BASE-010 | `sdk/base/nostd/containers` | Reconfirm copy-size and assignment-return concerns in `btree` / `avltree` | [BASE-010.md](BASE001-500/BASE-010.md) |
 | BASE-011 | `sdk/base/system/floating_point` | Analyze large exponent-gap behavior for both signs and add/subtract | [BASE-011.md](BASE001-500/BASE-011.md) |
 | BASE-012 | `sdk/base` revision metadata | Confirm source-basis meaning before changing Revision 1105 labels | [BASE-012.md](BASE001-500/BASE-012.md) |
-
 | BASE-013 | `test/testcase/base/system`, `test/testcase/base/stream` | Focused assertion and stale-comment review | [BASE-013.md](BASE001-500/BASE-013.md) |
 | IO-001 | `sdk/io/parser` | Reconcile old parser TODO/architecture notes with current LALR/GLR implementation | [IO-001.md](IO001-500/IO-001.md) |
 | IO-002 | `sdk/io/asn.1/loader` | Recheck historical loader/PKIX/compiler roadmap against current source and test registration | [IO-002.md](IO001-500/IO-002.md) |
