@@ -61,5 +61,5 @@ Do not use `mlfq_nonshared_binder` as if it were automatic memory management: in
 
 - `sdk/io/system/mlfq.hpp`
 
-## 6. Developer Notes
+## 5. Developer Notes
 The type is described as a multi-level *feedback* queue, but this implementation's visible selection policy is priority-map ordering plus FIFO per priority. The class does not itself calculate priority changes from service time; priority assignment and any feedback policy belong to the caller.
