@@ -94,8 +94,7 @@ The adapter maps the requested scheme to a backend marker; the builder creates a
 
 The applet sources show concrete selection points: `tlsserver` and `dtlsserver` add either `socket_scheme_openssl` or `socket_scheme_trial`; `httpserver1` and `httpserver2` configure an adapter through `http_server_builder`; `netclient` exposes `-T` for the trial client path. These paths share the socket contract, but not universal protocol/certificate compatibility.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Socket model](socket-model.md) — shared client/server contracts and scheme metadata.
 - [Naive sockets](naive/README.md) — direct TCP/UDP.
 - [OpenSSL sockets](openssl/README.md) and [OpenSSL socket adapter](openssl/openssl-socket-adapter.md) — TLS/DTLS backend selection.
@@ -104,8 +103,7 @@ The applet sources show concrete selection points: `tlsserver` and `dtlsserver` 
 - [Network server](../server/README.md) — accept, multiplexer, session, stream, and protocol orchestration.
 - [TLS/DTLS/QUIC](../tls/README.md) — protocol state, record protection, and QUIC packet/frame handling.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.
 
 ## 7. Developer Notes

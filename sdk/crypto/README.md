@@ -55,8 +55,7 @@ A module's presence under `sdk/crypto/` does not imply that every algorithm, pro
 
 The Authenticode PE verifier calculates the PE-specific Authenticode image digest, compares it with the digest described by the signed content, and verifies signer/certificate material. The current sample sets `authenticode_ctrl_t::set_crl` to `1` (CRL download enabled); its source comment notes that this can be set to `0` for air-gapped networks. The presence of revocation-check code does not by itself prove a complete production revocation policy.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`sdk/base/`](../base/README.md) — foundational types, encoding, strings, and utility support.
 - [`sdk/io/`](../io/README.md) — CBOR, JSON, ASN.1/DER, OID conversion, and other representations consumed by crypto-related paths.
 - [`sdk/net/`](../net/README.md) — protocol consumers such as TLS/DTLS/QUIC and HTTP authentication.
@@ -66,8 +65,7 @@ The Authenticode PE verifier calculates the PE-specific Authenticode image diges
 - [`crypto-mindmap.md`](crypto-mindmap.md) — compact topic map.
 - [`crypto-references.md`](crypto-references.md) — curated external standards, book, and online-reference list.
 
-## 6. References
-
+## 5. References
 - [OpenSSL libcrypto introduction](https://docs.openssl.org/master/man7/ossl-guide-libcrypto-introduction/)
 - [IANA JOSE registry](https://www.iana.org/assignments/jose/jose.xhtml)
 - [IANA COSE registry](https://www.iana.org/assignments/cose/cose.xhtml)

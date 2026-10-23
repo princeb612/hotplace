@@ -80,8 +80,7 @@ Test sources cover distinct but related behaviors: parser handling of assignment
 
 Parameterized ASN.1 is a particular boundary: grammar productions and direct semantic prototypes exist, but they should not be described as a complete parser-to-runtime template-instantiation pipeline without enabled end-to-end tests and implementation evidence.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Follow the source and tests
 
 - [ASN.1 Basic](basic/README.md) — semantic/structural models and retained X.680 study notes.
@@ -95,8 +94,7 @@ Parameterized ASN.1 is a particular boundary: grammar productions and direct sem
 - `test/testcase/asn.1/runtime/` — parser and staged publisher cases.
 - `test/testcase/asn.1/loader/testcase_loader.cpp` — integrated file → parse tree → publish → module-resolution path.
 
-## 6. References
-
+## 5. References
 - ITU-T X.680–X.693 — ASN.1 notation and encoding rules.
 - [RFC 5280](https://www.rfc-editor.org/rfc/rfc5280) — Internet X.509 PKI Certificate and CRL Profile.
 - [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) — Cryptographic Message Syntax (CMS).

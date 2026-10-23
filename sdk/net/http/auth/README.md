@@ -74,8 +74,7 @@ The router owns the high-level decision to resolve the provider before invoking 
 
 Credential containers use locks around their in-memory maps/sets. This protects those container operations; it does not define credential rotation, persistence, rate limiting, lockout, or revocation policy for an application.
 
-## 5. Relationships
-
+## 4. Relationships
 - `basic_credentials.hpp/.cpp`, `basic_authentication_provider.hpp/.cpp`
 - `digest_credentials.hpp/.cpp`, `digest_access_authentication_provider.hpp/.cpp`, `rfc2617_digest.hpp/.cpp`
 - `bearer_credentials.hpp/.cpp`, `bearer_authentication_provider.hpp/.cpp`
@@ -86,8 +85,7 @@ Credential containers use locks around their in-memory maps/sets. This protects 
 - [HTTP core model](../http-core-model.md) and [server/client flow](../http-server-client.md) — request routing and callback boundary.
 - `sdk/crypto/` — cryptographic primitives used by Digest and related code where applicable.
 
-## 6. References
-
+## 5. References
 - [RFC 7617 — The 'Basic' HTTP Authentication Scheme](https://www.rfc-editor.org/rfc/rfc7617)
 - [RFC 7616 — HTTP Digest Access Authentication](https://www.rfc-editor.org/rfc/rfc7616)
 - [RFC 6750 — The OAuth 2.0 Authorization Framework: Bearer Token Usage](https://www.rfc-editor.org/rfc/rfc6750)

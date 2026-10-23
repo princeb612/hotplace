@@ -64,8 +64,7 @@ HPACK and QPACK share the broad static/dynamic table idea, not a common state ma
 - **QPACK** is designed for HTTP/3's multiplexed QUIC streams. It includes encoder/decoder instructions, acknowledgements/cancellation and field-section state so dynamic references can be coordinated despite independent streams. It is not HPACK with a different name.
 - **Body content encoding** such as gzip/deflate is unrelated to this module: header compression operates on header fields, not response body bytes.
 
-## 5. Relationships
-
+## 4. Relationships
 - `http_header_compression.hpp/.cpp` — shared compression operations and decode data.
 - `http_header_compression_stream.hpp` — compression-stream abstraction.
 - `http_static_table.hpp/.cpp` — base lookup/select behavior for protocol-specific static tables.
@@ -75,7 +74,6 @@ HPACK and QPACK share the broad static/dynamic table idea, not a common state ma
 - [HTTP/2 frames and session](../http2/README.md) and [HTTP/3 frames](../http3/README.md) — the protocol layers that carry compressed header blocks/field sections.
 - `../../../../test/testcase/net/hpack/` and `../../../../test/testcase/net/qpack/` — source-level vectors and behavior tests.
 
-## 6. References
-
+## 5. References
 - [RFC 7541 — HPACK: Header Compression for HTTP/2](https://www.rfc-editor.org/rfc/rfc7541)
 - [RFC 9204 — QPACK: Field Compression for HTTP/3](https://www.rfc-editor.org/rfc/rfc9204)

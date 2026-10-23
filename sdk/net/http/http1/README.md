@@ -77,8 +77,7 @@ The `message_size` returned by framing is a byte count, not an HTTP semantic obj
 
 The generic protocol abstraction is important to the architecture because it lets `network_stream` and `network_protocol_group` coordinate message framing without hard-coding HTTP parsing into the multiplexer callback. Protocol-specific behavior remains behind the `network_protocol` interface.
 
-## 5. Relationships
-
+## 4. Relationships
 - `http_protocol.hpp/.cpp` — HTTP/1.x implementation of the network protocol abstraction.
 - `../../server/network_protocol.hpp/.cpp`, `network_stream.hpp/.cpp`, `network_session.hpp/.cpp` — generic protocol registration, buffered input, and session flow.
 - `../http_request.hpp/.cpp`, `../http_response.hpp/.cpp` — parse/compose semantic messages after framing.
@@ -88,6 +87,5 @@ The generic protocol abstraction is important to the architecture because it let
 - [HTTP/2 implementation](../http2/README.md) — sibling binary framing path.
 - `../../../../test/testcase/net/http/testcase_http.cpp` — source-level HTTP parsing/framing tests.
 
-## 6. References
-
+## 5. References
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)
