@@ -53,8 +53,7 @@ A `file_stream` owns an open platform file resource and may also own a memory ma
 
 The important boundary is external resource access: the file-stream implementation adapts the common stream interface to platform file operations and, where supported, mapped access. A caller may cross between mapped access and ordinary stream reads, so the file handle, mapping, seek position, and close path must be understood from the concrete implementation.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/base/stream/` — common `stream_t`, buffers, and formatting.
 - `sdk/io/basic/` — binary payload helpers that can use common stream abstractions.
 - `sdk/io/string/` — URL and textual helpers; not the same module as the placeholder `string.hpp` in this directory.

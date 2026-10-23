@@ -31,8 +31,7 @@ Provider handles and the library context have an explicit lifetime. `close()` un
 
 Algorithm discovery is not equivalent to uniform support: the existing tests gate full operation attempts on `oqs_alg_oid_registered`, and classify other enumerated entries as `not_supported`.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Source-test evidence
 
 The KEM test compares the shared secret produced by encapsulation with the secret recovered by decapsulation. The signature test signs with a private key and verifies with the public key. These validate the integrated provider path, not a full independent mathematical implementation.

@@ -36,7 +36,7 @@ The `oqs_alg_oid_registered` flag records whether an algorithm can be mapped thr
 
 The adapter delegates key generation and serialization to `crypto_keychain`, and KEM/signature operations to the common OpenSSL PQC helpers. The implementation is guarded for OpenSSL 3 provider APIs; older OpenSSL versions return `not_supported`.
 
-## 5. Relationships
+## 4. Relationships
 - `../basic/` provides common key, serialization, and crypto operations.
 - `../advisor/` provides algorithm and OID-related metadata.
 - `../../../test/testcase/crypto/pqc/` contains provider-backed and common PQC tests.

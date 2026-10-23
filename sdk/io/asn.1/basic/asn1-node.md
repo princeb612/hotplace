@@ -105,7 +105,7 @@ A structural tree can exist before a schema has been selected or references reso
 
 Structural parsing and DER behavior are exercised across `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/`. Those directories contain the relevant source-level test paths; this documentation update did not run them.
 
-## 5. Relationships
+## 4. Relationships
 ### Related documents
 
 - `structural/README.md` — distinction between the structural TLV tree and schema-driven semantic objects, including tagging examples

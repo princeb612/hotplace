@@ -41,7 +41,7 @@ Character conversion is platform-dependent. Do not assume the Windows-only `A2W(
 
 To see the shared string helpers in an integration context, follow URL decomposition in `url.cpp`; the URL implementation uses the base regex/stream facilities and shares this directory's public header.
 
-## 5. Relationships
+## 4. Relationships
 - `sdk/base/string/` — general-purpose string facilities; keep the two similarly named modules distinct.
 - `sdk/io/string/url.cpp` — URL processing functions declared alongside the tokenization APIs.
 - `sdk/base/pattern/` and `sdk/base/stream/` — regex and output-stream facilities used by URL processing.
