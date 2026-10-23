@@ -86,8 +86,7 @@ Declaration and resolution are separate. Creating a referenced-type node does no
 - Parameterized notation has grammar productions and direct semantic prototypes, but the disabled end-to-end probe means parameter binding/substitution should not be represented as complete.
 - Parser, publisher, imported-symbol resolution, and notation representation are exercised in distinct test stages. This documentation update did not execute those tests.
 
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 Basic](../basic/README.md) — semantic types, structural nodes, tagging, and constraints.
 - [ASN.1 parser adapter](asn1_parser.md) — tokenization and generic parse-tree construction.
 - [ASN.1 publisher](asn1_publisher.md) — grammar-event handling and semantic reconstruction.

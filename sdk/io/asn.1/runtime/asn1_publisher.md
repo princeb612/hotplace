@@ -127,8 +127,7 @@ parse_tree action
 - `test/testcase/asn.1/testcase_basic3.cpp` — additional ASN.1 object-model behavior.
 
 These are source-level verification paths, not a claim that the tests were run during this documentation update. A production handler or grammar rule alone does not prove every related notation feature is complete end to end.
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 parser adapter](asn1_parser.md) — provides the syntax tree.
 - [ASN.1 runtime](README.md) — module registry and resulting runtime representation.
 - [ASN.1 module](asn1_module.md) — local/imported lookup and reference resolution.
