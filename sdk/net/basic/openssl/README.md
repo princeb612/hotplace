@@ -60,8 +60,7 @@ The adapter is the configuration/factory boundary; `network_server` owns the bro
 
 The current adapter implementation explicitly handles `h2` by enabling HTTP/2 ALPN on the TLS server socket context. Other protocol strings return `not_supported`. Do not describe this method as a general arbitrary-ALPN registry without checking the implementation.
 
-## 5. Relationships
-
+## 4. Relationships
 - `openssl_tls_client_socket.hpp/.cpp`, `openssl_tls_server_socket.hpp/.cpp`
 - `openssl_dtls_client_socket.hpp/.cpp`, `openssl_dtls_server_socket.hpp/.cpp`
 - `openssl_tls_context.hpp/.cpp`, `openssl_tls_context_sdk.cpp`
@@ -73,6 +72,5 @@ The current adapter implementation explicitly handles `h2` by enabling HTTP/2 AL
 - [TLS/DTLS/QUIC implementation](../../tls/README.md) — protocol messages, protection, and session behavior.
 - [Certificate-generation instructions](../../../../etc/cert/README.md) and [self-signed certificate](../self-signed-certificate.md) — local certificate setup.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

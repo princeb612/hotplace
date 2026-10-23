@@ -79,10 +79,7 @@ The native socket and any TLS/DTLS backend context have lifetimes that must be r
 
 `naive/` implements direct TCP/UDP operations, `openssl/` integrates secure socket operations with OpenSSL, and `trial/` is an experimental composition area. Capability claims belong to the concrete backend and build configuration, not the shared interface alone.
 
-## 5. Relationships
-
-
-
+## 4. Relationships
 - `basic_socket.hpp/.cpp`
 - `client_socket.hpp/.cpp`
 - `server_socket.hpp/.cpp`
@@ -112,6 +109,5 @@ OS socket API
 
 The diagram is a responsibility stack, not a required call sequence for every application.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

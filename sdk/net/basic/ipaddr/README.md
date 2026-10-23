@@ -105,8 +105,7 @@ caller enforces the decision
 
 The rule collection is synchronized during insertion and matching. This does not make mode changes, clearing, and server accept lifecycle coordination an atomic server-wide operation.
 
-## 5. Relationships
-
+## 4. Relationships
 - `ipaddr_acl.hpp/.cpp` — public API, normalized rule representation, and matching implementation.
 - `sdk.hpp/.cpp` — SDK-facing integration.
 - [Basic socket layer](../README.md) — socket abstractions and caller-side admission boundary.
@@ -114,6 +113,5 @@ The rule collection is synchronized during insertion and matching. This does not
 - [Network server](../../server/README.md) — higher-level accept/session orchestration.
 - `test/testcase/net/basic/testcase_acl.cpp` — source-level ACL assertions; this documentation update does not claim that tests were executed.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

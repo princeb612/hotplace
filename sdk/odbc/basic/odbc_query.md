@@ -72,8 +72,7 @@ Successful execution calls `build_fieldinfo()`. That routine calls `SQLNumResult
 
 For `async_query`, `odbc_sinker::ready()` repeatedly calls `execute_statement()`. A `busy` result causes elapsed monotonic time to be checked; once it exceeds the configured timeout, the sinker returns timeout and closes the query. Synchronous mode returns ready immediately. This adapter does not itself schedule threads or make a synchronous driver operation asynchronous.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`odbc_connector.md`](odbc_connector.md) — creates the query and manages the environment/connection lifecycle
 - [`odbc_record.md`](odbc_record.md) — row container populated by `fetch()`
 - [`odbc_field.md`](odbc_field.md) — column values and conversions
@@ -82,6 +81,5 @@ For `async_query`, `odbc_sinker::ready()` repeatedly calls `execute_statement()`
 - [`../../types.md`](../../types.md) — query modes and ODBC return-code mapping
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample's direct execution/fetch path
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)
