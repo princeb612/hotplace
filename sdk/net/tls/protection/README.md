@@ -197,8 +197,7 @@ The transcript hash is a running cryptographic state, not a hash of every receiv
 
 The session can coordinate all three families, but they do not share one counter or wire format.
 
-## 5. Relationships
-
+## 4. Relationships
 - [TLS key schedule](tls_key_schedule.md) — TLS 1.2 key block and TLS 1.3 staged derivation.
 - [Transcript hash](tls_transcript_hash.md) — transcript input and stage checkpoints.
 - [MtE vs EtM](tls_mte_etm.md) — legacy CBC authentication order and AEAD distinction.
@@ -209,8 +208,7 @@ The session can coordinate all three families, but they do not share one counter
 - [TLS protection/session flow](../tls-protection-and-session.md) — message-specific transcript updates, key-schedule checkpoints, and protection activation boundaries.
 - [QUIC integration](../quic/README.md) — TLS-derived secrets used by packet protection.
 
-## 6. References
-
+## 5. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 7366 — Encrypt-then-MAC for TLS and DTLS](https://www.rfc-editor.org/rfc/rfc7366)

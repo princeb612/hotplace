@@ -101,8 +101,7 @@ In `test/applet/authenticode/sample.cpp`, `test1()` creates a verifier, opens a 
 - [`../../../io/string/`](../../io/string/) — URL decomposition for CRL cache paths.
 - [`../../../test/applet/authenticode/sample.cpp`](../../../test/applet/authenticode/sample.cpp) — concrete API usage.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Implementation and test sources
 
 - `authenticode_verifier.hpp`, `authenticode_verifier.cpp`, `sdk.hpp`, `sdk.cpp`.
@@ -112,8 +111,7 @@ In `test/applet/authenticode/sample.cpp`, `test1()` creates a verifier, opens a 
 
 - The signing-time exception currently reads a `signingTime` from a PKCS#7 counter-signature attribute and uses it only to override `X509_V_ERR_CERT_HAS_EXPIRED` for the signer certificate at depth zero when the time falls within that certificate's validity interval. The code path shown does not, by itself, establish validation of a trusted timestamp authority or its timestamp-token signature. Do not describe it as complete trusted-timestamp validation.
 
-## 6. References
-
+## 5. References
 - [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE headers and certificate-table layout.
 - [Microsoft Authenticode PE Image Hashing](https://learn.microsoft.com/en-us/windows/win32/secbp/understanding-pe-signatures) — Authenticode image digest construction.
 - [RFC 5652: Cryptographic Message Syntax (CMS)](https://www.rfc-editor.org/rfc/rfc5652) — SignedData and signer information.

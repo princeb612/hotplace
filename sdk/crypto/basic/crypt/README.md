@@ -202,8 +202,7 @@ The implementation questions identified above are tracked in [`follow-up-workspa
 
 The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records combinations represented by the source. It does not guarantee that every algorithm/mode is enabled by every OpenSSL build or provider.
 
-## 5. Relationships
-
+## 4. Relationships
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.
 - `../digest/README.md` and `../mac/README.md` document related digest/MAC primitives.
 - TLS, JOSE and COSE build protocol-specific inputs and headers above these primitives; this layer does not construct TLS records or JOSE/COSE messages.
@@ -224,8 +223,7 @@ The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records co
 - `testcase_crypto_aead.cpp` and `testcase_aead_ccm.cpp` exercise AEAD behavior.
 - CAVP block-cipher vectors, RFC 3394 key-wrap vectors, RFC 7539 ChaCha20/Poly1305 vectors, and CBC-HMAC TLS/JOSE vectors cover specific algorithm contracts. Vector presence should not be read as support for every algorithm/mode in every build.
 
-## 6. References
-
+## 5. References
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 3394 — Advanced Encryption Standard (AES) Key Wrap Algorithm.
 - RFC 5649 — AES Key Wrap with Padding.

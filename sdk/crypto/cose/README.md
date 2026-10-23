@@ -249,8 +249,7 @@ For other algorithms, use three separate evidence levels: (1) metadata exists in
 
 CWT (CBOR Web Token) uses CBOR claims and commonly uses COSE as its protection envelope, but CWT claim semantics are not the same thing as COSE message processing. The COSE code can protect a CBOR payload; the source reviewed here does not expose a separate CWT claims-validation API for registered claims, issuer/audience policy or application authorization. Those checks belong to the CWT/application layer above the COSE envelope.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/io/cbor/` — CBOR values, maps, arrays, byte strings, parsing and serialization.
 - `sdk/crypto/basic/` — AEAD, signatures, MAC, keys, key exchange and KDF operations.
 - `sdk/crypto/advisor/` — COSE algorithm/group metadata and mappings to primitive/key details.
@@ -272,8 +271,7 @@ The tests assert operation return status and exercise receive-side processing. T
 - `cbor_web_key.hpp/.cpp` — COSE key representation.
 - `sdk/crypto/advisor/resource_cose.cpp` — algorithm/group metadata and explicit support flags.
 
-## 6. References
-
+## 5. References
 - [RFC 8949 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949).
 - [RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process](https://www.rfc-editor.org/rfc/rfc9052).
 - [RFC 9053 — CBOR Object Signing and Encryption (COSE): Initial Algorithms](https://www.rfc-editor.org/rfc/rfc9053).
