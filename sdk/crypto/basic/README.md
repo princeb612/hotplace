@@ -90,8 +90,7 @@ The module READMEs link to the relevant source and testcase entry points for eac
 - [RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA)](https://www.rfc-editor.org/rfc/rfc8032) — Ed25519 and Ed448 signature schemes.
 - [RFC 7748: Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 These notes preserve cross-directory inventories, reference examples, and study material that do not belong to one implementation directory's README. They are intentionally not presented as complete API specifications or universal support claims.
 
 ### 6.1 Cipher inventory

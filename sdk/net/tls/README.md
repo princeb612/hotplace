@@ -224,8 +224,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - [Cipher suite information](https://ciphersuite.info/cs/)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 ### RFC figures transcribed as plain text
 
 The following diagrams are retained as quick-reading aids. The authoritative wording and any corrections should be checked against the linked RFCs.

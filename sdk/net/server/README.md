@@ -169,8 +169,7 @@ A datagram read preserves its source address in `network_stream_data`. The sessi
 ## 5. References
 No external references are currently listed.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 The class relationship is a responsibility map, not an inheritance diagram:
 
 ```text

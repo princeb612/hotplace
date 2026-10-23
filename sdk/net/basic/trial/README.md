@@ -76,6 +76,5 @@ The trial implementation is experimental. In particular, the existence of TLS/DT
 ## 5. References
 No external references are currently listed.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 The trial adapter maps TLS/DTLS/QUIC/QUIC2 to the trial backend, while the OpenSSL adapter maps only TLS/DTLS to OpenSSL. Keep this backend-selection difference visible when documenting server configuration; the two adapters share an interface but not the same scheme support.

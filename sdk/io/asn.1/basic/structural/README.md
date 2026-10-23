@@ -61,8 +61,7 @@ Do not treat a structural parse as proof that schema-level constraints, referenc
 ## 5. References
 - ITU-T X.690 — BER/DER encoding rules for TLV structure and tagged encodings.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 The following byte-level examples are retained here because they illustrate the distinction described above without requiring a separate reference page. They are examples of particular encodings, not a coverage claim.
 
 ### DER/TLV examples retained from the tagging study

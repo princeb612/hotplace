@@ -92,8 +92,7 @@ The exact order of TLS handshake state transitions and QUIC packet-space availab
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
 - [RFC 9369 — QUIC Version 2](https://www.rfc-editor.org/rfc/rfc9369)
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 These notes retain the RFC handshake examples and TLS/QUIC interaction diagrams used while developing this area. They complement the implementation model above rather than defining another source-tree module.
 
 ### RFC summaries
