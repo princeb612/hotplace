@@ -8,15 +8,17 @@ hotplace is a one-person project space for studying, experimenting, integrating,
 
 ## Before every follow-up session
 
-1. Read this file.
-2. Read the top-level `DATA-BEHAVIOR-FOLLOW-UP.md` for the current index.
+1. Read this file on `workspace-follow-up`.
+2. Read the top-level `FOLLOW-UP.md` index.
 3. Open the relevant per-issue file(s) before asking the user to reconstruct the background.
-4. Read the revision record(s) for historical context.
-5. Check the current source/revision/commit before assuming an old finding still applies.
+4. Read the relevant revision record(s) for historical context.
+5. **Check the latest `master` commit first.** Record its full commit SHA and commit message/date, then inspect the relevant source files at that exact commit. Do not assume a revision label, a branch name, a previously pasted snippet, or a prior session's SHA proves the source is current.
+6. Compare the current source against the source basis recorded in the issue. Inspect the relevant diff and related declarations/tests when needed. If `master` has moved since the last check, re-evaluate the finding against the new source rather than carrying forward the old conclusion.
+7. Keep the latest `master` source as the source-of-truth for current behavior, and `workspace-follow-up` as the source-of-truth for follow-up tracking/history. Never mix their roles.
 
 ## Layout and responsibilities
 
-- Top-level `DATA-BEHAVIOR-FOLLOW-UP.md`: concise cumulative index of IDs, current status, and links to per-issue files.
+- Top-level `FOLLOW-UP.md`: concise cumulative index of IDs, current status, and links to per-issue files.
 - Area-prefixed range directories hold self-contained working records; create files only for actual issues, not empty placeholders:
   - `BASE001-500/BASE-NNN.md` and later BASE ranges
   - `IO001-500/IO-NNN.md` and later IO ranges
@@ -36,6 +38,16 @@ hotplace is a one-person project space for studying, experimenting, integrating,
 - On a newer source revision, re-check the finding and update its status only when evidence supports the change.
 - Keep historical context and decisions in the issue file; keep the cumulative index short.
 - Do not bulk-create shallow boilerplate files. Detail should be enough to resume work, but remain proportionate to the issue.
+
+## Source check, updates, and verification
+
+1. **Read before writing.** Fetch the latest `master` commit and the relevant source at that exact SHA. Fetch the latest `workspace-follow-up` head and the current issue/index files separately.
+2. **Do not infer identity from branch names alone.** Record full commit SHAs in the issue when source identity matters. Link to immutable commit-SHA URLs for source evidence; branch URLs may be added for convenient navigation but are not historical evidence.
+3. **State evidence precisely.** Separate (a) what source inspection confirms, (b) what a diff confirms, (c) what existing tests appear to cover, and (d) what was actually executed in this session. Never imply that source inspection proves a test passed. Do not claim a build/test result unless it was actually run and its result observed.
+4. **Make only the needed tracking changes.** Update the relevant issue record first, then update `FOLLOW-UP.md` if the status or navigation changed. Preserve the original revision record. Do not change product source or tests from this workspace.
+5. **Target the correct branch explicitly.** All writes in this workflow must target `workspace-follow-up`. Before writing, confirm the branch exists and retrieve the current file/blob SHA and branch HEAD. If the branch or file changed since it was read, refresh and reconcile rather than overwriting blindly. Never target `master` for a write.
+6. **Verify after writing.** Read the updated files back from `workspace-follow-up`, verify the intended content and index consistency, and confirm the new commit's parent/branch. Check that `master` was not modified by this operation.
+7. **Report the outcome briefly.** Give the issue ID, disposition, exact changed files, follow-up commit link, and any verification not performed. Keep unresolved work visible; do not call an issue resolved merely because a proposed fix looks plausible.
 
 ## Recording and working style
 
