@@ -21,6 +21,16 @@ The index is for navigation and current disposition. Open the linked per-issue f
 | BASE-011 | `sdk/base/system/floating_point` | Analyze large exponent-gap behavior for both signs and add/subtract | [BASE-011.md](BASE001-500/BASE-011.md) |
 | BASE-012 | `sdk/base` revision metadata | Confirm source-basis meaning before changing Revision 1105 labels | [BASE-012.md](BASE001-500/BASE-012.md) |
 
+| BASE-013 | `test/testcase/base/system`, `test/testcase/base/stream` | Focused assertion and stale-comment review | [BASE-013.md](BASE001-500/BASE-013.md) |
+| IO-001 | `sdk/io/parser` | Reconcile old parser TODO/architecture notes with current LALR/GLR implementation | [IO-001.md](IO001-500/IO-001.md) |
+| IO-002 | `sdk/io/asn.1/loader` | Recheck historical loader/PKIX/compiler roadmap against current source and test registration | [IO-002.md](IO001-500/IO-002.md) |
+| IO-003 | `test/testcase/asn.1` | Strengthen selected DER round-trip and notation-reconstruction assertions | [IO-003.md](IO001-500/IO-003.md) |
+| CRYPTO-001 | `sdk/crypto/jose` | Verify decrypt result contract, mixed-recipient acceptance, and output-buffer behavior | [CRYPTO-001.md](CRYPTO001-500/CRYPTO-001.md) |
+| CRYPTO-002 | `sdk/crypto/jose` | Reconcile historical TODO/status matrix; do not treat it as current support status | [CRYPTO-002.md](CRYPTO001-500/CRYPTO-002.md) |
+| CRYPTO-003 | `sdk/crypto/authenticode` | Decide digest error propagation contract and add focused failure-path evidence if needed | [CRYPTO-003.md](CRYPTO001-500/CRYPTO-003.md) |
+| NET-001 | `sdk/net/http/auth` | Trace RFC 9258 TODO to the owning TLS/PSK component; avoid attributing it to HTTP auth without evidence | [NET-001.md](NET001-500/NET-001.md) |
+
+
 ## Maintenance
 
 - Per-issue files are the starting point for work; the revision overview records the historical review context.
