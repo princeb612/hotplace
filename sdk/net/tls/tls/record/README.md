@@ -111,8 +111,7 @@ The handshake-record path has its own TLS 1.3 preprocessing behavior: it resets 
 - **DTLS over datagrams:** record headers include DTLS-specific sequencing context; datagram boundaries, epoch and sequence handling are not TCP stream semantics.
 - **QUIC:** TLS handshake messages bypass this record framing and enter the QUIC CRYPTO-frame/packet path.
 
-## 5. Relationships
-
+## 4. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [Handshake messages](../handshake/README.md) — structured handshake content inside records.
 - [Extensions](../extension/README.md) — extension data nested in handshake messages.
@@ -121,8 +120,7 @@ The handshake-record path has its own TLS 1.3 preprocessing behavior: it resets 
 - [DTLS record publisher](../../dtls_record_publisher.md) — datagram-specific record publication.
 - [QUIC integration](../../quic/README.md) — CRYPTO frames and packet protection instead of ordinary TLS record framing.
 
-## 6. References
-
+## 5. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)

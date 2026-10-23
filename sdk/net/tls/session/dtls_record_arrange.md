@@ -96,10 +96,7 @@ The later record (sequence 2) remains buffered until the expected sequence 1 is 
 
 Records older than the current expected position are treated as stale/retransmitted input. The pool provides bounded ordering of records that arrived; it does not reconstruct missing records, guarantee complete retransmission behavior, or replace DTLS handshake-flight management.
 
-## 5. Relationships
-
-
-
+## 4. Relationships
 - `dtls_record_arrange.hpp`
 - `session/dtls_record_arrange.cpp`
 - `test/testcase/tls/testcase_dtls_record_arrange.cpp`
@@ -126,7 +123,6 @@ tls_session
 
 The class is concerned with **receive-side ordering**. It does not construct DTLS handshake fragments; that responsibility belongs to `dtls_record_publisher`.
 
-## 6. References
-
+## 5. References
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)

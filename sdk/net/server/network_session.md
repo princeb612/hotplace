@@ -115,8 +115,7 @@ The manager destructor calls `shutdown()`, which releases entries in both `_sess
 
 `get_session_data()` exposes application/session key-value state without forcing application data into the generic transport buffers. `get_http2_session()` exposes optional HTTP/2-specific state; generic TCP/TLS sessions do not require it.
 
-## 5. Relationships
-
+## 4. Relationships
 - `network_session.hpp/.cpp` — session lifecycle, buffering, reference counting, and send path.
 - [Network server](README.md) — manager, workers, and event lifecycle.
 - [Network server execution model](network-server-model.md) — orchestration path.
@@ -125,6 +124,5 @@ The manager destructor calls `shutdown()`, which releases entries in both `_sess
 - [DTLS record arrangement](../tls/dtls_record_arrange.md), [DTLS publisher](../tls/dtls_record_publisher.md), [QUIC packet publisher](../tls/quic_packet_publisher.md), and [TLS session support](../tls/session/README.md).
 - `sdk/net/http/` — HTTP/2 state and HTTP message semantics layered above generic session buffering.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

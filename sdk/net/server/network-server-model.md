@@ -129,8 +129,7 @@ The ordering above is the literal `close()` sequence; the manager's `shutdown()`
 
 A manager lookup returns a referenced session, so work already holding a reference can outlive removal from the lookup map. Conversely, `close()` waits for the worker groups before clearing protocol references and closing the multiplexer, and context destruction then releases sessions still retained by manager maps. These are distinct lifetime stages: worker quiescence, lookup deregistration, multiplexer unbinding/closure, and reference-counted object destruction should not be conflated.
 
-## 5. Relationships
-
+## 4. Relationships
 - `network_server.hpp/.cpp` — context fields and worker routines.
 - [Server overview](README.md) — integrated socket-to-application flow.
 - [Network session](network_session.md) — session state and lifetime.
@@ -138,6 +137,5 @@ A manager lookup returns a referenced session, so work already holding a referen
 - [Socket model](../basic/socket-model.md) — common socket contract.
 - [HTTP server](../http/README.md) — higher-level protocol/callback layer.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

@@ -142,8 +142,7 @@ The event-loop API is cooperative. The controller's flag is checked during the l
 
 The API comment examples show the intended server flow, but they are not evidence that every lifecycle race or backend-specific error path has a dedicated test.
 
-## 5. Relationships
-
+## 4. Relationships
 - `multiplexer_controller` manages event-loop thread stop flags; it does not manage per-connection protocol state.
 - `sdk/net/server/` consumes the multiplexer as part of the server/session flow.
 - `sdk/io/system/socket.hpp` supplies socket operations and socket-type detection used to classify events.
@@ -156,7 +155,6 @@ The API comment examples show the intended server flow, but they are not evidenc
 - `sdk/io/system/windows/multiplexer_iocp.cpp`
 - `sdk/net/server/network-server-model.md`
 
-## 6. References
-
+## 5. References
 - [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) and [epoll_wait(2)](https://man7.org/linux/man-pages/man2/epoll_wait.2.html) — Linux event notification APIs.
 - [Microsoft Learn: CreateIoCompletionPort](https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-createiocompletionport) and [GetQueuedCompletionStatus](https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus) — Windows I/O completion ports.
