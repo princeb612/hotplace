@@ -155,8 +155,7 @@ cfg_grammar ─► generation ─► ACTION/GOTO table ─► build or import
 
 Lexical errors, table-generation conflicts, .ptb integrity errors, syntax errors and domain-semantic errors belong to different boundaries. A successful syntax parse does not prove ASN.1 type, reference, tag or constraint validity.
 
-## 5. Relationships
-
+## 4. Relationships
 - `../basic/` — payload and stream primitives used by table serialization and other I/O operations.
 - `../asn.1/` — the main higher-level grammar and semantic consumer. Its lexer registration, grammar productions, table revision, and semantic builder must stay coordinated.
 - `../../base/graph/gss.md` — graph-structured stack support used by GLR execution.

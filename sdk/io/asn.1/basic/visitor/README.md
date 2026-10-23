@@ -43,8 +43,7 @@ The practical selection rule is:
 
 `asn1_object::publish(stream_t*)` and `publish(binary_t*)` select the notation and DER paths respectively. The constraint evaluator is a different operation; it produces an allowed-value set rather than encoded output.
 
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 visitor architecture](../asn1-visitor.md) — visitor family in the context of the semantic model.
 - [ASN.1 object model](../asn1-object-model.md) — objects visited and published.
 - [Structural node model](../asn1-node.md) — structural TLV tree, distinct from semantic-object visitors.

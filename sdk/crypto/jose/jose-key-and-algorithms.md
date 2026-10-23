@@ -31,8 +31,7 @@ The module uses enum-like JOSE identifiers to select protocol processing rather 
 
 The current source-based algorithm inventory, including the distinction between JOSE enums and shared metadata-only signature entries, is summarized in the [JOSE README](README.md). The [historical status note](jose-overview.md) retains older `O`/`-` marks and TODOs for maintainer context; they are not the authoritative current support matrix. In particular, `RSA1_5` remains present in the current JWA resource table despite the historical TODO to disable it, and RFC 7638/AKP test sources exist despite older TODO items. Neither a mapping nor a test file alone proves availability in every build.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Source-test evidence
 
 The test sources include JWK loading and PEM interoperability (`testcase_rfc7515.cpp`), RFC 7517 JWK examples (`testcase_rfc7517.cpp`), thumbprint examples (`testcase_rfc7638.cpp`), and RFC 8037 X25519/Ed25519-family cases (`testcase_rfc8037.cpp`). The AKP test uses `crypto_keychain::add_ossl3` for ML-DSA-44/65/87 and signs/verifies through `json_web_signature`; it is gated on OpenSSL 3.5 or newer.

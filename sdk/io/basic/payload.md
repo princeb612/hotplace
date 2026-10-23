@@ -190,7 +190,7 @@ The canonical reference example is `padlen | data | value | pad`, where `pad` re
 
 The test sources cover write/read round trips, group selection, reference-sized fields, 24-bit and 48-bit integers, big-number values, and the `payload_encoded` extension used by QUIC. Test existence establishes source-level coverage; it does not by itself establish a runtime execution result.
 
-## 5. Relationships
+## 4. Relationships
 ### Relationship with higher layers
 
 ```text

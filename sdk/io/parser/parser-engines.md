@@ -146,7 +146,7 @@ When a tree is supplied, SHIFT records terminal symbol/value and REDUCE records 
 
 test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp feeds the same notation vectors to four paths: LALR build, LALR import, GLR build and GLR import. test_load_parsingtable() provides a focused imported-table example. For tree construction, follow test_asn1parser() in test/testcase/io/parser/asn1module.hpp and parse_tree.cpp.
 
-## 5. Relationships
+## 4. Relationships
 - `parser-generation.md` — constructs the grammar tables consumed by these engines.
 - `parser-tree.md` — receives parser SHIFT/REDUCE events.
 - `parsing-table-binary-format.md` — defines the imported/exported table artifact.
