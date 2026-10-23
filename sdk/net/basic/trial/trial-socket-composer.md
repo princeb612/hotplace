@@ -118,8 +118,7 @@ For DTLS, phase 1 may emit HelloVerifyRequest before a cookie-validated ClientHe
 
 The composer callback is the hand-off for already encoded output. TLS passes record bytes; DTLS delegates record fragmentation/publication; QUIC delegates packet/frame construction. The callback's caller decides how bytes are sent. Keep three independently traceable paths in mind: socket I/O, session-status advancement, and record/packet publication.
 
-## 5. Relationships
-
+## 4. Relationships
 - `secure_prosumer.hpp/.cpp` — secure I/O composition and status coordination.
 - `secure_client_socket.hpp/.cpp` and `trial_tls_server_socket.hpp/.cpp` — client/server secure socket integration.
 - `client_socket_prosumer.hpp/.cpp` — asynchronous socket I/O and buffering.
@@ -130,8 +129,7 @@ The composer callback is the hand-off for already encoded output. TLS passes rec
 - `../server_socket_adapter.hpp/.cpp`, `../server_socket_builder.hpp/.cpp` — backend selection.
 - [Trial backend](README.md), [network server](../../server/README.md), and [TLS implementation](../../tls/README.md).
 
-## 6. References
-
+## 5. References
 No external references are currently listed.
 
 ## 7. Developer Notes

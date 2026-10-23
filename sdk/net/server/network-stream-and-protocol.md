@@ -87,8 +87,7 @@ An insufficient prefix can return `more_data`, so the stream retains input until
 
 Completed messages are copied into the target stream, which is the session's `_request` stream in the normal server path. The consumer callback receives the completed data and session context after framing. Protocol parsing is therefore separate from application dispatch: HTTP handlers consume HTTP-framed messages, while the generic network layer remains responsible for transport buffering and protocol selection.
 
-## 5. Relationships
-
+## 4. Relationships
 - `network_stream.hpp/.cpp` — queue nodes, byte accumulation, and framing loop.
 - `network_protocol.hpp/.cpp` and `network_protocol_group.hpp/.cpp` — protocol contract, registry, and selector.
 - [Network server overview](README.md) — complete worker path.
@@ -98,6 +97,5 @@ Completed messages are copied into the target stream, which is the session's `_r
 - `sdk/net/http/http1/` and `sdk/net/http/http2/` — TCP-stream protocol implementations; HTTP/3 additionally depends on QUIC and ALPN.
 - `test/testcase/net/http/testvector_http2.cpp` and `testcase_http.cpp` — source-level framing examples.
 
-## 6. References
-
+## 5. References
 No external references are currently listed.

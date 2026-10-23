@@ -185,8 +185,7 @@ Key-log lines contain master secrets or traffic secrets that may permit decrypti
 
 The session's status bitmask, directional handshake status, protection-active flag, transcript state, and sequence counters evolve at different call sites. A status bit being set does not alone prove that a peer handshake is complete; a successful encryption call does not prove delivery; and the presence of derived secrets does not mean every direction or protection space is active. Read state changes alongside the caller that triggers them.
 
-## 5. Relationships
-
+## 4. Relationships
 - `tls_session.hpp/.cpp`, `dtls_record_arrange.hpp/.cpp`, `dtls_record_publisher.hpp/.cpp`.
 - `quic_packet_publisher.hpp/.cpp`, `quic_session.hpp/.cpp`, `quic_streams.hpp/.cpp`.
 - `sslkeylog_exporter.hpp/.cpp`, `sslkeylog_importer.hpp/.cpp`.
@@ -197,8 +196,7 @@ The session's status bitmask, directional handshake status, protection-active fl
 - [DTLS record arrangement](dtls_record_arrange.md), [DTLS record publisher](dtls_record_publisher.md), [QUIC packet publisher](quic_packet_publisher.md).
 - `test/testcase/tls/` and `test/testcase/quic/sample.cpp` — source-level protocol/trace paths.
 
-## 6. References
-
+## 5. References
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)

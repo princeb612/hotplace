@@ -131,8 +131,7 @@ The HTTP/3 source has frame representations and QPACK components, but the full s
 
 The generic stream layer can retain input when the protocol reports insufficient data and clear queued invalid input for states such as `forged`, `crash`, or `large`. The exact interpretation of malformed headers, invalid frame fields, body-length conflicts, or protocol-specific errors belongs to the relevant HTTP parser/session implementation; do not attribute all validation to `network_protocol_group` or the multiplexer.
 
-## 5. Relationships
-
+## 4. Relationships
 - `http1/http_protocol.hpp/.cpp` — HTTP/1.x framing implementation.
 - `http2/http2_protocol.hpp/.cpp` — HTTP/2 preface and frame framing.
 - `http2/http2_frame*.*` and `http2/http2_session.*` — frame codec and per-stream request state.
@@ -143,8 +142,7 @@ The generic stream layer can retain input when the protocol reports insufficient
 - [Network stream and protocol](../server/network-stream-and-protocol.md) and [network server](../server/network-server-model.md) — generic framing and session boundaries.
 - [TLS/QUIC transport](../tls/README.md) — transport-side QUIC implementation.
 
-## 6. References
-
+## 5. References
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112) — message framing over a byte stream.
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113) — connection preface, frame structure, streams, and protocol state.
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114) and [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000) — HTTP/3 framing and transport boundaries.
