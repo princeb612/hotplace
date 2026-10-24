@@ -93,7 +93,7 @@ decode complete pairs
 
 The current `decoder_stream::flush()` decodes a retained suffix only when it contains two characters. A lone final hexadecimal character is not a complete byte. The stream decoder's RFC-style Base16 selector currently returns `not_supported`; the existence of the RFC helper functions does not mean that mode is implemented by `decoder_stream`.
 
-## 4. Relationships
+## 5. Relationships
 
 - [`test/testcase/encode/testcase_base16.cpp`](../../../test/testcase/encode/testcase_base16.cpp) covers ordinary conversion, stream-buffer overloads, encoder/decoder streams, odd-sized chunks, and RFC-style examples.
 - `lowlevel/base16.*` implements byte-level conversion; `base16.*` exposes higher-level overloads.
@@ -102,6 +102,6 @@ The current `decoder_stream::flush()` decodes a retained suffix only when it con
 - `sdk/base/basic/dump_memory.*` formats diagnostic hex dumps; it is not an alternative Base16 encoder.
 - The same testcase provides source-level coverage for the conversion paths above.
 
-## 5. References
+## 6. References
 
 - [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)
