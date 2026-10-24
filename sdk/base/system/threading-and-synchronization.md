@@ -72,7 +72,7 @@ The object tracks a maximum concurrent-thread capacity, running threads, callbac
 
 The higher-level `signalwait_threads` behavior is the main project-specific part; the platform classes are primarily compatibility layers.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/system/atomic.hpp` — compiler-specific increment/decrement primitives used by reference-counting code.
 - `sdk/base/system/shared_instance.hpp` — project-specific shared ownership and reference-count lifetime.
@@ -80,6 +80,6 @@ The higher-level `signalwait_threads` behavior is the main project-specific part
 - `sdk/base/system/linux/` and `sdk/base/system/windows/` — platform implementations selected by the public headers.
 - `test/testcase/base/system/testcase_signalwait_threads.cpp` — source-level test for four-worker coordination, capacity failure, signaling, waiting, and termination.
 
-## 6. References
+## 5. References
 
 No external references are listed.
