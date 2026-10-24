@@ -67,7 +67,7 @@ caller
 - `binary_stream` assembles primitive binary values; it does not by itself define a complete protocol message layout. The caller supplies field order, widths, and validation.
 - Stream buffer lifetime and input ownership are API-specific. Inspect the exact operation's return type and ownership contract before retaining a pointer or view.
 
-## 5. Relationships
+## 4. Relationships
 
 - [`stream.md`](../stream.md) — root-level abstract `stream_t` contract.
 - [`basic_stream.md`](basic_stream.md) — in-memory formatted text stream; its `operator<<(const variant&)` uses `vtprintf_style_debugmode`.
@@ -80,6 +80,6 @@ caller
 - `sdk/io/stream/` — OS/file-oriented stream adapters.
 - [Stream testcase documentation](../../../test/testcase/base/stream/testcase_stream.md) — owns source-level coverage and report context. The stream tests include `testcase_stream.cpp` and `testcase_bufferio.cpp`; the supplied report snapshot does not identify source revision or execution environment, so it is not evidence that this exact tree passed.
 
-## 6. References
+## 5. References
 
 No external references are listed.
