@@ -31,6 +31,22 @@ The module uses enum-like JOSE identifiers to select protocol processing rather 
 
 The current source-based algorithm inventory, including the distinction between JOSE enums and shared metadata-only signature entries, is summarized in the [JOSE README](README.md). The [historical status note](jose-overview.md) retains older `O`/`-` marks and TODOs for maintainer context; they are not the authoritative current support matrix. In particular, `RSA1_5` remains present in the current JWA resource table despite the historical TODO to disable it, and RFC 7638/AKP test sources exist despite older TODO items. Neither a mapping nor a test file alone proves availability in every build.
 
+### Real-code example: load a JWK, then select a JWS algorithm
+
+`test/testcase/jose/testcase_rfc7515.cpp` demonstrates the key/algorithm boundary using the RFC 7515 HMAC-SHA-256 vector:
+
+```cpp
+crypto_key key;
+json_web_key jwk;
+jwk.load_file(&key, key_ownspec, "rfc7515.jwk");
+
+json_web_signature jws;
+std::string signature;
+ret = jws.sign(&key, (char*)hs256_header, claim, signature);
+ret = jws.verify(&key, signature, result);
+```
+
+The JWK loader creates the common `crypto_key` representation; the caller separately chooses the JWS operation and supplies the header/claim. The key type alone does not select the signing algorithm, and the presence of an enum/resource mapping does not prove that every backend/build supports that algorithm.
 ## 4. Relationships
 ### Source-test evidence
 
