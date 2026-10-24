@@ -92,6 +92,34 @@ printf / vprintf
 
 `printf()` and `vprintf()` reuse the formatting/buffer machinery from `sdk/base/stream`, rather than calling the operating-system formatted I/O API directly. The ordinary stream API and mapped access are complementary ways to access the same file, but their active-state requirements differ.
 
+### Concrete caller path: mapped write followed by ordinary read
+
+The stream testcase uses the public file-stream API to show why the mapping lifetime is explicit. The following is reduced from `test/testcase/io/stream/testcase_filestream.cpp`:
+
+```cpp
+#include <hotplace/sdk/io/stream/file_stream.hpp>
+
+file_stream fs;
+return_t ret = fs.open("testfile", open_write);
+if (errorcode_t::success == ret) {
+    fs.truncate(1024);
+    ret = fs.begin_mmap();
+    if (errorcode_t::success == ret) {
+        byte_t* bytes = fs.data();
+        *reinterpret_cast<uint32*>(bytes) = 0x12345678;
+        fs.end_mmap();
+
+        fs.seek(0, FILE_BEGIN);
+        uint32 value = 0;
+        size_t size_read = 0;
+        fs.read(&value, sizeof(value), &size_read);
+        // The testcase asserts value == 0x12345678.
+    }
+}
+```
+
+The mapped pointer is used only between `begin_mmap()` and `end_mmap()`; the later read uses the ordinary stream interface. This testcase verifies the first written integer, not every byte in the mapped region or all platform-specific mapping and locking behaviors.
+
 ### Open flags
 
 `filestream_flag_t` describes the file-open policy.
