@@ -54,7 +54,7 @@ Platform-dependent facilities must be reviewed against their actual implementati
 
 The numeric modules also have distinct purposes: `bignumber` supplies arbitrary-width integer operations, decimal/rational helpers build higher-level numeric representations, and IEEE-754 helpers concern binary floating-point formats. These should not be collapsed into a single generic “number” abstraction.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Focused module notes
 
@@ -83,3 +83,7 @@ base/system
 ```
 
 - [System testcase directory](../../../test/testcase/base/system/README.md) and [system testcase note](../../../test/testcase/base/system/testcase_system.md) own the source-level coverage descriptions for these modules. The shared [base testcase report snapshot](../../../test/testcase/test-report-status.md) should be interpreted only with its stated revision/environment limitations.
+
+## 6. References
+
+No external references are listed.
