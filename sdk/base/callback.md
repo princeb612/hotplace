@@ -41,6 +41,26 @@ The narrow/wide aliases select a character representation only when `_MBCS`/`MBC
 
 `THREAD_CALLBACK_ROUTINE` standardizes a return-code-bearing callback shape; it does not create a thread or establish synchronization by itself.
 
+### Concrete consumer path: module enumeration callback
+
+The Windows module enumerator shows how an extended callback is used as a synchronous visitor with an explicit stop signal:
+
+```cpp
+CALLBACK_CONTROL cbControl = CONTINUE_CONTROL;
+// For each MODULEENTRY32 entry:
+LPVOID pData[1];
+pData[0] = &me;
+callback_handler(enum_modules_t::enum_toolhelp, 1, pData, &cbControl, param);
+
+if (STOP_CONTROL == cbControl) {
+    break;
+}
+```
+
+The enumerator passes a type discriminator, a count, an array of payload pointers, the control pointer, and the caller's parameter. Here `pData[0]` points to the current local `MODULEENTRY32 me`; a callback must not retain that pointer after the invocation unless it copies the data. Setting `STOP_CONTROL` requests that this enumeration loop stop. The callback contract does not itself specify the payload's concrete type or lifetime; those details come from this enumerator.
+
+Source: `sdk/base/system/windows/sdk.cpp`, `enum_modules_toolhelp()`.
+
 ## 4. Relationships
 
 - `sdk/base/charset.hpp` — defines the platform text-mode macros that affect the narrow/wide callback aliases.
