@@ -33,6 +33,23 @@ The source is organized into cooperating layers:
 
 Conceptually, `basic` supplies operations and key abstractions; `advisor` supplies lookup metadata; COSE and JOSE compose those facilities into format-specific security objects; Authenticode verifies a PE-specific signed format; and OQS is an optional provider integration path rather than a peer message format.
 
+### Start from the problem you need to solve
+
+The module pages retain the implementation and standards detail. If you are new to a particular cryptographic task, start with the matching caller-level example below, then follow the data model and behavior flow in that page.
+
+| Problem to solve | Start here | What the example helps you see |
+|---|---|---|
+| Encrypt bytes and recover them | [Symmetric encryption and AEAD](basic/crypt/README.md#practical-use-build-a-cipher-round-trip-bytes-then-release-it) | How the algorithm, key, nonce/IV and output relate; for AEAD, why AAD and the authentication tag are part of the contract. |
+| Check whether a message was changed and came from a key holder | [MAC and OTP](basic/mac/README.md) or [digital signatures](basic/sign/README.md) | MACs require shared secret material; signatures separate signing with private material from verification with public material. |
+| Derive key bytes from existing secret material | [KDF](basic/kdf/README.md) | How digest, input keying material, salt, context/info and output length determine a derivation. Password hardening is a different task from HKDF. |
+| Establish matching key-agreement output between peers | [Key material and exchange](basic/key/README.md#practical-use-exchange-public-shares-and-compare-derived-secrets) | Each peer retains local private material, exchanges public share bytes, and derives a secret; this alone is not peer authentication or a complete handshake. |
+| Sign or encrypt a structured JSON message | [JOSE](jose/README.md) | How JWS/JWE processing combines keys, algorithm identifiers, serialization and the underlying primitives. |
+| Sign or encrypt a CBOR message | [COSE](cose/README.md) | How a protected header selects the operation and how the encoded message is processed. |
+| Check a Windows PE file's Authenticode signature | [Authenticode verifier](authenticode/authenticode_verifier.md) | How PE digest comparison and certificate/trust checks fit together, including revocation inputs. |
+| Experiment with post-quantum operations | [OQS provider adapter](oqs/README.md) | How provider discovery and capability gates precede KEM/signature operations; external provider and OpenSSL version matter. |
+
+These examples demonstrate API use and specific source paths, not universal algorithm availability or production security policy. The caller still has to check operation results and follow the relevant protocol's key, nonce, trust, and validation requirements.
+
 ### Detailed source-tree documents
 
 - [basic/key/README.md](basic/key/README.md) — key representation, construction, generation, key selection, and classical/hybrid key exchange.
