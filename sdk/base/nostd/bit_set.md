@@ -46,6 +46,10 @@ The constructor fixes the low/high domain for the lifetime of the object. Each v
 
 This is a bounded integral set. It does not automatically grow its domain when an out-of-range value arrives.
 
-## 4. Relationships
+## 5. Relationships
 
 - `bit_set.hpp` implements the bounded bit-set representation, and `testcase_bitset.cpp` provides direct source-level coverage. ASN.1 BIT STRING is the motivating domain mentioned by the header; the ASN.1 layer owns its encoding and semantic constraints.
+
+## 6. References
+
+No external references are listed.
