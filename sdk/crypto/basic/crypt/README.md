@@ -202,6 +202,29 @@ The implementation questions identified above are tracked in [`follow-up-workspa
 
 The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records combinations represented by the source. It does not guarantee that every algorithm/mode is enabled by every OpenSSL build or provider.
 
+### Practical use: build a cipher, round-trip bytes, then release it
+
+The symmetric wrapper testcase selects an algorithm/mode through a builder, encrypts a byte range, and only attempts decryption after encryption succeeds:
+
+```cpp
+cipher_encrypt_builder builder;
+auto cipher = builder.set(crypt_algorithm_t::aes128, crypt_mode_t::cbc).build();
+if (cipher) {
+    binary_t ciphertext;
+    return_t ret = cipher->encrypt(key, iv, input, input_size, ciphertext);
+    if (errorcode_t::success == ret) {
+        binary_t plaintext;
+        ret = cipher->decrypt(key, iv, ciphertext, plaintext);
+        // Compare plaintext with the original input in the caller.
+    }
+    cipher->release();
+}
+```
+
+The builder chooses the operation implementation; the caller supplies the key, IV, and input bytes. The round trip demonstrates API composition, not a recommendation to reuse a fixed IV or key in an application. Real applications must follow the selected mode's key/IV requirements and manage key material and nonce/IV uniqueness appropriately.
+
+For AEAD, the analogous testcase uses `crypto_aead_builder::set_scheme()` and carries AAD and the authentication tag as separate inputs/outputs. See [testcase_cipher_encrypt.cpp](../../../../test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp) and [testcase_crypto_aead.cpp](../../../../test/testcase/crypto/crypt/testcase_crypto_aead.cpp).
+
 ## 4. Relationships
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.
 - `../digest/README.md` and `../mac/README.md` document related digest/MAC primitives.
