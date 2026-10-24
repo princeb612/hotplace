@@ -64,7 +64,7 @@ The consume path is the reverse segmentation adapter for an already constructed 
 
 The publisher orchestrates content-to-frame and frame-to-packet layout. It does not replace QUIC frame/packet classes, implement the TLS key schedule itself, or send a UDP datagram on its own. Successful callback output proves local packet construction only, not delivery, ACK/loss recovery, or interoperability.
 
-## 4. Relationships
+## 5. Relationships
 - `quic_packet_publisher.hpp`
 - `session/quic_packet_publisher.cpp`
 - `quic/packet/README.md`
@@ -97,6 +97,6 @@ tls_session
 
 The publisher does not replace QUIC packet/frame classes. It orchestrates their construction and packing for a session.
 
-## 5. References
+## 6. References
 - [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
