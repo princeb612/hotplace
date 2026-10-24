@@ -188,7 +188,7 @@ A big number can be inserted with `set_bn()` and then participate in the same co
 
 The negative flag is also supported. This is useful when a protocol representation stores a magnitude separately from the semantic sign.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test/testcase/base/basic/testcase_variant.cpp` covers protocol-oriented integer conversion, endian conversion and truncation, `bignumber` conversion/formatting, and negative-value handling. One assertion stores `32768` as `uint32`, converts with `variant_convendian | variant_trunc`, Base16-encodes the resulting `binary_t`, and checks `00008000`; this is a concrete example, not a guarantee for every type/flag combination.
 - `valist` uses `variant_t` as the retained representation for heterogeneous arguments before it reconstructs the platform-specific native `va_list`; this is an argument-passing path, not the stream-formatting path.
@@ -197,6 +197,6 @@ The negative flag is also supported. This is useful when a protocol representati
 - `binary_t` is the byte-container used by binary conversion; Base16 encoding is used by the testcase to make the bytes inspectable.
 - Higher-level protocol code defines field meaning and ordering; `variant` supplies value/type conversion primitives. The main implementation is in `variant.hpp/.cpp` with shared declarations in `types.hpp`; `testcase_variant.cpp` provides conversion examples, while `valist.hpp/.cpp` is a consumer of heterogeneous values. The testcase is a concrete conversion example, not a universal statement that every `vartype_t` has a defined binary representation for every flag combination.
 
-## 6. References
+## 5. References
 
 No external references are listed.
