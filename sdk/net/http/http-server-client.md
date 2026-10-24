@@ -175,7 +175,7 @@ server_socket_builder -> adapter
 
 Use `test/applet/httpserver1/run_server.cpp` as the HTTP/1.1 comparison. The two applets show the practical reason for the builder layer: application routing remains familiar while transport backend and protocol configuration differ.
 
-## 4. Relationships
+## 5. Relationships
 - `http_server.hpp/.cpp`, `http_server_builder.hpp/.cpp`
 - `http_client.hpp/.cpp`, `http_router.hpp/.cpp`
 - `http_response.hpp/.cpp` — response composition and version-specific send path.
@@ -189,6 +189,6 @@ Use `test/applet/httpserver1/run_server.cpp` as the HTTP/1.1 comparison. The two
 - `test/testcase/net/http/testcase_http.cpp` — source-level request/response/router coverage.
 - `test/applet/httpserver1/` and `test/applet/httpserver2/` — server applet source paths.
 
-## 5. References
+## 6. References
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110) — request/response semantics and status codes.
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113) — stream-aware request/response framing.
