@@ -92,7 +92,7 @@ The adapter maps the requested scheme to a backend marker; the builder creates a
 
 `ipaddr_acl` normalizes and evaluates a peer address, returning an allow/deny result. The server/socket caller chooses where to invoke it and enforces the result; the ACL is not automatically installed as a socket filter.
 
-The applet sources show concrete selection points: `tlsserver` and `dtlsserver` add either `socket_scheme_openssl` or `socket_scheme_trial`; `httpserver1` and `httpserver2` configure an adapter through `http_server_builder`; `netclient` exposes `-T` for the trial client path. These paths share the socket contract, but not universal protocol/certificate compatibility.
+The applet documentation provides concrete caller paths without duplicating them here: [`tlsserver`](../../../test/applet/tlsserver/README.md) and [`dtlsserver`](../../../test/applet/dtlsserver/README.md) select `socket_scheme_openssl` or `socket_scheme_trial`; [`httpserver1`](../../../test/applet/httpserver1/README.md) and [`httpserver2`](../../../test/applet/httpserver2/README.md) configure an adapter through `http_server_builder`; [`netclient`](../../../test/applet/netclient/README.md) selects TCP, UDP, TLS, or DTLS with `-P` and the trial path with `-T`. These are runnable integration paths, not evidence of universal protocol/certificate compatibility.
 
 ## 4. Relationships
 - [Socket model](socket-model.md) — shared client/server contracts and scheme metadata.
