@@ -102,7 +102,7 @@ For each fixture, `testcase_loader.cpp` checks the status of tokenization, parsi
 - Parameterized notation has grammar productions and direct semantic prototypes, but the disabled end-to-end probe means parameter binding/substitution should not be represented as complete.
 - Parser, publisher, imported-symbol resolution, and notation representation are exercised in distinct test stages. This documentation update did not execute those tests.
 
-## 5. Relationships
+## 4. Relationships
 - [ASN.1 Basic](../basic/README.md) — semantic types, structural nodes, tagging, and constraints.
 - [ASN.1 parser adapter](asn1_parser.md) — tokenization and generic parse-tree construction.
 - [ASN.1 publisher](asn1_publisher.md) — grammar-event handling and semantic reconstruction.
@@ -113,11 +113,11 @@ For each fixture, `testcase_loader.cpp` checks the status of tokenization, parsi
 - `test/testcase/asn.1/runtime/testcase_publish.cpp`
 - `test/testcase/asn.1/loader/testcase_loader.cpp`
 
-## 6. References
+## 5. References
 
 No external references are listed.
 
-## 7. Developer Notes
+## 6. Developer Notes
 The examples below preserve the earlier DER/TLV/semantic-object comparison study. They are illustrative traces for selected schemas and tag combinations, not evidence of complete ASN.1 feature coverage.
 
 ### Tagged and referenced types
