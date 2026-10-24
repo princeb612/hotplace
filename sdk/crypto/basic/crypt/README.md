@@ -225,6 +225,29 @@ The builder chooses the operation implementation; the caller supplies the key, I
 
 For AEAD, the analogous testcase uses `crypto_aead_builder::set_scheme()` and carries AAD and the authentication tag as separate inputs/outputs. See [testcase_cipher_encrypt.cpp](../../../../test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp) and [testcase_crypto_aead.cpp](../../../../test/testcase/crypto/crypt/testcase_crypto_aead.cpp).
 
+### 3.5 Concrete caller path: AEAD round trip
+
+The common AEAD testcase builds a scheme-specific object, supplies the per-message key, nonce/IV, plaintext and AAD, and carries the returned tag into decryption. The shortened form below follows `test/testcase/crypto/crypt/testcase_crypto_aead.cpp`:
+
+```cpp
+#include <hotplace/sdk/crypto/basic/crypto_aead.hpp>
+
+crypto_aead_builder builder;
+auto aead = builder.set_scheme(crypto_scheme_t::aes_128_gcm).build();
+if (aead) {
+    binary_t ciphertext, plaintext, tag;
+    return_t ret = aead->encrypt(key, iv,
+        reinterpret_cast<const byte_t*>(input.data()), input.size(),
+        ciphertext, aad, tag);
+    if (errorcode_t::success == ret) {
+        ret = aead->decrypt(key, iv, ciphertext, plaintext, aad, tag);
+    }
+    aead->release();
+}
+```
+
+The important contract is that the tag is a separate output of encryption and an input to decryption, while AAD is supplied to both operations but is not encrypted into the ciphertext. The test exercises round trips for several AES-GCM/CCM scheme identifiers; it does not establish interoperability with another implementation or define a production nonce-generation strategy. The test's fixed key and IV are fixtures and must not be copied into application code.
+
 ## 4. Relationships
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.
 - `../digest/README.md` and `../mac/README.md` document related digest/MAC primitives.
