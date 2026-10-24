@@ -43,6 +43,15 @@ replace(source, old, new) ────────────► modified sourc
 - `gettoken()` and `tokenize()` are exercised by the testcase source and should not be confused with the range-based `split_context_t` API documented in [split.md](split.md).
 - These APIs do not by themselves define protocol-specific token grammar; callers supply delimiters or predicates.
 
+### Practical example: format and then edit a message
+
+```cpp
+std::string message = format("%s %d", "sample", 1); // "sample 1"
+replace(message, "sample", "hotplace");               // "hotplace 1"
+```
+
+`format()` creates a `std::string`, while `replace()` modifies that string in place. This is a small example of two common operations available without constructing a stream object; both operations are exercised in `testcase_string.cpp`.
+
 ## 4. Relationships
 
 - `test/testcase/base/string/testcase_string.cpp` — `testcase_string()` exercises formatting, tokenization, line scanning, bounded scanning, and replacement; see the [testcase guide and recorded result](../../../test/testcase/base/string/README.md).
