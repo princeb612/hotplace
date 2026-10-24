@@ -77,7 +77,7 @@ result() ─► EXIT_SUCCESS if no unexpected failure; otherwise EXIT_FAILURE
 
 The result code remains the input to classification; the console label/color is derived reporting metadata. The outer test runner consumes the executable's exit status, not the logger text or the visual category alone.
 
-## 5. Relationships
+## 4. Relationships
 
 - [Error handling and error advice](../system/error-handling.md) — result-code descriptions, category classification, and report hints.
 - [Trace and debug events](../system/trace.md) — leave-trace paths and debug diagnostics.
@@ -86,6 +86,6 @@ The result code remains the input to classification; the console label/color is 
 - `testcase.hpp/.cpp` implement result recording and reporting; `logger.hpp` and `console_color.hpp` provide output integration. `error.hpp` and `error_advisor.cpp` provide result/category interpretation.
 - `test/testcase/base/unittest/testcase_unittest.cpp` — `test_error()` checks advisor name/message lookup; `test_testcase()` submits representative result categories; `test_fail()`, `test_trace()`, and `test_try_leave()` cover error-flow and leave-trace paths. This describes source coverage, not execution in this documentation task.
 
-## 6. References
+## 5. References
 
 No external references are listed.
