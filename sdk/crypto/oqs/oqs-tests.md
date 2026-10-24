@@ -26,7 +26,7 @@ The OQS tests are integration tests around provider discovery and OpenSSL key/op
 
 `testcase_oqs_dsa.cpp` checks key generation, serialization, public-key decoding, signing, and verification.
 
-## 5. Relationships
+## 4. Relationships
 
 ### Source-test evidence
 
