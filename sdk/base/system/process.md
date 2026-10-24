@@ -66,10 +66,14 @@ parent process
 
 Process termination, output draining, and redirection cleanup are distinct concerns. The caller should follow the platform implementation's close/wait contract and should not assume `terminate()` by itself drains pending output or releases every associated resource.
 
-## 4. Relationships
+## 5. Relationships
 
 - [Standard-I/O redirection](redirection.md) — parent-side pipe/handle operations.
 - `sdk/base/system/linux/process.hpp` — Linux implementation based on POSIX process creation.
 - `sdk/base/system/windows/process.hpp` — Windows process and handle implementation.
 - `sdk/base/system/dir.hpp` — independent filesystem helper; process working-directory configuration is not directory creation.
 - Higher-level code should treat executable argument construction and child-process policy as application responsibilities.
+
+## 6. References
+
+No external references are listed.
