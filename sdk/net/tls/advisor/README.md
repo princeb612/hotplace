@@ -99,4 +99,7 @@ A successful TLS metadata lookup means that the identifier is recognized by the 
 - [TLS overview](../README.md).
 
 ## 5. References
-No external references are currently listed.
+- [IANA TLS Parameters Registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml) — TLS parameter identifiers and assignments.
+- [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml) — QUIC transport parameters, frames, packet types, and error codes.
+- [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446) — TLS 1.3 protocol identifiers and handshake/protection context.
+- [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000) — QUIC packet, frame, and transport-parameter context.
