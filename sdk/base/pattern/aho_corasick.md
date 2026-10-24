@@ -186,7 +186,7 @@ The source documents `repeat_as()` and `treat_as()` as mutually exclusive approa
 
 The reducer can prepare token sequences for a parser, but it does not replace the grammar, parser state or semantic actions. It is a preprocessing layer that changes the granularity of the tokens presented downstream.
 
-## 4. Relationships
+## 5. Relationships
 
 - `aho_corasick.hpp/.cpp` — base literal-pattern automaton and match range handling.
 - `aho_corasick_wildcard.hpp` — wildcard transition exploration and hidden prefix/range metadata.
@@ -196,12 +196,12 @@ The reducer can prepare token sequences for a parser, but it does not replace th
 - `test/testcase/base/pattern/testcase_aho_corasick_wildcard.cpp` — wildcard and ignore-case paths.
 - `test/testcase/io/parser/asn1module.cpp` and `test/testcase/io/parser/testvector_parser.yml` — concrete `treat_as` configuration and input/output span expectations.
 
-## 5. References
+## 6. References
 
 - [Aho-Corasick algorithm for pattern searching in C++](https://www.javatpoint.com/aho-corasick-algorithm-for-pattern-searching-in-cpp)
 - [Understanding failure links and output](https://daniel.lawrence.lu/blog/y2014m03d25/)
 
-## 6. Development Notes (for maintainer review)
+## 7. Development Notes (for maintainer review)
 The implementation history records a source review of greedy filtering and a reset fix, followed by wildcard-search optimizations that normalize repeated `*` symbols and avoid repeated active-node work with generation-based visitation. These are meaningful implementation choices: the wildcard path has to control the number of active states, while reduction has to retain original token spans after replacing a sequence with a virtual token.
 
 The reduction APIs were developed as an exploratory token-processing layer with Gemini assistance. The resulting design is worth understanding through its rule composition—`group_as`, `insert_as`, `repeat_as` and `treat_as`—rather than describing it as a generic pattern-search optimization.
