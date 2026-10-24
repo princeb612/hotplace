@@ -36,7 +36,7 @@ Incoming bytes are framed into records, protected content is authenticated/decry
 
 QUIC reuses TLS 1.3 handshake semantics but does not use ordinary TLS records for its handshake transport. QUIC carries handshake bytes in CRYPTO frames and has separate packet/frame processing.
 
-## 4. Relationships
+## 5. Relationships
 - [Record layer](record/README.md) — record header, content and framing boundary.
 - [Handshake messages](handshake/README.md) — message types and structured fields.
 - [Extensions](extension/README.md) — typed extension payloads and negotiation parameters.
@@ -45,6 +45,6 @@ QUIC reuses TLS 1.3 handshake semantics but does not use ordinary TLS records fo
 - [TLS session support](../session/README.md) — handshake state and protocol lifecycle.
 - [QUIC integration](../quic/README.md) — CRYPTO-frame transport of TLS handshake bytes.
 
-## 5. References
+## 6. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
