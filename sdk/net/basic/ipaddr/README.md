@@ -127,7 +127,7 @@ The rule engine only returns a decision; it does not close a socket or reject a 
 
 Source: [testcase_acl.cpp](../../../../test/testcase/net/basic/testcase_acl.cpp).
 
-## 4. Relationships
+## 5. Relationships
 - `ipaddr_acl.hpp/.cpp` — public API, normalized rule representation, and matching implementation.
 - `sdk.hpp/.cpp` — SDK-facing integration.
 - [Basic socket layer](../README.md) — socket abstractions and caller-side admission boundary.
@@ -135,5 +135,5 @@ Source: [testcase_acl.cpp](../../../../test/testcase/net/basic/testcase_acl.cpp)
 - [Network server](../../server/README.md) — higher-level accept/session orchestration.
 - `test/testcase/net/basic/testcase_acl.cpp` — source-level ACL assertions; this documentation update does not claim that tests were executed.
 
-## 5. References
+## 6. References
 No external references are currently listed.
