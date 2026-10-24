@@ -107,13 +107,39 @@ SUPPORT_OQS enabled at build?
 A source file being compiled or a provider listing an algorithm is not itself a successful operation test. These are selected flow checks, not full conformance, malformed-key, cross-provider or interoperability suites.
 
 
+
+**Source-to-case index**
+
+| Source file | Focus | Explicit evidence / limitation |
+|---|---|---|
+| `testcase_pqc_dsa.cpp` | Common PQC signature operations | Sign/verify operation status; not a fixed signature-byte vector |
+| `testcase_pqc_encode.cpp` | Common PQC key encoding and decoding | Status checks and reconstructed-key equality where explicitly asserted |
+| `testcase_pqc_kem.cpp` | ML-KEM-512/768/1024 | OpenSSL 3.5+ guard; decoded public-key equality and encapsulated/decapsulated shared-secret equality |
+| `testcase_pqc_hybrid_kem.cpp` | Classical + PQC hybrid KEM | Key-share and shared-secret lengths, then Alice/Bob shared-secret comparison where supported |
+| `oqs/testcase_oqs_encode.cpp` | Enumerate OQS KEM/signature algorithms and try PEM/DER encoding variants for OID-registered entries | Enumeration or successful encoding alone does not prove an end-to-end algorithm operation |
+| `oqs/testcase_oqs_kem.cpp` | OQS key generation, serialization, encapsulation and decapsulation | Compare sender/receiver shared secrets |
+| `oqs/testcase_oqs_dsa.cpp` | OID-registered OQS signatures | Sign/verify operation path; inspect source assertions for the precise oracle |
+
+```text
+CMake SUPPORT_OQS
+  ├─ disabled → dummy OQS testcase implementations
+  └─ enabled  → oqs/ testcase sources
+                  ├─ encode: enumerate + try supported PEM/DER forms
+                  ├─ KEM: key → encode/decode → encapsulate/decapsulate
+                  │        → compare shared secrets
+                  └─ DSA: sign → verify
+                           ↓
+                 runtime provider and algorithm availability
+```
+
+The common ML-KEM and hybrid KEM paths are distinct from the provider-backed OQS paths. Build-time inclusion, runtime provider availability, and a successful cryptographic operation are separate conditions.
+
 ### Documentation and verification status
 
 No tests were run during this documentation pass. The supplied aggregate crypto report does not isolate the PQC/OQS directory, so no per-directory result is asserted here.
 
 ## 4. Relationships
 
-- [PQC testcase detail map](testcase_pqc.md)
 - `oqs/` contains provider-specific tests.
 - `sdk/crypto/oqs/` documents the provider adapter.
 - `sdk/crypto/basic/` contains common cryptographic abstractions.
