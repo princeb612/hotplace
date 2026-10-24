@@ -225,7 +225,7 @@ The builder chooses the operation implementation; the caller supplies the key, I
 
 For AEAD, the analogous testcase uses `crypto_aead_builder::set_scheme()` and carries AAD and the authentication tag as separate inputs/outputs. See [testcase_cipher_encrypt.cpp](../../../../test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp) and [testcase_crypto_aead.cpp](../../../../test/testcase/crypto/crypt/testcase_crypto_aead.cpp).
 
-## 4. Relationships
+## 5. Relationships
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.
 - `../digest/README.md` and `../mac/README.md` document related digest/MAC primitives.
 - TLS, JOSE and COSE build protocol-specific inputs and headers above these primitives; this layer does not construct TLS records or JOSE/COSE messages.
@@ -246,7 +246,7 @@ For AEAD, the analogous testcase uses `crypto_aead_builder::set_scheme()` and ca
 - `testcase_crypto_aead.cpp` and `testcase_aead_ccm.cpp` exercise AEAD behavior.
 - CAVP block-cipher vectors, RFC 3394 key-wrap vectors, RFC 7539 ChaCha20/Poly1305 vectors, and CBC-HMAC TLS/JOSE vectors cover specific algorithm contracts. Vector presence should not be read as support for every algorithm/mode in every build.
 
-## 5. References
+## 6. References
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 3394 — Advanced Encryption Standard (AES) Key Wrap Algorithm.
 - RFC 5649 — AES Key Wrap with Padding.
