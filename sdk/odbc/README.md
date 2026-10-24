@@ -76,7 +76,7 @@ Native return codes are converted into coarse hotplace error categories by `erro
 - [`basic/odbc_record.md`](basic/odbc_record.md) and [`basic/odbc_field.md`](basic/odbc_field.md) — row and column representation
 - [`basic/odbc_diagnose.md`](basic/odbc_diagnose.md) — diagnostic callbacks
 - [`basic/odbc_sinker.md`](basic/odbc_sinker.md) — async readiness and timeout bridge
-- [`test/testcase/odbc/testcase_odbc.md`](../../test/testcase/odbc/testcase_odbc.md) — sample behavior and verification limits
+- [`test/testcase/odbc/README.md`](../../test/testcase/odbc/README.md) — sample behavior and verification limits
 
 ## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)
