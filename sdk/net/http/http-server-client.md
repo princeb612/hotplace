@@ -123,6 +123,36 @@ URL
 
 This is the current simple HTTP/1.x client path. It does not automatically negotiate or implement the separate HTTP/2 frame/session path.
 
+### Concrete applet path: configure HTTP/2 and dispatch a request
+
+`test/applet/httpserver2/run_server.cpp` shows how a real caller connects the builder, adapter, application callback, and router. The socket scheme is selected earlier from the applet options; the following excerpt keeps only the HTTP-facing setup and request dispatch:
+
+```cpp
+http_server_builder builder;
+builder.set(adapter)
+    .enable_http(false)
+    .set_port_http(option.port)
+    .enable_https(true)
+    .set_port_https(option.port_tls)
+    .set_tls_verify_peer(0)  // applet uses a self-signed certificate
+    .enable_ipv4(true)
+    .enable_ipv6(true)
+    .enable_h2(true)
+    .set_handler(consumer_routine)
+    .set_tls_cipher_list(ciphersuites);
+
+_http_server.make_share(builder.build());
+
+// In consumer_routine, on mux_read when request is non-null:
+http_response response(request);
+_http_server->get_http_router().route(session, request, &response);
+response.respond(session);
+```
+
+The applet then registers URI handlers such as `/api/html` and `/api/json`, and starts the server. This is a real integration path, not a standalone minimal program: `adapter`, `option`, `ciphersuites`, `consumer_routine`, and the shared `_http_server` are established by the surrounding applet. The callback explicitly invokes `route()`; this confirms that routing is application-controlled rather than an automatic consequence of `http_server::consume()`.
+
+The `set_tls_verify_peer(0)` setting is for the applet's self-signed-certificate setup and is not a production verification recommendation. This example demonstrates HTTP/2 server configuration and request dispatch; it does not establish complete HTTP/3 server support.
+
 ### Network-server boundary
 
 `http_server` uses `network_server` for listener setup, multiplexer registration, accept/TLS-accept work, session creation, producer/consumer buffering, and shutdown. For HTTPS, the chosen adapter creates/starts the secure server socket before the network server binds the listener. The network server's TLS-accept workers perform the secure accept/handshake stage before ordinary session event processing. For plain HTTP, the TCP server socket follows the direct accept path.
