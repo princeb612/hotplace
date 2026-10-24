@@ -67,7 +67,7 @@ When reviewing a change, verify polynomial, bit direction, initialization/finali
 
 A CRC detects accidental corruption according to its specified checksum scheme; it does not provide collision resistance or authenticity and must not be used as a cryptographic security primitive. No dedicated direct CRC testcase was identified in this revision's source tree, so verification should follow the Radix-64 consumer and distinguish end-to-end format coverage from a standalone `crc24()` unit test.
 
-## 5. Relationships
+## 4. Relationships
 
 - `crc24()` is consumed by Radix-64 encoding to supply its CRC-24 checksum; `crc32()` is a separate 32-bit checksum helper.
 
@@ -85,6 +85,6 @@ base/basic/crc.cpp
 - CRC is not a substitute for a cryptographic digest, MAC, or digital signature.
 - The implementation is in `crc.hpp/.cpp`; `radix64.hpp` consumes CRC-24 together with Base64 armor. Validate the caller-visible checksum representation through the Radix-64 testcase under `test/testcase/base/encoding/`, rather than treating a checksum-only vector as proof of the full format contract.
 
-## 6. References
+## 5. References
 
 - [RFC 4880 — OpenPGP Message Format](https://www.rfc-editor.org/rfc/rfc4880), Sections 6.5 and 6.6.
