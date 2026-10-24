@@ -185,6 +185,18 @@ Key-log lines contain master secrets or traffic secrets that may permit decrypti
 
 The session's status bitmask, directional handshake status, protection-active flag, transcript state, and sequence counters evolve at different call sites. A status bit being set does not alone prove that a peer handshake is complete; a successful encryption call does not prove delivery; and the presence of derived secrets does not mean every direction or protection space is active. Read state changes alongside the caller that triggers them.
 
+### Real-code example: session status is not one boolean
+
+The TLS 1.2 AEAD testcase in `test/testcase/tls/testcase_tls12_aead.cpp` demonstrates a narrow protection operation through `tls_session::get_tls_protection()`. For lifecycle behavior, follow the handshake/session path from `test/applet/tlsserver/run_server.cpp`; the applet selects the backend and runs a real connection, while the session maintains directional handshake/protection state and scheduled work.
+
+```text
+handshake processing -> per-direction session status
+                    -> protection enabled for that direction
+                    -> record processing uses active protection state
+```
+
+Do not interpret a session-wide status notification as proof that both directions have entered protected application-data state. Use the detailed state transitions in this document to interpret the integration trace.
+
 ## 4. Relationships
 - `tls_session.hpp/.cpp`, `dtls_record_arrange.hpp/.cpp`, `dtls_record_publisher.hpp/.cpp`.
 - `quic_packet_publisher.hpp/.cpp`, `quic_session.hpp/.cpp`, `quic_streams.hpp/.cpp`.
