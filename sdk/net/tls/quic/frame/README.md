@@ -53,7 +53,7 @@ UDP -> packet authentication/decryption -> frame parser
 
 This layer boundary explains why a frame parser does not directly invoke the HTTP router. The current HTTP/3 components are not evidence of a complete end-to-end HTTP/3 server.
 
-## 4. Relationships
+## 5. Relationships
 - `quic_frame.hpp/.cpp`, `quic_frame_builder.hpp/.cpp`, `quic_frames.hpp/.cpp`.
 - `quic_frame_ack.*`, `quic_frame_crypto.*`, `quic_frame_stream.*`, `quic_frame_http3_stream.*`.
 - `quic_frame_connection_close.*`, `quic_frame_reset_stream.*`, `quic_frame_stop_sending.*`.
@@ -62,6 +62,6 @@ This layer boundary explains why a frame parser does not directly invoke the HTT
 - `sdk/io/basic/payload.hpp/.cpp` — reusable binary payload field-layout support.
 - `sdk/net/http/http3/` — HTTP/3-specific stream frames and frame consumers.
 
-## 5. References
+## 6. References
 - [RFC 9000 — QUIC transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)
