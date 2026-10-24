@@ -105,6 +105,21 @@ nonce() / token() ───────────────> rand(size, enco
 
 The byte-buffer APIs and encoded-string APIs return different representations of random data. Callers should choose the representation required by the protocol and should not mistake an optional timestamp prefix for additional random bytes. The wrapper does not assign protocol-specific nonce uniqueness, token expiry, or storage policy.
 
+#### Concrete caller path from `testcase_random.cpp`
+
+```cpp
+openssl_prng random;
+
+int32 value = random.rand32();
+std::string nonce = random.nonce(16, encoding_t::encoding_base16);
+std::string token = random.token(16, encoding_t::encoding_base64url);
+
+// Separate API path: include an encoded timestamp prefix.
+std::string timestamped = random.rand(16, encoding_t::encoding_base16, true);
+```
+
+The testcase repeats the integer, nonce and token calls 30 times and optionally logs the latest value. It does not check uniqueness, length/alphabet for every result, entropy, or distribution. The timestamped path is not equivalent to a nonce/token of the same random-byte length: `usetime=true` prepends encoded timestamp bytes before the random buffer. Treat these calls as examples of the API shape, not as proof of a token format or a protocol's nonce policy.
+
 ### 3.3 PQC key encoding and operation flow
 
 Key serialization routes by the requested encoding: PEM/DER formats use the keychain's format decoder/encoder, while raw public/private forms use the named-algorithm raw path. The algorithm name is needed for raw decoding because the byte string alone does not identify the key type.
