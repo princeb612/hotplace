@@ -43,9 +43,13 @@ Delegates category classification to `error_advisor`; the category is not inferr
 
 On Linux, positive values are treated as errno values. Negative values are disambiguated between resolver errors and negative kernel errno conventions, with `EAI_SYSTEM` using the current `errno`. On Windows, a zero flag selects `GetLastError()`; the Winsock flag selects `WSAGetLastError()`. The input parameter is therefore interpreted differently by platform and flag.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/system/error.hpp` — `error_advisor`, `error_traits`, categories and diagnostic hints.
 - `sdk/base/syntax.hpp` — uses `errorcode_t` in allocation/error-handling macros.
 - `sdk/base/callback.hpp` — callback signatures return `return_t`.
 - `sdk/base/unittest/` — reports test outcomes using shared error/category conventions. `error.hpp/.cpp` define the shared codes and wrapper; this is the common representation that the system error-advisor layer interprets.
+
+## 6. References
+
+No external references are listed.
