@@ -127,6 +127,19 @@ The rule engine only returns a decision; it does not close a socket or reject a 
 
 Source: [testcase_acl.cpp](../../../../test/testcase/net/basic/testcase_acl.cpp).
 
+### Real-code entry point: enforce the ACL decision
+
+The testcase demonstrates how rules are evaluated; `test/applet/tcpserver2/run_server.cpp` shows how a real caller enforces the result. Its accept callback calls `acl.determine(client_addr, result)` and maps the decision to `CONTINUE_CONTROL` or `STOP_CONTROL`. During setup, `echo_server()` inserts IPv4/IPv6 loopback allow rules, selects whitelist mode, and registers the callback with `network_server`.
+
+```text
+echo_server(): add rules -> setmode(whitelist)
+  -> network_server.set_accept_control_handler(...)
+  -> accept_handler(peer address)
+  -> acl.determine(peer address, result)
+  -> CONTINUE_CONTROL / STOP_CONTROL
+```
+
+This is the distinction to retain: `ipaddr_acl` computes a policy decision, while the server callback enforces it at the accept boundary. Compare the rule-focused testcase with `test/applet/tcpserver2/run_server.cpp` to see the policy API and its integration point.
 ## 5. Relationships
 - `ipaddr_acl.hpp/.cpp` — public API, normalized rule representation, and matching implementation.
 - `sdk.hpp/.cpp` — SDK-facing integration.
