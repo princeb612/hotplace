@@ -91,13 +91,13 @@ The first write intentionally need not contain a complete three-byte Base64 grou
 
 Source: `test/testcase/encode/testcase_base64.cpp`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `base16.*` and `base64.*` provide the conversion routines used by the stream.
 - `http_huffman_coding.*` provides the fixed protocol table and symbol-code lookup.
 - `decoder_stream` is the corresponding stateful decoding layer.
 - `test/testcase/encode/testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide source-level coverage for chunked input and finalization; this documents test intent, not execution in this documentation task.
 
-## 6. References
+## 5. References
 
 No external references are listed.
