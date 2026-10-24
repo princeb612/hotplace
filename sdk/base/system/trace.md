@@ -67,6 +67,37 @@ For example, run a debug-built sample with -d --debug to activate debug-level ev
 
 The source contains trace calls before the handler is installed, but event delivery is gated: the debug option must be present in get_trace_option(), a handler must be registered, and the category/level checks must pass. Therefore, the important workflow is to activate the existing diagnostics, not to add new log statements first.
 
+### Existing instrumentation in parser code
+
+`cfg_grammar::add_production()` in `sdk/io/parser/cfg_grammar.cpp` is a compact real-code example. The production is inserted into the grammar tables first; the debug-only block then formats that same production for trace output.
+
+```cpp
+#if defined DEBUG
+if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+    trace_debug_event(trace_category_t::trace_category_internal,
+                     trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+        print_style_t style("{", ", ", "}");
+        style.set_element("", ", ", "");
+
+        dbs.printf(" {%i, \\"%s\\", ", id, lhs.c_str());
+        print(rhs, dbs, [](const std::vector<std::string>::const_iterator iter,
+                           basic_stream& dbs) -> void {
+            dbs << "\\"" << *iter << "\\"";
+        }, style);
+        dbs << "},\\n";
+    });
+}
+#endif
+```
+
+This code is already present in the SDK; it does not add a new log statement at runtime. Three separate gates should be understood:
+
+- `#if defined DEBUG` controls whether this instrumentation is compiled into the build.
+- `istraceable(category, level)` checks whether this category/verbosity is eligible for tracing under the active trace configuration. Here the request is the internal category at `loglevel_trace`, the most detailed level described by this API.
+- `trace_debug_event(category, event, callback)` submits the formatted event through the trace subsystem, where the trace option, category filter, and registered handler determine whether it is delivered.
+
+`trace_debug_filter()` configures category filtering; `trace_debug_filtered()` is the corresponding filter decision used during event delivery. `set_trace_debug()` installs the handler that receives the formatted stream. These functions connect configuration, eligibility, event formatting, and output without making trace equivalent to ordinary logger calls.
+
 ### Event delivery and error context
 
 trace_debug_event* routes an event to the registered handler only when the trace option is enabled and the category is not filtered. Leave-trace helpers additionally consult the configured debug level and use error_advisor to attach the symbolic error-code name; variants requesting a backtrace call trace_backtrace().
