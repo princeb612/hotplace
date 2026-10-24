@@ -207,7 +207,7 @@ QUIC: handshake → CRYPTO frame ─┐
 
 These flows describe responsibilities visible in source. The presence of a message class, hint, RFC note, or construction test does not establish complete conformance to every TLS/DTLS version or QUIC feature. Keep protocol requirements, implemented code paths, and actually executed test evidence separate.
 
-## 4. Relationships
+## 5. Relationships
 - [TLS/QUIC advisor](advisor/README.md) — protocol identifiers, resource indexes, and cross-advisor metadata mapping.
 - [DTLS record arrangement](session/dtls_record_arrange.md)
 - [DTLS record publisher](session/dtls_record_publisher.md)
@@ -226,7 +226,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - `test/testcase/tls/` — source-level test entry points and protocol test vectors.
 - `test/testcase/quic/` — QUIC packet/number/protection vectors and PCAP SIMPLE paths; see its testcase README for explicit source-level and runtime-evidence boundaries.
 
-## 5. References
+## 6. References
 ### Protocol specifications
 
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
@@ -245,7 +245,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - [Cipher suite information](https://ciphersuite.info/cs/)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 6. Developer Notes
+## Developer Notes
 ### RFC figures transcribed as plain text
 
 The following diagrams are retained as quick-reading aids. The authoritative wording and any corrections should be checked against the linked RFCs.
@@ -558,4 +558,4 @@ end
 ```
 
 - These notes are a compact working summary, not a complete or normative description of TLS key scheduling. Verify each version-specific step, label, context hash, and input against the relevant RFC and the implementation before using it to explain code behavior.
-- Local implementation documents belong under [Relationships](#4-relationships), not under external References.
+- Local implementation documents belong under [Relationships](#5-relationships), not under external References.
