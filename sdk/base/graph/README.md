@@ -150,14 +150,14 @@ push() creates a new node, optionally attaches one parent, indexes the node by s
 
 Traversal uses a visited set to avoid revisiting the same node while walking parent links. clear_heads() clears the active-head list but does not explicitly erase the node index. backtrack_string() follows only the first parent at each step, so it represents one path rather than all ambiguous ancestry.
 
-## 4. Relationships
+## 5. Relationships
 
 - [General graph](graph.md) documents t_graph<T>, edge attributes, search builders, and topological sort.
 - [Graph-structured stack](gss.md) documents t_gss<STATE, VALUE> and path operations used by GLR.
 - [Graph testcase suite](../../../test/testcase/base/graph/README.md) describes direct graph/GSS tests and distinguishes asserted results from diagnostic output.
 - sdk/io/parser/glr_parser.cpp is the parser-side consumer of GLR parsing infrastructure. The dependency points from parser code to the base graph primitive, not the reverse.
 
-## 5. References
+## 6. References
 
 - [Graph Online](https://graphonline.ru/en/) — graph visualization tool referenced by the original source documentation.
 - [Graph-structured stack](https://en.wikipedia.org/wiki/Graph-structured_stack) — background on the GSS data structure.
