@@ -170,6 +170,27 @@ echo_server()
 ```
 
 The associated `consumer_routine` handles the three event types; on read, this simple echo example sends received bytes back through the event socket. Read the callback and the full `echo_server()` together: the former shows the application boundary, while the latter shows listener setup and loop ownership. The applet also configures `ipaddr_acl` and uses the accept callback to decide whether to continue or reject a connection.
+### IPv4 and IPv6 listener model
+
+`network_server` does not infer a dual-stack listener from an address. Its `open()` accepts an explicit address family and passes it to the selected `server_socket::open()`. The caller can create one context for `AF_INET` and another for `AF_INET6`, each with its own listening socket, multiplexer context, callback registration, and event/consumer loops.
+
+```text
+application setup
+  ├─ network_server.open(handle_ipv4, AF_INET, port, ...)
+  │    └─ IPv4 listener + context
+  └─ network_server.open(handle_ipv6, AF_INET6, port, ...)
+       └─ IPv6 listener + context
+
+each context independently:
+  accept/read event -> session manager -> producer/consumer -> callback
+```
+
+The concrete example is `test/applet/tcpserver2/run_server.cpp`: it opens both families on the selected port, installs the accept-control handler for each handle, starts the consumer and event loops for both, and closes both contexts during cleanup. This is **two explicitly opened listeners**, not proof that one IPv6 socket also accepts IPv4-mapped connections. Whether the two binds can coexist on the same port depends on the socket backend and operating-system IPv6/dual-stack settings.
+
+The peer address is carried through the socket/session path as socket-address data; the accept callback can pass that address to `ipaddr_acl::determine()` to make an admission decision. Listener-family support and ACL address-representation support are separate concerns: the ACL implementation documents that IPv6 matching requires `__SIZEOF_INT128__` and otherwise reports IPv6 input as unsupported.
+
+For HTTP, `http_server_builder::enable_ipv4()` and `enable_ipv6()` are separate settings, both disabled by default. When enabled, the builder calls `startup_server()` separately with `AF_INET` and/or `AF_INET6` for the selected HTTP services. Enabling IPv6 in the builder is therefore an explicit listener configuration, not automatic dual-stack behavior.
+
 ## 5. Relationships
 - `network_server.hpp/.cpp` — context, worker loops, protocol registration, and shutdown.
 - [Network server execution model](network-server-model.md) — worker and lifecycle orchestration.
