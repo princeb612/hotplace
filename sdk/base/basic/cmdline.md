@@ -97,10 +97,14 @@ This is the parser's intended composition: token registration → callback dispa
 
 Source: [testcase_cmdline.cpp](../../../test/testcase/base/basic/testcase_cmdline.cpp).
 
-## 4. Relationships
+## 5. Relationships
 
 - The callback target type `T` is application-defined; `cmdline` provides token recognition and parameter dispatch rather than defining the application's option structure.
 - The source test vectors cover missing mandatory arguments, optional flags such as `-keygen`, missing values, unknown tokens, and valid combinations; preserve these cases when changing token matching or argument ordering.
 - Test vectors are part of the behavior contract and should be reviewed with `testcase_cmdline.cpp` when parsing rules change.
 - The implementation is in `cmdline.hpp`; the associated vectors are `testvector_cmdline.cpp` and `testvector_cmdline.yml`, alongside `testcase_cmdline.cpp`. Parsing changes should be checked against both assertions and data-driven cases.
 - This parser is separate from any protocol-level command or configuration parser.
+
+## 6. References
+
+No external references are listed.
