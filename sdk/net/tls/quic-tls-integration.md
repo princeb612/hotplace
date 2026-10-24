@@ -106,6 +106,20 @@ The implementation derives QUIC-labelled key, IV, and header-protection values f
 
 Sharing the TLS handshake and key schedule does not make QUIC a TLS-record transport. TLS transcript processing, CRYPTO stream offsets, QUIC packet numbers, STREAM IDs, and TLS record sequence numbers are distinct state domains. The implementation's integration path should be reviewed across session, protection, publisher, packet, and frame code rather than inferred from one class alone.
 
+### Real-code example: follow the composer across the TLS/QUIC boundary
+
+The concrete source path to study is `sdk/net/basic/trial/trial-socket-composer.md`, together with the QUIC frame and packet documents. The composer serializes TLS handshake messages, then the QUIC path places those bytes in CRYPTO frames and protects packets with QUIC keys. It does not publish a TLS record around those handshake bytes.
+
+```text
+tls_handshake object -> serialized handshake bytes
+  -> CRYPTO frame (offset + bytes)
+  -> QUIC packet builder
+  -> QUIC header protection + packet AEAD
+  -> UDP datagram
+```
+
+Use this source path to understand protocol integration. Do not use the HTTP/2 applet as evidence of HTTP/3 integration; the repository does not currently expose a complete HTTP/3 server path.
+
 ## 4. Relationships
 - `quic/rfc9000.md`
 - `quic/rfc9001.md`
