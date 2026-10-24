@@ -41,6 +41,23 @@ The Linux and Windows branches include their corresponding platform type headers
 
 `encoding_t` is an identifier set, not an encoder implementation. The matching encoder/decoder code defines the actual accepted syntax and error behavior.
 
+### Concrete caller path: byte storage and log-level parsing
+
+The shared aliases are used directly in ordinary SDK code:
+
+```cpp
+binary_t payload;
+payload.push_back(0x16);
+payload.push_back(0x03);
+payload.push_back(0x03);
+
+loglevel_t level = loglevel_helper::to_loglevel("debug");
+```
+
+`binary_t` is a byte vector, so its contents represent an explicit sequence of octets rather than a C string. `loglevel_helper::to_loglevel()` accepts the textual configuration value and maps recognized names to the corresponding enum; an unrecognized or null name falls back to `default_loglevel`. These two utilities share the base type layer but solve independent problems.
+
+The log-level conversion is also used when interpreting command-line or configuration options; the helper is a mapping function, not a logger configuration operation by itself.
+
 ## 4. Relationships
 
 - `sdk/base/error.hpp` — return codes and platform error normalization.
