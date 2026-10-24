@@ -70,7 +70,7 @@ HTTP/2 applet:           request bytes -> HTTP/2 session / HPACK -> http_request
 
 The split is intentional. HPACK tests isolate compression state and wire representation; the applet shows that HPACK is an internal HTTP/2 concern rather than an application callback responsibility.
 
-## 4. Relationships
+## 5. Relationships
 - `hpack_encoder.hpp/.cpp` — field encoding and decoding.
 - `hpack_static_table.hpp/.cpp`, `hpack_dynamic_table.hpp/.cpp` — HPACK-specific tables.
 - [Shared compression infrastructure](../compression/README.md) — common static/dynamic table and compression interfaces.
@@ -79,5 +79,5 @@ The split is intentional. HPACK tests isolate compression state and wire represe
 - [QPACK](../qpack/README.md) — related goal for HTTP/3, but different wire format and state coordination.
 - `test/testcase/net/hpack/testcase_huffman.cpp`, `testcase_rfc7541.cpp`, and `testvector_hpack.cpp` — source-level HPACK/Huffman vectors and assertions.
 
-## 5. References
+## 6. References
 - [RFC 7541 — HPACK: Header Compression for HTTP/2](https://www.rfc-editor.org/rfc/rfc7541)
