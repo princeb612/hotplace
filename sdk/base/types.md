@@ -58,9 +58,13 @@ loglevel_t level = loglevel_helper::to_loglevel("debug");
 
 The log-level conversion is also used when interpreting command-line or configuration options; the helper is a mapping function, not a logger configuration operation by itself.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/error.hpp` — return codes and platform error normalization.
 - `sdk/base/encoding/` — consumes `binary_t` and encoding identifiers.
 - `sdk/base/stream/` — byte/text stream utilities.
 - `sdk/base/system/linux/types.hpp` and `sdk/base/system/windows/types.hpp` — platform-specific type definitions.
+
+## 6. References
+
+No external references are listed.
