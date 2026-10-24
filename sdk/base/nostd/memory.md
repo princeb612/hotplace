@@ -72,11 +72,11 @@ The raw pointer is returned by the protocol-selection path with its reference co
 
 Source: `sdk/net/server/network_stream.cpp`, `network_stream::do_writep()`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/nostd/utility.md` — other conversion and generic helper functions.
 - `sdk/net/server/network_stream.cpp` — uses `make_promise_on_destruction` to ensure a reference-counted `network_protocol` is released when temporary processing finishes.
 - C++11 compatibility — these helpers should not be mistaken for a new language-standard requirement.
-## 6. References
+## 5. References
 
 - [cppreference: std::make_unique](https://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique) — C++14 standard-library API used as a comparison point for the C++11-compatible helper.
