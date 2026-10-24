@@ -66,12 +66,12 @@ supplied checksum ────────────────────�
 
 A successful Base64 decode is not sufficient: the checksum must also match. The checksum detects accidental corruption but is not a cryptographic integrity/authentication mechanism.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/encoding/base64.*` provides payload and checksum encoding.
 - `sdk/base/basic/crc.cpp` implements `crc24()`.
 - `test/testcase/encode/testcase_base64.cpp` covers RFC 4880 section 6.5 vectors, CRC-24 values, round trips, and section 6.6 ASCII-armored message processing.
 
-## 6. References
+## 5. References
 
 - [RFC 4880 — OpenPGP Message Format](https://www.rfc-editor.org/rfc/rfc4880), Sections 6.5 and 6.6.
