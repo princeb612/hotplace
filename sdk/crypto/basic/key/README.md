@@ -343,26 +343,42 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 The key-exchange testcase creates independent key stores for two peers. Each side generates a local key pair and a public share, then consumes the other peer's share to derive a secret:
 
 ```cpp
-crypto_key keystore_alice;
-crypto_keyexchange keyexch_alice(group);
-binary_t share_alice;
-binary_t secret_alice;
-return_t ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
+return_t exchange_two_peers(tls_group_t group) {
+    crypto_key keystore_alice;
+    crypto_keyexchange keyexch_alice(group);
+    binary_t share_alice;
+    binary_t secret_alice;
 
-crypto_key keystore_bob;
-crypto_keyexchange keyexch_bob(group);
-binary_t share_bob;
-binary_t secret_bob;
-ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
+    return_t ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
 
-keyexch_bob.exchange(&keystore_bob, "bob", share_alice, secret_bob);
-ret = keyexch_alice.exchange(&keystore_alice, "alice", share_bob, secret_alice);
-if (secret_alice != secret_bob) {
-    ret = errorcode_t::mismatch;
+    crypto_key keystore_bob;
+    crypto_keyexchange keyexch_bob(group);
+    binary_t share_bob;
+    binary_t secret_bob;
+
+    ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    ret = keyexch_bob.exchange(&keystore_bob, "bob", share_alice, secret_bob);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    ret = keyexch_alice.exchange(&keystore_alice, "alice", share_bob, secret_alice);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    return (secret_alice == secret_bob) ? errorcode_t::success : errorcode_t::mismatch;
 }
 ```
 
-The example separates three values that are easy to conflate: each peer's local key object, the public share exchanged over the protocol, and the locally derived shared secret. The testcase compares both secrets; a real protocol must also authenticate the peer and bind the exchange to its handshake transcript. A matching secret alone does not authenticate the peer or establish a secure channel.
+The function parameter makes the negotiated/tested group explicit; each peer gets an independent key store, and every operation status is checked before the derived secrets are compared. The example separates three values that are easy to conflate: each peer's local key object, the public share exchanged over the protocol, and the locally derived shared secret. The testcase compares both secrets; a real protocol must also authenticate the peer and bind the exchange to its handshake transcript. A matching secret alone does not authenticate the peer or establish a secure channel.
 
 Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
 
