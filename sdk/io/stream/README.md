@@ -49,6 +49,24 @@ A `file_stream` owns an open platform file resource and may also own a memory ma
 
 `printf()` and `vprintf()` reuse `bufferio` from `sdk/base/stream`, format into bytes, and then write those bytes to the file. This is a concrete example of the division between base stream facilities and OS-backed I/O.
 
+### Concrete mmap-to-stream sequence from `testcase_filestream.cpp`
+
+The direct testcase demonstrates the resource boundary with a 1 KiB temporary file:
+
+```text
+open("testfile", open_write)
+  -> truncate(1024) and check size
+  -> begin_mmap()
+  -> data() returns mapped bytes
+  -> write 32-bit values through the mapped view
+  -> end_mmap()
+  -> seek(0, FILE_BEGIN)
+  -> read 4 bytes through file_stream
+  -> assert the read value == 0x12345678
+```
+
+The testcase checks each open/mapping status before using the resource, checks the truncated size, ends the mapping before switching to ordinary stream access, and verifies the first value read from offset zero. It then unlinks the temporary file. This shows that `data()` is the mapped view, whereas `read()` uses the stream interface; the test is not a comparison of mapped and buffered I/O performance.
+
 ### File and mapping access
 
 The important boundary is external resource access: the file-stream implementation adapts the common stream interface to platform file operations and, where supported, mapped access. A caller may cross between mapped access and ordinary stream reads, so the file handle, mapping, seek position, and close path must be understood from the concrete implementation.
