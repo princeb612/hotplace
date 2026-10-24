@@ -46,6 +46,28 @@ The constructor fixes the low/high domain for the lifetime of the object. Each v
 
 This is a bounded integral set. It does not automatically grow its domain when an out-of-range value arrives.
 
+### Concrete caller path: ASN.1 named-bit value construction
+
+The ASN.1 value layer uses the bounded bit set to collect selected non-negative named-bit values before appending the packed bytes to its output:
+
+```cpp
+asn1_native_int_t minvalue = *evalues.begin();
+asn1_native_int_t maxvalue = *evalues.rbegin();
+t_bit_set<asn1_native_int_t> bs(minvalue, maxvalue);
+
+for (const auto& item : evalues) {
+    bs.add(item);
+}
+
+binary_t temp = bs.get();
+bin.insert(bin.end(), bs.unused_bit());
+bin.insert(bin.end(), temp.begin(), temp.end());
+```
+
+The ASN.1 layer determines the active value domain and which named values are present. `t_bit_set` maps those values to bits and exposes the packed storage plus the number of unused bits in the final octet. ASN.1 then emits the unused-bit count before the bytes, as required by the surrounding BIT STRING representation. The bit set does not itself encode the ASN.1 tag/length or validate the schema's named-bit rules.
+
+Source: `sdk/io/asn.1/basic/asn1_value.cpp`.
+
 ## 5. Relationships
 
 - `bit_set.hpp` implements the bounded bit-set representation, and `testcase_bitset.cpp` provides direct source-level coverage. ASN.1 BIT STRING is the motivating domain mentioned by the header; the ASN.1 layer owns its encoding and semantic constraints.
