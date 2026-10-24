@@ -66,7 +66,7 @@ Connection success and status depend on the installed driver manager, driver, an
 - [`odbc_query.md`](odbc_query.md) — statement and connection-associated query lifetime
 - [`odbc_diagnose.md`](odbc_diagnose.md) — environment and statement diagnostics
 - [`../../types.md`](../../types.md) — shared return-code conversion and query modes
-- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample's caller-supplied connection configuration
+- [`../../../test/testcase/odbc/README.md`](../../../test/testcase/odbc/README.md) — sample's caller-supplied connection configuration
 
 ## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)
