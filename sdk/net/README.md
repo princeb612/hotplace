@@ -113,6 +113,15 @@ The source components `dtls_record_arrange`, `dtls_record_publisher`, and `quic_
 
 A directory's presence does not guarantee that every backend, protocol version, extension, or optional feature is enabled in every build. Use the relevant CMake configuration and source guards when stating platform or feature support. Keep implementation claims separate from protocol-standard requirements.
 
+### Real-code entry points
+
+The directory-level diagrams are easiest to ground in three runnable callers:
+
+- `test/applet/tcpserver2/run_server.cpp` — opens listeners with `network_server`, registers accept control, and echoes data from a consumer callback. Use it to follow the plain TCP server lifecycle.
+- `test/applet/tlsserver/run_server.cpp` — selects OpenSSL or trial socket schemes and TLS version flags before entering the same network-server orchestration. Use it to distinguish application callbacks from handshake/record processing.
+- `test/applet/httpserver2/run_server.cpp` — builds an HTTP server, enables HTTP/2, and dispatches completed requests through `http_router` before responding. Use it to follow the boundary between transport/session processing and application semantics.
+
+These examples are intentionally complementary rather than one universal path. A callback receiving application data does not itself demonstrate how bytes were framed, how a handshake was negotiated, or how a request became complete; follow the corresponding component Behavior Model for those steps.
 ## 5. Relationships
 ```text
 Application / protocol consumer
