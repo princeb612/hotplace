@@ -85,7 +85,7 @@ Caller sequence
 
 The shared element extractor is an adaptation point, not a shared execution engine. After normalization, each algorithm maintains different state and reports a different result shape: a first index, a key/index or prefix length, a collection of ranges and pattern IDs, a set of occurrence positions, or capture ranges. Select the algorithm by the result and matching semantics the caller needs, not by the fact that all of them accept sequences.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/io/parser/` — consumes token-oriented pattern/reduction behavior; the Aho-Corasick reducer can collapse token sequences into higher-level virtual tokens.
 - `sdk/base/encoding/huffman_coding.*` — uses Trie longest-prefix scanning to decode variable-length Huffman codes.
@@ -93,3 +93,7 @@ The shared element extractor is an adaptation point, not a shared execution engi
 - `sdk/io/string/url.cpp` — uses the regex helpers to decompose URL components.
 - `test/testcase/base/pattern/` — owns source-level testcase descriptions and report-derived verification context; see [pattern testcase overview](../../../test/testcase/base/pattern/README.md).
 - Algorithm-specific details are documented in the linked pages above.
+
+## 6. References
+
+No external references are listed.
