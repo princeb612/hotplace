@@ -43,9 +43,13 @@ replace(source, old, new) ────────────► modified sourc
 - `gettoken()` and `tokenize()` are exercised by the testcase source and should not be confused with the range-based `split_context_t` API documented in [split.md](split.md).
 - These APIs do not by themselves define protocol-specific token grammar; callers supply delimiters or predicates.
 
-## 4. Relationships
+## 5. Relationships
 
 - `test/testcase/base/string/testcase_string.cpp` — `testcase_string()` exercises formatting, tokenization, line scanning, bounded scanning, and replacement; see the [testcase guide and recorded result](../../../test/testcase/base/string/README.md).
 - [`split.md`](split.md) describes the separate context-based splitting API.
 - [`obfuscation.md`](obfuscation.md) and [`constexpr-obfuscation.md`](constexpr-obfuscation.md) cover string obfuscation, not general scanning.
 - `sdk/base/stream/` provides stream and formatted-output abstractions; `sdk/io/string/` provides I/O-facing string processing. Public string declarations are in `string.hpp`.
+
+## 6. References
+
+No external references are listed.
