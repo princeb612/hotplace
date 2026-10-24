@@ -68,10 +68,10 @@ The ASN.1 layer determines the active value domain and which named values are pr
 
 Source: `sdk/io/asn.1/basic/asn1_value.cpp`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `bit_set.hpp` implements the bounded bit-set representation, and `testcase_bitset.cpp` provides direct source-level coverage. ASN.1 BIT STRING is the motivating domain mentioned by the header; the ASN.1 layer owns its encoding and semantic constraints.
 
-## 6. References
+## 5. References
 
 No external references are listed.
