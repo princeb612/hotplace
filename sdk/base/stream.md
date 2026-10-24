@@ -38,6 +38,23 @@ The interface returns `return_t` for operations that can fail, while state queri
 
 `data()`, `size()`, `empty()`, and `occupied()` expose the concrete stream's current state. Callers should consult the specific implementation before retaining a data pointer across writes or resize operations.
 
+### Concrete consumer path: format into an abstract stream
+
+The formatting API accepts the abstract `stream_t*`, allowing the caller to choose a concrete destination while keeping the formatting call unchanged:
+
+```cpp
+basic_stream output;
+valist args;
+args << 3.141592 << "phi" << 123;
+
+sprintf(&output, "value={1} value={2} value={3}", args);
+// output: value=3.141592 value=phi value=123
+```
+
+This is the pattern used by the `valist` testcase: `basic_stream` supplies the destination implementation, while `sprintf()` consumes indexed arguments and writes formatted text through the stream interface. The base `stream_t` contract does not promise that every concrete stream has identical storage or pointer-stability behavior.
+
+Source: `test/testcase/base/basic/testcase_valist.cpp`.
+
 ## 4. Relationships
 
 - `sdk/base/stream.hpp` declares the abstract contract; `sdk/base/stream/` supplies concrete in-memory streams and low-level buffers.
