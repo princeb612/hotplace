@@ -68,30 +68,27 @@ bool huffman_coding::decodable() const {
 }
 ```
 
-The five-bit boundary matters because the final octet can have one to seven padding bits. If a table permits a four-bit code, padding can complete a real codeword and the decoder cannot tell whether that symbol was intended or those bits were only padding. For example, with `A = 1010` and `B = 1111`, the tail `1010 1111` can mean `AB`, but it can also mean `A` followed by four padding bits. The byte stream alone does not distinguish the two interpretations.
+The minimum length matters at the final byte: padding bits could otherwise complete a valid short code, making it unclear whether the last symbol is data or padding. For example, a four-bit code `1010` could be mistaken for a final padding pattern. This is why the automatic decoder rejects tables whose shortest code is four bits or less.
 
-HPACK's table supplies the other part of the guarantee: RFC 7541 pads with the leading bits of the reserved 30-bit EOS code (`111...111`), which is not an ordinary data symbol. Because the HPACK code table is prefix-free, that all-ones suffix is a prefix of EOS rather than a valid symbol code. Thus the five-bit minimum is a guard used by this implementation's automatic decode path, while the HPACK EOS convention explains why its padding can be recognized. The minimum-length check alone does not validate an arbitrary imported table's padding convention.
+HPACK uses a fixed prefix-free table and pads with leading bits of its reserved 30-bit EOS code (all ones), which is not an ordinary symbol. This convention helps identify padding in HPACK, but `decodable()` itself checks only the shortest code length; it does not validate an arbitrary imported table or its padding convention.
 
-By default, `decode()` returns `errorcode_t::ambiguous` when the shortest code is four bits or shorter. `manual_decode` bypasses that guard and relaxes the final all-ones-tail check; use it only when the caller independently knows how to interpret the remaining bits. `decodable()` is useful for checking the minimum-length precondition before relying on automatic decoding.
+By default, `decode()` returns `errorcode_t::ambiguous` when this minimum-length condition is not met. `manual_decode` bypasses the guard and relaxes the final-tail check, so it is intended for callers that can interpret the remaining bits themselves.
 
 ### HPACK: fixed table used by HTTP/2
 
-HPACK applies Huffman coding to header-name and header-value strings inside compressed header blocks. Its table is fixed by RFC 7541 Appendix B; the generic `huffman_coding` learning path is not involved. The `http_huffman_coding` singleton exposes that table and uses the shared bit-oriented encoder/decoder behavior.
+HPACK uses Huffman coding for literal header-name and header-value strings. Unlike the generic class, `http_huffman_coding` uses the fixed table from RFC 7541 Appendix B.
 
 ```text
-HTTP/2 HEADERS / CONTINUATION
-            │ compressed header block
-            ▼
-        HPACK field decoder ─── static/dynamic table references
-            │ literal string encoded with Huffman?
-            ▼
-    http_huffman_coding (RFC 7541 fixed table)
-            │
-            ├── encode: input bytes -> variable-length codes -> EOS-style padding
-            └── decode: encoded bytes -> symbols; validate final padding
+HTTP/2 header block
+       │
+       ▼
+HPACK field representation
+       │ literal string uses Huffman?
+       ▼
+http_huffman_coding ──► encode / decode string bytes
 ```
 
-Huffman coding handles a literal string's byte representation; it does not choose whether a header field is indexed, uses a table name, or is emitted as a literal. Those choices and the stateful static/dynamic header tables belong to HPACK.
+Huffman coding represents the string bytes; HPACK separately determines whether a field is indexed, references a table name, or is sent as a literal.
 
 ### Practical example: RFC 7541 vectors
 
@@ -115,24 +112,7 @@ _test_case.assert(
     __FUNCTION__, "decode %s", sample);
 ```
 
-The actual helper `do_test_huffman_codes_routine()` also logs intermediate bytes when verbose mode is enabled. The vectors include short header-like strings such as `no-cache` and `custom-key`, as well as longer text. Comparing with fixed RFC bytes matters: a round trip alone could pass even if encoder and decoder shared the same incorrect table.
-
-### HTTP/2 path
-
-```text
-http_huffman_coding::get_instance()
-                │
-                ▼
-      fixed RFC 7541 code table
-                │
-       ┌────────┴────────────────────────────────┐
-       ▼                                         ▼
-  ymbol lookup                       bit-sequence decode
-       │                                         │
-       └──── encoder_stream / decoder_stream ────┘
-```
-
-The singleton exposes the protocol-specific table to stream wrappers. Generic Huffman learning remains a separate capability.
+The helper also covers short header-like strings such as `no-cache` and `custom-key`. Comparing against fixed RFC bytes is useful because a round trip alone could pass even if the encoder and decoder shared the same incorrect table.
 
 ## 4. Relationships
 
