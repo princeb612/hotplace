@@ -200,10 +200,14 @@ result_to_return_t() ───► preserved return_t, or convert _lastcode
 
 This is why the policy type matters: `error_traits<T, category>` classifies the current result and supplies conversions. The same numeric value can mean success under one category and failure under another; the callback return type alone is not enough to infer continuation behavior.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/system/error.hpp` owns the `error_traits` policy specializations and the `error_advisor` / `error_category_hint` lookup model. `function_pipeline.hpp` consumes those policies; it does not independently define what a category-specific native result means.
 - `error_advisor` and `error_category_hint` explain hotplace error-code categories and their descriptive/test metadata. The `return_t` specialization's `is_not_fail()` uses the advisor's category classification; this is how a non-severe category can be distinguished from a severe error.
 - `sdk/base/basic/function_pipeline.hpp` implements sequencing, state conversion, exception paths, counters, and debug tracing. `test/testcase/base/basic/testcase_pipeline.cpp` demonstrates the externally observable flow and result conversion.
 - Higher-level code can use the pipeline without embedding OpenSSL- or `errno`-specific branches in every callback chain, provided it selects the matching `T, category` pair and respects that specialization's return-value convention.
 
+
+## 6. References
+
+No external references are listed.
