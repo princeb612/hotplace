@@ -71,7 +71,7 @@ The testcase checks each open/mapping status before using the resource, checks t
 
 The important boundary is external resource access: the file-stream implementation adapts the common stream interface to platform file operations and, where supported, mapped access. A caller may cross between mapped access and ordinary stream reads, so the file handle, mapping, seek position, and close path must be understood from the concrete implementation.
 
-## 4. Relationships
+## 5. Relationships
 - `sdk/base/stream/` — common `stream_t`, buffers, and formatting.
 - `sdk/io/basic/` — binary payload helpers that can use common stream abstractions.
 - `sdk/io/string/` — URL and textual helpers; not the same module as the placeholder `string.hpp` in this directory.
@@ -79,6 +79,10 @@ The important boundary is external resource access: the file-stream implementati
 
 The implementation is split across `file_stream.hpp`, `stream.hpp`, `linux/file_stream.cpp`, and `windows/file_stream.cpp`; these files are linked from the [stream directory](./) and should be read when checking platform-specific lifecycle details.
 
-## 5. Developer Notes
+## 6. References
+
+No external references are listed.
+
+## 7. Developer Notes
 - Keep the boundary with `sdk/base/stream` explicit: do not describe in-memory `basic_stream` behavior as if it were implemented by `file_stream`.
 - If a second concrete stream type is added, give it a separate module document instead of turning this directory README into an exhaustive class reference.
