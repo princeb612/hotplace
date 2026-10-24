@@ -57,7 +57,10 @@ jose_context_t* context = nullptr;
 jose.open(&context, &key);
 
 ret = jose.sign(context, jws_t::hs256, claim, signature);
-ret = jose.verify(context, signature, result);
+if (errorcode_t::success == ret) {
+    ret = jose.verify(context, signature, result);
+}
+jose.close(context);
 ```
 
 The example makes the division of responsibility concrete: the caller supplies a key, operation identifier, claim, and output object; the JOSE facade handles the serialized signing/verification path. The test also tries different serialization modes. The result flag and return code remain distinct, and the context must be closed on every exit path.
