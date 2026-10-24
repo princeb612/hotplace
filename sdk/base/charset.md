@@ -38,14 +38,14 @@ The `_tcs*`, `_sntprintf`, and related aliases provide source-level compatibilit
 
 Because the Linux branch rejects Unicode mode, code that requires UTF-16/UTF-32 text must use an explicit encoding API rather than relying on `TCHAR` abstractions.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/types.hpp` — platform-specific type and system-header setup.
 - `sdk/base/callback.hpp` — uses the active MBCS/Unicode macros to select callback aliases.
 - `sdk/base/inline.hpp` — shared helpers built on the compatibility definitions.
 - `sdk/base/string/` — string operations and Unicode-specific implementations.
 
-## 5. References
+## 6. References
 
 - [Linux man-pages: strcasecmp(3)](https://man7.org/linux/man-pages/man3/strcasecmp.3.html) — POSIX-style case-insensitive string comparison.
 - [Microsoft Learn: Generic-text mappings in tchar.h](https://learn.microsoft.com/en-us/cpp/text/generic-text-mappings-in-tchar-h?view=msvc-170) — Windows generic-text compatibility macros.
