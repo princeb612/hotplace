@@ -70,6 +70,26 @@ transcript_hash_builder
 
 The transcript object's retained state represents the ordered bytes accepted so far. In this API, `digest(message, result)` first adds the supplied message to that state and then returns the resulting digest; it is not an independent one-shot digest of `message`. `dup()` allows a branch/checkpoint to continue without mutating the original state. `reset()` starts a new accumulation for the configured algorithm.
 
+### Concrete transcript use from `testcase_transcript_hash.cpp`
+
+The testcase feeds `client hello` followed by `server hello` through three API forms and compares the final digest:
+
+```text
+openssl_hash:
+  open("sha256") -> init -> update(client) -> update(server) -> finalize
+
+openssl_hash with checkpoints:
+  open("sha256") -> init -> update(client, hash1) -> update(server, hash2)
+
+transcript_hash_builder:
+  set(sha2_256) -> build -> digest(client, hash1) -> digest(server, hash2)
+
+assert(final result from path 2 == path 1)
+assert(final result from path 3 == path 1)
+```
+
+This test demonstrates that the transcript facade's successive `digest()` calls accumulate the same ordered input as the backend's incremental updates. The intermediate `hash1` values are snapshots after the first message; they are not independent hashes of only that message. The assertions compare the final values, while the logged intermediate values are diagnostic output. This is a source-level usage example, not a fresh execution result.
+
 ### Digest versus transcript hash
 
 A digest is computed over a byte sequence. A transcript object retains incremental state across calls, so message order and the exact set of messages included in a checkpoint matter. In the `transcript_hash` API, `digest(message, result)` adds the supplied message to the current state and returns the resulting digest; it is not simply an independent one-shot hash of that message.
