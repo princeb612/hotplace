@@ -118,6 +118,23 @@ For DTLS, phase 1 may emit HelloVerifyRequest before a cookie-validated ClientHe
 
 The composer callback is the hand-off for already encoded output. TLS passes record bytes; DTLS delegates record fragmentation/publication; QUIC delegates packet/frame construction. The callback's caller decides how bytes are sent. Keep three independently traceable paths in mind: socket I/O, session-status advancement, and record/packet publication.
 
+### Real-code example: trace from server option to publication path
+
+`test/applet/tlsserver/run_server.cpp` selects the trial backend when `option_flag_trial` is set, builds the server socket, and then uses `network_server` callbacks for application data. The callback's `session->send(...)` is above the composer: it submits bytes to the session and does not manually serialize TLS records, DTLS records, or QUIC packets.
+
+```text
+trial backend selected
+  -> server socket / TLS session
+  -> tls_composer handshake and publication
+       TLS  -> TLS records
+       DTLS -> DTLS records / datagram publication
+       QUIC -> CRYPTO frames / QUIC packets
+  -> network/session transport
+  -> application callback
+```
+
+Use the applet to understand the caller lifecycle and this composer model to inspect transport-specific serialization. This is not evidence that every TLS/DTLS/QUIC option has identical feature support.
+
 ## 4. Relationships
 - `secure_prosumer.hpp/.cpp` — secure I/O composition and status coordination.
 - `secure_client_socket.hpp/.cpp` and `trial_tls_server_socket.hpp/.cpp` — client/server secure socket integration.
