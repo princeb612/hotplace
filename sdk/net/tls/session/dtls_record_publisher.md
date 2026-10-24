@@ -77,7 +77,7 @@ Two boundaries are involved: fragment size limits one handshake-body slice, whil
 
 Fragmentation addresses the handshake-body limit; record segmentation/grouping addresses output-unit boundaries. A successful publish means the implementation generated output bytes, not that a peer received them, that a complete handshake flight fits one datagram, or that loss/retransmission has been handled. Receive-side record validation and ordering are implemented by dtls_record_arrange, not by this publisher.
 
-## 4. Relationships
+## 5. Relationships
 - [TLS/DTLS/QUIC overview](../README.md)
 - [DTLS record arrangement](dtls_record_arrange.md)
 - [TLS session support](README.md)
@@ -107,5 +107,5 @@ The publisher is the **send-side construction** counterpart to `dtls_record_arra
 - `tls/handshake/dtls_handshake_fragmented.cpp` — writes the fragment header and selected handshake-body bytes.
 - `test/testcase/tls/testcase_construct_dtls12_1.cpp` and `testcase_construct_dtls12_2.cpp` — construction examples; `test/testcase/tls/sample.cpp` contains additional usage examples.
 
-## 5. References
+## 6. References
 - [RFC 6347 — Datagram Transport Layer Security Version 1.2](https://www.rfc-editor.org/rfc/rfc6347) — protocol context for DTLS handshake and record fragmentation.
