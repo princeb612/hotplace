@@ -56,13 +56,13 @@ makedirp(path)
 
 `makedirp()` is a prefix-creation helper, not a path canonicalizer. It does not establish symlink safety or normalize all platform-specific path semantics.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/system/process.hpp` — accepts a working-directory string for child-process launch; it does not call `makedirp()` automatically.
 - `sdk/base/system/linux/types.hpp` and `sdk/base/system/windows/types.hpp` — platform headers.
 - `sdk/base/system/` — low-level OS helpers; this file is limited to directory creation.
 
-## 5. References
+## 6. References
 
 - [Linux man-pages: mkdir(2)](https://man7.org/linux/man-pages/man2/mkdir.2.html) — POSIX directory creation.
 - [Microsoft Learn: _mkdir, _wmkdir](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/mkdir-wmkdir?view=msvc-170) — Microsoft CRT directory creation functions.
