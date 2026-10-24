@@ -192,7 +192,7 @@ Base128 decoding consumes bytes until it encounters a byte whose continuation bi
 
 The fixed-width `uint64` overload rejects certain malformed or overlong encodings and returns `bad_data` if the input ends before a terminating byte. The `bignumber` overload supports larger values and includes a maximum-byte guard. These are representation-level checks; they do not validate the meaning of an ASN.1 OID or a surrounding schema.
 
-## 5. Relationships
+## 4. Relationships
 
 - [Encoding testcase and verification notes](../../../test/testcase/encode/README.md) describe source-level coverage for this directory. Test assertions and runtime evidence belong there rather than being inferred from implementation descriptions.
 - [Base16](base16.md), [Base64](base64.md), and [Base128](base128.md) document the individual data-encoding APIs.
@@ -202,7 +202,7 @@ The fixed-width `uint64` overload rejects certain malformed or overlong encoding
 - Low-level Base16/Base64 routines implement the core conversion operations used by the higher-level wrappers.
 - `base128` is consumed by ASN.1 OID encoding in `sdk/io/asn.1/`; this directory owns the integer representation, while ASN.1 owns OID semantics.
 
-## 6. References
+## 5. References
 
 - [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)
 - [RFC 4880 — OpenPGP Message Format](https://www.rfc-editor.org/rfc/rfc4880)
