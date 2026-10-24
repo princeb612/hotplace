@@ -91,22 +91,22 @@ formatter consumes arguments
 
 `valist` storage and formatting are separate phases: a format specifier does not change the stored value's type. Native `va_list` reconstruction is ABI-specific, so a change to its layout handling must be reviewed against each supported compiler/architecture rather than inferred from a single platform.
 
-### Practical use: load typed arguments from a vector
+### Practical use: format typed arguments from a vector
 
-The YAML-driven testcase converts each declared argument to its intended C++ type before inserting it into `valist`. Each format case is then evaluated through `sprintf()` and compared with its expected text:
+The YAML-driven testcase converts each declared argument to its intended C++ type before inserting it into `valist`. One vector supplies an integer, a string, and a floating-point value; the formatter can reuse or reorder those values by their 1-based positions:
 
 ```cpp
 valist va;
-va << static_cast<int8>(-1)
-   << static_cast<uint16>(513)
-   << "sample";
+va << 256 << "hello world" << 3.141592f;
 
 basic_stream bs;
-sprintf(&bs, "{1:02x} {2:04x} {3:s}", va);
-_test_case.assert(bs == expected, __FUNCTION__, "typed arguments");
+sprintf(&bs, "value={1}, value={1:04x}, value={1:04d}", va);
+// expected: value=256, value=0x0100, value=0256
+_test_case.assert(bs == "value=256, value=0x0100, value=0256",
+                  __FUNCTION__, "typed arguments");
 ```
 
-This is a reduced illustration of the testcase's construction-and-formatting pattern, not a literal vector row. The source handles each declared type explicitly because YAML scalar conversion alone does not establish the exact C++ type required by a variadic consumer. The format string chooses the textual representation later; it does not change the values stored in `valist`.
+The format specifier changes the textual presentation, not the stored value. The testcase also permutes argument references (for example, `{2} {3} {1}`) and includes ABI-sensitive integer widths, making it useful to distinguish format behavior from native variadic argument construction.
 
 ## 4. Relationships
 
