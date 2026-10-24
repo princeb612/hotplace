@@ -208,7 +208,7 @@ QUIC: handshake → CRYPTO frame ─┐
 These flows describe responsibilities visible in source. The presence of a message class, hint, RFC note, or construction test does not establish complete conformance to every TLS/DTLS version or QUIC feature. Keep protocol requirements, implemented code paths, and actually executed test evidence separate.
 
 ## 4. Relationships
-- [TLS advisor implementation](tls_advisor.md)
+- [TLS/QUIC advisor](advisor/README.md) — protocol identifiers, resource indexes, and cross-advisor metadata mapping.
 - [DTLS record arrangement](session/dtls_record_arrange.md)
 - [DTLS record publisher](session/dtls_record_publisher.md)
 - [QUIC packet publisher](session/quic_packet_publisher.md)
