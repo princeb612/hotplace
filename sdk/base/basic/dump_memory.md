@@ -62,6 +62,24 @@ Memory dumps appear throughout protocol, TLS, QUIC, DTLS, crypto, certificate, a
 
 Logger and buffer-I/O code also use the same dump facility.
 
+### Concrete consumer path: logger dump
+
+The logger wraps the formatter with a log-level gate. For a `binary_t` payload, the relevant implementation is:
+
+```cpp
+logger& logger::dump(loglevel_t level, const binary_t& msg,
+                     unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump(msg.data(), msg.size(), hexpart, indent);
+    }
+    return *this;
+}
+```
+
+This separates two responsibilities: the logger decides whether the requested level should be emitted and routes the diagnostic output; the dump path renders the byte range. The convenience API does not change the bytes or validate their protocol meaning. The default-level overload follows the same pattern using `test_loglevel()` without an explicit level.
+
+Source: `sdk/base/unittest/logger_dump.cpp`.
+
 ### Row construction
 
 ```text
@@ -77,10 +95,14 @@ supported input overload
 
 The displayed base address is presentation metadata; rebasing does not change the memory address being read. Likewise, the ASCII column is a diagnostic rendering of bytes, not a reversible encoding or protocol validation step.
 
-## 4. Relationships
+## 5. Relationships
 
 - `test/testcase/base/basic/testcase_dumpmemory.cpp` holds the text input constant while varying hexadecimal width, indentation, and displayed base address, then exercises `hdump()` with a label and string input.
 - `logger_dump.cpp` connects the formatter to the logger's configured output path.
 - `binary_t`, `basic_stream`, and `variant` provide supported input representations; the dump utility renders their bytes for inspection.
 - Formatting output is diagnostic text, not a canonical serialization format.
 - `dump_memory.hpp/.cpp` implement the formatter; `logger_dump.cpp` connects it to the logger's configured output path. `testcase_dumpmemory.cpp` covers the formatter, while logger APIs decide where the rendered diagnostic text is sent.
+
+## 6. References
+
+No external references are listed.
