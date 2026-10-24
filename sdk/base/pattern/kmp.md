@@ -79,13 +79,13 @@ _test_case.assert(0xa == idx, __FUNCTION__, "pattern search");
 
 The same testcase also searches contiguous memory and uses a custom comparator for object and pointer elements. Those variants demonstrate that the matcher is not restricted to byte vectors: the element type and comparison rule determine what constitutes a match.
 
-## 5. Relationships
+## 4. Relationships
 
 - `pattern.hpp` — shared element-access conventions; KMP's equality comparator is specific to `t_kmp`. The implementation is in `kmp.hpp`.
 - [`test/testcase/base/pattern/testcase_kmp.cpp`](../../../test/testcase/base/pattern/testcase_kmp.cpp) — asserts match index `0xa` for byte vectors, contiguous memory, value objects and pointer objects with a custom comparator.
 - [`testvector_kmp.cpp`](../../../test/testcase/base/pattern/testvector_kmp.cpp) and [`testvector_kmp.yml`](../../../test/testcase/base/pattern/testvector_kmp.yml) — additional vector-driven cases.
 - `sdk/io/parser/` — related parser pattern-search APIs, but not the same class as `t_kmp`.
 
-## 6. References
+## 5. References
 
 - *Data Structures & Algorithms*, Section 12.3.3, “The Knuth–Morris–Pratt Algorithm” — the source header cites this section for the failure-function and linear-time matching algorithm.
