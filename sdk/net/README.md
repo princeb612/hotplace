@@ -113,7 +113,7 @@ The source components `dtls_record_arrange`, `dtls_record_publisher`, and `quic_
 
 A directory's presence does not guarantee that every backend, protocol version, extension, or optional feature is enabled in every build. Use the relevant CMake configuration and source guards when stating platform or feature support. Keep implementation claims separate from protocol-standard requirements.
 
-## 4. Relationships
+## 5. Relationships
 ```text
 Application / protocol consumer
   ├─ server/ ── coordinates ──> basic/ socket backends
@@ -144,7 +144,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [TLS/DTLS/QUIC area](tls/README.md)
 - [HTTP area](http/README.md)
 
-## 5. References
+## 6. References
 ### Protocol specifications
 
 - TLS 1.0: [RFC 2246](https://www.rfc-editor.org/rfc/rfc2246)
@@ -171,7 +171,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 6. Developer Notes
+## Developer Notes
 - Preserve the original protocol/reference material when reorganizing the document; move it under References rather than deleting it.
 - Keep detailed TLS/DTLS/QUIC state and record/packet relationships in `tls/` component documents. This README should provide orientation and boundaries, not duplicate the implementation walkthrough.
 - Keep HTTP/2 HPACK and HTTP/3 QPACK distinct. Shared purpose does not mean identical wire format or algorithm.
