@@ -95,7 +95,7 @@ supported input overload
 
 The displayed base address is presentation metadata; rebasing does not change the memory address being read. Likewise, the ASCII column is a diagnostic rendering of bytes, not a reversible encoding or protocol validation step.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test/testcase/base/basic/testcase_dumpmemory.cpp` holds the text input constant while varying hexadecimal width, indentation, and displayed base address, then exercises `hdump()` with a label and string input.
 - `logger_dump.cpp` connects the formatter to the logger's configured output path.
@@ -103,6 +103,6 @@ The displayed base address is presentation metadata; rebasing does not change th
 - Formatting output is diagnostic text, not a canonical serialization format.
 - `dump_memory.hpp/.cpp` implement the formatter; `logger_dump.cpp` connects it to the logger's configured output path. `testcase_dumpmemory.cpp` covers the formatter, while logger APIs decide where the rendered diagnostic text is sent.
 
-## 6. References
+## 5. References
 
 No external references are listed.
