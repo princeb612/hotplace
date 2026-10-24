@@ -163,7 +163,7 @@ SSLKEYLOG import/export is an auxiliary diagnostic path for labeled secret mater
 - [TLS session overview](session/README.md)
 - [TLS/DTLS/QUIC overview](README.md)
 - [TLS message model](tls-message-model.md)
-- [TLS advisor](tls_advisor.md)
+- [TLS advisor](advisor/README.md)
 - [QUIC/TLS integration](quic-tls-integration.md)
 
 ### Related areas
