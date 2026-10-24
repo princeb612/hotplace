@@ -91,6 +91,23 @@ formatter consumes arguments
 
 `valist` storage and formatting are separate phases: a format specifier does not change the stored value's type. Native `va_list` reconstruction is ABI-specific, so a change to its layout handling must be reviewed against each supported compiler/architecture rather than inferred from a single platform.
 
+### Practical use: load typed arguments from a vector
+
+The YAML-driven testcase converts each declared argument to its intended C++ type before inserting it into `valist`. Each format case is then evaluated through `sprintf()` and compared with its expected text:
+
+```cpp
+valist va;
+va << static_cast<int8>(-1)
+   << static_cast<uint16>(513)
+   << "sample";
+
+basic_stream bs;
+sprintf(&bs, "{1:02x} {2:04x} {3:s}", va);
+_test_case.assert(bs == expected, __FUNCTION__, "typed arguments");
+```
+
+This is a reduced illustration of the testcase's construction-and-formatting pattern, not a literal vector row. The source handles each declared type explicitly because YAML scalar conversion alone does not establish the exact C++ type required by a variadic consumer. The format string chooses the textual representation later; it does not change the values stored in `valist`.
+
 ## 4. Relationships
 
 - `variant_t` is the intermediate typed-value representation; `valist` adapts stored values to the native variadic calling convention.
