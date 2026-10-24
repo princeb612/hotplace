@@ -174,7 +174,7 @@ asn1_advisor
 
 The testcase does not make those paths interchangeable: the imported table still needs the matching lexer/token-to-terminal setup, and the parser's syntax result remains distinct from ASN.1 semantic publication and constraint evaluation.
 
-## 5. Relationships
+## 4. Relationships
 - `../basic/` — payload and stream primitives used by table serialization and other I/O operations.
 - `../asn.1/` — the main higher-level grammar and semantic consumer. Its lexer registration, grammar productions, table revision, and semantic builder must stay coordinated.
 - `../../base/graph/gss.md` — graph-structured stack support used by GLR execution.
@@ -183,6 +183,6 @@ The testcase does not make those paths interchangeable: the imported table still
 - Implementation files are grouped by responsibility: `lexical_analyzer*`, `lexical_token*`, and `lexical_context*` implement lexical analysis; `cfg_grammar*` represents and builds grammar/table structures; `lalr1_parser*` and `glr_parser*` execute the parser engines; `binary_parsing_table*` reads/writes serialized tables; and `parse_tree*` records syntax structure. These are source-navigation pointers, not separate public concepts.
 
 
-## 6. References
+## 5. References
 
 No external references are listed.
