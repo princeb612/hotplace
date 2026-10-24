@@ -125,6 +125,18 @@ http_router::route(session, request, response)
 
 The router checks the registered authentication provider before selecting and invoking the URI handler. The provider/resolver path is scheme-specific; the exact credential verification may use an application callback or a built-in credential container. Authentication failure produces the provider's challenge response and prevents normal route dispatch. On success, the router selects the route handler or fallback path. This detail complements the lifecycle diagram above; the scheme-specific implementation is documented in [Authentication providers and credentials](auth/README.md).
 
+### Real-code example: the shared request/response model
+
+`test/applet/httpserver1/run_server.cpp` demonstrates the common HTTP-facing objects: the callback receives an `http_request`, constructs `http_response response(request)`, and routes the request when appropriate. `test/applet/httpserver2/run_server.cpp` follows the same application-facing pattern for HTTP/2 and calls `response.respond(session)`.
+
+```text
+HTTP/1.x bytes -> HTTP/1 framing/parser ─┐
+                                        ├-> http_request -> router/handler
+HTTP/2 frames -> HTTP/2 session/HPACK ──┘                  -> http_response
+```
+
+Read the two applets together to see what is shared and what is protocol-specific. The common C++ request/response types do not imply common wire framing or identical response serialization.
+
 ## 4. Relationships
 - `http_request.hpp/.cpp`, `http_response.hpp/.cpp`
 - `http_header.hpp/.cpp`, `http_uri.hpp/.cpp`
