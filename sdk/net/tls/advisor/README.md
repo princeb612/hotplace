@@ -101,7 +101,7 @@ server options -> socket scheme / builder
 
 Use `test/testcase/tls/testcase_tls12_aead.cpp` for a focused example of a selected cipher-suite identifier feeding TLS protection setup. Keep metadata availability distinct from backend support and actual negotiation success.
 
-## 5. Relationships
+## 4. Relationships
 - `tls_advisor.cpp`, `tls_advisor_aead_parameters.cpp`, `tls_advisor_quic.cpp`.
 - `tls_advisor_tls_extensiontype_values.cpp`, `tls_advisor_tls_parameters.cpp`.
 - `resource.cpp`, `resource_aead_parameters.cpp`, `resource_ciphersuite.cpp`, `resource_quic.cpp`, `resource_tls_extensiontype_values.cpp`, `resource_tls_parameters.cpp`.
@@ -111,7 +111,7 @@ Use `test/testcase/tls/testcase_tls12_aead.cpp` for a focused example of a selec
 - [QUIC](../quic/README.md) — QUIC packet/frame and session integration.
 - [TLS overview](../README.md).
 
-## 6. References
+## 5. References
 - [IANA TLS Parameters Registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml) — TLS parameter identifiers and assignments.
 - [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml) — QUIC transport parameters, frames, packet types, and error codes.
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446) — TLS 1.3 protocol identifiers and handshake/protection context.

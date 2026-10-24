@@ -127,7 +127,7 @@ multiplexer event -> session lookup/reference -> consumer callback
 
 This shows why the session abstraction matters: the caller submits application data through the active session, while socket/backend and protocol-specific transport work remain below that boundary.
 
-## 5. Relationships
+## 4. Relationships
 - `network_session.hpp/.cpp` — session lifecycle, buffering, reference counting, and send path.
 - [Network server](README.md) — manager, workers, and event lifecycle.
 - [Network server execution model](network-server-model.md) — orchestration path.
@@ -136,5 +136,5 @@ This shows why the session abstraction matters: the caller submits application d
 - [DTLS record arrangement](../tls/dtls_record_arrange.md), [DTLS publisher](../tls/dtls_record_publisher.md), [QUIC packet publisher](../tls/quic_packet_publisher.md), and [TLS session support](../tls/session/README.md).
 - `sdk/net/http/` — HTTP/2 state and HTTP message semantics layered above generic session buffering.
 
-## 6. References
+## 5. References
 No external references are currently listed.

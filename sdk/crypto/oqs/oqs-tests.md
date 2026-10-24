@@ -35,7 +35,7 @@ The tests require OpenSSL 3 and an externally installed `oqsprovider` module. Al
 No test was run during this documentation pass. The supplied crypto report is aggregate (`crypto` suite: pass 4214, expt 281, fail 0, skip 90); it does not provide an isolated OQS/PQC breakdown, so those totals are not attributed to this directory. The meaning of `expt` and `triv` is not inferred.
 
 - [Provider adapter](oqs-provider-adapter.md)
-- [PQC testcase map](../../../test/testcase/crypto/pqc/testcase_pqc.md)
+- [PQC testcase README](../../../test/testcase/crypto/pqc/README.md)
 - `test/testcase/crypto/oqs-provider.md` is the separate provider study note.
 - `testcase_oqs_encode.cpp`
 - `testcase_oqs_kem.cpp`

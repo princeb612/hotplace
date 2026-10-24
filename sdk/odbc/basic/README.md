@@ -104,7 +104,7 @@ Build integration collects common `basic/*.cpp` files, adds `basic/unicode/*.cpp
 - [`odbc_diagnose.md`](odbc_diagnose.md) — diagnostic record dispatch
 - [`odbc_sinker.md`](odbc_sinker.md) — asynchronous readiness and timeout behavior
 - [`../../odbc.hpp`](../../odbc.hpp) and [`../types.md`](../types.md) — module contract and shared types
-- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — checked-in integration sample and its limits
+- [`../../../test/testcase/odbc/README.md`](../../../test/testcase/odbc/README.md) — checked-in integration sample and its limits
 
 ## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

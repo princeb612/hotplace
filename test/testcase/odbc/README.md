@@ -22,7 +22,43 @@ This directory contains the configurable `test-odbc` integration sample for `sdk
 - With a non-empty connection string, the sample calls `odbc_connector::connect()`, executes `select * from <table>`, fetches records, and logs each field name and string value. It registers `dbdiag_handler` to log native error details.
 - If `--c` is absent or empty, the sample exits its test body before connecting. The database, driver, credentials, and table are external prerequisites.
 
-The detailed source path and its limits are recorded in [ODBC integration testcase](testcase_odbc.md).
+### Source flow
+
+1. Register `dbdiag_handler` to log native ODBC error code, SQLSTATE, and diagnostic message.
+2. Call `odbc_connector::connect()`; continue only when the return value indicates success.
+3. Execute `select * from <table>` through `odbc_query::query()`; continue to row traversal only after success.
+4. Fetch `odbc_record` objects, iterate their fields, obtain each field name and string-converted value, and log both.
+5. Check `more()` for additional result sets and release the query object after the connected path completes.
+
+```text
+--c / --t
+   |
+   v
+connect() -- success --> query("select * from <table>")
+                                |
+                             success
+                                v
+                          fetch(record)
+                                |
+                                v
+                      get_field(i) / field name
+                                |
+                                v
+                         as_string() / log
+                                |
+                                v
+                             more()
+```
+
+### Source-level limits
+
+- Connection and query return values gate subsequent operations.
+- Records and fields are traversed when rows are returned; a diagnostic callback is registered.
+- There is no fixed database fixture or deterministic assertion of expected row/field values.
+- The sample does not independently validate prepared-statement binding, every field conversion, asynchronous cancellation, or every diagnostic branch.
+- A successful process exit with an empty connection string does not demonstrate a database connection.
+
+The database, driver, credentials, and table remain external prerequisites.
 
 ## 3. Evidence
 
@@ -32,7 +68,6 @@ The reported Ubuntu 20 / Sanitizer run included 12 passing targets but did not i
 
 ## 4. Relationships
 
-- [`testcase_odbc.md`](testcase_odbc.md) — detailed source-level coverage and verification interpretation
 - [`sample.cpp`](sample.cpp) — integration sample
 - [`CMakeLists.txt`](CMakeLists.txt) — testcase target setup
 - [`sdk/odbc/README.md`](../../../sdk/odbc/README.md) — implementation overview

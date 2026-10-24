@@ -77,7 +77,7 @@ HTTP parser / router / response builder
 
 Use the applet to see where response construction occurs and this document to understand the shared metadata source. The resource table's availability does not imply support for every feature associated with a protocol version.
 
-## 5. Relationships
+## 4. Relationships
 - `../http_resource.hpp` — singleton interface, lookup methods, and map declarations.
 - `http_resource_http1.cpp` — HTTP status phrases and method names.
 - `http_resource_http2.cpp` — HTTP/2 frame/flag/SETTINGS/error names and HPACK static-table entries.
@@ -85,7 +85,7 @@ Use the applet to see where response construction occurs and this document to un
 - [HTTP overview](../README.md) — common module boundaries.
 - [HTTP/2](../http2/README.md), [HPACK](../hpack/README.md), [HTTP/3](../http3/README.md), and [QPACK](../qpack/README.md) — protocol implementations that consume related metadata.
 
-## 6. References
+## 5. References
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)

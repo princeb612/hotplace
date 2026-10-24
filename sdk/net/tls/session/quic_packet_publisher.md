@@ -64,7 +64,49 @@ The consume path is the reverse segmentation adapter for an already constructed 
 
 The publisher orchestrates content-to-frame and frame-to-packet layout. It does not replace QUIC frame/packet classes, implement the TLS key schedule itself, or send a UDP datagram on its own. Successful callback output proves local packet construction only, not delivery, ACK/loss recovery, or interoperability.
 
-## 5. Relationships
+### `quic_param_max_udp_payload_size` and packet sizing
+
+The QUIC session setting `quic_param_max_udp_payload_size` is the publisher's configured payload ceiling. In this implementation, `quic_session` initializes it to **1200 bytes**. `quic_packet_publisher::set_session()` copies the current setting into `_payload_size`, while each `quic_packet` obtains its `get_max_payload_size()` directly from the session setting. The parameter therefore affects packet layout through the session setting; it is not merely a transport-parameter value written into the TLS extension.
+
+```text
+quic_session::get_setting()
+  quic_param_max_udp_payload_size = 1200 (default)
+                 |
+                 +-------------------------------+
+                 |                               |
+                 v                               v
+quic_packet_publisher::set_session()      quic_packet::get_max_payload_size()
+  _payload_size = current setting           reads session setting directly
+                 |                               |
+                 |                      publish_space() / consume()
+                 |                               |
+                 +--> container grouping         v
+                      threshold             available payload budget
+                                            minus estimated overhead
+                                            and already carried bytes
+                                                   |
+                                                   v
+                                       consume CRYPTO / STREAM entries
+                                       into packet frame layout
+                                                   |
+                                                   v
+                                       serialize and protect QUIC packet
+```
+
+#### How the configured limit changes the layout
+
+1. **Session setup:** the session starts with `quic_param_max_udp_payload_size = 1200`. Code may change the setting through `session->get_quic_session().get_setting().set(quic_param_max_udp_payload_size, value)`. Set it before constructing/publishing packets so the publisher's cached `_payload_size` and the packet's session-backed limit agree.
+2. **Available capacity:** `publish_space()` builds a packet for the relevant protection space and calculates `payload_space` from `packet->get_max_payload_size() - packet->estimate_overhead() - bin.size()`. The current `quic_packet::estimate_overhead()` returns zero, so it does not currently subtract a separately estimated header/protection overhead at this stage.
+3. **Frame selection:** pending CRYPTO or STREAM entries are added while the accumulated remaining entry bytes have not reached the calculated `payload_space`. The frame and packet serializers still encode their own headers and protection fields; the payload-size setting is a layout budget, not a promise that every final encoded packet is exactly that size.
+4. **Multiple packets:** when pending content exceeds the available budget, remaining segments are emitted through subsequent packets. `consume()` uses the same session-backed maximum, subtracting the caller-supplied `paid` bytes and the packet's estimated overhead before reporting a segment limit.
+5. **Container grouping:** `_payload_size` is also used when deciding whether the last already-built byte buffer in `container` can be reused as a base for the next protection-space output. This is a separate grouping step; the primary per-packet maximum is read by `quic_packet::get_max_payload_size()` from the session setting.
+
+#### Important distinction: peer limit, local limit, and path MTU
+
+`max_udp_payload_size` is an endpoint's declaration of the maximum UDP payload it is willing to **receive**; the peer must respect the value it learned for the receiver. It is not, by itself, path-MTU discovery. The QUIC implementation's setting is used here as a packet-construction ceiling, but the path may support less or more. RFC 9000 requires support for at least 1200-byte UDP payloads, prohibits IP-layer fragmentation of QUIC datagrams, and describes PMTUD/DPLPMTUD for discovering larger path sizes. Values below 1200 are invalid under the RFC. See [RFC 9000, Section 14](https://www.rfc-editor.org/rfc/rfc9000.html#section-14) and [Section 18.2](https://www.rfc-editor.org/rfc/rfc9000.html#section-18.2).
+
+Thus, increasing this setting does not prove that the path can carry larger datagrams, and reducing it does not automatically implement path-MTU discovery. It changes the implementation's configured sizing budget; correctness still depends on peer parameters, packet overhead, and path capacity.
+## 4. Relationships
 - `quic_packet_publisher.hpp`
 - `session/quic_packet_publisher.cpp`
 - `quic/packet/README.md`
@@ -97,6 +139,6 @@ tls_session
 
 The publisher does not replace QUIC packet/frame classes. It orchestrates their construction and packing for a session.
 
-## 6. References
+## 5. References
 - [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

@@ -103,7 +103,7 @@ options -> scheme flags -> server_socket_builder
 
 Compare the trial option path in the same applet to see the backend selection point. QUIC/QUIC2 are not mapped by this OpenSSL adapter.
 
-## 5. Relationships
+## 4. Relationships
 - `openssl_tls_context.hpp/.cpp`, `openssl_tls.hpp/.cpp`
 - `openssl_tls_client_socket.hpp/.cpp`, `openssl_tls_server_socket.hpp/.cpp`
 - `openssl_dtls_client_socket.hpp/.cpp`, `openssl_dtls_server_socket.hpp/.cpp`
@@ -116,5 +116,5 @@ Compare the trial option path in the same applet to see the backend selection po
 - [TLS/DTLS/QUIC layer](../../tls/README.md) — protocol/session behavior.
 - [Certificate setup](self-signed-certificate.md) — local certificate-generation note.
 
-## 6. References
+## 5. References
 No external references are currently listed.

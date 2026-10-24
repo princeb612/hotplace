@@ -136,7 +136,7 @@ The directory-level diagrams are easiest to ground in three runnable callers:
 - `test/applet/httpserver2/run_server.cpp` — builds an HTTP server, enables HTTP/2, and dispatches completed requests through `http_router` before responding. Use it to follow the boundary between transport/session processing and application semantics.
 
 These examples are intentionally complementary rather than one universal path. A callback receiving application data does not itself demonstrate how bytes were framed, how a handshake was negotiated, or how a request became complete; follow the corresponding component Behavior Model for those steps.
-## 5. Relationships
+## 4. Relationships
 ```text
 Application / protocol consumer
   ├─ server/ ── coordinates ──> basic/ socket backends
@@ -167,8 +167,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [TLS/DTLS/QUIC area](tls/README.md)
 - [HTTP area](http/README.md)
 
-## 6. References
-
+## 5. References
 ### Protocol specifications
 
 - TLS 1.0: [RFC 2246](https://www.rfc-editor.org/rfc/rfc2246)
@@ -195,7 +194,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 7. Developer Notes
+## 6. Developer Notes
 
 - Preserve the original protocol/reference material when reorganizing the document; move it under References rather than deleting it.
 - Keep detailed TLS/DTLS/QUIC state and record/packet relationships in `tls/` component documents. This README should provide orientation and boundaries, not duplicate the implementation walkthrough.

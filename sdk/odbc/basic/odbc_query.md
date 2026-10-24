@@ -79,7 +79,7 @@ For `async_query`, `odbc_sinker::ready()` repeatedly calls `execute_statement()`
 - [`odbc_diagnose.md`](odbc_diagnose.md) — diagnostic records for failed native operations
 - [`odbc_sinker.md`](odbc_sinker.md) — asynchronous readiness and timeout adapter
 - [`../../types.md`](../../types.md) — query modes and ODBC return-code mapping
-- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample's direct execution/fetch path
+- [`../../../test/testcase/odbc/README.md`](../../../test/testcase/odbc/README.md) — sample's direct execution/fetch path
 
 ## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

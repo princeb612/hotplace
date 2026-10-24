@@ -91,6 +91,27 @@ The fixture files are copied into the build tree by `CMakeLists.txt` for the `jo
 4. Verify the supplied JWS with the loaded key. The vector consumer does not regenerate the expected JWS or compare a newly generated signature byte-for-byte.
 5. On older OpenSSL versions the source records `not_supported`; this is a version-gated path, not a successful ML-DSA execution.
 
+
+### Source-to-case index
+
+Use this index to trace each protocol family from the executable dispatch to its testcase source and principal fixtures. The detailed procedures and evidence diagrams below remain the authoritative description of actual assertions.
+
+| Source file | Functions / focus | Main fixtures or data |
+|---|---|---|
+| `testcase_rfc7515.cpp` | `test_basic`, RFC 7515 A.1–A.7, HMAC, PEM/key-generation and key-match paths | `rfc7515.jwk`, `rfc7515.pem`, fixed RFC JWS strings |
+| `testcase_rfc7516.cpp` | JWE A.1–A.4, RSA-OAEP variants, Appendix B CBC-HMAC computation | `rfc7516_A*` fixtures and embedded CEK/IV/AAD/ciphertext/tag values |
+| `testcase_rfc7517.cpp` | Appendix C encrypted-private-key example | `rfc7517_C.jwk`, passphrase |
+| `testcase_rfc7518.cpp` | PS256 serialization, bidirectional P-384 ECDH, Concat KDF | Alice/Bob RFC JWK fixtures |
+| `testcase_rfc7520.cpp` | JWS fixture verification, JWE fixture decryption, nested and generated serialization paths | `rfc7520_figure*` JWS/JWE files, public/private JWKs |
+| `testcase_rfc7638.cpp` | Canonical public JWK JSON, SHA-256 and thumbprint | `rfc7638_3.jwk`, expected thumbprint |
+| `testcase_rfc8037.cpp` | EdDSA, X25519/X448 ECDH-ES, generated OKP matrix | RFC 8037 JWK fixtures |
+| `testcase_akp.cpp` | ML-DSA-44/65/87 JWS sign/verify | Generated keys and fixed payload |
+| `testvector_akp.cpp` | Load JWK from JSON, compare raw public key, verify supplied JWS | `testvector_akp_mldsa44.json`, `...65.json`, `...87.json` |
+
+The executable entry point is `sample.cpp`; `sample.hpp` declares the testcase functions and shared options. The source dispatches RFC 7515, 7516, 7517, 7518, 7520, 7638 and 8037 groups, followed by AKP signing and JSON-vector processing. `CMakeLists.txt` copies the `*.json`, `*.jwe`, `*.jwk`, `*.jws` and `*.pem` fixtures into the build tree.
+
+The supplied report snapshot also lists **AKP: 18 success**. Interpret this alongside the OpenSSL 3.5+ guard: older OpenSSL builds record `not_supported`, which is not evidence of successful ML-DSA execution.
+
 ## 3. Evidence
 
 ### Source-level coverage
@@ -365,7 +386,6 @@ The report records RFC 7515 as `success 34, triv 2`, RFC 7520 as `success 164`, 
 - `../../../sdk/crypto/basic/` — common cryptographic operations and key abstractions.
 - `../../../sdk/crypto/advisor/` — JOSE/JWA algorithm metadata and mappings.
 - `../../../sdk/crypto/cose/` — related CBOR/COSE security-object functionality.
-- `testcase_jose.md` — supplemental map of testcase functions, fixture families and the supplied report snapshot.
 - [JOSE implementation overview](../../../sdk/crypto/jose/jose-overview.md)
 - [JWS/JWE processing](../../../sdk/crypto/jose/jose-signing-encryption.md)
 - [JWK and algorithm mapping](../../../sdk/crypto/jose/jose-key-and-algorithms.md)

@@ -57,6 +57,85 @@ The context is the shared coordination object passed to worker routines. `server
 
 The implemented multiplexer paths are `multiplexer_epoll` on Linux and `multiplexer_iocp` on Windows. A kqueue class/reference exists, but it does not by itself establish a supported macOS/BSD server path.
 
+### `server_conf` and `netserver_config_t` in actual use
+
+`server_conf` is a typed key-value map: `netserver_config_t` identifies a setting and the stored value is `uint16`. The enum groups settings used by two layers. The first four control `network_server` worker/multiplexer setup; the HTTP-related keys are read by `http_server_builder` and `http_server`; the final two size the buffers created by the session manager.
+
+#### Network worker and multiplexer settings
+
+| Key | Meaning in the implementation | Default / effective behavior |
+|---|---|---|
+| `serverconf_concurrent_event` | Passed to `multiplexer.open()` as its concurrency/capacity argument when `network_server::open()` creates the multiplexer context. | `server_conf`: 1024; `open(..., conf=nullptr, ...)`: 1024. The source comment says this matters to Linux epoll and is ignored by Windows IOCP. It is not the producer-thread count. |
+| `serverconf_concurrent_tls_accept` | Configures the TLS-accept worker group created by `network_server::open()`; it is started automatically for stream sockets whose server socket reports TLS support. | `server_conf`: 1; no supplied config: 1. The HTTP builder overrides this to 2. It does not create TLS workers for every socket type; the automatic creation path is the stream/TLS path. |
+| `serverconf_concurrent_network` | Producer/network worker count. On Windows, `network_server::open()` uses it to size the producer thread group. `http_server::start()` also reads it and passes it to `event_loop_run()`. | `server_conf`: 2. With no config, the Windows fallback is 1. On Linux, producer capacity is set to 1 in `open()` (and the TLS/DTLS datagram path is explicitly single-producer), so setting this key does not increase the configured producer capacity there. |
+| `serverconf_concurrent_consume` | Configures the consumer worker group; `http_server::start()` reads it and starts that many consumer loops per HTTP listener context. | `server_conf`: 2; no supplied config: 2. The HTTP builder also initializes it to 2. |
+
+The counts are not interchangeable: event/multiplexer configuration, TLS handshake work, transport production, and protocol/application consumption are separate stages.
+
+```text
+network_server::open(conf)
+  ├─ concurrent_event       -> multiplexer.open(...)
+  ├─ concurrent_tls_accept  -> TLS-accept worker group
+  ├─ concurrent_network    -> producer group capacity on Windows
+  │                           Linux: producer capacity is fixed at 1
+  └─ concurrent_consume    -> consumer group capacity
+
+HTTP:
+  http_server::start()
+    ├─ concurrent_network  -> event_loop_run(handle, producers)
+    └─ concurrent_consume  -> consumer_loop_run(handle, consumers)
+```
+
+#### HTTP server settings
+
+These keys are not general listener switches interpreted by `network_server::open()`. The HTTP builder reads them in `build()`, then chooses which socket schemes and address families to pass to `http_server::startup_server()`.
+
+| Key | Actual use | `http_server_builder` initial value |
+|---|---|---:|
+| `serverconf_enable_ipv4` | Enables separate HTTP service listeners using `AF_INET`. | 0 (disabled) |
+| `serverconf_enable_ipv6` | Enables separate HTTP service listeners using `AF_INET6`. | 0 (disabled) |
+| `serverconf_verify_peer` | Passed to adapter startup for TLS and QUIC schemes as the peer-verification setting. Set through `set_tls_verify_peer()`. | 0 |
+| `serverconf_enable_http` | Enables the plain HTTP service; its port is read from `serverconf_port_http`. | 0 (disabled) |
+| `serverconf_enable_https` | Enables secure HTTP service setup. HTTP/1.1 or HTTP/2 causes TLS startup; HTTP/3 causes QUIC startup. | 0 (disabled) |
+| `serverconf_port_http` | Port supplied to each enabled IPv4/IPv6 plain HTTP listener. | 80 |
+| `serverconf_port_https` | Port supplied to each enabled IPv4/IPv6 HTTPS and HTTP/3 listener. | 443 |
+| `serverconf_enable_h1` | Combined with `serverconf_enable_h2`, determines whether the builder starts the TLS path for HTTPS. The ALPN selection falls back to `http/1.1` whenever neither HTTP/3 nor HTTP/2 is enabled; that fallback does not separately test this flag. | 1 |
+| `serverconf_enable_h2` | Adds the HTTP/2 protocol to each HTTP server context and enables the HTTP/2 request path. It also participates in choosing TLS startup and ALPN. | Not explicitly set by the builder; absent key reads as 0 in this configuration path. |
+| `serverconf_enable_h3` | Enables the QUIC-based HTTP/3 startup path and selects `h3` ALPN. The builder currently uses `serverconf_port_https` for its listener port. | Not explicitly set by the builder; absent key reads as 0 in this configuration path. |
+
+The builder only enters its service-setup block when at least one address family is enabled. Consequently, enabling HTTP/HTTPS without enabling IPv4 or IPv6 does not create a listener. The protocol flags also do not independently enable a service: `serverconf_enable_https` gates the secure-service setup, while `serverconf_enable_h1` / `serverconf_enable_h2` select the TLS path and `serverconf_enable_h3` selects the QUIC path. HTTP/3 classes and flags should not be read as proof of a complete, general-purpose HTTP/3 server implementation.
+
+#### TCP and UDP buffer settings
+
+| Key | Actual use | Default / zero behavior |
+|---|---|---|
+| `serverconf_tcp_bufsize` | Read by `network_session_manager::connected()`; applied to the newly created stream session's `netbuffer_t`. | The `server_conf` constructor does not set it. A missing/zero value is passed to `set_bufsize(0)`, whose call site documents zero as “use default buffer size.” |
+| `serverconf_udp_bufsize` | Read when creating the shared datagram session and peer-specific DTLS cookie sessions; applied to each session buffer. | Not set by the `server_conf` constructor. Zero requests the buffer's default size. |
+
+These settings control the session's application-side network buffer configuration. They do not, by themselves, configure the operating system's TCP socket buffers or change the UDP path MTU.
+
+#### Why the defaults differ by construction path
+
+```text
+server_conf()
+  event=1024, tls_accept=1, network=2, consume=2
+  tcp_bufsize / udp_bufsize and HTTP keys: not initialized here
+       |
+       +--> network_server::open(..., &conf, ...)
+       |      reads configured values; Linux producer capacity is still 1
+       |
+       +--> http_server_builder()
+              initializes HTTP flags/ports and overrides
+              tls_accept=2, network=2, consume=2
+                    |
+                    +--> build() copies config to http_server
+                           |
+                           +--> startup_server() per enabled service/family
+                           +--> start() starts producer and consumer loops
+```
+
+When `network_server::open()` receives a null `conf`, it supplies fallback values for the four worker/multiplexer settings. That is a separate path from passing a default-constructed `server_conf`: the latter has `serverconf_concurrent_network=2`, while the Linux producer group is nevertheless configured for one worker. The HTTP builder also has its own defaults and copies its configuration into the created `http_server`. For this reason, the effective configuration should be read from the caller's construction path and the consuming code, not from the enum declaration alone.
+
 ### Session and message data
 
 ```text
@@ -170,7 +249,28 @@ echo_server()
 ```
 
 The associated `consumer_routine` handles the three event types; on read, this simple echo example sends received bytes back through the event socket. Read the callback and the full `echo_server()` together: the former shows the application boundary, while the latter shows listener setup and loop ownership. The applet also configures `ipaddr_acl` and uses the accept callback to decide whether to continue or reject a connection.
-## 5. Relationships
+### IPv4 and IPv6 listener model
+
+`network_server` does not infer a dual-stack listener from an address. Its `open()` accepts an explicit address family and passes it to the selected `server_socket::open()`. The caller can create one context for `AF_INET` and another for `AF_INET6`, each with its own listening socket, multiplexer context, callback registration, and event/consumer loops.
+
+```text
+application setup
+  ├─ network_server.open(handle_ipv4, AF_INET, port, ...)
+  │    └─ IPv4 listener + context
+  └─ network_server.open(handle_ipv6, AF_INET6, port, ...)
+       └─ IPv6 listener + context
+
+each context independently:
+  accept/read event -> session manager -> producer/consumer -> callback
+```
+
+The concrete example is `test/applet/tcpserver2/run_server.cpp`: it opens both families on the selected port, installs the accept-control handler for each handle, starts the consumer and event loops for both, and closes both contexts during cleanup. This is **two explicitly opened listeners**, not proof that one IPv6 socket also accepts IPv4-mapped connections. Whether the two binds can coexist on the same port depends on the socket backend and operating-system IPv6/dual-stack settings.
+
+The peer address is carried through the socket/session path as socket-address data; the accept callback can pass that address to `ipaddr_acl::determine()` to make an admission decision. Listener-family support and ACL address-representation support are separate concerns: the ACL implementation documents that IPv6 matching requires `__SIZEOF_INT128__` and otherwise reports IPv6 input as unsupported.
+
+For HTTP, `http_server_builder::enable_ipv4()` and `enable_ipv6()` are separate settings, both disabled by default. When enabled, the builder calls `startup_server()` separately with `AF_INET` and/or `AF_INET6` for the selected HTTP services. Enabling IPv6 in the builder is therefore an explicit listener configuration, not automatic dual-stack behavior.
+
+## 4. Relationships
 - `network_server.hpp/.cpp` — context, worker loops, protocol registration, and shutdown.
 - [Network server execution model](network-server-model.md) — worker and lifecycle orchestration.
 - [Network session](network_session.md) — per-connection state, buffering, and lifetime.
@@ -180,7 +280,7 @@ The associated `consumer_routine` handles the three event types; on read, this s
 - [TLS/DTLS/QUIC](../tls/README.md) — secure protocol/session processing.
 - `test/testcase/net/sample.cpp`, `test/applet/tcpserver1/`, `test/applet/tcpserver2/` — source examples.
 
-## 6. References
+## 5. References
 No external references are currently listed.
 
 ## Developer Notes

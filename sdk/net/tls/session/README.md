@@ -172,12 +172,55 @@ These adapters keep the wire formats separate: DTLS arranges and publishes DTLS 
 
 ### SSLKEYLOG import and export
 
-The key-log helpers form an optional observation/import boundary around the session's named secrets; they are not part of the TLS wire protocol.
+The key-log helpers form an optional observation/import boundary around the session's named secrets; they are not part of the TLS wire protocol. The important setup distinction is that **export installs an output hook, while import installs a session-status hook and loads records before replaying the handshake**.
 
-- **Import:** `sslkeylog_importer::add()` splits a line into exactly three space-delimited columns: label, hexadecimal ClientHello random, and hexadecimal secret. The label must be in the importer's known-label table; unknown labels and malformed lines are rejected. The decoded secret is stored under the decoded ClientHello random and its mapped `tls_secret_t`.
-- **Attach and match:** `sslkeylog_importer::attach(session)` installs `session_status_changed` as the session's status-change hook. When the aggregate `session_status_client_hello` event is reported, the importer reads the session's ClientHello random, finds entries keyed by that random, and assigns the matching named secrets into the session's `tls_protection` secret collection. Import therefore depends on the ClientHello random matching exactly; merely parsing a key-log line does not immediately alter an arbitrary session.
-- **Export:** `sslkeylog_exporter` is a singleton with a caller-supplied line hook. Its `log(session, secret)` maps supported secret identifiers to labels such as `CLIENT_RANDOM`, `CLIENT_HANDSHAKE_TRAFFIC_SECRET`, `SERVER_HANDSHAKE_TRAFFIC_SECRET`, `CLIENT_TRAFFIC_SECRET_0`, `SERVER_TRAFFIC_SECRET_0`, and `EXPORTER_SECRET`, then formats `label client_random_hex secret_hex` and passes the line to the hook. Exporting requires a valid session and an installed hook.
-- **Scope:** these helpers bridge named in-memory secrets and an external key-log representation. They do not negotiate the cipher suite, calculate missing key material, prove that a handshake completed, or apply record/packet protection themselves. The importer's accepted label table is narrower than every label defined by modern key-log conventions; do not infer support for labels that are not mapped in its source.
+#### Export setup and call path
+
+```text
+caller / testcase initialization
+  -> sslkeylog_exporter::get_instance()
+  -> set(line_callback)
+       e.g. write each line to a controlled log sink
+  -> TLS handshake/key schedule calculates named secrets
+  -> tls_protection calculation calls exporter->log(session, secret)
+  -> exporter maps tls_secret_t to SSLKEYLOGFILE label
+  -> "LABEL CLIENT_RANDOM_HEX SECRET_HEX"
+  -> line_callback
+```
+
+For example, `test/testcase/tls/sample.cpp` installs a logger-backed callback when the `-k` option is supplied. In `DEBUG` builds, enabling the relevant trace level also installs that callback for the normal testcase path. The exporter itself is a singleton and does not open a file or register a callback with OpenSSL: `set()` stores the caller's callback, and the hotplace TLS protection calculation explicitly calls `log(session, secret)` when supported secrets are derived.
+
+The current calculation call sites export TLS 1.3 client/server handshake traffic secrets, client/server application traffic secrets and exporter master secret, and the TLS 1.2 master secret. The exporter maps those values to the corresponding supported labels. It does not emit every label listed in the source comments; for example, merely having an early-traffic secret in session state does not mean this exporter currently serializes it.
+
+#### Import setup and replay path
+
+```text
+PCAP SIMPLE testcase vector
+  -> create tls_session (TLS or DTLS)
+  -> sslkeylog_importer::clear()
+  -> sslkeylog_importer::attach(&session)
+       -> use_pre_master_secret(true)
+       -> set_hook_change_session_status(session_status_changed)
+  -> add each "LABEL CLIENT_RANDOM_HEX SECRET_HEX" line
+       -> decode and index by ClientHello random + tls_secret_t
+  -> replay records in vector order through dump_record(...)
+  -> ClientHello status event
+       -> find secrets by session ClientHello random
+       -> assign matched values into tls_protection secrets
+  -> later handshake/record processing consumes imported values
+```
+
+The concrete caller is `test/testcase/tls/testvector_pcap.cpp`. For each YAML vector it creates a fresh session, clears the importer's accumulated entries, attaches the importer, parses the vector's `secrets` sequence, and then feeds the listed records to `dump_record()`. The order matters: the importer must be attached to that session, and the key-log entries must be loaded before the relevant ClientHello status event occurs during replay.
+
+`add()` accepts exactly three space-delimited columns: label, hexadecimal ClientHello random, and hexadecimal secret. The label must be in the importer's known-label table; unknown labels and malformed lines are rejected. The decoded secret is stored under the decoded ClientHello random and its mapped `tls_secret_t`. When the session reports the exact `session_status_client_hello` event, the hook reads the session's ClientHello random and assigns the matching named secrets into `tls_protection`. Parsing a line alone does not alter an arbitrary session, and a random mismatch means the entry will not be matched to that session.
+
+#### Responsibilities and limits
+
+- **Exporter:** `set(callback)` controls where emitted lines go; `log(session, secret)` formats a supported in-memory secret as a line. It does not perform handshake progression or derive the secret.
+- **Importer:** `add(line)` parses/indexes external values; `attach(session)` enables pre-master-secret use and registers the status hook that installs matching values into the session. It does not synthesize missing key-log entries or independently decrypt a capture.
+- **Session/protection:** handshake processing still controls status transitions, transcript handling, key derivation, and record/packet processing. Key-log import/export is a side channel around those operations, not a replacement for them.
+
+The importer's accepted label table currently covers `CLIENT_RANDOM`, `CLIENT_HANDSHAKE_TRAFFIC_SECRET`, `SERVER_HANDSHAKE_TRAFFIC_SECRET`, `CLIENT_TRAFFIC_SECRET_0`, `SERVER_TRAFFIC_SECRET_0`, and `EXPORTER_SECRET`. Do not infer support for labels that are not mapped in its source.
 
 Key-log lines contain master secrets or traffic secrets that may permit decryption of captured traffic. A hook or imported key-log file must be treated as sensitive material and kept out of ordinary logs, bug reports, and public test artifacts unless the values are intentionally synthetic.
 
@@ -197,7 +240,7 @@ handshake processing -> per-direction session status
 
 Do not interpret a session-wide status notification as proof that both directions have entered protected application-data state. Use the detailed state transitions in this document to interpret the integration trace.
 
-## 5. Relationships
+## 4. Relationships
 - `tls_session.hpp/.cpp`, `dtls_record_arrange.hpp/.cpp`, `dtls_record_publisher.hpp/.cpp`.
 - `quic_packet_publisher.hpp/.cpp`, `quic_session.hpp/.cpp`, `quic_streams.hpp/.cpp`.
 - `sslkeylog_exporter.hpp/.cpp`, `sslkeylog_importer.hpp/.cpp`.
@@ -208,7 +251,7 @@ Do not interpret a session-wide status notification as proof that both direction
 - [DTLS record arrangement](dtls_record_arrange.md), [DTLS record publisher](dtls_record_publisher.md), [QUIC packet publisher](quic_packet_publisher.md).
 - `test/testcase/tls/` and `test/testcase/quic/sample.cpp` — source-level protocol/trace paths.
 
-## 6. References
+## 5. References
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)

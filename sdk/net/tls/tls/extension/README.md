@@ -108,7 +108,7 @@ wire extension envelope -> typed extension object
 
 Do not treat successful decoding of an extension payload as proof that the peer's offer was accepted. The applet demonstrates configuration/integration; focused handshake tests are needed for a particular extension's exact negotiation rule.
 
-## 5. Relationships
+## 4. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [Handshake messages](../handshake/README.md) — extension collection and enclosing message context.
 - [TLS advisor](../../advisor/README.md) — extension identifiers and protocol hints.
@@ -117,7 +117,7 @@ Do not treat successful decoding of an extension payload as proof that the peer'
 - [QUIC integration](../../quic/README.md) — QUIC transport parameters and TLS 1.3 handshake integration.
 - [HTTP/2](../../../http/http2/README.md) — ALPN-selected application protocol path.
 
-## 6. References
+## 5. References
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 7301 — TLS Application-Layer Protocol Negotiation (ALPN)](https://www.rfc-editor.org/rfc/rfc7301)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

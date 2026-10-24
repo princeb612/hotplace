@@ -122,7 +122,7 @@ live server:      socket/session -> handshake state -> record protection -> appl
 
 Use the testcase to reason about record inputs and cryptographic outputs; use the applet to reason about where records sit in the connection lifecycle. They answer different questions.
 
-## 5. Relationships
+## 4. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [Handshake messages](../handshake/README.md) — structured handshake content inside records.
 - [Extensions](../extension/README.md) — extension data nested in handshake messages.
@@ -131,7 +131,7 @@ Use the testcase to reason about record inputs and cryptographic outputs; use th
 - [DTLS record publisher](../../dtls_record_publisher.md) — datagram-specific record publication.
 - [QUIC integration](../../quic/README.md) — CRYPTO frames and packet protection instead of ordinary TLS record framing.
 
-## 6. References
+## 5. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)

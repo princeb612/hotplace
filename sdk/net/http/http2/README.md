@@ -144,7 +144,7 @@ case mux_read:
 ```
 
 This makes the layer boundary visible: HTTP/2 frame parsing, CONTINUATION handling, HPACK decoding, and request-completion state belong to the SDK; the applet handles application routing and response submission. The builder setup in `simple_http2_server()` selects the OpenSSL or trial socket scheme and configures the HTTP server. The callback excerpt alone does not configure HTTP/2.
-## 5. Relationships
+## 4. Relationships
 - `http2_frame.hpp/.cpp`, `http2_frame_builder.hpp/.cpp`, and `http2_frame_*.hpp/.cpp` — frame serialization and parsing.
 - `http2_protocol.hpp/.cpp` — protocol recognition and frame framing.
 - `http2_session.hpp/.cpp` — per-stream state and request assembly.
@@ -154,5 +154,5 @@ This makes the layer boundary visible: HTTP/2 frame parsing, CONTINUATION handli
 - [Network session](../../server/network_session.md), [stream/protocol](../../server/network-stream-and-protocol.md), and [network server](../../server/README.md).
 - `test/testcase/net/http/testcase_http2_frame.cpp` and `testvector_http2.cpp` — source-level frame/vector cases.
 
-## 6. References
+## 5. References
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)

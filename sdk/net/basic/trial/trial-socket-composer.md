@@ -114,6 +114,48 @@ incoming bytes / packet
 
 For DTLS, phase 1 may emit HelloVerifyRequest before a cookie-validated ClientHello proceeds. For QUIC, server handshake data is published in QUIC packets containing CRYPTO frames. The public role-specific methods are asymmetric: client `handshake(from_client, ...)` is not a general server entry point, and the client-side status callback path is not implemented symmetrically.
 
+### Direct message construction versus handshake orchestration
+
+The construction testcases exercise a lower-level path than the composer's role-specific handshake drivers. Keep these two uses distinct:
+
+- `tls_composer::construct_client_hello(...)` and `construct_server_hello(...)` construct a typed handshake object and its fields/extensions. They do not by themselves wrap it in a record, serialize wire bytes, send it, or complete a handshake.
+- The caller owns the next step: attach the returned handshake to the applicable record/ciphertext representation, then serialize it or hand it to a publisher.
+- `tls_composer::handshake(...)` and `session_status_changed(...)` are orchestration entry points. They use session status and protocol/version-specific flow to decide which message or flight to construct and publish.
+
+#### Construction path shown by the TLS testcase
+
+```text
+testcase_construct_tls.cpp
+  -> create tls_session + tls_record_handshake
+  -> tls_composer::construct_client_hello / construct_server_hello
+       -> typed handshake + extensions
+  -> record << handshake
+  -> record.write(direction, bytes)
+  -> testcase checks the returned status
+```
+
+The testcase repeats this pattern for selected TLS 1.2/1.3 groups and versions. Other messages are assembled through record builders and `add(...)` callbacks; where protection is required, construction depends on the session's applicable protection state. The source's successful status check is not automatically a byte-for-byte known-answer assertion.
+
+#### DTLS construction paths
+
+```text
+DTLS 1.2 testcase
+  -> construct handshake / record collection
+  -> construct_record_fragmented(...)
+  -> DTLS record publisher
+  -> callback sends individual datagrams
+
+DTLS 1.3 testcase
+  -> construct handshake content
+  -> dtls13_ciphertext / DTLS 1.3 record representation
+  -> record.write(direction, bytes)
+  -> testcase status check
+```
+
+The two DTLS 1.2 testcases also explore different record grouping modes: individual handshake records versus multiple handshakes grouped for publication and then rearranged/reassembled on the receive side. This tests the datagram-specific record path, not just TLS-over-TCP framing. DTLS 1.3 uses its own ciphertext/record representation and should not be described as the same fragmentation path.
+
+These are deliberately direct construction exercises: they isolate message/record creation and selected session-state dependencies. They are not substitutes for following the live composer handshake, which additionally waits for peer-driven session status and chooses the next flight. Conversely, the live composer overview should not be duplicated in each testcase document.
+
 ### 3.3 Callback and lifetime boundary
 
 The composer callback is the hand-off for already encoded output. TLS passes record bytes; DTLS delegates record fragmentation/publication; QUIC delegates packet/frame construction. The callback's caller decides how bytes are sent. Keep three independently traceable paths in mind: socket I/O, session-status advancement, and record/packet publication.
@@ -135,7 +177,7 @@ trial backend selected
 
 Use the applet to understand the caller lifecycle and this composer model to inspect transport-specific serialization. This is not evidence that every TLS/DTLS/QUIC option has identical feature support.
 
-## 5. Relationships
+## 4. Relationships
 - `secure_prosumer.hpp/.cpp` — secure I/O composition and status coordination.
 - `secure_client_socket.hpp/.cpp` and `trial_tls_server_socket.hpp/.cpp` — client/server secure socket integration.
 - `client_socket_prosumer.hpp/.cpp` — asynchronous socket I/O and buffering.
@@ -145,8 +187,9 @@ Use the applet to understand the caller lifecycle and this composer model to ins
 - `tls_composer_quic_handshake.cpp` — QUIC-specific handshake and packet publication.
 - `../server_socket_adapter.hpp/.cpp`, `../server_socket_builder.hpp/.cpp` — backend selection.
 - [Trial backend](README.md), [network server](../../server/README.md), and [TLS implementation](../../tls/README.md).
+- [TLS/DTLS construction testcases](../../../../test/testcase/tls/README.md) — direct construction, serialization, fragmentation, and assertion boundaries; see also `testcase_construct_tls.cpp`, `testcase_construct_dtls12_1.cpp`, `testcase_construct_dtls12_2.cpp`, and `testcase_construct_dtls13.cpp`.
 
-## 6. References
+## 5. References
 No external references are currently listed.
 
 ## Developer Notes

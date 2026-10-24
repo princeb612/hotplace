@@ -128,8 +128,7 @@ The naming `load_resource()` is retained internally because the advisor still ma
 
 The tests normally reach advisor functionality through parser, publisher, runtime, and loader operations rather than treating the advisor as an independent application-level API. These are source-level verification paths; this document update did not execute them.
 
-## 5. Relationships
-
+## 4. Relationships
 - `../runtime/asn1_parser.*` — parser entry point that uses advisor-provided parser providers.
 - `../runtime/asn1_publisher.*` — publication/semantic reconstruction.
 - `../../parser/` — LALR(1)/GLR parser implementations.

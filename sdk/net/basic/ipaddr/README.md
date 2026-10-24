@@ -140,7 +140,7 @@ echo_server(): add rules -> setmode(whitelist)
 ```
 
 This is the distinction to retain: `ipaddr_acl` computes a policy decision, while the server callback enforces it at the accept boundary. Compare the rule-focused testcase with `test/applet/tcpserver2/run_server.cpp` to see the policy API and its integration point.
-## 5. Relationships
+## 4. Relationships
 - `ipaddr_acl.hpp/.cpp` — public API, normalized rule representation, and matching implementation.
 - `sdk.hpp/.cpp` — SDK-facing integration.
 - [Basic socket layer](../README.md) — socket abstractions and caller-side admission boundary.
@@ -148,5 +148,5 @@ This is the distinction to retain: `ipaddr_acl` computes a policy decision, whil
 - [Network server](../../server/README.md) — higher-level accept/session orchestration.
 - `test/testcase/net/basic/testcase_acl.cpp` — source-level ACL assertions; this documentation update does not claim that tests were executed.
 
-## 6. References
+## 5. References
 No external references are currently listed.

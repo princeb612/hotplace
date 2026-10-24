@@ -94,7 +94,7 @@ trial TLS/QUIC composer -> QUIC CRYPTO / STREAM data
 ```
 
 Use `test/applet/httpserver2/run_server.cpp` as the real-code comparison for the completed HTTP/2 application boundary, not as evidence that HTTP/3 is similarly integrated. This contrast makes the current implementation boundary explicit.
-## 5. Relationships
+## 4. Relationships
 - `http3_frame.hpp/.cpp`, `http3_frame_builder.hpp/.cpp`, `http3_frame_*.hpp/.cpp` — HTTP/3 frame model.
 - [QPACK](../qpack/README.md) and [compression infrastructure](../compression/README.md) — field-section compression and table state.
 - [QUIC transport](../../tls/quic/README.md) — packets, frames, streams, and connection/session behavior.
@@ -104,7 +104,7 @@ Use `test/applet/httpserver2/run_server.cpp` as the real-code comparison for the
 - [HTTP server/client flow](../http-server-client.md) — server configuration and the incomplete HTTP/3 service path.
 - `test/testcase/net/qpack/` — QPACK vectors; these are not a substitute for direct HTTP/3 frame/server tests.
 
-## 6. References
+## 5. References
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)
 - [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

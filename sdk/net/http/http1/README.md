@@ -92,7 +92,7 @@ TCP read #3: remaining body + next message bytes
 
 This is a behavior example rather than a claim that every HTTP/1 body mode is implemented. The current framing path's supported length rules and limitations remain those documented above.
 
-## 5. Relationships
+## 4. Relationships
 - `http_protocol.hpp/.cpp` — HTTP/1.x implementation of the network protocol abstraction.
 - `../../server/network_protocol.hpp/.cpp`, `network_stream.hpp/.cpp`, `network_session.hpp/.cpp` — generic protocol registration, buffered input, and session flow.
 - `../http_request.hpp/.cpp`, `../http_response.hpp/.cpp` — parse/compose semantic messages after framing.
@@ -102,5 +102,5 @@ This is a behavior example rather than a claim that every HTTP/1 body mode is im
 - [HTTP/2 implementation](../http2/README.md) — sibling binary framing path.
 - `../../../../test/testcase/net/http/testcase_http.cpp` — source-level HTTP parsing/framing tests.
 
-## 6. References
+## 5. References
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)

@@ -102,7 +102,7 @@ mux_read callback
 ```
 
 Use the full callback in `test/applet/httpserver1/run_server.cpp` for the plain-HTTP versus HTTPS branch. For the builder and HTTP/2 configuration path, compare `test/applet/httpserver2/run_server.cpp` and the HTTP/2 component document. Routing is not automatic inside `http_server::consume()`.
-## 5. Relationships
+## 4. Relationships
 - [HTTP core model](http-core-model.md) — request, response, URI, header, routing, and authentication relationships.
 - [HTTP server/client flow](http-server-client.md) — builder options, startup, protocol registration, handler callback and client path.
 - [HTTP protocol stack](http-protocol-stack.md) — the network stream/protocol framing boundary.
@@ -116,7 +116,7 @@ Use the full callback in `test/applet/httpserver1/run_server.cpp` for the plain-
 - [Basic socket layer](../basic/README.md) and [TLS/DTLS/QUIC](../tls/README.md) — transport and secure-session integration.
 - [HTTP testcase documentation](../../../test/testcase/net/http/README.md), [HPACK tests](../../../test/testcase/net/hpack/README.md), and [QPACK tests](../../../test/testcase/net/qpack/README.md) — source-level testcase inventory and evidence.
 
-## 6. References
+## 5. References
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)

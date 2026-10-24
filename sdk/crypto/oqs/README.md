@@ -140,7 +140,7 @@ The adapter delegates key generation and serialization to `crypto_keychain`, and
 
 ### 4.2 Test evidence and source entry points
 
-`testcase_oqs_kem.cpp` checks a key-encapsulation round trip: key generation, public/private key encode/decode, encapsulation, decapsulation, and comparison of the two shared secrets. `testcase_oqs_dsa.cpp` checks signing and verification for OID-registered signature algorithms. See [the testcase map](../../../test/testcase/crypto/pqc/testcase_pqc.md).
+`testcase_oqs_kem.cpp` checks a key-encapsulation round trip: key generation, public/private key encode/decode, encapsulation, decapsulation, and comparison of the two shared secrets. `testcase_oqs_dsa.cpp` checks signing and verification for OID-registered signature algorithms. See the [PQC testcase README](../../../test/testcase/crypto/pqc/README.md).
 
 - OpenSSL 3 provider API documentation
 

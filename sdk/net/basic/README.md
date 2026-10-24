@@ -107,7 +107,7 @@ command-line options
 ```
 
 This is the useful usage example for the socket abstraction: the caller chooses a capability/backend combination, while the concrete socket and server layer perform transport and lifecycle work. Read the complete setup and cleanup in `test/applet/tlsserver/run_server.cpp`; this outline is an orientation aid, not a replacement for the full routine.
-## 5. Relationships
+## 4. Relationships
 - [Socket model](socket-model.md) — shared client/server contracts and scheme metadata.
 - [Naive sockets](naive/README.md) — direct TCP/UDP.
 - [OpenSSL sockets](openssl/README.md) and [OpenSSL socket adapter](openssl/openssl-socket-adapter.md) — TLS/DTLS backend selection.
@@ -116,7 +116,7 @@ This is the useful usage example for the socket abstraction: the caller chooses 
 - [Network server](../server/README.md) — accept, multiplexer, session, stream, and protocol orchestration.
 - [TLS/DTLS/QUIC](../tls/README.md) — protocol state, record protection, and QUIC packet/frame handling.
 
-## 6. References
+## 5. References
 No external references are currently listed.
 
 ## Developer Notes

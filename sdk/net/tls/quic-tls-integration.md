@@ -120,7 +120,7 @@ tls_handshake object -> serialized handshake bytes
 
 Use this source path to understand protocol integration. Do not use the HTTP/2 applet as evidence of HTTP/3 integration; the repository does not currently expose a complete HTTP/3 server path.
 
-## 5. Relationships
+## 4. Relationships
 - `quic/rfc9000.md`
 - `quic/rfc9001.md`
 - `quic/rfc9369.md`
@@ -141,7 +141,7 @@ Use this source path to understand protocol integration. Do not use the HTTP/2 a
 - `session/` — session and packet publisher lifecycle
 - `protection/` — TLS-derived secrets and packet-protection primitives
 
-## 6. References
+## 5. References
 - [RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

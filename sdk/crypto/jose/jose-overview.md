@@ -89,7 +89,7 @@ These tables are a snapshot from the existing document, not a normative declarat
 
 ### Source-test evidence
 
-The direct source-level examples are mapped in [`testcase_jose.md`](../../../test/testcase/jose/testcase_jose.md). In particular, RFC 7515 tests exercise signature/MAC operations, RFC 7516 and RFC 7520 tests exercise encryption and key management, and RFC 7638/8037/AKP sources cover thumbprints and additional key/algorithm families.
+The direct source-level examples and fixture index are documented in the [JOSE testcase README](../../../test/testcase/jose/README.md). In particular, RFC 7515 tests exercise signature/MAC operations, RFC 7516 and RFC 7520 tests exercise encryption and key management, and RFC 7638/8037/AKP sources cover thumbprints and additional key/algorithm families.
 
 - [JWS signing and JWE encryption](jose-signing-encryption.md)
 - [JWK and algorithm mapping](jose-key-and-algorithms.md)

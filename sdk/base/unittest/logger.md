@@ -290,6 +290,6 @@ Pre-existing notes or development-oriented material retained for the maintainer 
 
 The two `sketch_logger_2008_*.jpg` files in this directory are retained as historical design material. They document earlier ideas such as schedulable stream handling and conditional flush; they should not be read as a current implementation diagram.
 
-## 6. References
+## 5. References
 
 No external references are listed.

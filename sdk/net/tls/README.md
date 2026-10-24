@@ -576,4 +576,4 @@ end
 ```
 
 - These notes are a compact working summary, not a complete or normative description of TLS key scheduling. Verify each version-specific step, label, context hash, and input against the relevant RFC and the implementation before using it to explain code behavior.
-- Local implementation documents belong under [Relationships](#4-relationships), not under external References.
+- Local implementation documents belong under [Relationships](#5-relationships), not under external References.
