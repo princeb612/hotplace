@@ -80,6 +80,33 @@ Test sources cover distinct but related behaviors: parser handling of assignment
 
 Parameterized ASN.1 is a particular boundary: grammar productions and direct semantic prototypes exist, but they should not be described as a complete parser-to-runtime template-instantiation pipeline without enabled end-to-end tests and implementation evidence.
 
+### Practical use: load and publish a module in separate stages
+
+The loader testcase deliberately exposes the two stages instead of hiding them behind one convenience call:
+
+```cpp
+parse_tree pt;
+asn1_loader loader;
+return_t ret = loader.load_file("example3.asn1", &pt);
+_test_case.test(ret, __FUNCTION__, "load ASN.1 source");
+
+asn1_build_resultset result;
+auto publisher = asn1_advisor::get_instance()->get_publisher();
+ret = publisher->build(&pt, result);
+_test_case.test(ret, __FUNCTION__, "publish ASN.1 module");
+
+auto modules = asn1_modules::get_instance();
+auto module = modules->get("MyShopPurchaseOrders");
+_test_case.assert(nullptr != module, __FUNCTION__, "module registered");
+if (module) {
+    _test_case.assert(module->get("PurchaseOrder"), __FUNCTION__, "type resolved");
+}
+```
+
+The parse tree is the syntax-stage output; `asn1_build_resultset` reports the semantic publishing result; `asn1_modules` is the registry used for later module lookup. Keeping these stages visible makes failures easier to localize. In a production path, check each return value before consuming the next stage, and validate every module/type lookup before dereferencing it.
+
+Source: [testcase_loader.cpp](../../test/testcase/asn.1/loader/testcase_loader.cpp).
+
 ## 4. Relationships
 ### Follow the source and tests
 
