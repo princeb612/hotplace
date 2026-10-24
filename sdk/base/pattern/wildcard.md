@@ -53,13 +53,13 @@ input exhausted
 
 The saved wildcard is a backtracking checkpoint, not a set of active automaton states. When a later literal fails, the matcher gives the latest `*` one more input element and retries the remaining pattern. This keeps the implementation small, but it is a different search strategy from the queue of active states used by `t_aho_corasick_wildcard`.
 
-## 4. Relationships
+## 5. Relationships
 
 - `pattern.hpp` — default/custom element extraction.
 - `aho_corasick.md` — explains why multi-pattern wildcard matching needs active-state exploration and additional range metadata.
 - `test/testcase/base/pattern/testcase_wildcard.cpp` — character and token/pointer matching.
 - `test/testcase/base/pattern/testcase_aho_corasick_wildcard.cpp` — wildcard matching across multiple registered patterns.
 
-## 5. References
+## 6. References
 
 - [Wildcard pattern matching](https://www.geeksforgeeks.org/wildcard-pattern-matching/?ref=lbp)
