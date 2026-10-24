@@ -88,6 +88,19 @@ wire/configuration cipher-suite ID
 
 A successful TLS metadata lookup means that the identifier is recognized by the resource tables. It does not prove backend availability, policy suitability, successful negotiation, or end-to-end support. Likewise, a successful crypto metadata lookup is not itself an encryption/signature operation.
 
+### Real-code example: metadata lookup versus negotiated state
+
+The TLS server applet (`test/applet/tlsserver/run_server.cpp`) builds a socket scheme from selected TLS versions and backend, then enters the session/handshake path. `tls_advisor` supplies protocol metadata and defaults used by that path; it does not perform the handshake or prove that a peer negotiated a given suite.
+
+```text
+server options -> socket scheme / builder
+  -> TLS session and handshake
+  -> advisor lookups for suite, group, extension, and parameters
+  -> negotiated/session state updated by protocol logic
+```
+
+Use `test/testcase/tls/testcase_tls12_aead.cpp` for a focused example of a selected cipher-suite identifier feeding TLS protection setup. Keep metadata availability distinct from backend support and actual negotiation success.
+
 ## 4. Relationships
 - `tls_advisor.cpp`, `tls_advisor_aead_parameters.cpp`, `tls_advisor_quic.cpp`.
 - `tls_advisor_tls_extensiontype_values.cpp`, `tls_advisor_tls_parameters.cpp`.
