@@ -44,6 +44,21 @@ tagged type
 
 The source tests cover low- and high-tag-number identifier forms, including malformed high-tag encodings. The examples in [tagging examples in the structural document](structural/README.md#developer-notes) compare the resulting DER bytes with weakly typed TLV trees and strongly typed semantic representations.
 
+### Real-code example: compare IMPLICIT replacement with EXPLICIT wrapping
+
+`test/testcase/asn.1/testcase_basic3.cpp` constructs tagged types, publishes them through an `asn1_module`, and compares the re-encoded DER with the original bytes. The important caller-level distinction is visible in the schema declarations:
+
+```cpp
+auto type2 = asn1_referenced_type::define(
+    "Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit,
+                                   asn1_referenced_type::refer("Type1")));
+auto type3 = asn1_referenced_type::define(
+    "Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit,
+                                   asn1_referenced_type::refer("Type2")));
+```
+
+The caller chooses the tagging mode when defining the semantic type. Later `module.publish(name, &bin_der)` exercises the encoding path; round-trip comparison checks the resulting representation. This is more informative than testing tag-number encoding alone because it shows how the mode enters the object model and reaches DER output.
+
 ## 4. Relationships
 - [Structural representation and tagging examples](structural/README.md) — concrete DER and object-tree examples.
 - [ASN.1 object model](asn1-object-model.md) — semantic objects and their representation visitors.
