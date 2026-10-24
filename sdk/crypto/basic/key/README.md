@@ -366,7 +366,7 @@ The example separates three values that are easy to conflate: each peer's local 
 
 Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
 
-## 4. Relationships
+## 5. Relationships
 ### 4.1 Internal implementation boundaries
 
 - `sdk/crypto/basic/crypto_key.hpp` declares `keydesc`, `crypto_key_object`, and `crypto_key`.
@@ -468,7 +468,7 @@ The key testcase directory covers several distinct contracts rather than one und
 
 These are source-level coverage references. They do not mean every algorithm/provider combination runs successfully in every build. In particular, post-quantum key generation and KEM paths depend on the OpenSSL version and provider capabilities described above.
 
-## 5. References
+## 6. References
 - [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517) — JWK key parameter names and representation.
 - [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037) — OKP keys in JOSE.
 - [RFC 7748 — Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.
