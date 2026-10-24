@@ -372,7 +372,7 @@ This makes the advisors a **translation and consistency layer** rather than a cr
 - `sdk/crypto/advisor/README.md`
 - `sdk/crypto/advisor/crypto_advisor.md`
 - `sdk/net/tls/README.md`
-- `sdk/net/tls/tls_advisor.md`
+- `sdk/net/tls/advisor/README.md`
 - `sdk/crypto/basic/`
 - `sdk/net/tls/`
 - `test/testcase/crypto/advisor/`
