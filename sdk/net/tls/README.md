@@ -207,6 +207,23 @@ QUIC: handshake → CRYPTO frame ─┐
 
 These flows describe responsibilities visible in source. The presence of a message class, hint, RFC note, or construction test does not establish complete conformance to every TLS/DTLS version or QUIC feature. Keep protocol requirements, implemented code paths, and actually executed test evidence separate.
 
+### Real-code entry points: isolate crypto from integration
+
+There are two complementary ways to study the TLS path:
+
+- **Focused record protection:** `test/testcase/tls/testcase_tls12_aead.cpp` creates a `tls_session`, selects TLS 1.2 and cipher suite `0xc02b`, derives the key block from fixed randoms and a master secret, checks the expected client key/IV, then attempts to decrypt a captured record. This isolates key derivation and record protection without running negotiation or certificate validation.
+- **End-to-end socket integration:** `test/applet/tlsserver/run_server.cpp` chooses TLS version/backend flags, builds the server socket, and uses `network_server` callbacks to echo application data. The handshake and record operations are performed below the callback by the selected backend/session path.
+
+```text
+focused testcase:
+fixed inputs -> tls_protection key block -> expected key/IV checks -> record decrypt
+
+server applet:
+options -> server_socket_builder -> network_server -> TLS session/handshake
+        -> completed application data -> consumer callback -> session.send()
+```
+
+Use the testcase when reasoning about cryptographic inputs and outputs; use the applet when reasoning about negotiation, socket integration, and application-data flow. Neither example alone proves complete protocol conformance: the testcase is not a full handshake, and a successful applet run covers only the exercised backend/options/peer combination.
 ## 5. Relationships
 - [TLS/QUIC advisor](advisor/README.md) — protocol identifiers, resource indexes, and cross-advisor metadata mapping.
 - [DTLS record arrangement](session/dtls_record_arrange.md)
