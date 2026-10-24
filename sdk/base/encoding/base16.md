@@ -46,6 +46,32 @@ The input representation selects the appropriate overload; the low-level convers
 
 For the templated output-buffer overload, the wrapper asks the low-level encoder/decoder for the required output size, reserves destination capacity, runs the conversion, and commits the written length on success. Unless `encoding_notrunc` is set, the destination is truncated first. Convenience overloads return a string or byte vector around the same conversion path.
 
+### Practical use: round trip and chunked input
+
+The Base16 testcase first checks the direct conversion contract: encode a byte string, decode the result, and compare the decoded bytes with the original. It also exercises the same operation through `std::string`, `binary_t`, and `basic_stream` output forms.
+
+```cpp
+auto encoded = base16_encode(sample1);
+auto decoded = base16_decode(encoded);
+_test_case.assert(decoded == bin_sample1, __FUNCTION__, "base16 round trip");
+```
+
+For incremental input, the testcase feeds data to `encoder_stream` and encoded text to `decoder_stream` in chunks. Chunk boundaries need not line up with the encoded byte pairs:
+
+```cpp
+encoder_stream encoder(encoding_t::encoding_base16);
+encoder.write(sample.data(), 5);
+encoder.write(sample.data() + 5, sample.size() - 5);
+auto encoded = encoder.str();
+
+decoder_stream decoder(encoding_t::encoding_base16);
+decoder.write(encoded.data(), 3);
+decoder.write(encoded.data() + 3, encoded.size() - 3);
+auto decoded = decoder.data();
+```
+
+This reduced example illustrates the API sequence; the source testcase uses pseudo-random chunk sizes over all 256 byte values and asserts that the decoded data matches the original. Check each `write()` status when adapting the pattern to application code.
+
 ### RFC-style textual bytes
 
 The RFC-oriented helpers accept human-readable byte lists such as `00:01:02:03:04:05` or `00 01 02 03 04 05`. This is a parsing/formatting convenience for displayed vectors, not a different Base16 alphabet. Ordinary `base16_decode()` expects the ordinary hexadecimal representation.
