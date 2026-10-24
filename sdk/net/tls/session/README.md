@@ -197,7 +197,7 @@ handshake processing -> per-direction session status
 
 Do not interpret a session-wide status notification as proof that both directions have entered protected application-data state. Use the detailed state transitions in this document to interpret the integration trace.
 
-## 4. Relationships
+## 5. Relationships
 - `tls_session.hpp/.cpp`, `dtls_record_arrange.hpp/.cpp`, `dtls_record_publisher.hpp/.cpp`.
 - `quic_packet_publisher.hpp/.cpp`, `quic_session.hpp/.cpp`, `quic_streams.hpp/.cpp`.
 - `sslkeylog_exporter.hpp/.cpp`, `sslkeylog_importer.hpp/.cpp`.
@@ -208,7 +208,7 @@ Do not interpret a session-wide status notification as proof that both direction
 - [DTLS record arrangement](dtls_record_arrange.md), [DTLS record publisher](dtls_record_publisher.md), [QUIC packet publisher](quic_packet_publisher.md).
 - `test/testcase/tls/` and `test/testcase/quic/sample.cpp` — source-level protocol/trace paths.
 
-## 5. References
+## 6. References
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)
