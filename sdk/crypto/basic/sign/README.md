@@ -194,7 +194,7 @@ The following is an upstream capability guide, not a guarantee that every hotpla
 
 For operational compatibility notes, record the exact OpenSSL minor version and provider (for example, default or FIPS), rather than a single “OpenSSL 3: yes/no” flag. Provider presence, FIPS approval, compile-time availability, and successful execution are four different claims.
 
-### 3.4 Concrete protocol consumer: TLS CertificateVerify
+### 3.7 Concrete protocol consumer: TLS CertificateVerify
 
 TLS CertificateVerify uses the negotiated TLS signature scheme to build the primitive signer. The TLS layer constructs the protocol-defined CertificateVerify input; `crypto_sign` performs only the selected signature operation:
 
