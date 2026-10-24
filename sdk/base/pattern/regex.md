@@ -85,13 +85,13 @@ regex::close(context)
 
 The wrapper exposes `range_t` coordinates rather than backend match objects. That makes results usable after the search call, but it also means the caller must preserve the original input when interpreting those coordinates. The context has a separate lifetime from the input and from the returned ranges; a successful `open()` must be paired with `close()`.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/nostd/range.hpp` — source-range representation.
 - `sdk/io/string/url.cpp` — uses regex tokenization to decompose URL components.
 - `test/testcase/base/pattern/testvector_regex.cpp` and `testvector_regex.yml` — regex test vectors.
 - `wildcard.md` — a separate pattern language with only single-element and zero-or-more wildcard symbols.
 
-## 5. References
+## 6. References
 
 - [C++ regular expressions — cppreference.com](https://en.cppreference.com/w/cpp/regex) — C++11 standard-library API and implementation context.
