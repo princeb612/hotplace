@@ -62,7 +62,7 @@ The prosumer layer coordinates socket input/output and buffering. Incoming bytes
 
 The trial implementation is experimental. In particular, the existence of TLS/DTLS/QUIC classes should not be interpreted as proof of feature parity or complete production-ready handshakes across all versions and paths.
 
-## 4. Relationships
+## 5. Relationships
 - `trial_server_socket_adapter.hpp/.cpp` — scheme mapping and adapter API.
 - `trial_*_socket.hpp/.cpp` — concrete transport-specific socket operations.
 - `client_socket_prosumer.hpp/.cpp`, `secure_client_socket.hpp/.cpp`, `secure_prosumer.hpp/.cpp` — socket I/O, queueing, and secure-data composition.
@@ -73,8 +73,8 @@ The trial implementation is experimental. In particular, the existence of TLS/DT
 - [Network server](../../server/README.md) — server event/session orchestration.
 - [TLS/DTLS/QUIC implementation](../../tls/README.md) — session state, record protection, DTLS publisher, and QUIC packet/frame layer.
 
-## 5. References
+## 6. References
 No external references are currently listed.
 
-## 6. Developer Notes
+## Developer Notes
 The trial adapter maps TLS/DTLS/QUIC/QUIC2 to the trial backend, while the OpenSSL adapter maps only TLS/DTLS to OpenSSL. Keep this backend-selection difference visible when documenting server configuration; the two adapters share an interface but not the same scheme support.
