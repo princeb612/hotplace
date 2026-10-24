@@ -58,6 +58,20 @@ The directories use different intermediate representations. These objects are no
 
 The map summarizes the main retained data at each boundary; it does not mean every operation traverses every directory.
 
+### Find a starting point by task
+
+| If the problem is… | Start here | What the example helps you decide |
+|---|---|---|
+| A message has known binary fields and lengths | [Payload](basic/payload.md) | Describe fields once and use that layout to read or write bytes. |
+| A file needs random byte access | [File stream](stream/file_stream.md) | Choose ordinary reads/writes or an explicit memory-mapped view. |
+| A URL must be split for request routing | [URL utilities](string/url.md) | Separate the path, query, host, and other components. |
+| Text must be recognized according to a grammar | [Parser lexer](parser/parser-lexer.md), then [parser overview](parser/README.md) | See where tokenization ends and grammar recognition begins. |
+| Encoded CBOR needs inspection or conversion | [CBOR reader and encoder](cbor/cbor-reader-encoder.md) | Compare the logical value, diagnostic notation, and wire bytes. |
+| ASN.1 notation must become usable types and values | [ASN.1 overview](asn.1/README.md) | Follow loading, syntax reconstruction, and semantic/module handling as distinct stages. |
+| Bytes need compression or decompression | [zlib wrapper](basic/zlib.md) | Select the framing expected by the surrounding protocol. |
+
+These are entry points, not a promise that one helper performs all validation for the larger protocol. Each component document distinguishes the operation it implements from checks that belong to its caller.
+
 ## 3. Behavior Model
 
 ### Distinct processing paths
