@@ -111,7 +111,7 @@ typed handshake message
 
 The same handshake semantics do not imply the same transport encoding. The applet shows the live caller boundary; the focused testcase is for cryptographic record behavior, not a complete handshake transcript.
 
-## 4. Relationships
+## 5. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [TLS records](../record/README.md) — record framing and content dispatch.
 - [Extensions](../extension/README.md) — nested typed extension payloads.
@@ -121,7 +121,7 @@ The same handshake semantics do not imply the same transport encoding. The apple
 - [Trial TLS composer](../../../basic/trial-socket-composer.md) — source example for constructing and publishing handshake flights.
 - [QUIC](../../quic/README.md) — TLS handshake bytes carried by CRYPTO frames.
 
-## 5. References
+## 6. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)
