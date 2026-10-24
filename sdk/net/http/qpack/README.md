@@ -89,7 +89,7 @@ QPACK encoder/decoder instructions travel on their designated QUIC streams
 
 Use the testcase to study the codec and its dynamic-table dependencies. Use the HTTP/3 and QUIC documents to understand the intended protocol boundary and current integration limit.
 
-## 4. Relationships
+## 5. Relationships
 - `qpack_encoder.hpp/.cpp` — QPACK field encoding and decoding.
 - `qpack_static_table.hpp/.cpp`, `qpack_dynamic_table.hpp/.cpp` — QPACK-specific tables.
 - [Shared compression infrastructure](../compression/README.md) — common table and compression abstractions.
@@ -99,5 +99,5 @@ Use the testcase to study the codec and its dynamic-table dependencies. Use the 
 - [HPACK](../hpack/README.md) — related header compression for HTTP/2, but a different wire format/state machine.
 - `test/testcase/net/qpack/testcase_rfc9204.cpp`, `testcase_capacity.cpp`, and `testcase_qpack_stream.cpp` — source-level QPACK vectors and state/capacity/stream assertions.
 
-## 5. References
+## 6. References
 - [RFC 9204 — QPACK: Field Compression for HTTP/3](https://www.rfc-editor.org/rfc/rfc9204)
