@@ -60,7 +60,7 @@ These flows cross several utility families, but do not imply a shared base class
 
 The range/set facilities are more than general-purpose containers: ASN.1 constraint evaluation consumes them to represent and evaluate permitted numeric or string values. The exact constraint semantics remain the responsibility of the ASN.1 layer.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Focused source notes
 
@@ -81,3 +81,7 @@ The range/set facilities are more than general-purpose containers: ASN.1 constra
 - `sdk/io/asn.1/` — consumes range/set facilities in ASN.1 constraint evaluation.
 - `sdk/base/stream/` — provides stream abstractions that may be used alongside byte-oriented helpers, but is a distinct component family.
 - [`test/testcase/base/nostd/`](../../../test/testcase/base/nostd/README.md) — source-level examples and testcase coverage. The testcase overview owns assertions and verification notes; the focused SDK pages explain implementation details.
+
+## 6. References
+
+No external references are listed.
