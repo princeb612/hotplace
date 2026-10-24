@@ -81,13 +81,13 @@ The split at two characters deliberately cuts across a four-character Base64 gro
 
 Source: `test/testcase/encode/testcase_base64.cpp`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `base16.*` and `base64.*` provide the conversion routines used by this stream.
 - `http_huffman_coding.*` supplies the protocol-specific Huffman decoder.
 - `encoder_stream` is the corresponding stateful encoding layer.
 - `test/testcase/encode/testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide source-level coverage for chunked decoding, including inputs split at different chunk sizes.
 
-## 6. References
+## 5. References
 
 No external references are listed.
