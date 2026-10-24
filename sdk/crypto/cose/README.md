@@ -272,7 +272,7 @@ if (errorcode_t::success == ret) {
 
 For encryption, the testcase follows the same composition with `encrypt()` and then `process()` to exercise decryption. The encoded message is the intermediate artifact passed between operations; the original payload, serialized COSE message, and processed output are different data. The test checks operation status, while application code should additionally validate the resulting payload and handle cleanup on every failure path.
 
-Source: [testcase_cose.cpp](../../test/testcase/cose/testcase_cose.cpp).
+Source: [testcase_cose.cpp](../../../test/testcase/cose/testcase_cose.cpp).
 
 ## 4. Relationships
 - `sdk/io/cbor/` — CBOR values, maps, arrays, byte strings, parsing and serialization.
