@@ -74,7 +74,7 @@ The block's field order and widths are part of the parsing-table format contract
 
 Source: `sdk/io/parser/binary_parsing_table_write.cpp`, `binary_parsing_table::write()`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/stream/binary_stream.hpp` implements the stream; `sdk/base/nostd/binary.hpp` defines `binary_t` and related byte-buffer helpers.
 - `sdk/base/system/endian-and-wire-integers.md` — byte-order helpers and wire-format integer context.
@@ -82,6 +82,6 @@ Source: `sdk/io/parser/binary_parsing_table_write.cpp`, `binary_parsing_table::w
 - `sdk/io/parser/binary_parsing_table_write.cpp` — production consumer that serializes the parser's binary parsing-table sections through `binary_stream`.
 - `test/testcase/base/stream/testcase_stream.cpp` and `testcase_bufferio.cpp` — related stream tests; they are not treated as direct `binary_stream` coverage.
 
-## 6. References
+## 5. References
 
 No external references are listed.
