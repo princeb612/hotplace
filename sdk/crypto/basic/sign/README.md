@@ -194,7 +194,7 @@ The following is an upstream capability guide, not a guarantee that every hotpla
 
 For operational compatibility notes, record the exact OpenSSL minor version and provider (for example, default or FIPS), rather than a single “OpenSSL 3: yes/no” flag. Provider presence, FIPS approval, compile-time availability, and successful execution are four different claims.
 
-## 5. Relationships
+## 4. Relationships
 - `../../advisor/README.md` maps signature names, key types, TLS signature schemes, JOSE identifiers and backend metadata.
 - `../key/README.md` supplies key objects and key-generation/serialization facilities.
 - `../digest/README.md` provides digest operations for digest-sign paths.
@@ -218,7 +218,7 @@ For operational compatibility notes, record the exact OpenSSL minor version and 
 - `testcase_mldsa.cpp` and `testcase_slhdsa.cpp` cover post-quantum signature paths. Availability depends on the build/provider used for those tests.
 - The source paths establish coverage targets, not execution in the current environment.
 
-## 6. References
+## 5. References
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 8032 — Edwards-Curve Digital Signature Algorithm (EdDSA).
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.
