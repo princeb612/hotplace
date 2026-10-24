@@ -198,7 +198,7 @@ Related ASN.1 tests include:
 - `testcase_basic3.cpp`
 - DER test vectors under `test/testcase/asn.1/`
 
-## 5. Relationships
+## 4. Relationships
 ### Visitor relationship
 
 Constraint traversal is separated from evaluation.
