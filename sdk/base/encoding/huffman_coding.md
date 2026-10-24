@@ -75,13 +75,13 @@ http_huffman_coding::get_instance()
 
 The singleton exposes the protocol-specific table to stream wrappers. Generic Huffman learning remains a separate capability.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/pattern/trie.hpp` supports bit-string matching in the generic decoder.
 - `http_huffman_coding.*` and `detail/http_huffman_codes.*` provide the fixed RFC 7541 table.
 - `encoder_stream` and `decoder_stream` preserve bit-oriented state across chunks.
 - `test/testcase/encode/testcase_huffman.cpp` provides source-level algorithm and RFC-vector coverage, including RFC 7541 Appendix B vectors and stream chunk-boundary cases.
 
-## 5. References
+## 6. References
 
 - [RFC 7541 — HPACK: Header Compression for HTTP/2](https://www.rfc-editor.org/rfc/rfc7541)
