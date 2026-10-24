@@ -210,7 +210,7 @@ fixed TLS 1.2 inputs -> calc_keyblock(...)
 
 This testcase isolates key derivation and record protection. It does not execute a complete handshake, validate a certificate, or establish interoperability with a live peer; use `test/applet/tlsserver/run_server.cpp` for the separate end-to-end socket path.
 
-## 4. Relationships
+## 5. Relationships
 - [TLS key schedule](tls_key_schedule.md) — TLS 1.2 key block and TLS 1.3 staged derivation.
 - [Transcript hash](tls_transcript_hash.md) — transcript input and stage checkpoints.
 - [MtE vs EtM](tls_mte_etm.md) — legacy CBC authentication order and AEAD distinction.
@@ -221,7 +221,7 @@ This testcase isolates key derivation and record protection. It does not execute
 - [TLS protection/session flow](../tls-protection-and-session.md) — message-specific transcript updates, key-schedule checkpoints, and protection activation boundaries.
 - [QUIC integration](../quic/README.md) — TLS-derived secrets used by packet protection.
 
-## 5. References
+## 6. References
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 7366 — Encrypt-then-MAC for TLS and DTLS](https://www.rfc-editor.org/rfc/rfc7366)
