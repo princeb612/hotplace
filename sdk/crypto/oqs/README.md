@@ -14,7 +14,7 @@
 
 ## 1. Role
 
-`sdk/crypto/oqs` (without the leading space) is the adapter between OpenSSL 3's provider API and hotplace's post-quantum crypto abstractions. It discovers provider-exposed KEM and signature algorithms and delegates key and operation work; it is not an independent implementation of the algorithms.
+`sdk/crypto/oqs/` is the adapter between OpenSSL 3's provider API and hotplace's post-quantum crypto abstractions. It discovers provider-exposed KEM and signature algorithms and delegates key and operation work; it is not an independent implementation of the algorithms.
 
 ## 2. Data Model
 The main API is `pqc_oqs`, with provider state represented by `oqs_context` in `types.hpp`. The adapter opens an isolated `OSSL_LIB_CTX`, loads the OpenSSL default provider and `oqsprovider`, then queries `OSSL_OP_KEM` and `OSSL_OP_SIGNATURE`.
