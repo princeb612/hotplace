@@ -161,6 +161,20 @@ The `set_tls_verify_peer(0)` setting is for the applet's self-signed-certificate
 
 The router is an optional application-level dispatcher, not the protocol parser and not the network-server callback itself. If the application's consume callback invokes `http_router::route()`, the router can authenticate, resolve a URI handler, or produce a 404 response. The selected handler composes the `http_response`; the response is then serialized/sent through the associated session and active protocol path. The HTTP/2 path must preserve stream identity from frame/session assembly through response construction; a generic session send call does not, by itself, describe the complete HTTP/2 frame sequence.
 
+### Real-code example: builder to runnable HTTP server
+
+`test/applet/httpserver2/run_server.cpp` is the concrete builder path. It chooses an OpenSSL or trial socket adapter with `server_socket_builder`, configures the HTTP server (including HTTP/2), registers handlers, and starts the listener. Its `consumer_routine` then routes a completed request and responds on the associated session.
+
+```text
+server_socket_builder -> adapter
+  -> http_server_builder / protocol options / handlers
+  -> build and start listener
+  -> network_server + network_session
+  -> completed http_request -> http_router -> http_response
+```
+
+Use `test/applet/httpserver1/run_server.cpp` as the HTTP/1.1 comparison. The two applets show the practical reason for the builder layer: application routing remains familiar while transport backend and protocol configuration differ.
+
 ## 4. Relationships
 - `http_server.hpp/.cpp`, `http_server_builder.hpp/.cpp`
 - `http_client.hpp/.cpp`, `http_router.hpp/.cpp`
