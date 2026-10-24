@@ -100,20 +100,25 @@ This source checks sign/verify statuses for the same message and signature; it i
 
 The adapter delegates key generation and serialization to `crypto_keychain`, and KEM/signature operations to the common OpenSSL PQC helpers. Provider discovery, algorithm naming, OID registration and successful cryptographic operations are separate conditions; none alone guarantees interoperability with a different provider or protocol.
 
-## 4. Relationships
+## 5. Relationships
 - `../basic/` provides common key, serialization, and crypto operations.
 - `../advisor/` provides algorithm and OID-related metadata.
 - `../../../test/testcase/crypto/pqc/` contains provider-backed and common PQC tests.
 - `../../../test/testcase/crypto/oqs-provider.md` retains provider study notes and planned external-vector work.
 
-### Implementation and source entry points
+### 5.1 Implementation and source entry points
 
 - `oqs.hpp`, `oqs.cpp`, `types.hpp`
 - `oqs-provider-adapter.md`
 - `oqs-tests.md`
 
-### Test evidence and source entry points
+### 5.2 Test evidence and source entry points
 
 `testcase_oqs_kem.cpp` checks a key-encapsulation round trip: key generation, public/private key encode/decode, encapsulation, decapsulation, and comparison of the two shared secrets. `testcase_oqs_dsa.cpp` checks signing and verification for OID-registered signature algorithms. See [the testcase map](../../../test/testcase/crypto/pqc/testcase_pqc.md).
 
 - OpenSSL 3 provider API documentation
+
+
+## 6. References
+- [OpenSSL provider](https://docs.openssl.org/3.0/man7/provider/) — provider loading and algorithm discovery.
+- [OpenSSL provider KEM](https://docs.openssl.org/3.0/man7/provider-kem/) — provider-side key encapsulation operations.
