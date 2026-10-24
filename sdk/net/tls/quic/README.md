@@ -79,6 +79,19 @@ The two directions meet at the TLS/QUIC boundary, but they are not one synchrono
 
 The exact order of TLS handshake state transitions and QUIC packet-space availability is stage-dependent. Packet/frame serialization, TLS transcript/key-schedule processing, packet protection, and actual UDP delivery are separate steps.
 
+### Real-code example: QUIC packet protection is not TLS record protection
+
+The repository's trial TLS/QUIC composer path connects TLS 1.3 handshake bytes to QUIC CRYPTO frames and packet publication. Follow `sdk/net/basic/trial/trial-socket-composer.md` with `sdk/net/tls/quic-tls-integration.md` and this packet model; `test/applet/httpserver2/run_server.cpp` is an HTTP/2 example only and must not be used as evidence of a complete HTTP/3 server.
+
+```text
+TLS handshake bytes -> CRYPTO frame -> QUIC packet builder
+  -> QUIC header protection + packet AEAD -> UDP datagram
+
+Not used here: TLS record header / TLS record sequence number
+```
+
+This is the correct example for the boundary between TLS handshake semantics and QUIC transport protection. The current repository does not provide a complete HTTP/3 application server path.
+
 ## 4. Relationships
 - [Packet implementation](packet/README.md) — packet variants, headers, number and protection boundaries.
 - [Frame implementation](frame/README.md) — CRYPTO, STREAM, ACK and control frames.
