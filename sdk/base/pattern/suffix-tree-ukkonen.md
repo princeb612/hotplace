@@ -66,6 +66,19 @@ Deletes the old tree and initializes an empty root and construction state.
 
 The key trade-off is explicit suffix paths versus compressed edge intervals. The former is easier to follow as a reference implementation; the latter is designed to avoid rebuilding every suffix path independently.
 
+### Practical example: find every occurrence of a substring
+
+```cpp
+t_suffixtree<char> tree("geeksforgeeks.org", 17);
+std::set<size_t> positions = tree.search("ee", 2);
+// positions == {1, 9}
+
+std::set<size_t> missing = tree.search("quiz", 4);
+// missing.empty() == true
+```
+
+The index is built once from the source text, then reused for different queries. The result contains zero-based starting positions, so `"ee"` is found at offsets 1 and 9. A missing substring produces an empty set. This example follows `test_suffixtree1()`; it demonstrates the query contract without requiring the reader to understand Ukkonen's construction first.
+
 ### Construction and query traces
 
 ```text
