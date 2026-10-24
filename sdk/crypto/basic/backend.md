@@ -143,8 +143,8 @@ The encapsulation output has two separate values: the capsule is transmitted to 
 
 Availability remains conditional on the linked OpenSSL version, provider configuration, key type and operation. A wrapper or an algorithm name in a reference table does not by itself guarantee that the backend can instantiate the operation.
 
-## 4. Relationships
-### Source-test evidence
+## 5. Relationships
+### 5.1 Source-test evidence
 
 `test/testcase/crypto/prng/testcase_random.cpp` is the direct random-generation source path. PQC behavior is exercised by the key/signature tests under `test/testcase/crypto/key/`, `test/testcase/crypto/sign/`, and `test/testcase/crypto/pqc/` where present. These cover specific backend configurations and are not proof of universal provider availability.
 
@@ -158,3 +158,8 @@ Availability remains conditional on the linked OpenSSL version, provider configu
 - `sdk/crypto/basic/pqc/openssl_pqc.cpp`
 - `test/testcase/crypto/prng/testcase_random.cpp`
 - `sdk/crypto/oqs/` and `test/testcase/crypto/pqc/`
+
+
+## 6. References
+- [OpenSSL RAND_bytes](https://docs.openssl.org/3.0/man3/RAND_bytes/) — random-byte generation API used by `openssl_prng`.
+- [OpenSSL provider](https://docs.openssl.org/3.0/man7/provider/) — provider model used by OpenSSL 3 PQC integration.
