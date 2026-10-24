@@ -66,6 +66,37 @@ parse(argv)
 
 The parser owns registration and dispatch state, not the application's option object. A successful callback only means that the registered handler ran; semantic validation of the resulting options remains the responsibility of the callback or application.
 
+### Practical use: bind arguments to application state
+
+The testcase defines an application-owned option type and registers callbacks that write directly into it. Required path arguments use `.preced()`; switches that may be omitted use `.optional()`.
+
+```cpp
+struct MYOPTION : public CMDLINEOPTION {
+    std::string infile;
+    std::string outfile;
+    bool keygen;
+    MYOPTION() : CMDLINEOPTION(), keygen(false) {}
+};
+
+t_cmdline_t<MYOPTION> cmdline;
+cmdline << t_cmdarg_t<MYOPTION>("-in", "input",
+    [](MYOPTION& o, const char* p) { o.infile = p; }).preced()
+        << t_cmdarg_t<MYOPTION>("-out", "output",
+    [](MYOPTION& o, const char* p) { o.outfile = p; }).preced()
+        << t_cmdarg_t<MYOPTION>("-keygen", "keygen",
+    [](MYOPTION& o, const char*) { o.keygen = true; }).optional();
+
+return_t ret = cmdline.parse(argc, argv);
+if (errorcode_t::success == ret) {
+    const MYOPTION& option = cmdline.value();
+    // Application logic consumes option.infile, option.outfile, option.keygen.
+}
+```
+
+This is the parser's intended composition: token registration → callback dispatch → application option state → application logic. A successful parse only means the registered command-line rules were satisfied; it does not prove that the paths exist or that the requested operation is valid. The source testcase also checks missing required arguments and invalid combinations.
+
+Source: [testcase_cmdline.cpp](../../../test/testcase/base/basic/testcase_cmdline.cpp).
+
 ## 4. Relationships
 
 - The callback target type `T` is application-defined; `cmdline` provides token recognition and parameter dispatch rather than defining the application's option structure.
