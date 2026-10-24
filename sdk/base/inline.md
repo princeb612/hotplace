@@ -62,13 +62,13 @@ The boundary between `0xff` and `0x100` demonstrates why byte width changes only
 
 Source: `test/testcase/base/system/testcase_capacity.cpp`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/charset.hpp` — platform text aliases.
 - `sdk/base/types.hpp` — shared integer aliases.
 - `sdk/base/string/` — more focused string operations and obfuscation.
 - `sdk/base/system/` — numeric and wire-width utilities.
 
-## 6. References
+## 5. References
 
 No external references are listed.
