@@ -143,7 +143,7 @@ configure server_conf + socket
 
 Compare this with `test/applet/tlsserver/run_server.cpp` to see the same orchestration around a secure socket. The applet owns configuration and application behavior; `network_server` owns the listener/event/session machinery.
 
-## 4. Relationships
+## 5. Relationships
 - `network_server.hpp/.cpp` — context fields and worker routines.
 - [Server overview](README.md) — integrated socket-to-application flow.
 - [Network session](network_session.md) — session state and lifetime.
@@ -151,5 +151,5 @@ Compare this with `test/applet/tlsserver/run_server.cpp` to see the same orchest
 - [Socket model](../basic/socket-model.md) — common socket contract.
 - [HTTP server](../http/README.md) — higher-level protocol/callback layer.
 
-## 5. References
+## 6. References
 No external references are currently listed.
