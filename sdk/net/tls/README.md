@@ -167,6 +167,27 @@ This flow describes data dependencies, not a single shared wire format. TLS and 
 6. **Adapt to transport boundaries.** DTLS publication fragments oversized handshake bodies and segments records for datagram output; the receive arranger validates datagram records and buffers them by peer and epoch/sequence until the next expected record is available. QUIC publication maps TLS handshakes to CRYPTO frames and application/HTTP/3/QPACK content to STREAM frames, then packs frames into packets within a payload target.
 7. **Return output to the caller.** Publisher callbacks or output containers receive serialized protocol units. Socket transmission, retransmission/loss recovery, and full peer interoperability are separate responsibilities and should not be inferred merely from a successful serialization path.
 
+### Concrete record-protection path from `testcase_tls12_aead.cpp`
+
+The TLS 1.2 AES-128-GCM testcase isolates record protection using captured-session inputs rather than running a complete client/server handshake:
+
+```text
+fixed TLS 1.2 cipher suite (0xc02b)
+  + client_random + server_random + master_secret
+                    |
+                    v
+protection.calc_keyblock(SHA-256, master_secret, randoms, suite)
+                    |
+                    +--> compare derived client_write_key / client_write_IV
+                    |
+                    v
+captured TLS record bytes
+  -> protection.decrypt(session, from_client, record, sequence=0)
+  -> check operation status
+```
+
+The testcase compares the derived client key and IV against fixed expected bytes before attempting decryption. The record includes the TLS record header and encrypted payload/tag, and the direction selects the client-side traffic material. This is a focused known-input record-protection test: it does not exercise negotiation, certificate validation, or a full handshake. In the shown code the decrypt result is checked for success, but the resulting plaintext is not compared against an expected byte sequence, so do not describe this particular assertion as a plaintext known-answer check.
+
 ### Session lifecycle and state boundaries
 
 tls_session owns the tls_protection object and lazily creates the relevant composer/publisher/arranger/session helpers. Each direction has its own session_info, including handshake status, protection activation, alert queue, and record-number state keyed by protection space. DTLS and QUIC helpers are session-associated because their decisions depend on negotiated state and transport-specific numbering.
