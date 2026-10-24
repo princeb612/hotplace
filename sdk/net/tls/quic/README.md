@@ -92,7 +92,7 @@ Not used here: TLS record header / TLS record sequence number
 
 This is the correct example for the boundary between TLS handshake semantics and QUIC transport protection. The current repository does not provide a complete HTTP/3 application server path.
 
-## 4. Relationships
+## 5. Relationships
 - [Packet implementation](packet/README.md) — packet variants, headers, number and protection boundaries.
 - [Frame implementation](frame/README.md) — CRYPTO, STREAM, ACK and control frames.
 - `quic_packet_publisher.hpp/.cpp`, `quic_session.cpp`, `quic_streams.cpp`.
@@ -100,12 +100,12 @@ This is the correct example for the boundary between TLS handshake semantics and
 - [TLS protection](../protection/README.md) — TLS 1.3 secrets and cryptographic operations.
 - `sdk/net/http/http3/` — HTTP/3 above QUIC streams.
 
-## 5. References
+## 6. References
 - [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)
 - [RFC 9369 — QUIC Version 2](https://www.rfc-editor.org/rfc/rfc9369)
 
-## 6. Developer Notes
+## Developer Notes
 These notes retain the RFC handshake examples and TLS/QUIC interaction diagrams used while developing this area. They complement the implementation model above rather than defining another source-tree module.
 
 ### RFC summaries
