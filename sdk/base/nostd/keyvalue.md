@@ -58,9 +58,9 @@ This is the useful application-level role of the string-key map: the URI parser 
 
 Sources: `sdk/net/http/http_uri.cpp`, `http_uri::to_keyvalue()`; `sdk/net/http/auth/oauth2.cpp`, `oauth2_authorization_code_grant_provider::authorization_handler()`.
 
-## 5. Relationships
+## 4. Relationships
 - `keyvalue.hpp` implements the value map and ordering indexes; it uses `critical_section.hpp` to serialize access.
 
-## 6. References
+## 5. References
 
 No external references are listed.
