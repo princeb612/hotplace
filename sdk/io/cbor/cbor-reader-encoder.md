@@ -150,9 +150,9 @@ This pattern keeps three questions distinct: whether parsing succeeds, what diag
 
 ### Related tests
 
-- `test/testcase/cbor/testvector_cbor.cpp` — encoded input → object → binary/diagnostic comparison.
-- `test/testcase/cbor/testcase_rfc7049.cpp` — direct encoder and object publisher expected-byte assertions.
-- `test/testcase/cbor/sample.cpp` — sample construction and output.
+- [`test/testcase/cbor/testvector_cbor.cpp`](../../../test/testcase/cbor/testvector_cbor.cpp) — encoded input → object → binary/diagnostic comparison.
+- [`test/testcase/cbor/testcase_rfc7049.cpp`](../../../test/testcase/cbor/testcase_rfc7049.cpp) — direct encoder and object publisher expected-byte assertions.
+- [`test/testcase/cbor/sample.cpp`](../../../test/testcase/cbor/sample.cpp) — sample construction and output.
 
 ## 5. References
 - [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), especially major types, additional information, and encoding considerations.
