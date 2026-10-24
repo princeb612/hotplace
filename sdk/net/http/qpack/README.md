@@ -78,6 +78,17 @@ Both protocols use static and dynamic tables, but their indexes, wire representa
 
 The current QPACK classes and testcase vectors show implementation coverage for parts of this format; they do not by themselves establish that the complete HTTP/3 server path is enabled.
 
+### Practical example: keep QPACK context separate from HTTP/3 framing
+
+The focused cases in `test/testcase/net/qpack/` are the most direct place to inspect QPACK field-section encoding/decoding and table state. The repository does not currently provide a complete HTTP/3 server applet comparable to `httpserver2`; do not treat the HTTP/2 applet as evidence of end-to-end QPACK integration.
+
+```text
+HTTP/3 HEADERS frame -> QPACK field section -> QPACK context -> header fields
+QPACK encoder/decoder instructions travel on their designated QUIC streams
+```
+
+Use the testcase to study the codec and its dynamic-table dependencies. Use the HTTP/3 and QUIC documents to understand the intended protocol boundary and current integration limit.
+
 ## 4. Relationships
 - `qpack_encoder.hpp/.cpp` — QPACK field encoding and decoding.
 - `qpack_static_table.hpp/.cpp`, `qpack_dynamic_table.hpp/.cpp` — QPACK-specific tables.
