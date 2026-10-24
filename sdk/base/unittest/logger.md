@@ -91,6 +91,55 @@ These settings allow the same logger abstraction to be used for short-lived test
 per-thread message context ─► buffered output ─► consumer / explicit flush
 ```
 
+### Concrete setup example
+
+The applet entry points repeat the same setup sequence after command-line parsing: configure a `logger_builder`, build a logger, and store it in a `t_shared_instance<logger>`. The following is a reduced example of the pattern used by `test/applet/tcpserver1/sample.cpp`; `option` represents the parsed applet options.
+
+```cpp
+// Global applet state:
+// test_case _test_case;
+// t_shared_instance<logger> _logger;
+
+logger_builder builder;
+builder.set(logger_t::logger_stdout, option.verbose);
+
+if (option.log) {
+    builder.set(logger_t::logger_flush_time, 1)
+           .set(logger_t::logger_flush_size, 1024)
+           .set_logfile("test.log")
+           .attach(&_test_case);
+}
+if (option.time) {
+    builder.set_timeformat("[Y-M-D h:m:s.f]");
+}
+
+_logger.make_share(builder.build());
+
+// The same logger can receive ordinary messages and trace output.
+_logger->writeln("application started");
+// Optional: install a trace callback that forwards trace text to the logger.
+if (option.debug) {
+    auto lambda_tracedebug = [&](trace_category_t category, trace_event_t event, stream_t* s) {
+        _logger->write(s);
+    };
+    set_trace_debug(lambda_tracedebug);
+    set_trace_option(trace_bt | trace_except | trace_debug);
+    set_trace_level(option.trace_level);
+}
+
+// After the applet's work is complete:
+_logger->flush();
+```
+
+This sequence separates four responsibilities:
+
+1. **Configure** output destinations and buffering policy with `logger_builder`.
+2. **Construct and share** the logger with `make_share(builder.build())`, making it available to the applet's other routines through `_logger`.
+3. **Connect optional producers** such as system trace callbacks to the logger; enabling the logger alone does not automatically enable trace capture.
+4. **Flush at the lifecycle boundary** so buffered messages can be processed before the program exits.
+
+File output and attachment to `test_case` are conditional in the applet example. The builder's default configuration can still provide console logging without those options. The exact logfile name and option names vary by applet; for example, `httpserver1` uses `server.log` rather than `test.log`.
+
 ### Output routing
 
 `consoleln()` writes to the console path, while `write()` and `writeln()` use the configured general output path. `colorln()` adds explicit console color handling.
@@ -151,6 +200,7 @@ Log-level filtering and output delivery are separate stages. A message that pass
 ## 4. Relationships
 
 - `test_case` can attach a logger for diagnostic output, but the test-case object owns the pass/fail/result accounting.
+- [`test/applet/tcpserver1/sample.cpp`](../../../test/applet/tcpserver1/sample.cpp) — representative logger builder setup, optional file output/time format, trace forwarding, and final flush. The same setup pattern recurs in other applet `sample.cpp` entry points, with applet-specific logfile names and optional producers.
 - `test/testcase/base/unittest/testcase_loglevel.cpp`, `testcase_consolecolor.cpp`, and `testcase_unittest.cpp` — source-level coverage for log-level filtering, console colors, formatted output, and logger/test-case integration.
 - `testcase_consolecolor.cpp` keeps terminal-color behavior distinct from ordinary logging.
 - `basic_stream` and the project's formatting helpers provide message construction; logger routes and flushes the resulting output.
@@ -158,7 +208,7 @@ Log-level filtering and output delivery are separate stages. A message that pass
 - `console_color.hpp` handles terminal styling, which is independent of file output and log-level filtering.
 - The consumer/buffering path means logger lifetime and shutdown/flush behavior matter when output must be complete before process exit. `logger.hpp/.cpp`, `logger_builder.cpp`, `logger_write.cpp`, and `logger_dump.cpp` implement the builder, write, and dump paths; `console_color.hpp` supplies terminal styling.
 
-## 6. Development Notes (for maintainer review)
+## 5. Development Notes (for maintainer review)
 
 Pre-existing notes or development-oriented material retained for the maintainer to review and reorganize.
 
