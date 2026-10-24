@@ -44,9 +44,13 @@ binary_stream
 - `get()` exposes the owned `binary_t` object by reference, so the reference is tied to the lifetime of the `binary_stream` instance and its contained object.
 - The class assembles primitive bytes only. It does not automatically add field lengths, tags, nested structure boundaries, or protocol framing.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/stream/binary_stream.hpp` implements the stream; `sdk/base/nostd/binary.hpp` defines `binary_t` and related byte-buffer helpers.
 - `sdk/base/system/endian-and-wire-integers.md` — byte-order helpers and wire-format integer context.
 - [`basic_stream.md`](basic_stream.md) — text formatting rather than primitive binary assembly.
 - `test/testcase/base/stream/testcase_stream.cpp` and `testcase_bufferio.cpp` — related stream tests; no direct `binary_stream` use was identified in the reviewed source, so tests of `binary_t` or other stream helpers are not treated as direct coverage.
+
+## 6. References
+
+No external references are listed.
