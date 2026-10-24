@@ -119,7 +119,7 @@ The source calls `hmac_kdf()` and checks the output against the known-answer byt
 
 For TLS 1.3-style derivation, the caller uses `hkdf_expand_tls13_label()` with the secret, label, context and requested length. That helper encodes the protocol-defined label structure and performs expansion; the TLS state machine must still select the correct secret, label and transcript context for each stage.
 
-## 5. Relationships
+## 4. Relationships
 - `../../advisor/README.md` resolves digest names used by HMAC/HKDF and backend operations.
 - `../digest/README.md` provides digest primitives used by digest-based KDFs.
 - `../key/README.md` documents key objects that may consume derived bytes in key/session workflows.
@@ -139,7 +139,7 @@ For TLS 1.3-style derivation, the caller uses `hkdf_expand_tls13_label()` with t
 - `testcase_rfc6070.cpp` covers PBKDF2; `testcase_rfc7914.cpp` covers scrypt; `testcase_rfc9106.cpp` covers Argon2; `testvector_rfc4615.cpp` covers AES-CMAC-related material.
 - These vector/testcase files show source-level coverage, not runtime execution or availability in every build.
 
-## 6. References
+## 5. References
 - RFC 4615 — The Advanced Encryption Standard-Cipher-based Message Authentication Code-PRF-128 (AES-CMAC-PRF-128).
 - RFC 5869 — HMAC-based Extract-and-Expand Key Derivation Function (HKDF).
 - RFC 6070 — PKCS #5: PBKDF2 Test Vectors.
