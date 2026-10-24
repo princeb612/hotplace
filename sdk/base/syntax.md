@@ -67,12 +67,12 @@ This abbreviated path illustrates the control-flow convention: `__leave2` exits 
 
 Source: `sdk/net/tls/sdk.cpp`, `load_certificate()`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/error.hpp` — shared error-code values used for allocation failure.
 - `sdk/base/stream.hpp` and `sdk/base/types.hpp` — foundational includes.
 - The source tree uses these macros in many components; inspect the call site to determine cleanup and error propagation.
 
-## 6. References
+## 5. References
 
 No external references are listed.
