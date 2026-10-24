@@ -95,6 +95,19 @@ A recognized extension identifier does not prove that its payload is supported o
 
 ALPN contributes to application-protocol selection; it does not route HTTP requests. QUIC transport parameters contribute to QUIC connection configuration; they do not construct packets. Those consumers remain outside the extension representation layer.
 
+### Real-code example: extension parsing is not negotiation by itself
+
+Use `test/applet/tlsserver/run_server.cpp` to see where extension handling fits: command-line options select the allowed TLS versions, backend, certificate family, and related parameters, then the handshake/session path processes peer extensions. The extension reader creates typed representations; later handshake logic decides whether an extension is valid for that message and whether its value is acceptable in context.
+
+```text
+wire extension envelope -> typed extension object
+  -> parent handshake extension collection
+  -> role/message/version checks
+  -> negotiated session state (where applicable)
+```
+
+Do not treat successful decoding of an extension payload as proof that the peer's offer was accepted. The applet demonstrates configuration/integration; focused handshake tests are needed for a particular extension's exact negotiation rule.
+
 ## 4. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [Handshake messages](../handshake/README.md) — extension collection and enclosing message context.
