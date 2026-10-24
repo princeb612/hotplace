@@ -132,7 +132,7 @@ EXCEPT
 
 This makes the same machinery useful for both direct membership tests and composition of nested ASN.1 constraints.
 
-## 4. Relationships
+## 5. Relationships
 
 - `test/testcase/base/nostd/testcase_set.cpp` exercises `t_range_set` merging, subtraction, equality, and QUIC ACK-range use cases.
 
@@ -157,3 +157,7 @@ sdk/base/nostd/range_set.hpp
 ```
 
 `range_set.hpp` implements normalized range operations using the range primitives in `range.hpp`; `set.hpp` is the higher-level runtime facade. ASN.1 constraint evaluation consumes this representation under `sdk/io/asn.1/basic/semantic/constraints/`, but the ASN.1 layer owns the meaning of each constraint.
+
+## 6. References
+
+No external references are listed.
