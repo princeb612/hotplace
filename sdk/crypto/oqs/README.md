@@ -63,6 +63,32 @@ pqc_oqs::close(context)
 
 The algorithm lists are discovered from the provider at runtime. The adapter records whether each name maps to an OpenSSL NID/OID, but the flag is only one capability gate used by the current tests; it does not establish support for every key encoding or higher-level protocol. A successfully opened context owns provider handles and an `OSSL_LIB_CTX`, so close it after the operation sequence. On OpenSSL versions before 3.0, these methods return `not_supported`.
 
+The enumeration call's callback is part of the caller contract, not an implicit provider action. This shortened version of the testcase includes its definition:
+
+```cpp
+oqs_context* context = nullptr;
+pqc_oqs oqs;
+
+return_t ret = oqs.open(&context);
+if (errorcode_t::success == ret) {
+    oqs.for_each(context, OSSL_OP_KEM, [&](const std::string& alg, int flags) -> void {
+        _logger->writeln("algorithm : %s", alg.c_str());
+
+        if (oqs_alg_oid_registered & flags) {
+            // This algorithm passes the testcase's OID-registration gate.
+            // Key generation and encapsulation/decapsulation follow here.
+        } else {
+            _test_case.test(errorcode_t::not_supported, __FUNCTION__,
+                            "No OID registered for %s", alg.c_str());
+        }
+    });
+
+    oqs.close(context);
+}
+```
+
+The lambda body shown here is an enumeration/gating example; the complete KEM operation is documented next. As in the testcase, `open()` must succeed before enumeration, and `close()` releases the provider context after the callback sequence.
+
 ### 3.2 Concrete KEM caller path from `testcase_oqs_kem.cpp`
 
 ```text
