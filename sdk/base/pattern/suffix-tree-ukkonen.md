@@ -91,14 +91,14 @@ search(query)
 
 The storage difference is visible in the edge labels: the explicit suffix trie materializes a path for each suffix, while Ukkonen nodes refer to intervals in the retained source. In the compressed tree, a query may finish partway through an edge; all leaves below that matched locus still identify occurrences of the query.
 
-## 4. Relationships
+## 5. Relationships
 
 - `pattern.hpp` — shared element extraction for source sequences.
 - `test/testcase/base/pattern/testcase_suffixtree.cpp` — explicit suffix-trie queries.
 - `test/testcase/base/pattern/testcase_ukkonen.cpp` — Ukkonen construction and substring queries.
 - `README.md` — places both indexes among the other pattern-matching choices.
 
-## 5. References
+## 6. References
 
 - [Pattern searching using Trie of all suffixes](https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/)
 - [Ukkonen's suffix-tree construction — Part 1](https://www.geeksforgeeks.org/ukkonens-suffix-tree-construction-part-1/)
