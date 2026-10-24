@@ -45,11 +45,29 @@ octets + length
   └─ crc24: init 00B704CE → byte into high 8 bits → 8 left-shift/reduce steps → mask 24 bits
 ```
 
+### Concrete caller path: OpenPGP Radix-64 armor
+
+The SDK's Radix-64 armor encoder shows where the CRC primitive becomes part of a real format operation:
+
+```cpp
+ret = base64_encode(data, data_size, encoded);
+if (errorcode_t::success != ret) {
+    __leave2;
+}
+
+auto checksum = hton32(crc24(data, data_size));
+ret = base64_encode((byte_t*)&checksum + 1, 3, crc);
+```
+
+The checksum is calculated over the original payload, converted to network byte order, and then the three checksum bytes are Base64-encoded separately from the payload. The decoder repeats the calculation over the decoded payload and compares the encoded checksum, returning `errorcode_t::mismatch` when it differs. This is a useful caller example because it connects the checksum parameters described above to the format's byte selection and validation path; it does not make CRC a cryptographic integrity mechanism.
+
+Source: `sdk/base/encoding/radix64.cpp` (`radix64_armor_encode()` / `radix64_armor_decode()`).
+
 When reviewing a change, verify polynomial, bit direction, initialization/finalization, and output width against the intended format.
 
 A CRC detects accidental corruption according to its specified checksum scheme; it does not provide collision resistance or authenticity and must not be used as a cryptographic security primitive. No dedicated direct CRC testcase was identified in this revision's source tree, so verification should follow the Radix-64 consumer and distinguish end-to-end format coverage from a standalone `crc24()` unit test.
 
-## 4. Relationships
+## 5. Relationships
 
 - `crc24()` is consumed by Radix-64 encoding to supply its CRC-24 checksum; `crc32()` is a separate 32-bit checksum helper.
 
@@ -66,3 +84,7 @@ base/basic/crc.cpp
 - The encoding layer owns the format-specific decision about when and how to include the checksum.
 - CRC is not a substitute for a cryptographic digest, MAC, or digital signature.
 - The implementation is in `crc.hpp/.cpp`; `radix64.hpp` consumes CRC-24 together with Base64 armor. Validate the caller-visible checksum representation through the Radix-64 testcase under `test/testcase/base/encoding/`, rather than treating a checksum-only vector as proof of the full format contract.
+
+## 6. References
+
+- [RFC 4880 — OpenPGP Message Format](https://www.rfc-editor.org/rfc/rfc4880), Sections 6.5 and 6.6.
