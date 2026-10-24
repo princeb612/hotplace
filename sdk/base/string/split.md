@@ -46,8 +46,12 @@ split_count() / split_get() / split_foreach() / split_chained_foreach()
 
 The callback templates check for a null context and return `invalid_parameter`. Callers should still follow the API's begin/use/end lifecycle.
 
-## 4. Relationships
+## 5. Relationships
 
 - General scanning and token helpers are documented in [string.md](string.md).
 - `sdk/base/stream/splitter.hpp` is a different API: it segments byte inputs into groups/segments and supports descriptor callbacks.
 - The API/context is declared in `split.hpp` and implemented in `split.cpp`. The test source is `test/testcase/base/string/testcase_string.cpp`, function `test_string_split()`.
+
+## 6. References
+
+No external references are listed.
