@@ -75,7 +75,7 @@ The diagram follows separate implementation paths rather than implying that the 
 - **Diagnostics:** `dump_memory` formats data for inspection; it does not establish that the bytes are valid according to a protocol or encoding specification.
 - **CRC:** CRC is an integrity/checksum mechanism for formats that specify it, not a cryptographic hash or authentication primitive.
 
-## 4. Relationships
+## 5. Relationships
 
 - `variant` and `valist` both represent values temporarily, but `variant` models typed runtime values while `valist` adapts a sequence of values to a compiler ABI's variadic-call convention.
 - `dump_memory` is a shared formatting primitive; `logger` in `sdk/base/unittest` provides a configured diagnostic output channel and can use dump helpers.
@@ -83,3 +83,7 @@ The diagram follows separate implementation paths rather than implying that the 
 - `function_pipeline` coordinates execution/error flow but does not replace each operation's own error semantics.
 - `builtinmemory` allocator adapters allow pool allocation to be used with container-style interfaces.
 - Source-level coverage is organized under [`test/testcase/base/basic/`](../../../test/testcase/base/basic/README.md). The testcase overview links the focused test sources and command-line vectors; it owns detailed assertions and verification status, while this directory document describes the SDK interfaces and their relationships.
+
+## 6. References
+
+No external references are listed.
