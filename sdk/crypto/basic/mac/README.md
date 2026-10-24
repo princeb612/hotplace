@@ -49,7 +49,26 @@ mac(message)   init → update(chunk)* → finalize
 
 The builder binds the selected hash and secret key to the higher-level object. A one-shot `mac()` call consumes a complete message; the incremental path retains keyed hash state across `update()` calls until finalization. `openssl_mac` is a separate one-shot helper, while `openssl_hash` is the context-level interface used for stateful backend work.
 
-### 3.2 HOTP and TOTP data flow
+### 3.2 Concrete caller paths: primitive, facade, and JOSE
+
+`test/testcase/crypto/sign/testcase_hmac.cpp` deliberately exercises three layers with the same message and key material:
+
+```text
+message bytes
+   ├─ openssl_hash(hash context, SHA-256) ──> unkeyed digest
+   ├─ openssl_hash(hash context + key) ─────> HMAC bytes
+   ├─ openssl_sign::sign_hmac / verify_hmac
+   │                                         └─> status
+   └─ json_object_signing_encryption
+         sign(jws_t::hs256) / verify()
+                     └─> JOSE signature object/string + status
+```
+
+The testcase compares the `openssl_hash` SHA-256 result with `EVP_Digest` output, which checks agreement between two unkeyed digest paths. For HMAC, it opens `openssl_hash` with the key and SHA-256 and checks the operation status; the shown code logs the resulting bytes but does not compare them against an expected HMAC vector. The `openssl_sign` path then signs and verifies the same message using `sign_hmac()` and `verify_hmac()`. Finally, the JOSE path uses `jws_t::hs256`, verifies the produced JOSE signature, and closes its context.
+
+These are related but different API contracts: raw HMAC bytes are not a JOSE signature representation, and a successful sign/verify round trip is not a substitute for a known-answer vector. The RFC 4231 testcase supplies the independent known-answer HMAC checks.
+
+### 3.3 HOTP and TOTP data flow
 
 ```text
 HOTP:
