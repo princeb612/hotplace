@@ -118,13 +118,13 @@ fallback.push_back(200);
 
 The scope is an RAII binding of a thread-local pool pointer, not an ownership wrapper for `local_pool`. The pool must outlive containers using it, and the scope restores the previous binding on exit. The testcase exercises this selection path and logs the in-scope allocation count, but it does not assert an exact allocation count or explicitly assert restoration of the previous pointer.
 
-## 5. Relationships
+## 4. Relationships
 
 - `builtinpool_allocator<T>` adapts the pool to standard-container allocation conventions.
 - The fixed-buffer constructor ties pool validity to the supplied backing buffer's lifetime.
 - `variant` and `basic_stream` are separate utilities; neither is a required part of pool allocation.
 - The allocator implementation is in `builtinmemory.hpp/.cpp`; `testcase_builtinmemory.cpp` exercises the pool and allocator-facing behavior. These links help check the adapter contract.
 
-## 6. References
+## 5. References
 
 No external references are listed.
