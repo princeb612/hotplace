@@ -62,6 +62,25 @@ If a prior chunk left a partial Base16/Base64 unit, the next chunk first fills t
 
 Important API detail: `data()` returns the byte buffer, not the status returned by its internal `flush()`. Callers needing explicit error handling should check each `write()` result and should not treat a returned buffer alone as proof that finalization succeeded.
 
+### Concrete caller path: chunked decode and final retrieval
+
+The Base64 testcase feeds encoded text in chunks, then obtains the accumulated bytes from the decoder:
+
+```cpp
+decoder_stream decoder(encoding_t::encoding_base64);
+return_t ret = decoder.write(encoded.data(), 2);
+if (errorcode_t::success == ret) {
+    ret = decoder.write(encoded.data() + 2, encoded.size() - 2);
+}
+if (errorcode_t::success == ret) {
+    binary_t decoded = decoder.data();
+}
+```
+
+The split at two characters deliberately cuts across a four-character Base64 group. The decoder retains the suffix and combines it with the next write. Note the API caveat above: `data()` returns the buffer, not the status from its internal `flush()`; checking `write()` is necessary but is not a separate assertion that every final suffix was valid. The full testcase uses many chunk sizes and compares the decoded output with the original byte sequence.
+
+Source: `test/testcase/encode/testcase_base64.cpp`.
+
 ## 4. Relationships
 
 - `base16.*` and `base64.*` provide the conversion routines used by this stream.
