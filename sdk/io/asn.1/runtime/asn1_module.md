@@ -201,11 +201,11 @@ The important boundary is between `parse_tree` and `asn1_build_resultset`: loadi
 
 ### Related tests
 
-- `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decoding and reference resolution.
-- `test/testcase/asn.1/loader/testcase_loader.cpp` — module loading, regenerated notation, `EXPORTS`, `IMPORTS`, and `is_resolvable()`.
-- `test/testcase/asn.1/testcase_constraints.cpp` — semantic construction with constraints.
-- `test/testcase/asn.1/runtime/testcase_parser.cpp` — parser/runtime path.
-- `test/testcase/asn.1/runtime/testcase_publish.cpp` — publishing path.
+- [`test/testcase/asn.1/testcase_basic3.cpp`](../../../../test/testcase/asn.1/testcase_basic3.cpp) — strongly typed decoding and reference resolution.
+- [`test/testcase/asn.1/loader/testcase_loader.cpp`](../../../../test/testcase/asn.1/loader/testcase_loader.cpp) — module loading, regenerated notation, `EXPORTS`, `IMPORTS`, and `is_resolvable()`.
+- [`test/testcase/asn.1/testcase_constraints.cpp`](../../../../test/testcase/asn.1/testcase_constraints.cpp) — semantic construction with constraints.
+- [`test/testcase/asn.1/runtime/testcase_parser.cpp`](../../../../test/testcase/asn.1/runtime/testcase_parser.cpp) — parser/runtime path.
+- [`test/testcase/asn.1/runtime/testcase_publish.cpp`](../../../../test/testcase/asn.1/runtime/testcase_publish.cpp) — publishing path.
 
 ### Reference lookup and resolution
 
