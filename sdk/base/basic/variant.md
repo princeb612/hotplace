@@ -161,6 +161,25 @@ reset() → shallow state reset (not an ownership-cleanup substitute)
 
 `is_coalescable_with()` checks whether another variant can logically follow the current value for coalescing purposes. The relation is directional rather than necessarily symmetric; the implementation recognizes compatible numeric and boundary-value combinations instead of treating all values of the same broad category as interchangeable.
 
+### Concrete caller path: protocol-width binary conversion
+
+The testcase demonstrates that `variant` can retain a typed value while producing bytes with explicit endian/truncation controls:
+
+```cpp
+binary_t bin;
+std::string hex;
+variant value;
+
+value.clear().set((uint32)32768);
+value.to_binary(bin, variant_convendian | variant_trunc);
+hex = base16_encode(bin);
+_test_case.assert(hex == "00008000", __FUNCTION__, "base16");
+```
+
+The stored value remains a `uint32`; `variant_convendian | variant_trunc` controls the output representation, and Base16 is used only to make the resulting bytes inspectable. The testcase also checks a 64-bit value and a `bignumber`, so this example should not be read as proof that every type has a meaningful binary representation under every control combination.
+
+Source: `test/testcase/base/basic/testcase_variant.cpp`.
+
 ### Big numbers
 
 `TYPE_BIGNUMBER` integrates `bignumber` with the variant type system.
@@ -169,7 +188,7 @@ A big number can be inserted with `set_bn()` and then participate in the same co
 
 The negative flag is also supported. This is useful when a protocol representation stores a magnitude separately from the semantic sign.
 
-## 4. Relationships
+## 5. Relationships
 
 - `test/testcase/base/basic/testcase_variant.cpp` covers protocol-oriented integer conversion, endian conversion and truncation, `bignumber` conversion/formatting, and negative-value handling. One assertion stores `32768` as `uint32`, converts with `variant_convendian | variant_trunc`, Base16-encodes the resulting `binary_t`, and checks `00008000`; this is a concrete example, not a guarantee for every type/flag combination.
 - `valist` uses `variant_t` as the retained representation for heterogeneous arguments before it reconstructs the platform-specific native `va_list`; this is an argument-passing path, not the stream-formatting path.
@@ -177,3 +196,7 @@ The negative flag is also supported. This is useful when a protocol representati
 - `basic_stream::operator<<(const variant&)` delegates to `vtprintf` with debug style, while other callers can select a protocol-oriented display style explicitly. This is why the same value can have different textual renderings without changing its stored representation.
 - `binary_t` is the byte-container used by binary conversion; Base16 encoding is used by the testcase to make the bytes inspectable.
 - Higher-level protocol code defines field meaning and ordering; `variant` supplies value/type conversion primitives. The main implementation is in `variant.hpp/.cpp` with shared declarations in `types.hpp`; `testcase_variant.cpp` provides conversion examples, while `valist.hpp/.cpp` is a consumer of heterogeneous values. The testcase is a concrete conversion example, not a universal statement that every `vartype_t` has a defined binary representation for every flag combination.
+
+## 6. References
+
+No external references are listed.
