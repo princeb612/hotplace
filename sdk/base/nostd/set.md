@@ -96,7 +96,7 @@ The same pattern is used for `intersect_with()` and `erase_from()` for the corre
 
 This keeps the semantic evaluator aware of the ASN.1 value category while the concrete set implementation remains hidden behind `_target`.
 
-## 4. Relationships
+## 5. Relationships
 
 - `test/testcase/base/nostd/testcase_set.cpp` provides source-level coverage for runtime set selection and set operations.
 
@@ -133,3 +133,6 @@ The `nostd` layer constructs and combines sets through the runtime facade. The A
 
 
 The facade is implemented in `set.hpp`; its numeric backend is `range_set.hpp`, and its string backend is `string_set.hpp`. The ASN.1 visitor connects to the facade through `asn1_constraint_evaluator.hpp`.
+## 6. References
+
+No external references are listed.
