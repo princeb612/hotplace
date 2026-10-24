@@ -46,6 +46,32 @@ The custom-deleter overloads preserve the supplied deleter type in the returned 
 
 `t_pointer_proxy` invokes its deleter on destruction. `release()` clears the stored pointer to prevent deletion after ownership has been transferred. The caller must explicitly release the proxy when another object has accepted responsibility for the pointer; otherwise the proxy remains the owner.
 
+### Concrete caller path: release a reference-counted protocol object
+
+The network stream uses `make_promise_on_destruction()` to adapt a raw pointer returned by protocol selection into a scope-bound owner:
+
+```cpp
+network_protocol* protocol = nullptr;
+test = protocol_group->is_kind_of(
+    bufstream.data(), bufstream.size(), &protocol);
+
+if (errorcode_t::success == test) {
+    auto lambda_deleter = [](network_protocol* object) -> void {
+        object->release();
+    };
+    auto protocol_ptr =
+        custom::make_promise_on_destruction<network_protocol>(
+            protocol, lambda_deleter);
+
+    protocol_ptr.get()->read_stream(
+        &bufstream, &message_size, &state, &priority);
+}
+```
+
+The raw pointer is returned by the protocol-selection path with its reference count incremented. The custom deleter calls `release()` when the local smart pointer leaves scope, including early exits from the surrounding processing path. This is the important distinction from `make_unique()`: the helper adopts an existing resource and applies the correct release operation instead of allocating a new object.
+
+Source: `sdk/net/server/network_stream.cpp`, `network_stream::do_writep()`.
+
 ## 5. Relationships
 
 - `sdk/base/nostd/utility.md` — other conversion and generic helper functions.
