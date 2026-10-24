@@ -154,7 +154,7 @@ The pipeline keeps `result()` in its configured type `T`. `result_to_return_t()`
 
 The pipeline does not make every operation's error values identical. For example, an errno-tagged pipeline converts a nonzero errno result to `internal_error` when producing `return_t`; callers that need the original native value must account for that conversion boundary.
 
-## 5. Relationships
+## 4. Relationships
 
 - **Shared result model — `sdk/base/error.hpp` and `sdk/base/error.cpp`:** define `errorcode_t`, the `return_t` wrapper, and result helpers. `return_t` delegates symbolic names and category information to the system error layer.
 - **Adapter and advisor API — `sdk/base/system/error.hpp` and `sdk/base/system/error_advisor.cpp`:** define `error_traits`, category hints, and the advisor interface; the implementation builds lookup maps and performs lookups/classification.
@@ -164,6 +164,6 @@ The pipeline does not make every operation's error values identical. For example
 - **Trace diagnostics — `sdk/base/system/trace.cpp`:** uses the advisor to obtain an error-code name when emitting leave-trace diagnostics.
 - **Source-level testcase coverage — `test/testcase/base/unittest/testcase_unittest.cpp`:** `test_error()` looks up the name and message for `invalid_parameter`; `test_testcase()` submits success, unsupported, and low-security results. Related tests exercise error-flow and trace paths. These describe test source, not a claim that tests were executed during this documentation update.
 
-## 6. References
+## 5. References
 
 - [RFC 6749 — The OAuth 2.0 Authorization Framework](https://www.rfc-editor.org/rfc/rfc6749): the shared error definitions include OAuth error names such as `invalid_request`, `access_denied`, `invalid_client`, and `invalid_grant`, with comments pointing to the relevant error-response sections. This RFC is relevant to those protocol-specific values; it does not define hotplace's general error-advisor, function-pipeline, or testcase-reporting model.
