@@ -173,7 +173,7 @@ This diagram shows the intended architectural direction, not a complete include 
   - https://baseconvert.com/ieee-754-floating-point
   - https://www.omnicalculator.com/other/floating-point
 
-## 6. Development Notes (for maintainer review)
+## 6. Developer Notes
 
 ### C++ Standard and GCC notes retained from the original README
 
