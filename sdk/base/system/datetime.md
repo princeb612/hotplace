@@ -115,7 +115,7 @@ One of the practical purposes of this module is to hide platform differences beh
 
 This is consistent with hotplace's broader goal of keeping the base system layer usable across older environments.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test/testcase/base/system/testcase_datetime.cpp` exercises construction/conversion through `timespec`, `datetime_t`, `time_t`, and system-time paths, as well as `timespan_t` arithmetic and `time_diff()` / `time_sum()` nanosecond carry/borrow normalization.
 - `sdk/base/system/datetime.hpp`, `datetime.cpp`, and `datetime_api.cpp` — public representation, core conversions/arithmetic, and API-level helpers.
@@ -124,6 +124,6 @@ This is consistent with hotplace's broader goal of keeping the base system layer
 - `test/testcase/base/system/testcase_datetime.cpp` — source-level conversions and nanosecond carry/borrow cases.
 - Higher-level protocols own timestamp meaning and epoch/precision rules when they serialize time values. The common implementation is in `datetime.hpp/.cpp` and `datetime_api.cpp`, with OS-specific adapters under `linux/` and `windows/`; `testcase_datetime.cpp` covers conversions and nanosecond carry/borrow.
 
-## 6. References
+## 5. References
 
 No external references are listed.
