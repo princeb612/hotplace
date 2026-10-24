@@ -382,7 +382,7 @@ The function parameter makes the negotiated/tested group explicit; each peer get
 
 Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
 
-### 3.5 Concrete TLS consumer: key-share serialization
+### 3.9 Concrete TLS consumer: key-share serialization
 
 TLS 1.3's client key-share extension asks the key-exchange layer for the public share for each selected group, then serializes the group identifier, share length and share bytes into the extension payload:
 
