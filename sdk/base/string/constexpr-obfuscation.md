@@ -36,12 +36,12 @@ literal / constexpr input
 
 The compile-time wrapper supports reconstruction for output/use, comparison, and append operations.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test/testcase/base/string/testcase_string.cpp` — `test_string_constexpr_hide()` and `test_string_constexpr_obf()` compare reconstructed output with the original character data; see the [testcase guide](../../../test/testcase/base/string/README.md).
 - [Runtime string obfuscation](obfuscation.md) covers `obfuscate_string`, which has a different storage/use model.
 - The project-wide baseline remains C++11; this isolated feature is explicitly C++14+. The implementation is in `constexpr_obfuscate.hpp`; it should remain isolated from headers that must compile under the C++11 baseline.
 
-## 6. References
+## 5. References
 
 No external references are listed.
