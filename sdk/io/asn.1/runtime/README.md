@@ -79,6 +79,22 @@ The generic parse tree, temporary semantic nodes, and completed runtime module/o
 
 Declaration and resolution are separate. Creating a referenced-type node does not alone prove that its target is linked. Module-aware `search()` can consult local definitions and imported-symbol modules; `resolve()` uses those lookups to validate reference dependencies.
 
+### Concrete use paths from the ASN.1 testcases
+
+The publisher can be exercised directly with an already assembled generic parse tree. In `test/testcase/asn.1/runtime/testcase_publish.cpp`, the first small example records SHIFT/REDUCE events for `Type1 ::= VisibleString`, obtains the publisher from `asn1_advisor`, calls `publisher->build(&pt, result)`, and publishes `result.object`. The testcase compares the resulting notation with the expected string. This isolates semantic reconstruction from lexical analysis and parser execution.
+
+The loader testcase follows the larger file-to-runtime path:
+
+```text
+asn1_loader::asn1file_to_tokens(parser, file, tokens)
+    -> parser.to_parsetree(tokens, parse_tree)
+    -> parser.to_result(parse_tree, result)
+    -> asn1_modules registry
+    -> module->get(name) / module->is_resolvable()
+```
+
+For each fixture, `testcase_loader.cpp` checks the status of tokenization, parsing, and result construction before continuing. It then compares the module-name list, looks up each expected module, checks its imports/exports and resolvability, and verifies selected assignment names. This is a practical example of why the stages remain separate: successful parsing is not sufficient evidence that the expected runtime module was published or that its imported references resolve.
+
 ### Completion boundaries
 
 - The shared publisher/handler set is prepared through `asn1_advisor`; each build uses its own context and temporary module state.
