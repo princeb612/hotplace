@@ -59,7 +59,7 @@ The two paths can meet when a test case emits diagnostics through a logger, but 
 - **Concurrency:** the logger has per-thread context and a consumer path. Changes to buffering, shutdown, or shared state should be checked for lifetime and synchronization implications.
 - **Historical material:** older logger sketches in this directory are retained as design/history material. They should not be treated as the current implementation contract without comparison to the active `.hpp/.cpp` files.
 
-## 5. Relationships
+## 4. Relationships
 
 ### Test-result path
 
@@ -74,6 +74,6 @@ The two paths can meet when a test case emits diagnostics through a logger, but 
 - `logger` uses common formatting and dump facilities, including `basic_stream` and memory-dump helpers from `sdk/base`.
 - Testcase analysis documents under [`test/testcase/base/unittest/`](../../../test/testcase/base/unittest/README.md) explain test intent and report context; this README explains the implementation components that support those tests. The focused sources are `testcase_unittest.cpp`, `testcase_loglevel.cpp`, and `testcase_consolecolor.cpp`.
 
-## 6. References
+## 5. References
 
 No external references are listed.
