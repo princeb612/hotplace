@@ -74,6 +74,21 @@ The router owns the high-level decision to resolve the provider before invoking 
 
 Credential containers use locks around their in-memory maps/sets. This protects those container operations; it does not define credential rotation, persistence, rate limiting, lockout, or revocation policy for an application.
 
+### Real-code example: authentication before URI dispatch
+
+`test/applet/httpserver1/run_server.cpp` is the application-level entry point: its `mux_read` branch creates a response and calls `http_router::route(session, request, &response)`. Authentication is not a separate check that the applet should duplicate; the router/provider path resolves the registered provider before invoking the URI handler.
+
+```text
+consumer_routine(mux_read)
+  -> http_router::route(session, request, response)
+  -> provider lookup
+  -> authentication resolver
+  -> success: URI handler
+     failure: challenge / 401
+```
+
+Use this alongside the focused authentication testcase/source for scheme-specific behavior. The applet demonstrates where authentication participates in a real request; it does not by itself prove every Basic, Digest, Bearer, or custom resolver path.
+
 ## 4. Relationships
 - `basic_credentials.hpp/.cpp`, `basic_authentication_provider.hpp/.cpp`
 - `digest_credentials.hpp/.cpp`, `digest_access_authentication_provider.hpp/.cpp`, `rfc2617_digest.hpp/.cpp`
