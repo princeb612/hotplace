@@ -95,12 +95,12 @@ The current `decoder_stream::flush()` decodes a retained suffix only when it con
 
 ## 4. Relationships
 
-- `test/testcase/encode/testcase_base16.cpp` covers ordinary conversion, stream-buffer overloads, encoder/decoder streams, odd-sized chunks, and RFC-style examples.
+- [`test/testcase/encode/testcase_base16.cpp`](../../../test/testcase/encode/testcase_base16.cpp) covers ordinary conversion, stream-buffer overloads, encoder/decoder streams, odd-sized chunks, and RFC-style examples.
 - `lowlevel/base16.*` implements byte-level conversion; `base16.*` exposes higher-level overloads.
 - `base16rfc.cpp` handles RFC-oriented human-readable byte forms.
 - `encoder_stream` and `decoder_stream` reuse Base16 conversion while handling chunk boundaries.
 - `sdk/base/basic/dump_memory.*` formats diagnostic hex dumps; it is not an alternative Base16 encoder.
-- `test/testcase/encode/testcase_base16.cpp` provides source-level coverage.
+- The same testcase provides source-level coverage for the conversion paths above.
 
 ## 5. References
 
