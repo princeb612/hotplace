@@ -55,6 +55,25 @@ network_server::open(...)
 
 The listener setup differs by transport: TCP/TLS uses a stream bind/listen path, while UDP/DTLS binds a datagram socket. The Linux DTLS path explicitly constrains producer concurrency to one for the supported epoll handshake flow. Producer/consumer work loops are created through the corresponding `*_loop_run()` methods rather than being synonymous with merely opening the listener.
 
+### Address family and listener contexts
+
+`network_server::open(handle, family, port, server_socket, ...)` forwards `family` to `server_socket::open()`; it does not itself merge IPv4 and IPv6 into one listener. To serve both families, the caller can invoke `open()` twice, using `AF_INET` and `AF_INET6`, and retain the two returned context handles independently.
+
+```text
+open(handle_v4, AF_INET, port, ...)
+  -> IPv4 socket + multiplexer context
+
+open(handle_v6, AF_INET6, port, ...)
+  -> IPv6 socket + multiplexer context
+
+handle_v4: accept/event loop + consumer loop + callback
+handle_v6: accept/event loop + consumer loop + callback
+```
+
+The two contexts have separate listener and multiplexer state and each needs its own loop start/stop and `close()` call. The source example `test/applet/tcpserver2/run_server.cpp` opens both on the same configured port and registers the same accept callback for both. That demonstrates the caller's two-listener pattern; it does not guarantee that every OS/socket configuration permits both binds to coexist, nor that the IPv6 socket accepts IPv4-mapped connections. Those behaviors depend on the selected socket backend and operating-system dual-stack settings.
+
+Address-family support at this layer should also be distinguished from address-policy support: accepted peer addresses are carried to the callback, but `ipaddr_acl` has its own compile-time IPv6 representation requirement. See [the server overview](README.md#ipv4-and-ipv6-listener-model) and [IP address/ACL model](../basic/ipaddr/README.md).
+
 ### Accept and handshake
 
 ```text
