@@ -92,7 +92,7 @@ The project's general compatibility target is C++11. Isolated experiments, inclu
 
 Test source and execution reports answer different questions. Source code reveals what a testcase attempts to assert; a report records results for a particular run and environment. The existence of a testcase is not proof that it was executed, and a report without a matching source revision and environment should not be treated as evidence that the exact current tree passed on that platform.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Dependency direction
 
@@ -124,7 +124,7 @@ This diagram shows the intended architectural direction, not a complete include 
 - Source-level test coverage for this layer is organized under [`test/testcase/base/`](../../test/testcase/base/); testcase documentation owns detailed coverage and verification status so those claims do not need to be duplicated in every SDK module document.
 - The [compile-time string-obfuscation](string/constexpr-obfuscation.md) and [big-number](system/bignumber.md) pages retain focused details that do not belong in a directory map. The [pattern overview](pattern/README.md) compares algorithm families and their selection criteria.
 
-## 5. References
+## 6. References
 
 ### Books
 
@@ -173,7 +173,7 @@ This diagram shows the intended architectural direction, not a complete include 
   - https://baseconvert.com/ieee-754-floating-point
   - https://www.omnicalculator.com/other/floating-point
 
-## 6. Development Notes (for maintainer review)
+## 7. Development Notes (for maintainer review)
 
 ### C++ Standard and GCC notes retained from the original README
 
