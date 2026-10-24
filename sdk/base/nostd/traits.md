@@ -46,13 +46,13 @@ basic_stream::operator<< routes integral, enum, and floating-point values throug
 
 This is distinct from basic_stream's indexed sprintf/vaprintf formatting syntax: printf_traits serves the C-style formatting path used by generic insertion, while the indexed formatter parses its own per-argument format requests.
 
-## 5. Relationships
+## 4. Relationships
 
 - sdk/base/encoding/base16.hpp and base64.hpp — use encoder_stream_traits<T> for generic output buffers.
 - sdk/base/stream/stream.hpp and basic_stream.hpp — adapt stream destinations and use printf_traits for insertion formatting.
 - sdk/base/nostd/binary.hpp and set.hpp — other examples of project traits controlling overloads and representation.
 - test/testcase/base/nostd/testcase_int.cpp and testcase_narrowcast.cpp — adjacent coverage for integer classification/conversion, not direct coverage of every encoder or formatting adapter.
 
-## 6. References
+## 5. References
 
 No external references are listed.
