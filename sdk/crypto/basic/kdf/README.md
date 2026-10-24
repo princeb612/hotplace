@@ -85,6 +85,40 @@ The input model selects the family: password KDFs deliberately impose a configur
 
 A KDF does not generate random salts or nonces, store passwords, or manage key lifetime. Password KDFs should not be substituted for HKDF, and HKDF should not be treated as a password-hardening function.
 
+### 3.3 Concrete caller path: inline HKDF known-answer test
+
+`testcase_hkdf.cpp` shows the complete caller-side shape without a builder: instantiate `openssl_kdf`, pass the digest, output length, IKM, salt and `info`, then compare the derived bytes with a fixed expected value.
+
+```cpp
+openssl_kdf kdf;
+binary_t result;
+
+kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, 10,
+             to_binary("secret"),
+             to_binary("salt"),
+             to_binary("label"));
+
+_test_case.assert(base16_decode("2ac4369f525996f8de13") == result,
+                  __FUNCTION__, "hkdf");
+```
+
+```text
+IKM "secret" + salt "salt" + info "label"
+                  |
+                  v
+       HKDF using SHA-256, L = 10
+                  |
+                  v
+          10 output bytes
+                  |
+                  v
+       exact expected-byte comparison
+```
+
+The source calls `hmac_kdf()` and checks the output against the known-answer bytes; it does not check the function's return status in this testcase. The strings are a compact fixture, not a deployment recommendation. In particular, the variable named `password` in the testcase is passed as HKDF input keying material; HKDF does not replace PBKDF2, scrypt or Argon2 when the input is a human password that needs password-hardening.
+
+For TLS 1.3-style derivation, the caller uses `hkdf_expand_tls13_label()` with the secret, label, context and requested length. That helper encodes the protocol-defined label structure and performs expansion; the TLS state machine must still select the correct secret, label and transcript context for each stage.
+
 ## 4. Relationships
 - `../../advisor/README.md` resolves digest names used by HMAC/HKDF and backend operations.
 - `../digest/README.md` provides digest primitives used by digest-based KDFs.
