@@ -43,6 +43,19 @@ The practical selection rule is:
 
 `asn1_object::publish(stream_t*)` and `publish(binary_t*)` select the notation and DER paths respectively. The constraint evaluator is a different operation; it produces an allowed-value set rather than encoded output.
 
+### Practical example: choose the operation before choosing the visitor
+
+The published-object paths in `test/testcase/asn.1/testcase_basic3.cpp` illustrate why traversal, notation, and DER output are separate operations. A caller that needs wire bytes uses the module's publish path; a caller that needs a readable schema uses represent/notation. For direct object inspection, use `asn1_visitor` or `asn1_ast_visitor` rather than treating a parser's `parse_tree` as the semantic object graph.
+
+```text
+asn1_module + object name
+  ├─ represent(name, stream) -> ASN.1 notation
+  ├─ publish(name, binary)   -> DER bytes
+  └─ visitor(object, module, callback) -> recursive object traversal
+```
+
+The first two branches are concrete module operations; the visitor branch is a distinct traversal API. Keep the purpose of the requested output explicit when selecting a visitor.
+
 ## 4. Relationships
 - [ASN.1 visitor architecture](../asn1-visitor.md) — visitor family in the context of the semantic model.
 - [ASN.1 object model](../asn1-object-model.md) — objects visited and published.
