@@ -55,7 +55,7 @@ asn1_parameterized_type::define()
 
 `define()` establishes the reusable semantic prototype; `specialize()` clones that prototype and associates actual parameter values. The direct semantic tests establish behavior for this object-model path only. They do not prove that parameterized notation parsed from a source file is fully bound, substituted, published and usable as a runtime type.
 
-## 5. Relationships
+## 4. Relationships
 
 - [Semantic ASN.1 model](../README.md) — shared semantic object hierarchy.
 - [ASN.1 publisher](../../../runtime/asn1_publisher.md) — parser-tree reconstruction handlers and current integration boundary.
