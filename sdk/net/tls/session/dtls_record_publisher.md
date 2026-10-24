@@ -64,6 +64,64 @@ serialized handshake message
 
 Two boundaries are involved: fragment size limits one handshake-body slice, while record grouping/segment policy determines which serialized fragments share an output record or segment.
 
+### Publication modes: one handshake per record vs multiple handshakes per record
+
+The flag is checked in the splitter callback, after each source handshake has been serialized and split into body ranges. It changes **record boundaries**, not handshake serialization, fragment size, or the handshake sequence assigned to each source message.
+
+| Mode | Boundary rule | Practical result |
+|---|---|---|
+| `set_flags(0)` (default) | Start a new record at each new segment **and** at the start of each source handshake (`splitter_new_group`). | Each handshake starts in a fresh DTLS record. If a handshake body is fragmented, its fragments are emitted in separate records as their segments begin. Easier to control each handshake's record boundary/size. |
+| `set_flags(dtls_record_publisher_multi_handshakes)` | Start a new record at a new segment; do not force a record boundary just because the next source handshake begins. | Multiple handshake messages, or fragments belonging to adjacent handshakes, can share one DTLS record when they fall within the same segment. A segment boundary still starts a new record. |
+
+```text
+Input tls_record_handshake
+  [ServerHello] [Certificate] [ServerKeyExchange] [ServerHelloDone]
+          |             |                |                |
+          +-------------+----------------+----------------+
+                                |
+                 serialize each handshake separately
+                 retain its own handshake sequence
+                                |
+                     split each encoded body
+                                |
+                 +--------------+--------------+
+                 |                             |
+             flags = 0                 multi_handshakes
+                 |                             |
+      new segment OR new handshake      new segment only
+                 |                             |
+        record boundary at each         share current record
+        handshake start                 until segment boundary
+                 |                             |
+      smaller, isolated record set      records may contain
+                                       adjacent handshake content
+```
+
+The splitter's segment counter is based on the cumulative handshake-body bytes processed, with `get_fragment_size()` used as its segment size. It is **not** a direct calculation of the final DTLS record length: record and fragment headers add overhead, so `set_fragment_size()` and `set_segment_size()` should not be read as exact wire-size guarantees.
+
+### Example from `testcase_construct_dtls12_2.cpp`
+
+The testcase constructs one source handshake record containing ServerHello, Certificate, ServerKeyExchange, and ServerHelloDone, then runs the same construction path with both flag settings. Its comments illustrate the intended difference:
+
+- **Flag off:** the four handshake messages begin in separate records; a large Certificate or ServerKeyExchange may occupy multiple fragment records. The test comments enumerate record sequence progression through the ServerHelloDone record.
+- **Flag on:** handshake content from neighboring messages can share a record/segment. The comments specifically show a record containing ServerHello plus Certificate, another containing Certificate plus ServerKeyExchange, and another containing ServerKeyExchange plus ServerHelloDone. Large messages may therefore appear as fragments across adjacent records while sharing a record with neighboring handshake content where the segment boundary permits it.
+
+Two sequence spaces must not be conflated: the handshake sequence identifies each logical handshake message, while the DTLS record sequence identifies each emitted record. Grouping can reduce the number of emitted records without merging the logical handshake messages or replacing their handshake sequence numbers.
+
+```text
+flags off:
+  record(seq 1): ServerHello
+  record(seq 2..): Certificate fragments
+  record(...): ServerKeyExchange fragments
+  record(...): ServerHelloDone
+
+multi_handshakes:
+  record(seq 1): ServerHello + initial Certificate fragment(s)
+  record(seq ...): remaining Certificate fragment(s) + ServerKeyExchange fragment(s)
+  record(seq ...): remaining ServerKeyExchange fragment(s) + ServerHelloDone
+```
+
+This is a conceptual view of the testcase comments, not a fixed record-count promise: exact boundaries depend on encoded message sizes and the configured fragment/segment size.
 ### Publish flow
 
 1. Reject a null source record and fail if no session is attached or the session is not DTLS.
