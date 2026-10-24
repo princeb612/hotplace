@@ -61,9 +61,13 @@ The enumerator passes a type discriminator, a count, an array of payload pointer
 
 Source: `sdk/base/system/windows/sdk.cpp`, `enum_modules_toolhelp()`.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/charset.hpp` — defines the platform text-mode macros that affect the narrow/wide callback aliases.
 - `sdk/base/error.hpp` — supplies `return_t`, the callback result type.
 - `sdk/base/system/thread.hpp` and platform thread implementations — consumers of thread-related callback conventions.
 - Individual enumeration APIs define the payload contract and callback invocation lifetime.
+
+## 6. References
+
+No external references are listed.
