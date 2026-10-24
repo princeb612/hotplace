@@ -114,6 +114,21 @@ For adjacency, DFS, and BFS, the visitor callback uses the start vertex as both 
 - **Dijkstra:** calculate tentative distances from each start using a priority queue. A strictly shorter route replaces predecessor alternatives; an equal-distance route is retained as another predecessor. infer() expands those alternatives into path lists. The implementation does not validate weights as non-negative, so callers should not assume negative-weight support.
 - **Topological sort:** compute in-degrees, enqueue zero-in-degree vertices, and decrement neighbors as each vertex is emitted. If the emitted count differs from the vertex count, the routine clears the result and returns false for a cycle. This operation is intended for directed acyclic graphs.
 
+### Concrete caller sequence from `testcase_graph.cpp`
+
+The shared testcase helper shows the intended lifetime and call order for a search object. The graph fixture is assembled first; each algorithm then owns a separate search object built from that graph:
+
+```cpp
+auto shortest = graph.build_dijkstra();
+shortest->learn().infer();
+shortest->traverse(start, traverse_handler);
+delete shortest;
+```
+
+For adjacency, DFS, and BFS, `testcase_graph.cpp` follows the same sequence with `build_adjacent()`, `build_dfs()`, and `build_bfs()`. Its callback formats the returned vertex list for logging. The helper's unconditional `assert(true, ...)` calls do not validate the printed traversal order; use the dedicated topological-sort expected-order comparison or a GSS path assertion when you need a checked result. This distinction is part of the practical API contract: `traverse()` delivers results to the caller, but it does not itself define an expected answer.
+
+The raw pointer returned by each `build_*()` call is explicitly deleted in the testcase. Keep the source graph alive until the search object is no longer used.
+
 ### GSS push, traversal, and retracing
 
 ~~~text
