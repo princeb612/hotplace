@@ -207,7 +207,7 @@ QUIC: handshake → CRYPTO frame ─┐
 
 These flows describe responsibilities visible in source. The presence of a message class, hint, RFC note, or construction test does not establish complete conformance to every TLS/DTLS version or QUIC feature. Keep protocol requirements, implemented code paths, and actually executed test evidence separate.
 
-## 5. Relationships
+## 4. Relationships
 - [TLS advisor implementation](tls_advisor.md)
 - [DTLS record arrangement](session/dtls_record_arrange.md)
 - [DTLS record publisher](session/dtls_record_publisher.md)
@@ -226,7 +226,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - `test/testcase/tls/` — source-level test entry points and protocol test vectors.
 - `test/testcase/quic/` — QUIC packet/number/protection vectors and PCAP SIMPLE paths; see its testcase README for explicit source-level and runtime-evidence boundaries.
 
-## 6. References
+## 5. References
 ### Protocol specifications
 
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
@@ -245,7 +245,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - [Cipher suite information](https://ciphersuite.info/cs/)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 7. Developer Notes
+## 6. Developer Notes
 ### RFC figures transcribed as plain text
 
 The following diagrams are retained as quick-reading aids. The authoritative wording and any corrections should be checked against the linked RFCs.
