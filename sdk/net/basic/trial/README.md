@@ -56,11 +56,95 @@ The adapter and builder create the concrete socket. `network_server` remains res
 - **DTLS trial socket:** `trial_dtls_*_socket` uses a datagram socket and DTLS session state. It serializes application data into DTLS records and sends via `sendto`; the composer delegates DTLS record publication/fragmentation to `dtls_record_publisher`.
 - **QUIC trial socket:** QUIC uses UDP datagrams but is neither TLS-over-UDP nor DTLS. The QUIC packet publisher carries TLS 1.3 handshake data in QUIC CRYPTO frames and owns QUIC packet construction.
 
-### 3.3 Producer/consumer and handshake flow
+### 3.3 Producer/consumer: the two queues have different jobs
 
-The prosumer layer coordinates socket input/output and buffering. Incoming bytes are consumed by the session-processing path, which updates `tls_session` and its handshake status. The composer waits for those status changes, constructs the next handshake flight, serializes it through the TLS/DTLS record path or QUIC packet path, and invokes the supplied callback to send/publish the bytes. The callback, socket read path, and status updates are separate responsibilities; a complete flow requires tracing all of them.
+The word *prosumer* covers two distinct stages. `client_socket_prosumer` moves bytes between the operating-system socket and a raw receive queue; `secure_prosumer` interprets those bytes as TLS-family records and exposes only application-data payloads to the caller. They are not duplicate queues.
 
-The trial implementation is experimental. In particular, the existence of TLS/DTLS/QUIC classes should not be interpreted as proof of feature parity or complete production-ready handshakes across all versions and paths.
+```text
+socket / OS completion
+        |
+        | recv() / recvfrom()                 Windows: IOCP completion
+        v
+client_socket_prosumer::_mplexer_key.buffer
+        |
+        | enqueue(socket_buffer_t)
+        v
+_rq  +  _rlock
+(raw socket bytes + datagram peer address)
+        |
+        | do_secure()
+        |   secure socket: drain _rq via do_consume()
+        v
+secure_prosumer::_mbs
+(accumulated record bytes; may retain an incomplete TLS record)
+        |
+        | parse records using tls_record_builder
+        | record->read(direction, stream, size, pos)
+        +-------------------------------+
+        | handshake / alert / other     | application_data
+        | record processing updates     | extract decrypted record payload
+        | session/protection state      v
+        |                         _mq + _mlock
+        |                         (application bytes
+        |                          + optional peer address)
+        |                                |
+        |                                | _msem.wait()
+        |                                v
+        |                         secure_client_socket::read()
+        |                         / recvfrom()
+        v
+  tls_session status changes
+  (tls_composer can wait for them)
+```
+
+#### 3.3.1 `client_socket_prosumer`: socket I/O and the raw queue
+
+- **Open/connect and start-up.** Stream sockets are created and connected by `connect()`; datagram sockets are created by `open()`, which saves the peer address. Both start the consumer machinery before calling `do_handshake()`. The base implementation of `do_handshake()` is a no-op; the secure subclass starts the TLS-family handshake.
+- **Read readiness/completion.** `start_consumer()` binds the socket to the platform multiplexer, starts a worker thread running its event loop, and initiates the Windows overlapped read where applicable. Linux handles `mux_read` / `mux_dgram` events with `recv()` / `recvfrom()`; Windows queues the completed buffer and posts the next asynchronous read.
+- **Raw buffering.** Each successful receive is copied into a `socket_buffer_t` and enqueued in `_rq` under `_rlock`. Datagram entries also retain the sender address. For a non-secure socket, the receive path signals `_rsem`; for a secure socket, it instead calls `do_secure()` to pass available raw bytes to the secure processing stage.
+- **Plain reads vs secure reads.** A plain `do_read()` waits on `_rsem` and copies bytes from the front of `_rq`; a partial read cuts the consumed prefix and leaves the remainder queued. For secure sockets, `do_read()` is overridden to read from `secure_prosumer::consume()`, not directly from `_rq`. The protected `do_consume()` drains the raw queue into a byte stream and carries the queued peer address alongside it.
+- **Sending.** The base `send()` is stream-only and writes the supplied bytes to the socket; `sendto()` is datagram-only. These are byte transport operations, not TLS record construction. Secure subclasses decide whether application bytes need to be wrapped before reaching these methods.
+- **Shutdown.** `close()` invokes `do_shutdown()`, stops/unbinds the multiplexer consumer, then invokes `do_close()`. The hooks are virtual: secure sockets use the shutdown hook to send `close_notify` and wait for the peer status, while the base hooks are no-ops.
+
+#### 3.3.2 `secure_prosumer`: record parsing and application-data delivery
+
+1. **Collect the raw input.** `secure_client_socket::do_secure()` calls `secure_prosumer::produce()` with a callback that drains `client_socket_prosumer::_rq` through `do_consume()`. The received bytes are appended to `_mbs`; `produce()` does not itself perform a socket read.
+2. **Select the framing path.** For TLS and QUIC session types, the accumulated bytes are parsed as a sequence of records from the current `pos`. After parsing, only the consumed prefix is cut from `_mbs`, leaving unconsumed bytes for the next receive. For DTLS, the input is first passed through the session's `dtls_record_arrange`; each ready datagram/record unit returned by `arrange.consume()` is then parsed. The datagram peer address is retained for queued application data.
+3. **Parse each record.** The first byte selects the TLS content type and `tls_record_builder` builds the corresponding record parser. `record->read(dir, stream, size, pos)` consumes the encoded record and performs its normal record/session processing. Handshake, alert, and other record types are processed by that record path but are not placed in the application read queue by this method.
+4. **Queue application payloads.** When a successfully read record is `application_data`, its decoded payload is copied to a new `socket_buffer_t` and enqueued in `_mq` under `_mlock`; the optional peer address is copied with it. The semaphore `_msem` signals that application data is available. This is the boundary between protocol records and bytes returned to the application.
+5. **Deliver bytes to the caller.** `secure_client_socket::do_read()` calls `secure_prosumer::consume()`. It waits on `_msem`, copies up to the caller's buffer size from the front of `_mq`, and preserves any unread suffix. For datagram socket types it also copies the queued peer address. `more_data` indicates that additional queued application data remains.
+
+#### 3.3.3 Handshake and application writes use the reverse path
+
+```text
+Handshake:
+tls_composer::handshake(from_client, timeout, callback)
+  -> construct / serialize handshake flight
+  -> callback(bin) -> secure_client_socket::do_send(bin)
+  -> concrete TLS / DTLS socket chooses transport send
+
+Application write:
+caller bytes
+  -> trial_tls_client_socket::send()
+       wrap as TLS application_data record
+       -> client_socket_prosumer::send() -> TCP stream
+  -> trial_dtls_client_socket::sendto()
+       wrap as DTLS application_data record
+       (DTLS 1.3 uses dtls13_ciphertext)
+       -> client_socket_prosumer::sendto() -> UDP datagram
+```
+
+The handshake callback and application `send()` are separate paths: `tls_composer` sends already-constructed handshake bytes through `do_send()`, while the concrete secure socket wraps application bytes into an application-data record. The QUIC client currently selects TLS 1.3 and uses the QUIC packet/session path; it should not be read as TLS records being sent directly over UDP.
+
+#### 3.3.4 How to read the model
+
+- `_rq` is a **transport-input queue**. It contains bytes received from the socket, before the secure record layer processes them.
+- `_mbs` is a **record-input accumulator**. It allows a stream receive to end in the middle of a record without discarding the incomplete suffix.
+- `_mq` is an **application-output queue** from the secure record parser's perspective: it contains application payloads ready for the caller, not encrypted wire records.
+- `_rsem` wakes plain-socket readers; `_msem` wakes secure application readers. Secure sockets route received input through `do_secure()` rather than using the plain-read semaphore as their application-data notification.
+- The event-loop callback, secure record parsing, and caller's `read()` are separate execution stages. A socket receive does not mean that application data is immediately available: the bytes may be handshake/control records, an incomplete TLS record, or DTLS input not yet ready to be consumed.
+
+The trial implementation is experimental; this model describes the current source path and should not be interpreted as a claim of complete TLS/DTLS/QUIC protocol conformance.
 
 ### Real-code entry point: the trial TLS server path
 
