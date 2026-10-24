@@ -70,7 +70,7 @@ conversion / serialization
 
 The sign is represented separately from the magnitude limbs, and the number of limbs grows with the value. Consequently, named fixed-width boundary cases are useful test inputs, not limits on the representable integer range. When serialized for a protocol, the caller must still honor the protocol's specified byte order and signedness.
 
-## 4. Relationships
+## 5. Relationships
 
 - sdk/base/system/types.hpp — fixed-width integer aliases used by the surrounding implementation.
 - sdk/base/basic/variant.hpp — variant-based construction and assignment.
@@ -78,7 +78,11 @@ The sign is represented separately from the magnitude limbs, and the number of l
 - sdk/base/system/endian.hpp — byte-order context for the big-endian stream interface.
 - test/testcase/base/system/testcase_bignumber.cpp — the test_bn3() source checks signed minimum/maximum and unsigned maximum values through 128 bits, using shifts and expected decimal strings. This is source-level coverage, not a claim that a particular build/test run has executed.
 
-## 6. Development Notes (for maintainer review)
+## 6. References
+
+No external references are listed.
+
+## 7. Development Notes (for maintainer review)
 
 The following signed/unsigned boundary-value list is retained as a maintainer reference rather than as the document's primary explanation. It records named fixed-width boundaries through 4096 bits where present in the prior note; it should not be read as a claim that bignumber itself has a 4096-bit maximum.
 
