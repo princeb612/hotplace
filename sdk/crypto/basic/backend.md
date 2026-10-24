@@ -143,6 +143,26 @@ The encapsulation output has two separate values: the capsule is transmitted to 
 
 Availability remains conditional on the linked OpenSSL version, provider configuration, key type and operation. A wrapper or an algorithm name in a reference table does not by itself guarantee that the backend can instantiate the operation.
 
+#### Concrete ML-KEM caller path from `testcase_pqc_kem.cpp`
+
+The common OpenSSL PQC testcase runs only when the compile-time OpenSSL version is at least 3.5. For each of ML-KEM-512, ML-KEM-768 and ML-KEM-1024, it follows this sequence:
+
+```text
+crypto_keychain::pkey_keygen_byname(algorithm)
+  -> private key object
+  -> DER public-key encode/decode
+  -> raw public-key encode/decode (algorithm name required)
+  -> assert EVP_PKEY_eq(DER public key, raw public key)
+  -> openssl_pqc::encapsule(public key)
+       -> capsule + Bob shared secret
+  -> openssl_pqc::decapsule(private key, capsule)
+       -> Alice shared secret
+  -> assert Alice shared secret == Bob shared secret
+  -> free EVP_PKEY objects
+```
+
+The testcase checks the reconstructed public-key objects and the final shared-secret equality. It logs capsule/secret bytes for inspection, but those logs are not fixed expected values. This is a KEM operation demonstration, not a complete TLS 1.3 handshake or key schedule; TLS still defines the key-share framing and how the shared secret is consumed. On older OpenSSL builds, the testcase reports `not_supported` rather than exercising these operations.
+
 ## 5. Relationships
 ### 5.1 Source-test evidence
 
