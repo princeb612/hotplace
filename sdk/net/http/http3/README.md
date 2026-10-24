@@ -82,6 +82,18 @@ QUIC stream reassembly
 
 This is the conceptual layering boundary only. The source has frame types and QPACK support, but does not yet provide the complete end-to-end HTTP/3 server/session dispatch path. Do not present the diagram as a verified runtime execution path.
 
+### Real-code boundary: what can currently be followed
+
+For HTTP/3, the source-level path is not yet a complete server example. The useful trace is from the experimental QUIC/TLS composer under `sdk/net/basic/trial` into QUIC packet/stream processing under `sdk/net/tls/quic`, and then into the HTTP/3 frame and QPACK types in this directory. Do not invent an application callback example by joining these components into an end-to-end path that the repository does not currently implement.
+
+```text
+trial TLS/QUIC composer -> QUIC CRYPTO / STREAM data
+                        -> QUIC packet and stream processing
+                        -> HTTP/3 frame / QPACK components
+                        -X-> complete HTTP/3 server dispatch path (not implemented)
+```
+
+Use `test/applet/httpserver2/run_server.cpp` as the real-code comparison for the completed HTTP/2 application boundary, not as evidence that HTTP/3 is similarly integrated. This contrast makes the current implementation boundary explicit.
 ## 5. Relationships
 - `http3_frame.hpp/.cpp`, `http3_frame_builder.hpp/.cpp`, `http3_frame_*.hpp/.cpp` — HTTP/3 frame model.
 - [QPACK](../qpack/README.md) and [compression infrastructure](../compression/README.md) — field-section compression and table state.
