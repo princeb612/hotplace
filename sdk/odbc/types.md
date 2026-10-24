@@ -54,7 +54,7 @@ This translation intentionally compresses native status into a small hotplace st
 - [`basic/README.md`](basic/README.md) — module-level data and control flow
 - [`basic/odbc_connector.md`](basic/odbc_connector.md) and [`basic/odbc_query.md`](basic/odbc_query.md) — consumers of the shared types and query mode
 - [`basic/odbc_diagnose.md`](basic/odbc_diagnose.md) — detailed native diagnostic reporting
-- [`test/testcase/odbc/testcase_odbc.md`](../../test/testcase/odbc/testcase_odbc.md) — integration sample and its coverage boundaries
+- [`test/testcase/odbc/README.md`](../../test/testcase/odbc/README.md) — integration sample and its coverage boundaries
 
 ## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)
