@@ -20,7 +20,7 @@ The packet layer represents QUIC packet variants and their packet-level header/p
 
 Packet variants include Initial, Handshake, 0-RTT, 1-RTT, Retry, and Version Negotiation. Common packet abstractions, packet collections, and builders compose headers and frame payloads. Packet-number state is associated with QUIC packet-number spaces and session state; it is not a TLS record sequence number or DTLS epoch/sequence pair.
 
-The packet layer owns the packet-number space and protection context; its key derivation inputs and timing are described in Behavior Model. These contexts do not turn QUIC packets into TLS records.
+A packet object carries packet-specific header and packet-number fields, but packet-number-space tracking and the applicable protection context come from the QUIC session/publisher path. The packet layer encodes and protects a packet using that supplied state; it does not own the connection-wide packet-number counters. These contexts do not turn QUIC packets into TLS records.
 
 Packet construction combines the packet header, packet-number context, frame payload, and packet-protection output. The order of these operations belongs to Behavior Model.
 
