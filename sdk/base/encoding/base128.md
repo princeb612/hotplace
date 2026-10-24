@@ -94,13 +94,13 @@ This shows the boundary between layers: the ASN.1 encoder parses the dotted OID 
 
 Source: `sdk/io/asn.1/basic/asn1_encode_write.cpp`, `asn1_encode::write()`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/io/asn.1/` consumes Base128 continuation-byte encoding for OID arcs. ASN.1 owns OID semantics; this directory owns the numeric representation.
 - `base128.hpp/.cpp` declare and implement the public overloads.
 - `test/testcase/encode/testcase_base128.cpp` provides fixed vectors and large-number source-level coverage.
 
 
-## 6. References
+## 5. References
 
 No external references are listed.
