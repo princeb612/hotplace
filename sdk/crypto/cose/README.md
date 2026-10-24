@@ -249,6 +249,31 @@ For other algorithms, use three separate evidence levels: (1) metadata exists in
 
 CWT (CBOR Web Token) uses CBOR claims and commonly uses COSE as its protection envelope, but CWT claim semantics are not the same thing as COSE message processing. The COSE code can protect a CBOR payload; the source reviewed here does not expose a separate CWT claims-validation API for registered claims, issuer/audience policy or application authorization. Those checks belong to the CWT/application layer above the COSE envelope.
 
+### Practical use: sign or encrypt, then process the encoded COSE message
+
+The COSE testcase shows the API sequence for a message operation. A fresh context is opened for signing/encryption and closed after the encoded CBOR message is produced; processing the result uses another context lifecycle:
+
+```cpp
+cose_context_t* context = nullptr;
+cbor_object_signing_encryption cose;
+binary_t message;
+binary_t output;
+
+cose.open(&context);
+return_t ret = cose.sign(context, key, algorithms, payload, message);
+cose.close(context);
+
+if (errorcode_t::success == ret) {
+    cose.open(&context);
+    ret = cose.process(context, key, message, output);
+    cose.close(context);
+}
+```
+
+For encryption, the testcase follows the same composition with `encrypt()` and then `process()` to exercise decryption. The encoded message is the intermediate artifact passed between operations; the original payload, serialized COSE message, and processed output are different data. The test checks operation status, while application code should additionally validate the resulting payload and handle cleanup on every failure path.
+
+Source: [testcase_cose.cpp](../../test/testcase/cose/testcase_cose.cpp).
+
 ## 4. Relationships
 - `sdk/io/cbor/` — CBOR values, maps, arrays, byte strings, parsing and serialization.
 - `sdk/crypto/basic/` — AEAD, signatures, MAC, keys, key exchange and KDF operations.
