@@ -85,8 +85,74 @@ The input model selects the family: password KDFs deliberately impose a configur
 
 A KDF does not generate random salts or nonces, store passwords, or manage key lifetime. Password KDFs should not be substituted for HKDF, and HKDF should not be treated as a password-hardening function.
 
-## 5. Relationships
+### 3.3 Concrete caller path: inline HKDF known-answer test
 
+`testcase_hkdf.cpp` shows the complete caller-side shape without a builder: instantiate `openssl_kdf`, pass the digest, output length, IKM, salt and `info`, then compare the derived bytes with a fixed expected value.
+
+```cpp
+openssl_kdf kdf;
+binary_t result;
+
+kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, 10,
+             to_binary("secret"),
+             to_binary("salt"),
+             to_binary("label"));
+
+_test_case.assert(base16_decode("2ac4369f525996f8de13") == result,
+                  __FUNCTION__, "hkdf");
+```
+
+```text
+IKM "secret" + salt "salt" + info "label"
+                  |
+                  v
+       HKDF using SHA-256, L = 10
+                  |
+                  v
+          10 output bytes
+                  |
+                  v
+       exact expected-byte comparison
+```
+
+The source calls `hmac_kdf()` and checks the output against the known-answer bytes; it does not check the function's return status in this testcase. The strings are a compact fixture, not a deployment recommendation. In particular, the variable named `password` in the testcase is passed as HKDF input keying material; HKDF does not replace PBKDF2, scrypt or Argon2 when the input is a human password that needs password-hardening.
+
+For TLS 1.3-style derivation, the caller uses `hkdf_expand_tls13_label()` with the secret, label, context and requested length. That helper encodes the protocol-defined label structure and performs expansion; the TLS state machine must still select the correct secret, label and transcript context for each stage.
+
+### 3.4 Concrete protocol consumers: TLS 1.3 Finished and QUIC packet keys
+
+The same TLS-label expansion primitive is consumed by both TLS 1.3 protection and QUIC packet protection, but the protocol layer supplies different labels, contexts and output lengths.
+
+TLS 1.3 Finished derives a per-direction Finished key from the corresponding handshake traffic secret, then uses HMAC over the transcript hash:
+
+```cpp
+// Reduced from sdk/net/tls/protection/tls_protection_calc_finished.cpp
+binary_t fin_key;
+openssl_kdf kdf;
+kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen,
+                            handshake_traffic_secret, "finished", context);
+
+crypto_hmac_builder builder;
+crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
+if (hmac) {
+    hmac->mac(transcript_hash, finished_verify_data);
+    hmac->release();
+}
+```
+
+QUIC uses the TLS 1.3 label encoding for packet-protection key, IV, header-protection key and key-update secret. The RFC 9001 testcase compares these derived values against the published vectors:
+
+```cpp
+// Reduced from test/testcase/quic/testcase_rfc9001.cpp
+kdf.hkdf_expand_tls13_label(key, "sha256", 32, secret, to_binary("quic key"), context);
+kdf.hkdf_expand_tls13_label(iv,  "sha256", 12, secret, to_binary("quic iv"),  context);
+kdf.hkdf_expand_tls13_label(hp,  "sha256", 32, secret, to_binary("quic hp"),  context);
+kdf.hkdf_expand_tls13_label(ku,  "sha256", 32, secret, to_binary("quic ku"),  context);
+```
+
+This is the key boundary between a generic KDF and protocol state: the helper encodes the label and expands bytes, while TLS/QUIC select the right secret, label, context and length at each protocol stage. The QUIC testcase checks the outputs against RFC 9001 vectors; it does not independently validate the complete TLS handshake or packet-protection state machine.
+
+## 4. Relationships
 - `../../advisor/README.md` resolves digest names used by HMAC/HKDF and backend operations.
 - `../digest/README.md` provides digest primitives used by digest-based KDFs.
 - `../key/README.md` documents key objects that may consume derived bytes in key/session workflows.
@@ -106,8 +172,7 @@ A KDF does not generate random salts or nonces, store passwords, or manage key l
 - `testcase_rfc6070.cpp` covers PBKDF2; `testcase_rfc7914.cpp` covers scrypt; `testcase_rfc9106.cpp` covers Argon2; `testvector_rfc4615.cpp` covers AES-CMAC-related material.
 - These vector/testcase files show source-level coverage, not runtime execution or availability in every build.
 
-## 6. References
-
+## 5. References
 - RFC 4615 — The Advanced Encryption Standard-Cipher-based Message Authentication Code-PRF-128 (AES-CMAC-PRF-128).
 - RFC 5869 — HMAC-based Extract-and-Expand Key Derivation Function (HKDF).
 - RFC 6070 — PKCS #5: PBKDF2 Test Vectors.

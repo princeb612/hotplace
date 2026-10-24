@@ -133,3 +133,6 @@ The `nostd` layer constructs and combines sets through the runtime facade. The A
 
 
 The facade is implemented in `set.hpp`; its numeric backend is `range_set.hpp`, and its string backend is `string_set.hpp`. The ASN.1 visitor connects to the facade through `asn1_constraint_evaluator.hpp`.
+## 5. References
+
+No external references are listed.

@@ -43,8 +43,21 @@ The practical selection rule is:
 
 `asn1_object::publish(stream_t*)` and `publish(binary_t*)` select the notation and DER paths respectively. The constraint evaluator is a different operation; it produces an allowed-value set rather than encoded output.
 
-## 5. Relationships
+### Real-code example: traverse a schema with a callback
 
+The public usage pattern is documented in `asn1_visitor.hpp` and implemented by the `asn1_visitor` class:
+
+```cpp
+auto callback = [](asn1_object* item) -> void {
+    // Inspect or collect the current semantic object.
+};
+asn1_visitor visitor(&module, callback);
+visitor.visit(schema);
+```
+
+The module pointer lets the visitor resolve referenced definitions while traversing the semantic object graph. Use `asn1_ast_visitor` when the required result is a separate descriptive tree instead; use `asn1_object::publish()` or `asn1_module::publish()` when the required result is DER bytes. These are different operations, not interchangeable visitor modes.
+
+## 4. Relationships
 - [ASN.1 visitor architecture](../asn1-visitor.md) — visitor family in the context of the semantic model.
 - [ASN.1 object model](../asn1-object-model.md) — objects visited and published.
 - [Structural node model](../asn1-node.md) — structural TLV tree, distinct from semantic-object visitors.

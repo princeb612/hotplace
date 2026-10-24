@@ -72,9 +72,32 @@ write(chunk n) ─┘            │
                        finalized output
 ```
 
+### Concrete caller path: split input at arbitrary boundaries
+
+The Base64 testcase writes the same byte sequence in chunks of varying size, then finalizes the stream to obtain the encoded result:
+
+```cpp
+encoder_stream encoder(encoding_t::encoding_base64);
+return_t ret = encoder.write(sample.data(), 1);
+if (errorcode_t::success == ret) {
+    ret = encoder.write(sample.data() + 1, sample.size() - 1);
+}
+if (errorcode_t::success == ret) {
+    std::string encoded = encoder.str();  // flushes the retained tail
+}
+```
+
+The first write intentionally need not contain a complete three-byte Base64 group. The stream retains the incomplete suffix, completes groups as later bytes arrive, and encodes the final remainder when `str()` calls `flush()`. The full testcase iterates through chunk sizes 1 to 16 and compares against the one-shot encoded result. The snippet is a reduced illustration of that sequence; production callers should also handle any status returned by finalization if their chosen API exposes one.
+
+Source: `test/testcase/encode/testcase_base64.cpp`.
+
 ## 4. Relationships
 
 - `base16.*` and `base64.*` provide the conversion routines used by the stream.
 - `http_huffman_coding.*` provides the fixed protocol table and symbol-code lookup.
 - `decoder_stream` is the corresponding stateful decoding layer.
 - `test/testcase/encode/testcase_base16.cpp`, `testcase_base64.cpp`, and `testcase_huffman.cpp` provide source-level coverage for chunked input and finalization; this documents test intent, not execution in this documentation task.
+
+## 5. References
+
+No external references are listed.

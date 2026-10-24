@@ -51,20 +51,17 @@ The two views answer different questions:
 
 Do not treat a structural parse as proof that schema-level constraints, references, or named component semantics have been validated.
 
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 node model](../asn1-node.md) — structural nodes and their ownership/traversal contract.
 - [ASN.1 object model](../asn1-object-model.md) — strongly typed semantic objects.
 - [tagging examples in Development Notes](#developer-notes) — DER bytes, TLV trees, and tagged semantic forms.
 - `sdk/io/asn.1/basic/semantic/` — type and value hierarchy.
 - `test/testcase/asn.1/testcase_basic2.cpp` and `testcase_basic3.cpp` — semantic/reference-oriented examples.
 
-## 6. References
-
+## 5. References
 - ITU-T X.690 — BER/DER encoding rules for TLV structure and tagged encodings.
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 The following byte-level examples are retained here because they illustrate the distinction described above without requiring a separate reference page. They are examples of particular encodings, not a coverage claim.
 
 ### DER/TLV examples retained from the tagging study

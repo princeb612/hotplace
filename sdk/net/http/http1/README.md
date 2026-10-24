@@ -77,8 +77,22 @@ The `message_size` returned by framing is a byte count, not an HTTP semantic obj
 
 The generic protocol abstraction is important to the architecture because it lets `network_stream` and `network_protocol_group` coordinate message framing without hard-coding HTTP parsing into the multiplexer callback. Protocol-specific behavior remains behind the `network_protocol` interface.
 
-## 5. Relationships
+### Real-code example: the parser must outlive one read
 
+`test/applet/httpserver1/run_server.cpp` is the consumer-side endpoint: its callback acts on an `http_request` only after the network/protocol path has assembled it. To understand why the callback does not parse each socket read as a request, follow `network-stream-and-protocol.md` and the HTTP/1 framing implementation together.
+
+```text
+TCP read #1: partial headers
+TCP read #2: remaining headers + partial body
+TCP read #3: remaining body + next message bytes
+       -> buffered framing consumes one complete message
+       -> preserves trailing bytes for the next message
+       -> callback receives completed http_request
+```
+
+This is a behavior example rather than a claim that every HTTP/1 body mode is implemented. The current framing path's supported length rules and limitations remain those documented above.
+
+## 5. Relationships
 - `http_protocol.hpp/.cpp` — HTTP/1.x implementation of the network protocol abstraction.
 - `../../server/network_protocol.hpp/.cpp`, `network_stream.hpp/.cpp`, `network_session.hpp/.cpp` — generic protocol registration, buffered input, and session flow.
 - `../http_request.hpp/.cpp`, `../http_response.hpp/.cpp` — parse/compose semantic messages after framing.
@@ -89,5 +103,4 @@ The generic protocol abstraction is important to the architecture because it let
 - `../../../../test/testcase/net/http/testcase_http.cpp` — source-level HTTP parsing/framing tests.
 
 ## 6. References
-
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)

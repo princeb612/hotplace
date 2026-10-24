@@ -129,8 +129,22 @@ The router is not reached directly by the frame parser. The HTTP server's consum
 
 HTTP/2 frames determine the stream and boundaries of compressed header fragments. HPACK interprets the field representations and updates its compression context. The resulting fields populate the shared HTTP model; the HTTP router works with request semantics, not raw HPACK instructions.
 
-## 5. Relationships
+### Real-code entry point: completed request dispatch
 
+`test/applet/httpserver2/run_server.cpp` illustrates the application boundary after HTTP/2 framing and session assembly. The callback does not parse frames itself; it receives a completed request, routes it, and sends the response on the same session:
+
+```cpp
+case mux_read:
+    if (request) {
+        http_response response(request);
+        _http_server->get_http_router().route(session, request, &response);
+        response.respond(session);
+    }
+    break;
+```
+
+This makes the layer boundary visible: HTTP/2 frame parsing, CONTINUATION handling, HPACK decoding, and request-completion state belong to the SDK; the applet handles application routing and response submission. The builder setup in `simple_http2_server()` selects the OpenSSL or trial socket scheme and configures the HTTP server. The callback excerpt alone does not configure HTTP/2.
+## 5. Relationships
 - `http2_frame.hpp/.cpp`, `http2_frame_builder.hpp/.cpp`, and `http2_frame_*.hpp/.cpp` — frame serialization and parsing.
 - `http2_protocol.hpp/.cpp` — protocol recognition and frame framing.
 - `http2_session.hpp/.cpp` — per-stream state and request assembly.
@@ -141,5 +155,4 @@ HTTP/2 frames determine the stream and boundaries of compressed header fragments
 - `test/testcase/net/http/testcase_http2_frame.cpp` and `testvector_http2.cpp` — source-level frame/vector cases.
 
 ## 6. References
-
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)

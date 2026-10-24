@@ -56,8 +56,20 @@ network_stream -> protocol consumer
 
 UDP has no TCP-style accept step and does not create one connected stream socket per peer. The server reacts to socket readiness, receives a datagram with its peer-address context, and sends datagrams according to the selected API. Any peer/session association is a higher-level caller/server decision; do not infer a TCP session lifecycle from the UDP wrapper.
 
-## 5. Relationships
+### Real-code example: plain TCP listener and accepted stream
 
+`test/applet/tcpserver2/run_server.cpp` is the practical caller. It creates `naive_tcp_server_socket`, passes it to `network_server.open()`, then receives connection/read/disconnect events through `consumer_routine`. The callback echoes bytes, while the socket wrapper handles native TCP operations and the server owns event/session orchestration.
+
+```text
+naive_tcp_server_socket -> listen/accept/read/write
+  -> network_server + multiplexer
+  -> network_session / network_stream
+  -> consumer_routine(mux_read) -> echo
+```
+
+Compare with `test/applet/tlsserver/run_server.cpp`: the higher-level server flow is similar, but the selected socket backend adds secure-session processing below the application callback.
+
+## 5. Relationships
 - `naive_tcp_client_socket.hpp/.cpp`, `naive_tcp_server_socket.hpp/.cpp`
 - `naive_udp_client_socket.hpp/.cpp`, `naive_udp_server_socket.hpp/.cpp`
 - [Common socket model](../socket-model.md) — common client/server contract.
@@ -67,5 +79,4 @@ UDP has no TCP-style accept step and does not create one connected stream socket
 - `../../../../test/testcase/net/basic/` — basic network socket testcase sources.
 
 ## 6. References
-
 No external references are currently listed.

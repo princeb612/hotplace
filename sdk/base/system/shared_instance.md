@@ -90,3 +90,7 @@ This recursive behavior is specific to composite types such as `cbor_map` that i
 - `test/testcase/base/system/testcase_shared.cpp` — explicit reference release and move/ownership lifetime checks, including single destruction at the end of ownership.
 - `sdk/io/cbor/cbor_map.hpp` — includes the nested-map ownership example; `cbor_map.cpp` implements member-wise reference propagation.
 - This utility is distinct from `std::shared_ptr`; callers must follow its own attach/release contract.
+
+## 5. References
+
+No external references are listed.

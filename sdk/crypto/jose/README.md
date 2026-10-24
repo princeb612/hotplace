@@ -223,8 +223,26 @@ close(context) → release retained key and context
 
 The API manages context through 'open', 'close' and context-clearing operations. The public wrapper dispatches to the focused signing or encryption class. Serialization can be compact, flattened JSON or general JSON depending on the operation/message shape. For multi-recipient JWE, recipient-specific wrapped/derived CEK material is not the same thing as the shared content-encryption output.
 
-## 5. Relationships
+### Practical use: decrypt a serialized JWE with an explicit context lifetime
 
+The RFC 7516 testcase loads a JWK-backed `crypto_key`, opens a JOSE context with that key, passes the serialized JWE to `decrypt()`, and closes the context:
+
+```cpp
+json_object_signing_encryption jose;
+jose_context_t* context = nullptr;
+binary_t plaintext;
+bool authenticated = false;
+
+jose.open(&context, key);
+return_t ret = jose.decrypt(context, serialized_jwe, plaintext, authenticated);
+jose.close(context);
+```
+
+Treat the return code and `authenticated` as distinct signals: the operation status reports whether processing completed, while the result flag reports the cryptographic validation outcome exposed by this API. Do not consume plaintext unless both the API contract and the caller's policy say the result is acceptable. Production code should also guarantee `close()` on every exit path; the testcase uses the project's cleanup idiom for this reason.
+
+Source: [testcase_rfc7516.cpp](../../../test/testcase/jose/testcase_rfc7516.cpp), which exercises the RFC 7516 JWE examples and serialization forms.
+
+## 4. Relationships
 - `../basic/` provides keys, signatures, HMAC, AEAD, KDF and encryption primitives.
 - `../advisor/` provides JOSE name/enum/key-type and primitive-parameter mappings.
 - `../cose/` provides analogous security-object processing over CBOR with COSE-specific identifiers and authenticated structures.
@@ -259,8 +277,7 @@ The source-test map is useful for selecting exact test functions, but this docum
 - `json_web_key.hpp/.cpp`, `json_web_signature.hpp/.cpp`
 - `../advisor/resource_sign.cpp`, `resource_jose_algorithm.cpp`, `resource_jose_encryption.cpp`
 
-## 6. References
-
+## 5. References
 - RFC 7515 — JSON Web Signature (JWS).
 - RFC 7516 — JSON Web Encryption (JWE).
 - RFC 7517 — JSON Web Key (JWK).

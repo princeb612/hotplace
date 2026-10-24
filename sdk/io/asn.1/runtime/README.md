@@ -79,6 +79,22 @@ The generic parse tree, temporary semantic nodes, and completed runtime module/o
 
 Declaration and resolution are separate. Creating a referenced-type node does not alone prove that its target is linked. Module-aware `search()` can consult local definitions and imported-symbol modules; `resolve()` uses those lookups to validate reference dependencies.
 
+### Concrete use paths from the ASN.1 testcases
+
+The publisher can be exercised directly with an already assembled generic parse tree. In `test/testcase/asn.1/runtime/testcase_publish.cpp`, the first small example records SHIFT/REDUCE events for `Type1 ::= VisibleString`, obtains the publisher from `asn1_advisor`, calls `publisher->build(&pt, result)`, and publishes `result.object`. The testcase compares the resulting notation with the expected string. This isolates semantic reconstruction from lexical analysis and parser execution.
+
+The loader testcase follows the larger file-to-runtime path:
+
+```text
+asn1_loader::asn1file_to_tokens(parser, file, tokens)
+    -> parser.to_parsetree(tokens, parse_tree)
+    -> parser.to_result(parse_tree, result)
+    -> asn1_modules registry
+    -> module->get(name) / module->is_resolvable()
+```
+
+For each fixture, `testcase_loader.cpp` checks the status of tokenization, parsing, and result construction before continuing. It then compares the module-name list, looks up each expected module, checks its imports/exports and resolvability, and verifies selected assignment names. This is a practical example of why the stages remain separate: successful parsing is not sufficient evidence that the expected runtime module was published or that its imported references resolve.
+
 ### Completion boundaries
 
 - The shared publisher/handler set is prepared through `asn1_advisor`; each build uses its own context and temporary module state.
@@ -86,8 +102,7 @@ Declaration and resolution are separate. Creating a referenced-type node does no
 - Parameterized notation has grammar productions and direct semantic prototypes, but the disabled end-to-end probe means parameter binding/substitution should not be represented as complete.
 - Parser, publisher, imported-symbol resolution, and notation representation are exercised in distinct test stages. This documentation update did not execute those tests.
 
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 Basic](../basic/README.md) — semantic types, structural nodes, tagging, and constraints.
 - [ASN.1 parser adapter](asn1_parser.md) — tokenization and generic parse-tree construction.
 - [ASN.1 publisher](asn1_publisher.md) — grammar-event handling and semantic reconstruction.
@@ -98,8 +113,11 @@ Declaration and resolution are separate. Creating a referenced-type node does no
 - `test/testcase/asn.1/runtime/testcase_publish.cpp`
 - `test/testcase/asn.1/loader/testcase_loader.cpp`
 
-## 7. Developer Notes
+## 5. References
 
+No external references are listed.
+
+## 6. Developer Notes
 The examples below preserve the earlier DER/TLV/semantic-object comparison study. They are illustrative traces for selected schemas and tag combinations, not evidence of complete ASN.1 feature coverage.
 
 ### Tagged and referenced types

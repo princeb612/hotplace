@@ -88,8 +88,20 @@ wire/configuration cipher-suite ID
 
 A successful TLS metadata lookup means that the identifier is recognized by the resource tables. It does not prove backend availability, policy suitability, successful negotiation, or end-to-end support. Likewise, a successful crypto metadata lookup is not itself an encryption/signature operation.
 
-## 5. Relationships
+### Real-code example: metadata lookup versus negotiated state
 
+The TLS server applet (`test/applet/tlsserver/run_server.cpp`) builds a socket scheme from selected TLS versions and backend, then enters the session/handshake path. `tls_advisor` supplies protocol metadata and defaults used by that path; it does not perform the handshake or prove that a peer negotiated a given suite.
+
+```text
+server options -> socket scheme / builder
+  -> TLS session and handshake
+  -> advisor lookups for suite, group, extension, and parameters
+  -> negotiated/session state updated by protocol logic
+```
+
+Use `test/testcase/tls/testcase_tls12_aead.cpp` for a focused example of a selected cipher-suite identifier feeding TLS protection setup. Keep metadata availability distinct from backend support and actual negotiation success.
+
+## 5. Relationships
 - `tls_advisor.cpp`, `tls_advisor_aead_parameters.cpp`, `tls_advisor_quic.cpp`.
 - `tls_advisor_tls_extensiontype_values.cpp`, `tls_advisor_tls_parameters.cpp`.
 - `resource.cpp`, `resource_aead_parameters.cpp`, `resource_ciphersuite.cpp`, `resource_quic.cpp`, `resource_tls_extensiontype_values.cpp`, `resource_tls_parameters.cpp`.
@@ -100,5 +112,7 @@ A successful TLS metadata lookup means that the identifier is recognized by the 
 - [TLS overview](../README.md).
 
 ## 6. References
-
-No external references are currently listed.
+- [IANA TLS Parameters Registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml) — TLS parameter identifiers and assignments.
+- [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml) — QUIC transport parameters, frames, packet types, and error codes.
+- [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446) — TLS 1.3 protocol identifiers and handshake/protection context.
+- [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000) — QUIC packet, frame, and transport-parameter context.

@@ -202,8 +202,53 @@ The implementation questions identified above are tracked in [`follow-up-workspa
 
 The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records combinations represented by the source. It does not guarantee that every algorithm/mode is enabled by every OpenSSL build or provider.
 
-## 5. Relationships
+### Practical use: build a cipher, round-trip bytes, then release it
 
+The symmetric wrapper testcase selects an algorithm/mode through a builder, encrypts a byte range, and only attempts decryption after encryption succeeds:
+
+```cpp
+cipher_encrypt_builder builder;
+auto cipher = builder.set(crypt_algorithm_t::aes128, crypt_mode_t::cbc).build();
+if (cipher) {
+    binary_t ciphertext;
+    return_t ret = cipher->encrypt(key, iv, input, input_size, ciphertext);
+    if (errorcode_t::success == ret) {
+        binary_t plaintext;
+        ret = cipher->decrypt(key, iv, ciphertext, plaintext);
+        // Compare plaintext with the original input in the caller.
+    }
+    cipher->release();
+}
+```
+
+The builder chooses the operation implementation; the caller supplies the key, IV, and input bytes. The round trip demonstrates API composition, not a recommendation to reuse a fixed IV or key in an application. Real applications must follow the selected mode's key/IV requirements and manage key material and nonce/IV uniqueness appropriately.
+
+For AEAD, the analogous testcase uses `crypto_aead_builder::set_scheme()` and carries AAD and the authentication tag as separate inputs/outputs. See [testcase_cipher_encrypt.cpp](../../../../test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp) and [testcase_crypto_aead.cpp](../../../../test/testcase/crypto/crypt/testcase_crypto_aead.cpp).
+
+### 3.5 Concrete caller path: AEAD round trip
+
+The common AEAD testcase builds a scheme-specific object, supplies the per-message key, nonce/IV, plaintext and AAD, and carries the returned tag into decryption. The shortened form below follows `test/testcase/crypto/crypt/testcase_crypto_aead.cpp`:
+
+```cpp
+#include <hotplace/sdk/crypto/basic/crypto_aead.hpp>
+
+crypto_aead_builder builder;
+auto aead = builder.set_scheme(crypto_scheme_t::aes_128_gcm).build();
+if (aead) {
+    binary_t ciphertext, plaintext, tag;
+    return_t ret = aead->encrypt(key, iv,
+        reinterpret_cast<const byte_t*>(input.data()), input.size(),
+        ciphertext, aad, tag);
+    if (errorcode_t::success == ret) {
+        ret = aead->decrypt(key, iv, ciphertext, plaintext, aad, tag);
+    }
+    aead->release();
+}
+```
+
+The important contract is that the tag is a separate output of encryption and an input to decryption, while AAD is supplied to both operations but is not encrypted into the ciphertext. The test exercises round trips for several AES-GCM/CCM scheme identifiers; it does not establish interoperability with another implementation or define a production nonce-generation strategy. The test's fixed key and IV are fixtures and must not be copied into application code.
+
+## 4. Relationships
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.
 - `../digest/README.md` and `../mac/README.md` document related digest/MAC primitives.
 - TLS, JOSE and COSE build protocol-specific inputs and headers above these primitives; this layer does not construct TLS records or JOSE/COSE messages.
@@ -224,8 +269,7 @@ The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records co
 - `testcase_crypto_aead.cpp` and `testcase_aead_ccm.cpp` exercise AEAD behavior.
 - CAVP block-cipher vectors, RFC 3394 key-wrap vectors, RFC 7539 ChaCha20/Poly1305 vectors, and CBC-HMAC TLS/JOSE vectors cover specific algorithm contracts. Vector presence should not be read as support for every algorithm/mode in every build.
 
-## 6. References
-
+## 5. References
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 3394 — Advanced Encryption Standard (AES) Key Wrap Algorithm.
 - RFC 5649 — AES Key Wrap with Padding.

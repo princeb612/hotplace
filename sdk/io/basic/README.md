@@ -75,8 +75,7 @@ input bytes + framing mode ──► zlib state ──► 1 KiB output chunks �
 - **Compression:** the caller chooses zlib-wrapped, raw DEFLATE, or gzip framing. The wrapper resets its destination and accumulates generated output; it does not choose a format from HTTP or JOSE metadata itself.
 
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/base/basic/` — `variant` and common value representations used by payload members.
 - `sdk/base/system/` — numeric and runtime helpers.
 - `sdk/base/stream/` — `basic_stream`/`stream_t` support used by formatting and output paths.
@@ -85,8 +84,7 @@ input bytes + framing mode ──► zlib state ──► 1 KiB output chunks �
 - `sdk/crypto/jose/` and `sdk/net/http/` — concrete consumers of JSON parsing and compression.
 - Implementation navigation: `payload.hpp/.cpp` and `payload_member.cpp` define the field-layout path; `oid.hpp/.cpp` and `oid_dictionary*` implement OID conversion/dictionary lookup; `zlib.hpp/.cpp` wraps compression; and `json.hpp` plus `types.hpp` provide JSON and shared declarations.
 
-## 6. References
-
+## 5. References
 ### Standards and external libraries
 
 - [RFC 1951 — DEFLATE Compressed Data Format](https://www.rfc-editor.org/rfc/rfc1951).

@@ -50,6 +50,21 @@ Append one byte or a value/range to the end of a `binary_t`. The no-transformer 
 
 Reserves the requested number of bytes and writes a width-constrained representation. When the requested width is narrower than the source type, the implementation selects the corresponding portion of the transformed value; when wider, it adds padding. Verify the intended width and sign representation at the call site, especially for protocol fields.
 
+### Practical example: make a protocol integer's byte order explicit
+
+A protocol field must have the same byte sequence on machines with different native byte orders. The testcase demonstrates this with the value `32768` (`0x8000`):
+
+```cpp
+binary_t wire;
+binary_append(wire, uint16(32768), [](uint16 v) -> uint16 { return hton16(v); });
+
+std::string hex;
+base16_encode(wire, hex);
+// hex == "8000"
+```
+
+The explicit `hton16` transformer produces the network-order bytes `80 00`. Omitting the transformer uses the host representation, which can differ by platform. The hex string is only a readable view of the bytes; the protocol field itself is the two-byte `binary_t`. This example follows `test_binary2()` in `test/testcase/base/nostd/testcase_binary.cpp`.
+
 ### `assign(id, ...)`
 
 Replaces the entry's current byte content, resets its tracked ranges, and records the supplied bytes as one written interval. If `bin_set_fin` is set, it records the final size.
@@ -86,11 +101,14 @@ The overload returning a whole `binary_t` moves the buffer out and then clears o
 
 `reserve()` creates a persistent entry with a tag and the keep-entry flag. `set_tag()` / `get_tag()` update or retrieve metadata, while `for_each()` enumerates entries under the internal lock. The callback therefore runs while the lock is held; avoid re-entering the same `t_binaries` object from that callback.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Shared types](../types.md) — defines `binary_t`.
 - [Endian and wire integers](../system/endian-and-wire-integers.md) — provides the byte-order transformers and custom-width helpers.
 - [IEEE-754](../system/ieee754.md) — converts native floating-point values to their bit representation.
 - [Range set](range_set.md) — `t_binaries` uses a range set to track received/written spans.
 - `sdk/base/system/critical_section.hpp` — protects entry mutations and metadata access.
 - `sdk/base/encoding/` — encoders can consume the byte buffers produced by these helpers. The implementation is split between `binary.hpp` and `binaries.hpp`; `testcase_binary.cpp` provides source-level examples.
+
+## 5. References
+
+No external references are listed.

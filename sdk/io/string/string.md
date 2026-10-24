@@ -29,6 +29,18 @@ The `string.hpp` / `string_charset.cpp` pair provides lightweight tokenization h
 - `tokenize(source, tokens, pos, mode)` extracts the next token and advances the caller-owned `pos`. The `token_quoted` mode flag enables quoted-token handling.
 - `gettoken(source, token, index, value)` retrieves a token by index and is implemented in terms of `tokenize()`.
 
+### Practical example: extract a field from delimiter-separated text
+
+For the compact record `key=item1|value1|link1`, the delimiters `=|` split the text into four tokens. To retrieve the value immediately after `=`, use index `1`:
+
+```cpp
+std::string value;
+gettoken("key=item1|value1|link1", "=|", 1, value);
+// value == "item1"
+```
+
+This is useful for simple legacy or configuration-like formats where a full parser would be unnecessary. The helper only splits according to its tokenization rules; it does not assign meaning to `key` or validate the record's structure.
+
 The caller controls iteration state. The helper is convenient for simple delimiter-based formats, but it is not a lexer with grammar rules, escaping semantics, or error recovery.
 
 
@@ -41,7 +53,7 @@ Character conversion is platform-dependent. Do not assume the Windows-only `A2W(
 
 To see the shared string helpers in an integration context, follow URL decomposition in `url.cpp`; the URL implementation uses the base regex/stream facilities and shares this directory's public header.
 
-## 5. Relationships
+## 4. Relationships
 - `sdk/base/string/` — general-purpose string facilities; keep the two similarly named modules distinct.
 - `sdk/io/string/url.cpp` — URL processing functions declared alongside the tokenization APIs.
 - `sdk/base/pattern/` and `sdk/base/stream/` — regex and output-stream facilities used by URL processing.

@@ -197,8 +197,20 @@ The transcript hash is a running cryptographic state, not a hash of every receiv
 
 The session can coordinate all three families, but they do not share one counter or wire format.
 
-## 5. Relationships
+### Real-code example: derive and verify record-protection inputs
 
+`test/testcase/tls/testcase_tls12_aead.cpp` is a focused caller of the protection model. It selects TLS 1.2 and cipher suite `0xc02b`, supplies fixed client/server randoms and a master secret to `calc_keyblock`, checks expected client key/IV values, and then attempts record decryption against captured bytes.
+
+```text
+fixed TLS 1.2 inputs -> calc_keyblock(...)
+  -> directional secrets / keys / IVs
+  -> compare expected values
+  -> decrypt captured record
+```
+
+This testcase isolates key derivation and record protection. It does not execute a complete handshake, validate a certificate, or establish interoperability with a live peer; use `test/applet/tlsserver/run_server.cpp` for the separate end-to-end socket path.
+
+## 5. Relationships
 - [TLS key schedule](tls_key_schedule.md) — TLS 1.2 key block and TLS 1.3 staged derivation.
 - [Transcript hash](tls_transcript_hash.md) — transcript input and stage checkpoints.
 - [MtE vs EtM](tls_mte_etm.md) — legacy CBC authentication order and AEAD distinction.
@@ -210,7 +222,6 @@ The session can coordinate all three families, but they do not share one counter
 - [QUIC integration](../quic/README.md) — TLS-derived secrets used by packet protection.
 
 ## 6. References
-
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 7366 — Encrypt-then-MAC for TLS and DTLS](https://www.rfc-editor.org/rfc/rfc7366)

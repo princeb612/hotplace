@@ -39,8 +39,40 @@ Code between `__try2` and `__finally2` is expanded into a single-iteration loop.
 
 In C++, the allocation macros catch `std::bad_alloc`; they do not catch arbitrary exceptions. Their behavior depends on the exact macro combination and the caller's assignment/leave statements.
 
+### Concrete caller path: early exit with cleanup
+
+The TLS certificate loader uses the macros to validate inputs, stop after a failed operation, and keep one return path:
+
+```cpp
+return_t ret = errorcode_t::success;
+__try2 {
+    if (nullptr == certfile || nullptr == keyfile) {
+        ret = errorcode_t::invalid_parameter;
+        __leave2;
+    }
+
+    ret = keychain.load_file(&temp, key_certfile, certfile,
+                             keydesc(KID_TLS_SERVER_CERTIFICATE_PUBLIC));
+    if (errorcode_t::success != ret) {
+        __leave2;
+    }
+
+    // Load the private key and register the loaded key objects.
+}
+__finally2 {}
+return ret;
+```
+
+This abbreviated path illustrates the control-flow convention: `__leave2` exits the single-iteration block, after which the function reaches `return ret`. The empty `__finally2 {}` does not perform cleanup by itself. A non-empty trailing block can run cleanup only when control reaches it normally; these macros are not C++ `finally` semantics and should not be treated as an exception-safe resource guard.
+
+Source: `sdk/net/tls/sdk.cpp`, `load_certificate()`.
+
 ## 4. Relationships
 
 - `sdk/base/error.hpp` — shared error-code values used for allocation failure.
 - `sdk/base/stream.hpp` and `sdk/base/types.hpp` — foundational includes.
 - The source tree uses these macros in many components; inspect the call site to determine cleanup and error propagation.
+
+## 5. References
+
+No external references are listed.

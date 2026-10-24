@@ -118,7 +118,31 @@ The dictionary can also accept a node vector directly. A successful lookup copie
 
 The conversion functions return `void`, so they do not provide a status code for malformed or out-of-range decimal tokens. A caller should not treat successful completion of the function as proof that the text is a valid ASN.1 OBJECT IDENTIFIER. The existing OID testcase demonstrates dictionary lookup from dotted text and ASN.1-braced text; it does not directly assert a conversion round trip through `oid_to_str()`.
 
-## 5. Relationships
+### Concrete caller path: resolve an ASN.1-style OID label sequence
+
+The OID testcase demonstrates the intended two-step operation: extract numeric arcs from ASN.1-braced notation, then ask the dictionary to resolve those arcs to metadata.
+
+```cpp
+#include <hotplace/sdk/io/basic/oid.hpp>
+
+// From test/testcase/io/basic/testcase_oid.cpp
+const char* text =
+    "{joint-iso-itu-t(2) country(16) us(840) organization(1) "
+    "gov(101) csor(3) nistAlgorithm(4) hashalgs(2) 3}";
+
+oid_t oid;
+asn1str_to_oid(text, strlen(text), oid);
+
+oid_metadata meta;
+auto dict = oid_dictionary::get_instance();
+bool found = dict->lookup(oid, meta);
+```
+
+The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name and description. The testcase asserts that lookup succeeds, but it does not establish that `asn1str_to_oid()` validates all ASN.1 OID notation rules.
+
+Source: `test/testcase/io/basic/testcase_oid.cpp`.
+
+## 4. Relationships
 - `oid_dictionary.hpp/.cpp` — uses `str_to_oid()` to index and search the OID trie.
 - `sdk/io/asn.1/basic/` — uses the conversion helpers as part of ASN.1 value encoding/decoding; BER/DER rules live there.
 - `sdk/base/nostd/atoi.hpp` and `sdk/base/string/string.hpp` — numeric token conversion and scanning helpers used by this implementation.
@@ -129,7 +153,6 @@ The conversion functions return `void`, so they do not provide a status code for
 - `sdk/io/basic/oid.hpp/.cpp`
 - `sdk/io/basic/oid_dictionary.hpp/.cpp`
 
-## 6. References
-
+## 5. References
 - [ITU-T X.660 / ISO/IEC 9834-1](https://www.itu.int/rec/T-REC-X.660/en) — object identifier framework.
 - [ISO/IEC 6523-1](https://www.iso.org/standard/63547.html) — identification of organizations and organization parts.

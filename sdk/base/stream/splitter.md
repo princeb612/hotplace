@@ -102,3 +102,7 @@ The fragment-size setting and the publisher's output-segment-size setting are se
 - `test/testcase/base/stream/testcase_stream.cpp` — [testcase notes](../../../test/testcase/base/stream/testcase_stream.md) — `test_stream_split()` exercises raw splitting and prefix/previous-fragment offset handling; `test_stream_split2()` covers descriptor-driven callbacks; `test_stream_split3()` covers multi-block segmentation. These are pointers to source-level examples, not claims about test execution status.
 - `sdk/net/dtls/` — protocol code may use fragmentation concepts, but `splitter` remains protocol-agnostic.
 - `sdk/net/tls/session/dtls_record_publisher.cpp` — concrete caller described above; it connects splitter callback metadata to DTLS handshake-fragment construction.
+
+## 5. References
+
+No external references are listed.

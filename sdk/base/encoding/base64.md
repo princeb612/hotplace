@@ -41,6 +41,28 @@ Base64 encoding consumes three input bytes per complete group and emits four enc
 
 The caller selects Base64 or Base64URL and supplies a byte range. The conversion routine applies that variant's alphabet and representation conventions. For templated output-buffer overloads, the wrapper first requests the required capacity from the low-level routine, reserves output storage, performs the conversion, and commits the written length on success. Unless `encoding_notrunc` is set, the destination is truncated before processing.
 
+### Concrete caller path: one-shot round trip
+
+The testcase exercises both convenience-returning overloads and caller-provided output buffers. The latter make status handling explicit:
+
+```cpp
+std::string encoded;
+std::string decoded;
+
+return_t ret = base64_encode(
+    reinterpret_cast<const byte_t*>(sample1), strlen(sample1), encoded);
+if (errorcode_t::success == ret) {
+    ret = base64_decode(encoded, decoded);
+}
+
+_test_case.test(ret, __FUNCTION__, "encode/decode");
+_test_case.assert(decoded == sample1, __FUNCTION__, "Base64 round trip");
+```
+
+This path uses a textual sample, so comparing the decoded string is appropriate. For arbitrary binary payloads, compare a byte container and preserve the explicit input length; a C-string overload cannot represent embedded zero bytes as part of its inferred length. The actual testcase has separate cases for `binary_t` and `basic_stream`, in addition to this string-oriented path.
+
+Source: `test/testcase/encode/testcase_base64.cpp`.
+
 ### Stateful stream flow
 
 ```text

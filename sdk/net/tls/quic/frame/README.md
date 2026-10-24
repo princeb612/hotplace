@@ -40,8 +40,20 @@ TLS handshake bytes
 
 On input, packet processing authenticates/decrypts the packet and parses frames; CRYPTO data is delivered to TLS handshake processing according to its offset/reassembly rules. STREAM data is delivered to QUIC stream handling. Frame parsing therefore feeds transport/session state, not directly the HTTP router.
 
-## 5. Relationships
+### Real-code example: frame parsing feeds transport/session state
 
+The QUIC/TLS composer path in `sdk/net/basic/trial/trial-socket-composer.md` illustrates the sender side: handshake bytes are wrapped in CRYPTO frames, while transport/control data uses QUIC frames. On receive, the packet layer authenticates and parses the packet before CRYPTO bytes return to TLS handshake processing and STREAM bytes go to stream handling.
+
+```text
+TLS handshake bytes -> CRYPTO frame -> QUIC packet -> UDP
+UDP -> packet authentication/decryption -> frame parser
+  -> CRYPTO: TLS handshake reassembly
+  -> STREAM: QUIC stream handling
+```
+
+This layer boundary explains why a frame parser does not directly invoke the HTTP router. The current HTTP/3 components are not evidence of a complete end-to-end HTTP/3 server.
+
+## 5. Relationships
 - `quic_frame.hpp/.cpp`, `quic_frame_builder.hpp/.cpp`, `quic_frames.hpp/.cpp`.
 - `quic_frame_ack.*`, `quic_frame_crypto.*`, `quic_frame_stream.*`, `quic_frame_http3_stream.*`.
 - `quic_frame_connection_close.*`, `quic_frame_reset_stream.*`, `quic_frame_stop_sending.*`.
@@ -51,6 +63,5 @@ On input, packet processing authenticates/decrypts the packet and parses frames;
 - `sdk/net/http/http3/` — HTTP/3-specific stream frames and frame consumers.
 
 ## 6. References
-
 - [RFC 9000 — QUIC transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)

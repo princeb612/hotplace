@@ -71,8 +71,7 @@ The associated applet is `test/applet/authenticode/sample.cpp`. It passes a PE f
 - `authenticode_plugin_pe.hpp/.cpp` — PE implementation.
 - [`../../../test/applet/authenticode/sample.cpp`](../../../test/applet/authenticode/sample.cpp) — end-to-end sample.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Implementation and test sources
 
 - `authenticode_plugin.hpp`, `authenticode_plugin.cpp`, `authenticode_plugin_pe.hpp`, `authenticode_plugin_pe.cpp`.
@@ -83,8 +82,7 @@ The associated applet is `test/applet/authenticode/sample.cpp`. It passes a PE f
 - The interface's comments mention PE, MSI, and Cabinet engines, and revision history records a refactor that split those engines. This document describes the concrete PE implementation only; it does not claim MSI/Cabinet support in this directory.
 - The plugin includes writing and separated-file hooks in its API surface. Keep API presence distinct from what the current PE implementation actually supports.
 
-## 6. References
-
+## 5. References
 - [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE headers and certificate-table layout.
 - [Microsoft Authenticode PE Image Hashing](https://learn.microsoft.com/en-us/windows/win32/secbp/understanding-pe-signatures) — Authenticode image digest construction.
 - [RFC 5652: Cryptographic Message Syntax (CMS)](https://www.rfc-editor.org/rfc/rfc5652) — SignedData and signer information.

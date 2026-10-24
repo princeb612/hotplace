@@ -91,9 +91,30 @@ formatter consumes arguments
 
 `valist` storage and formatting are separate phases: a format specifier does not change the stored value's type. Native `va_list` reconstruction is ABI-specific, so a change to its layout handling must be reviewed against each supported compiler/architecture rather than inferred from a single platform.
 
+### Practical use: format typed arguments from a vector
+
+The YAML-driven testcase converts each declared argument to its intended C++ type before inserting it into `valist`. One vector supplies an integer, a string, and a floating-point value; the formatter can reuse or reorder those values by their 1-based positions:
+
+```cpp
+valist va;
+va << 256 << "hello world" << 3.141592f;
+
+basic_stream bs;
+sprintf(&bs, "value={1}, value={1:04x}, value={1:04d}", va);
+// expected: value=256, value=0x0100, value=0256
+_test_case.assert(bs == "value=256, value=0x0100, value=0256",
+                  __FUNCTION__, "typed arguments");
+```
+
+The format specifier changes the textual presentation, not the stored value. The testcase also permutes argument references (for example, `{2} {3} {1}`) and includes ABI-sensitive integer widths, making it useful to distinguish format behavior from native variadic argument construction.
+
 ## 4. Relationships
 
 - `variant_t` is the intermediate typed-value representation; `valist` adapts stored values to the native variadic calling convention.
 - The adapter is general-purpose; `sprintf()` is one consumer of `valist`. `basic_stream::vaprintf()` and `basic_stream::vaprintln()` are convenience entry points that forward to the formatter, not the definition of the `valist` abstraction.
-- `test/testcase/base/basic/testcase_valist.cpp`, `testvector_valist.cpp`, and `testvector_valist.yml` provide source-level coverage for the adapter and formatting paths.
+- [`testcase_valist.cpp`](../../../test/testcase/base/basic/testcase_valist.cpp), [`testvector_valist.cpp`](../../../test/testcase/base/basic/testvector_valist.cpp), and [`testvector_valist.yml`](../../../test/testcase/base/basic/testvector_valist.yml) provide source-level coverage for the adapter and formatting paths.
 - `valist` is ABI-sensitive; do not infer portability from the high-level `operator<<()` interface alone. The adapter is implemented in `valist.hpp/.cpp`, uses `variant.hpp` as its intermediate representation, and is exercised by `testcase_valist.cpp`.
+
+## 5. References
+
+No external references are listed.

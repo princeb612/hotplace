@@ -79,3 +79,7 @@ The higher-level `signalwait_threads` behavior is the main project-specific part
 - `sdk/base/system/signalwait_threads.hpp/.cpp` — worker-group orchestration built on threads and semaphores.
 - `sdk/base/system/linux/` and `sdk/base/system/windows/` — platform implementations selected by the public headers.
 - `test/testcase/base/system/testcase_signalwait_threads.cpp` — source-level test for four-worker coordination, capacity failure, signaling, waiting, and termination.
+
+## 5. References
+
+No external references are listed.

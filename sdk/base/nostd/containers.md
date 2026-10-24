@@ -53,10 +53,13 @@ The container side of `nostd` provides STL-like structures used where hotplace w
 
 `set`, tree and range structures are also used by higher-level matching/search code, so they are infrastructure rather than protocol-specific implementations.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Range set](range_set.md) and [string set](string_set.md) implement range/value-set operations; they are separate from the tree and sequence containers.
 - [Runtime set facade](set.md) selects the numeric or string backend based on the value type.
 - `sdk/base/pattern/trie.hpp` provides a prefix trie for sequence matching; it is distinct from the ordered search trees in this document.
 - `sdk/io/asn.1/basic/semantic/constraints/` consumes the range/set family to evaluate ASN.1 constraints.
 - `test/testcase/base/nostd/` contains dedicated source tests for AVL tree, B-tree, list, set, tree, range, and vector behavior (`testcase_avltree.cpp`, `testcase_btree.cpp`, `testcase_list.cpp`, `testcase_set.cpp`, `testcase_tree.cpp`, `testcase_range.cpp`, and `testcase_vector.cpp`).
+
+## 5. References
+
+No external references are listed.

@@ -92,7 +92,6 @@ These are different representations of the same handshake progression. Do not as
 A handshake message may span record boundaries, and a record may carry multiple handshake messages. DTLS can fragment handshake messages and receive records out of order. QUIC carries TLS handshake bytes in CRYPTO frames and uses QUIC packet-number spaces and packet protection. Those differences belong to the session/transport path even though the underlying TLS handshake types overlap.
 
 ## 5. Relationships
-
 - [TLS/DTLS/QUIC overview](README.md) — directory-level protocol and transport model.
 - [Record model](tls/record/README.md) — record header/body framing and content dispatch.
 - [Handshake model](tls/handshake/README.md) — typed handshake objects and their read/write lifecycle.
@@ -105,7 +104,6 @@ A handshake message may span record boundaries, and a record may carry multiple 
 - `test/testcase/tls/` — construction, alert, HelloRetryRequest, and TLS 1.2/1.3 source examples.
 
 ## 6. References
-
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)

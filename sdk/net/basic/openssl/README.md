@@ -60,8 +60,19 @@ The adapter is the configuration/factory boundary; `network_server` owns the bro
 
 The current adapter implementation explicitly handles `h2` by enabling HTTP/2 ALPN on the TLS server socket context. Other protocol strings return `not_supported`. Do not describe this method as a general arbitrary-ALPN registry without checking the implementation.
 
-## 5. Relationships
+### Real-code example: select OpenSSL for TLS or DTLS
 
+`test/applet/tlsserver/run_server.cpp` is the real TLS caller: it adds `socket_scheme_openssl` when the trial option is not selected, then builds a server socket and passes it to `network_server`. The OpenSSL adapter maps TLS to a stream-oriented secure socket and DTLS to a datagram-oriented secure socket; it does not handle QUIC/QUIC2.
+
+```text
+TLS option -> socket_scheme_tls + socket_scheme_openssl -> TCP/TLS socket
+DTLS option -> socket_scheme_dtls + socket_scheme_openssl -> UDP/DTLS socket
+QUIC option -> not this adapter; follow the trial/QUIC path
+```
+
+Use the applet for the caller/configuration boundary and the adapter document for scheme mapping. A successful TLS applet run does not establish DTLS or QUIC support.
+
+## 5. Relationships
 - `openssl_tls_client_socket.hpp/.cpp`, `openssl_tls_server_socket.hpp/.cpp`
 - `openssl_dtls_client_socket.hpp/.cpp`, `openssl_dtls_server_socket.hpp/.cpp`
 - `openssl_tls_context.hpp/.cpp`, `openssl_tls_context_sdk.cpp`
@@ -74,5 +85,4 @@ The current adapter implementation explicitly handles `h2` by enabling HTTP/2 AL
 - [Certificate-generation instructions](../../../../etc/cert/README.md) and [self-signed certificate](../self-signed-certificate.md) — local certificate setup.
 
 ## 6. References
-
 No external references are currently listed.

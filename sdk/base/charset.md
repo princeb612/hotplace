@@ -38,6 +38,19 @@ The `_tcs*`, `_sntprintf`, and related aliases provide source-level compatibilit
 
 Because the Linux branch rejects Unicode mode, code that requires UTF-16/UTF-32 text must use an explicit encoding API rather than relying on `TCHAR` abstractions.
 
+### Practical caller example: use the configured text mode deliberately
+
+The aliases in this header are compile-time compatibility names, not runtime encoding detection. A caller using `_tcslen` or `_sntprintf` gets the mapping selected by the build definitions; it does not automatically convert UTF-8, UTF-16, or the system locale.
+
+```text
+build definitions
+  -> charset.hpp selects TCHAR and _tcs* aliases
+  -> caller compiles against that text type
+  -> explicit encoding API is still required at a wire/file boundary
+```
+
+Use this layer for source compatibility where the supported platform mapping is sufficient. If a protocol or file format specifies UTF-8/UTF-16, make that encoding conversion explicit instead of relying on `TCHAR`.
+
 ## 4. Relationships
 
 - `sdk/base/types.hpp` — platform-specific type and system-header setup.

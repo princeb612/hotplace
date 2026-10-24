@@ -64,8 +64,20 @@ http_resource::get_instance()
 
 The initial load uses the status-code table as its initialization guard. Once initialization runs, the protocol-specific loaders populate their maps. Lookup methods then return the stored name/phrase for a code; static-table accessors enumerate entries through a callback and expose the table size. These methods provide readable metadata to protocol code and diagnostics, while actual parsing/encoding decisions remain in the HTTP/1.x, HTTP/2, HPACK, HTTP/3, and QPACK implementations.
 
-## 5. Relationships
+### Real-code example: metadata lookup supports protocol code
 
+The HTTP server applets (`test/applet/httpserver1/run_server.cpp` and `test/applet/httpserver2/run_server.cpp`) construct responses through `http_response::compose(...)` and routing/response logic. `http_resource` supplies status phrases and protocol metadata used by the HTTP implementation; it does not parse a request or choose a route.
+
+```text
+HTTP parser / router / response builder
+  -> status or protocol metadata lookup
+  -> http_resource shared tables
+  -> protocol-specific serialization
+```
+
+Use the applet to see where response construction occurs and this document to understand the shared metadata source. The resource table's availability does not imply support for every feature associated with a protocol version.
+
+## 5. Relationships
 - `../http_resource.hpp` — singleton interface, lookup methods, and map declarations.
 - `http_resource_http1.cpp` — HTTP status phrases and method names.
 - `http_resource_http2.cpp` — HTTP/2 frame/flag/SETTINGS/error names and HPACK static-table entries.
@@ -74,7 +86,6 @@ The initial load uses the status-code table as its initialization guard. Once in
 - [HTTP/2](../http2/README.md), [HPACK](../hpack/README.md), [HTTP/3](../http3/README.md), and [QPACK](../qpack/README.md) — protocol implementations that consume related metadata.
 
 ## 6. References
-
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)

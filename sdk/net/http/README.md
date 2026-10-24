@@ -89,8 +89,20 @@ Protocol processing consults `http_resource` for the in-process names, phrases, 
 - `hpack/` — HTTP/2 header compression.
 - `qpack/` — HTTP/3 field compression.
 
-## 5. Relationships
+### Real-code entry point: HTTP request to response
 
+`test/applet/httpserver1/run_server.cpp` shows the application-facing path. On `mux_read`, the callback receives the completed `http_request`, creates an `http_response`, optionally invokes the router, and continues the response/send path. The HTTP SDK owns parsing and request construction; the applet owns the choice to route or handle a request directly.
+
+```text
+mux_read callback
+  -> obtain network_session + http_request
+  -> construct http_response(request)
+  -> optionally http_router::route(session, request, response)
+  -> complete response and send through session
+```
+
+Use the full callback in `test/applet/httpserver1/run_server.cpp` for the plain-HTTP versus HTTPS branch. For the builder and HTTP/2 configuration path, compare `test/applet/httpserver2/run_server.cpp` and the HTTP/2 component document. Routing is not automatic inside `http_server::consume()`.
+## 5. Relationships
 - [HTTP core model](http-core-model.md) — request, response, URI, header, routing, and authentication relationships.
 - [HTTP server/client flow](http-server-client.md) — builder options, startup, protocol registration, handler callback and client path.
 - [HTTP protocol stack](http-protocol-stack.md) — the network stream/protocol framing boundary.
@@ -105,7 +117,6 @@ Protocol processing consults `http_resource` for the in-process names, phrases, 
 - [HTTP testcase documentation](../../../test/testcase/net/http/README.md), [HPACK tests](../../../test/testcase/net/hpack/README.md), and [QPACK tests](../../../test/testcase/net/qpack/README.md) — source-level testcase inventory and evidence.
 
 ## 6. References
-
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112)
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113)
@@ -113,8 +124,7 @@ Protocol processing consults `http_resource` for the in-process names, phrases, 
 - [RFC 7541 — HPACK](https://www.rfc-editor.org/rfc/rfc7541)
 - [RFC 9204 — QPACK](https://www.rfc-editor.org/rfc/rfc9204)
 
-## 7. Developer Notes
-
+## Developer Notes
 ### Protocol evolution notes
 
 These notes preserve the original developer-oriented comparison; they are conceptual background, not a claim that every item is implemented by this repository.

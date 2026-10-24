@@ -58,3 +58,7 @@ insert() / cut() / replace() / clear() ─► mutate or reset content
 - `basic_stream.md` — higher-level in-memory stream abstraction built over stream-related utilities; do not treat the two APIs as interchangeable.
 - `test/testcase/base/stream/testcase_bufferio.cpp` — `test_bufferio1()` covers edits, searches, replacement, and content comparisons; `test_bufferio2()` checks non-null returned storage with a nonzero pad size.
 - `test/testcase/base/stream/testcase_bufferio.md` — describes source-level test coverage and separates it from runtime execution status.
+
+## 5. References
+
+No external references are listed.

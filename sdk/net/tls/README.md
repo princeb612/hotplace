@@ -167,6 +167,27 @@ This flow describes data dependencies, not a single shared wire format. TLS and 
 6. **Adapt to transport boundaries.** DTLS publication fragments oversized handshake bodies and segments records for datagram output; the receive arranger validates datagram records and buffers them by peer and epoch/sequence until the next expected record is available. QUIC publication maps TLS handshakes to CRYPTO frames and application/HTTP/3/QPACK content to STREAM frames, then packs frames into packets within a payload target.
 7. **Return output to the caller.** Publisher callbacks or output containers receive serialized protocol units. Socket transmission, retransmission/loss recovery, and full peer interoperability are separate responsibilities and should not be inferred merely from a successful serialization path.
 
+### Concrete record-protection path from `testcase_tls12_aead.cpp`
+
+The TLS 1.2 AES-128-GCM testcase isolates record protection using captured-session inputs rather than running a complete client/server handshake:
+
+```text
+fixed TLS 1.2 cipher suite (0xc02b)
+  + client_random + server_random + master_secret
+                    |
+                    v
+protection.calc_keyblock(SHA-256, master_secret, randoms, suite)
+                    |
+                    +--> compare derived client_write_key / client_write_IV
+                    |
+                    v
+captured TLS record bytes
+  -> protection.decrypt(session, from_client, record, sequence=0)
+  -> check operation status
+```
+
+The testcase compares the derived client key and IV against fixed expected bytes before attempting decryption. The record includes the TLS record header and encrypted payload/tag, and the direction selects the client-side traffic material. This is a focused known-input record-protection test: it does not exercise negotiation, certificate validation, or a full handshake. In the shown code the decrypt result is checked for success, but the resulting plaintext is not compared against an expected byte sequence, so do not describe this particular assertion as a plaintext known-answer check.
+
 ### Session lifecycle and state boundaries
 
 tls_session owns the tls_protection object and lazily creates the relevant composer/publisher/arranger/session helpers. Each direction has its own session_info, including handshake status, protection activation, alert queue, and record-number state keyed by protection space. DTLS and QUIC helpers are session-associated because their decisions depend on negotiated state and transport-specific numbering.
@@ -186,9 +207,25 @@ QUIC: handshake → CRYPTO frame ─┐
 
 These flows describe responsibilities visible in source. The presence of a message class, hint, RFC note, or construction test does not establish complete conformance to every TLS/DTLS version or QUIC feature. Keep protocol requirements, implemented code paths, and actually executed test evidence separate.
 
-## 5. Relationships
+### Real-code entry points: isolate crypto from integration
 
-- [TLS advisor implementation](tls_advisor.md)
+There are two complementary ways to study the TLS path:
+
+- **Focused record protection:** `test/testcase/tls/testcase_tls12_aead.cpp` creates a `tls_session`, selects TLS 1.2 and cipher suite `0xc02b`, derives the key block from fixed randoms and a master secret, checks the expected client key/IV, then attempts to decrypt a captured record. This isolates key derivation and record protection without running negotiation or certificate validation.
+- **End-to-end socket integration:** `test/applet/tlsserver/run_server.cpp` chooses TLS version/backend flags, builds the server socket, and uses `network_server` callbacks to echo application data. The handshake and record operations are performed below the callback by the selected backend/session path.
+
+```text
+focused testcase:
+fixed inputs -> tls_protection key block -> expected key/IV checks -> record decrypt
+
+server applet:
+options -> server_socket_builder -> network_server -> TLS session/handshake
+        -> completed application data -> consumer callback -> session.send()
+```
+
+Use the testcase when reasoning about cryptographic inputs and outputs; use the applet when reasoning about negotiation, socket integration, and application-data flow. Neither example alone proves complete protocol conformance: the testcase is not a full handshake, and a successful applet run covers only the exercised backend/options/peer combination.
+## 4. Relationships
+- [TLS/QUIC advisor](advisor/README.md) — protocol identifiers, resource indexes, and cross-advisor metadata mapping.
 - [DTLS record arrangement](session/dtls_record_arrange.md)
 - [DTLS record publisher](session/dtls_record_publisher.md)
 - [QUIC packet publisher](session/quic_packet_publisher.md)
@@ -206,8 +243,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - `test/testcase/tls/` — source-level test entry points and protocol test vectors.
 - `test/testcase/quic/` — QUIC packet/number/protection vectors and PCAP SIMPLE paths; see its testcase README for explicit source-level and runtime-evidence boundaries.
 
-## 6. References
-
+## 5. References
 ### Protocol specifications
 
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
@@ -226,7 +262,7 @@ These flows describe responsibilities visible in source. The presence of a messa
 - [Cipher suite information](https://ciphersuite.info/cs/)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
-## 7. Developer Notes
+## 6. Developer Notes
 
 ### RFC figures transcribed as plain text
 

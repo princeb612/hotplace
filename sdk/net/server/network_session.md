@@ -115,8 +115,19 @@ The manager destructor calls `shutdown()`, which releases entries in both `_sess
 
 `get_session_data()` exposes application/session key-value state without forcing application data into the generic transport buffers. `get_http2_session()` exposes optional HTTP/2-specific state; generic TCP/TLS sessions do not require it.
 
-## 5. Relationships
+### Real-code example: session as the application send boundary
 
+In `test/applet/tlsserver/run_server.cpp`, the consumer callback receives `network_session` from `data_array[3]`. On `mux_read`, it calls `session->send((char*)buf, bufsize)` rather than writing to a separately managed native socket. `test/applet/httpserver2/run_server.cpp` similarly calls `response.respond(session)` after routing a completed request.
+
+```text
+multiplexer event -> session lookup/reference -> consumer callback
+  -> raw echo: session.send(bytes)
+  -> HTTP:     response.respond(session)
+```
+
+This shows why the session abstraction matters: the caller submits application data through the active session, while socket/backend and protocol-specific transport work remain below that boundary.
+
+## 5. Relationships
 - `network_session.hpp/.cpp` — session lifecycle, buffering, reference counting, and send path.
 - [Network server](README.md) — manager, workers, and event lifecycle.
 - [Network server execution model](network-server-model.md) — orchestration path.
@@ -126,5 +137,4 @@ The manager destructor calls `shutdown()`, which releases entries in both `_sess
 - `sdk/net/http/` — HTTP/2 state and HTTP message semantics layered above generic session buffering.
 
 ## 6. References
-
 No external references are currently listed.

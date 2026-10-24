@@ -97,8 +97,21 @@ The mutable position is significant: a handshake parser operates on a byte range
 - DTLS adds message fragmentation and ordering/reassembly concerns.
 - QUIC carries TLS handshake bytes in CRYPTO frames and uses QUIC packet-number spaces and packet protection.
 
-## 5. Relationships
+### Real-code example: one handshake object, several output boundaries
 
+The TLS server integration in `test/applet/tlsserver/run_server.cpp` selects a backend and starts a session; handshake objects are processed beneath its `consumer_routine`. To study an isolated handshake/record relationship, compare the captured-record assertions in `test/testcase/tls/testcase_tls12_aead.cpp` with this message lifecycle diagram.
+
+```text
+typed handshake message
+  -> tls_handshake::write()
+  -> TLS: TLS record publisher
+     DTLS: DTLS record arrangement/publication
+     QUIC: CRYPTO frame and QUIC packet path
+```
+
+The same handshake semantics do not imply the same transport encoding. The applet shows the live caller boundary; the focused testcase is for cryptographic record behavior, not a complete handshake transcript.
+
+## 5. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [TLS records](../record/README.md) — record framing and content dispatch.
 - [Extensions](../extension/README.md) — nested typed extension payloads.
@@ -109,7 +122,6 @@ The mutable position is significant: a handshake parser operates on a byte range
 - [QUIC](../../quic/README.md) — TLS handshake bytes carried by CRYPTO frames.
 
 ## 6. References
-
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)

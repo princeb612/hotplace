@@ -63,11 +63,27 @@ search(data)
 
 The important state transition is the mismatch branch: the source cursor `i` does not retreat. Only the pattern cursor `j` falls back through the failure table. The implementation therefore reuses comparisons already implied by the matched prefix instead of rescanning the same source region.
 
+### Practical use from the testcase
+
+The testcase learns a byte pattern once, searches the source sequence, and checks the returned offset. For the sample below, the expected first match begins at index `0xa`:
+
+```cpp
+binary_t data = to_binary("abacaabaccabacabaabb");
+binary_t pattern = to_binary("abacab");
+
+t_kmp<byte_t> kmp;
+kmp.learn(pattern);
+size_t idx = kmp.search(data);
+_test_case.assert(0xa == idx, __FUNCTION__, "pattern search");
+```
+
+The same testcase also searches contiguous memory and uses a custom comparator for object and pointer elements. Those variants demonstrate that the matcher is not restricted to byte vectors: the element type and comparison rule determine what constitutes a match.
+
 ## 4. Relationships
 
 - `pattern.hpp` — shared element-access conventions; KMP's equality comparator is specific to `t_kmp`. The implementation is in `kmp.hpp`.
-- `test/testcase/base/pattern/testcase_kmp.cpp` — asserts match index `0xa` for byte vectors, contiguous memory, value objects and pointer objects with a custom comparator.
-- `test/testcase/base/pattern/testvector_kmp.cpp` and `testvector_kmp.yml` — additional vector-driven cases.
+- [`test/testcase/base/pattern/testcase_kmp.cpp`](../../../test/testcase/base/pattern/testcase_kmp.cpp) — asserts match index `0xa` for byte vectors, contiguous memory, value objects and pointer objects with a custom comparator.
+- [`testvector_kmp.cpp`](../../../test/testcase/base/pattern/testvector_kmp.cpp) and [`testvector_kmp.yml`](../../../test/testcase/base/pattern/testvector_kmp.yml) — additional vector-driven cases.
 - `sdk/io/parser/` — related parser pattern-search APIs, but not the same class as `t_kmp`.
 
 ## 5. References

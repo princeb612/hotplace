@@ -26,6 +26,20 @@ The principal boundaries are:
 
 This directory is responsible for network and protocol behavior. Cryptographic operations and key abstractions are supplied by `sdk/crypto`; common representations, parsing, and I/O facilities are supplied by `sdk/base` and `sdk/io`.
 
+### Start from the task you want to try
+
+| If you want to… | Start here | What the example helps you understand |
+|---|---|---|
+| Run a plain TCP echo server | [`tcpserver2`](../../test/applet/tcpserver2/README.md), then [server model](server/README.md) | How a listener, event loop, session callback, and echo response fit together. |
+| Try TCP, UDP, TLS, or DTLS against a server | [`netclient`](../../test/applet/netclient/README.md) | How the selected transport changes connect/read behavior; TCP/TLS may need multiple reads, while UDP/DTLS preserve datagram semantics. |
+| Compare OpenSSL and trial secure-socket paths | [`tlsserver`](../../test/applet/tlsserver/README.md), then [socket layer](basic/README.md) | How scheme/backend selection is separate from server orchestration and handshake processing. |
+| Apply a peer-address allow/deny policy | [IP address and ACL](basic/ipaddr/README.md), with the [TCP server example](../../test/applet/tcpserver2/README.md) | How whitelist/blacklist rules produce a decision and the caller enforces it through accept control. |
+| Handle an HTTP/1.1 request and route it | [HTTP layer](http/README.md), then [`httpserver1`](../../test/applet/httpserver1/README.md) | Where a completed request becomes an application response, and that routing is explicitly invoked by the callback. |
+| Try HTTP/2 with the shared server abstraction | [`httpserver2`](../../test/applet/httpserver2/README.md), then [HTTP layer](http/README.md) | How HTTP/2 changes protocol/session handling without replacing the shared server orchestration. |
+| Understand TLS vs DTLS vs QUIC wire units | [TLS/DTLS/QUIC](tls/README.md) | Why TLS records, DTLS datagram records, and QUIC packets/frames must not be treated as the same framing path. |
+
+These applets are practical integration entry points, not a claim that every backend or protocol combination has been tested on every platform. In particular, the presence of HTTP/3 and QUIC-related classes should not be read as proof of a complete HTTP/3 server path.
+
 ## 2. Data Model
 
 ### Cross-layer entities and ownership boundaries
@@ -113,8 +127,16 @@ The source components `dtls_record_arrange`, `dtls_record_publisher`, and `quic_
 
 A directory's presence does not guarantee that every backend, protocol version, extension, or optional feature is enabled in every build. Use the relevant CMake configuration and source guards when stating platform or feature support. Keep implementation claims separate from protocol-standard requirements.
 
-## 5. Relationships
+### Real-code entry points
 
+The directory-level diagrams are easiest to ground in three runnable callers:
+
+- `test/applet/tcpserver2/run_server.cpp` — opens listeners with `network_server`, registers accept control, and echoes data from a consumer callback. Use it to follow the plain TCP server lifecycle.
+- `test/applet/tlsserver/run_server.cpp` — selects OpenSSL or trial socket schemes and TLS version flags before entering the same network-server orchestration. Use it to distinguish application callbacks from handshake/record processing.
+- `test/applet/httpserver2/run_server.cpp` — builds an HTTP server, enables HTTP/2, and dispatches completed requests through `http_router` before responding. Use it to follow the boundary between transport/session processing and application semantics.
+
+These examples are intentionally complementary rather than one universal path. A callback receiving application data does not itself demonstrate how bytes were framed, how a handshake was negotiated, or how a request became complete; follow the corresponding component Behavior Model for those steps.
+## 5. Relationships
 ```text
 Application / protocol consumer
   ├─ server/ ── coordinates ──> basic/ socket backends

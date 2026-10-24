@@ -71,8 +71,7 @@ The concise output is a CBOR encoding; diagnostic output is text intended for in
 
 The RFC-oriented testcase builds values or object trees and uses `cbor_publisher` to obtain both diagnostic and concise output, then compares concise bytes against expected hex. The YAML-vector testcase parses encoded bytes and publishes both forms; it compares bytes first and uses diagnostic text for selected cases where multiple valid floating-point widths represent the same value. These are source-level verification paths; this documentation update did not execute the tests.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Related source
 
 - `cbor_visitor.*` — visitor interface and concrete output-target adapters.
@@ -90,6 +89,5 @@ The RFC-oriented testcase builds values or object trees and uses `cbor_publisher
 
 - [CBOR reader and encoder](cbor-reader-encoder.md) — parse and encode paths leading into and out of the object tree.
 
-## 6. References
-
+## 5. References
 - [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), including diagnostic notation and encoded data-item examples.

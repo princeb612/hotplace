@@ -68,3 +68,7 @@ The source comments explicitly identify protocol uses:
 - `uint48_t`: DTLS record sequence
 
 This makes the utility particularly useful in the parser/protocol layers where a field is specified as an exact number of network-order octets. The implementation is split across `endian.hpp`, `uint.hpp`, `uint24.cpp`, and `uint48.cpp`; `types.hpp` supplies platform/integer aliases. `testcase_endian.cpp` provides source-level coverage for byte order and custom-width integer behavior.
+
+## 5. References
+
+No external references are listed.

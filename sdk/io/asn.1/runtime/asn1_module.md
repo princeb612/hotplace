@@ -171,13 +171,41 @@ parser -> publisher -> runtime
                  regenerated ASN.1
 ```
 
+### Practical use: load, publish, then resolve a module
+
+The loader testcase deliberately separates file parsing from semantic publishing so each stage can be checked independently:
+
+```cpp
+parse_tree pt;
+asn1_loader loader;
+auto ret = loader.load_file("example3.asn1", &pt);
+_test_case.test(ret, __FUNCTION__, "load ASN.1 file");
+
+asn1_build_resultset result;
+auto publisher = asn1_advisor::get_instance()->get_publisher();
+ret = publisher->build(&pt, result);
+_test_case.test(ret, __FUNCTION__, "publish ASN.1 modules");
+
+auto modules = asn1_modules::get_instance();
+for (const auto& name : result.module_names) {
+    auto module = modules->get(name);
+    if (module) {
+        basic_stream bs;
+        module->represent(&bs);
+        _logger->write(bs);
+    }
+}
+```
+
+The important boundary is between `parse_tree` and `asn1_build_resultset`: loading creates the syntax tree; publishing constructs and registers semantic modules. The registry lookup and `represent()` call then inspect the published result. The testcase additionally asserts expected module/type names and checks module import/export resolvability.
+
 ### Related tests
 
-- `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decoding and reference resolution.
-- `test/testcase/asn.1/loader/testcase_loader.cpp` — module loading, regenerated notation, `EXPORTS`, `IMPORTS`, and `is_resolvable()`.
-- `test/testcase/asn.1/testcase_constraints.cpp` — semantic construction with constraints.
-- `test/testcase/asn.1/runtime/testcase_parser.cpp` — parser/runtime path.
-- `test/testcase/asn.1/runtime/testcase_publish.cpp` — publishing path.
+- [`test/testcase/asn.1/testcase_basic3.cpp`](../../../../test/testcase/asn.1/testcase_basic3.cpp) — strongly typed decoding and reference resolution.
+- [`test/testcase/asn.1/loader/testcase_loader.cpp`](../../../../test/testcase/asn.1/loader/testcase_loader.cpp) — module loading, regenerated notation, `EXPORTS`, `IMPORTS`, and `is_resolvable()`.
+- [`test/testcase/asn.1/testcase_constraints.cpp`](../../../../test/testcase/asn.1/testcase_constraints.cpp) — semantic construction with constraints.
+- [`test/testcase/asn.1/runtime/testcase_parser.cpp`](../../../../test/testcase/asn.1/runtime/testcase_parser.cpp) — parser/runtime path.
+- [`test/testcase/asn.1/runtime/testcase_publish.cpp`](../../../../test/testcase/asn.1/runtime/testcase_publish.cpp) — publishing path.
 
 ### Reference lookup and resolution
 
@@ -225,7 +253,7 @@ resolve()
 reference dependency validation
 ```
 
-## 5. Relationships
+## 4. Relationships
 - `asn1_parser` and `asn1_publisher` provide syntax parsing and semantic publication.
 - `asn1_modules` owns the module registry; each `asn1_module` resolves local and imported definitions.
 - `sdk/io/asn.1/basic/semantic/` supplies the semantic objects whose references are linked into modules.

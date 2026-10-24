@@ -114,6 +114,37 @@ For adjacency, DFS, and BFS, the visitor callback uses the start vertex as both 
 - **Dijkstra:** calculate tentative distances from each start using a priority queue. A strictly shorter route replaces predecessor alternatives; an equal-distance route is retained as another predecessor. infer() expands those alternatives into path lists. The implementation does not validate weights as non-negative, so callers should not assume negative-weight support.
 - **Topological sort:** compute in-degrees, enqueue zero-in-degree vertices, and decrement neighbors as each vertex is emitted. If the emitted count differs from the vertex count, the routine clears the result and returns false for a cycle. This operation is intended for directed acyclic graphs.
 
+### Concrete caller sequence from `testcase_graph.cpp`
+
+The example includes the callback as well as the search-object lifecycle. The callback receives the source vertex, destination vertex, distance, and path list; for Dijkstra, it formats the route and its total distance for logging.
+
+```cpp
+template <typename T>
+void do_test_graph_shortest_path(t_graph<T>& graph, const T& start) {
+    auto traverse_handler = [](const T& from, const T& to, int distance, const std::list<T>& path) -> void {
+        basic_stream bs;
+        print_style_t style("", " -> ", "");
+        print(path, bs, style);
+
+        basic_stream out;
+        out << "path[" << from << "->" << to << "] " << bs
+            << " (distance : " << distance << ")";
+        _logger->writeln(out);
+    };
+
+    auto shortest = graph.build_dijkstra();
+    shortest->learn().infer();
+    shortest->traverse(start, traverse_handler);
+    delete shortest;
+}
+```
+
+This is the callback shape used by the templated helper in `testcase_graph.cpp`; it assumes the surrounding testcase's project logging and printing utilities are available. For a single start vertex, `traverse(start, ...)` reports the routes retained for that start. The two-endpoint overload, `traverse(start, end, ...)`, narrows reporting to a requested destination.
+
+For adjacency, DFS, and BFS, the testcase uses a different callback formatter that prints the vertex list, then follows the same build → `learn().infer()` → `traverse()` → `delete` lifecycle. The helper's unconditional `assert(true, ...)` calls do not validate the printed traversal order; use the dedicated topological-sort expected-order comparison or a GSS path assertion when you need a checked result. `traverse()` delivers results to the caller, but it does not itself define an expected answer.
+
+The raw pointer returned by each `build_*()` call is explicitly deleted in the testcase. Keep the source graph alive until the search object is no longer used.
+
 ### GSS push, traversal, and retracing
 
 ~~~text

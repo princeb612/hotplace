@@ -46,6 +46,49 @@ The constructor fixes the low/high domain for the lifetime of the object. Each v
 
 This is a bounded integral set. It does not automatically grow its domain when an out-of-range value arrives.
 
+### Practical example: track selected values in a bounded domain
+
+A bit set can answer membership questions for a known range without storing a separate node for each value:
+
+```cpp
+t_bit_set<int> selected(0, 15);
+selected.add(1);
+selected.add(3);
+selected.add(5);
+
+bool has_three = selected.has(3);  // true
+selected.subtract(3);
+bool still_has_three = selected.has(3);  // false
+```
+
+The configured domain is `0..15`; adding values sets their corresponding bits, and `subtract()` clears a bit. This small example is the same direct membership pattern used in `testcase_bitset.cpp`; the ASN.1 example below shows how the same representation is used for a protocol value.
+
+### Concrete caller path: ASN.1 named-bit value construction
+
+The ASN.1 value layer uses the bounded bit set to collect selected non-negative named-bit values before appending the packed bytes to its output:
+
+```cpp
+asn1_native_int_t minvalue = *evalues.begin();
+asn1_native_int_t maxvalue = *evalues.rbegin();
+t_bit_set<asn1_native_int_t> bs(minvalue, maxvalue);
+
+for (const auto& item : evalues) {
+    bs.add(item);
+}
+
+binary_t temp = bs.get();
+bin.insert(bin.end(), bs.unused_bit());
+bin.insert(bin.end(), temp.begin(), temp.end());
+```
+
+The ASN.1 layer determines the active value domain and which named values are present. `t_bit_set` maps those values to bits and exposes the packed storage plus the number of unused bits in the final octet. ASN.1 then emits the unused-bit count before the bytes, as required by the surrounding BIT STRING representation. The bit set does not itself encode the ASN.1 tag/length or validate the schema's named-bit rules.
+
+Source: `sdk/io/asn.1/basic/asn1_value.cpp`.
+
 ## 4. Relationships
 
 - `bit_set.hpp` implements the bounded bit-set representation, and `testcase_bitset.cpp` provides direct source-level coverage. ASN.1 BIT STRING is the motivating domain mentioned by the header; the ASN.1 layer owns its encoding and semantic constraints.
+
+## 5. References
+
+No external references are listed.

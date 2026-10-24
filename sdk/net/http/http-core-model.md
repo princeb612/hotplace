@@ -125,8 +125,19 @@ http_router::route(session, request, response)
 
 The router checks the registered authentication provider before selecting and invoking the URI handler. The provider/resolver path is scheme-specific; the exact credential verification may use an application callback or a built-in credential container. Authentication failure produces the provider's challenge response and prevents normal route dispatch. On success, the router selects the route handler or fallback path. This detail complements the lifecycle diagram above; the scheme-specific implementation is documented in [Authentication providers and credentials](auth/README.md).
 
-## 5. Relationships
+### Real-code example: the shared request/response model
 
+`test/applet/httpserver1/run_server.cpp` demonstrates the common HTTP-facing objects: the callback receives an `http_request`, constructs `http_response response(request)`, and routes the request when appropriate. `test/applet/httpserver2/run_server.cpp` follows the same application-facing pattern for HTTP/2 and calls `response.respond(session)`.
+
+```text
+HTTP/1.x bytes -> HTTP/1 framing/parser ─┐
+                                         ├-> http_request -> router/handler
+HTTP/2 frames -> HTTP/2 session/HPACK  ──┘                -> http_response
+```
+
+Read the two applets together to see what is shared and what is protocol-specific. The common C++ request/response types do not imply common wire framing or identical response serialization.
+
+## 5. Relationships
 - `http_request.hpp/.cpp`, `http_response.hpp/.cpp`
 - `http_header.hpp/.cpp`, `http_uri.hpp/.cpp`
 - `http_router.hpp/.cpp`, `http_server.hpp/.cpp`, `http_server_builder.hpp/.cpp`, `http_client.hpp/.cpp`
@@ -141,7 +152,6 @@ The router checks the registered authentication provider before selecting and in
 - `test/testcase/net/http/testcase_http.cpp` — source-level request/response/router coverage.
 
 ## 6. References
-
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110) — common request/response fields, status codes, and semantics.
 - [RFC 3986 — Uniform Resource Identifier (URI): Generic Syntax](https://www.rfc-editor.org/rfc/rfc3986) — URI structure and generic syntax.
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112) and [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113) — version-specific framing and protocol behavior.

@@ -110,7 +110,29 @@ The buffer/stream wrappers explicitly reject null input pointers, and stream-out
 
 The current implementation's hotplace status is not a detailed mapping of every zlib return code: the loop stops when the return code is no longer `Z_OK`, but the wrapper does not consistently translate zlib initialization or terminal error codes into distinct `return_t` values. Callers should therefore not interpret `success` alone as proof that every malformed compressed stream was fully validated; where correctness is security- or protocol-critical, the surrounding caller must account for the exact input and expected framing.
 
-## 5. Relationships
+### Concrete consumer path: JWE compressed content
+
+The JOSE encryption implementation selects raw DEFLATE when the JWE context enables its compression flag. It compresses the plaintext before encryption, then inflates the decrypted bytes when the protected `zip` parameter identifies `DEF`:
+
+```cpp
+#include <hotplace/sdk/io/basic/zlib.hpp>
+
+// Reduced from sdk/crypto/jose/json_object_encryption.cpp
+binary_t deflated;
+zlib_deflate(zlib_windowbits_t::windowbits_deflate, input, deflated);
+ret = doencrypt(handle, enc, alg, deflated, encrypted);
+
+// After successful decryption, when zip == "DEF":
+binary_t inflated;
+zlib_inflate(zlib_windowbits_t::windowbits_deflate, output, inflated);
+output = inflated;
+```
+
+The important format decision is `windowbits_deflate`: RFC 7516's `DEF` content-coding uses raw DEFLATE, not a zlib wrapper or gzip stream. Compression is selected by the JOSE layer; this helper only performs the requested framing operation. The production call sites shown here do not check the return value of these two compression calls, so the example describes the current integration path rather than a recommended error-handling template.
+
+Source: `sdk/crypto/jose/json_object_encryption.cpp`.
+
+## 4. Relationships
 - `sdk/base/stream/` — stream abstraction used by stream-oriented overloads.
 - `sdk/net/http/http_response.cpp` — HTTP content compression consumer.
 - `sdk/crypto/jose/json_object_encryption.cpp` — JOSE `DEF` compression consumer.
@@ -119,8 +141,7 @@ The current implementation's hotplace status is not a detailed mapping of every 
 
 - `sdk/io/basic/zlib.hpp/.cpp`
 
-## 6. References
-
+## 5. References
 - RFC 1951 — DEFLATE Compressed Data Format Specification.
 - RFC 1952 — gzip file format.
 - RFC 7520 §5.9 — JOSE compressed content example (`zip: DEF`).

@@ -63,12 +63,10 @@ SQL metadata + SQLGetData bytes
 
 The destructor frees buffer-backed data according to `_data_type`; scalar members and `_datetime` are stored inline. Because storage and conversion are type-specific, callers should preserve the semantic SQL type when interpreting binary, large numeric, and date/time values.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`odbc_record.md`](odbc_record.md) — holds fields for a fetched row
 - [`odbc_query.md`](odbc_query.md) — selects retrieval types and constructs field objects
 - [`../README.md`](README.md) — overall result traversal
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

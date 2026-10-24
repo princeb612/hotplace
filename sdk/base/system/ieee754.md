@@ -95,3 +95,7 @@ The two facilities solve different problems:
 ```
 
 Use `floating_point` when exact decimal/rational arithmetic is the concern. Use `ieee754` when the binary representation or IEEE 754 classification of a native floating-point value is the concern. The implementation is in `ieee754.hpp/.cpp`; `nostd/binary.hpp` uses its representation conversion, and `testcase_ieee754.cpp` covers classification/conversion cases.
+
+## 5. References
+
+No external references are listed.

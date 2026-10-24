@@ -97,8 +97,7 @@ ODBC `SQLRETURN` conversion is deliberately coarse (`success`, `invalid_context`
 
 Build integration collects common `basic/*.cpp` files, adds `basic/unicode/*.cpp` on Windows, and links the platform `odbc` library. Driver-manager availability, driver behavior, SQL type mappings, and character-width configuration affect runtime results.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`odbc_connector.md`](odbc_connector.md) — environment, connection, and query creation
 - [`odbc_query.md`](odbc_query.md) — statement execution, metadata, fetching, and result sets
 - [`odbc_record.md`](odbc_record.md) and [`odbc_field.md`](odbc_field.md) — fetched rows and their column values
@@ -107,6 +106,5 @@ Build integration collects common `basic/*.cpp` files, adds `basic/unicode/*.cpp
 - [`../../odbc.hpp`](../../odbc.hpp) and [`../types.md`](../types.md) — module contract and shared types
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — checked-in integration sample and its limits
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

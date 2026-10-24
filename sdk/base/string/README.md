@@ -60,3 +60,7 @@ String operations do not automatically provide protocol parsing or validation. F
 - `sdk/base/stream/` — stream formatting and buffered output, distinct from string algorithms.
 - `sdk/io/string/` — URL, tokenization and platform character-conversion utilities used closer to I/O and protocol boundaries.
 - [String testcase guide](../../../test/testcase/base/string/README.md) — source examples and verification notes. The principal test source is `testcase_string.cpp`; assertions and report-derived verification belong in the testcase document.
+
+## 5. References
+
+No external references are listed.

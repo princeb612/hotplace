@@ -33,6 +33,36 @@ Documented with GPT-6
 
 The exact source/testcase layout can evolve independently of the SDK source tree; the stable meaning is the verification boundary represented by each group.
 
+## Practical usage patterns found in testcases
+
+The testcase tree also records how SDK APIs are composed in real code. These examples are useful entry points when documenting a component's Behavior Model; they are representative usage paths, not a claim that every possible input or failure mode is covered.
+
+| Usage pattern | Representative source | What the code demonstrates |
+|---|---|---|
+| Configure and route diagnostics | [Applet logger setup](../applet/tcpserver1/sample.cpp); [ASN.1 diagnostic output](asn.1/sample.cpp) | `logger_builder` setup, callback-based output, and formatted token diagnostics |
+| Encode/decode with incremental input | [Base16 testcase](encode/testcase_base16.cpp) | One-shot round trip compared with `encoder_stream` / `decoder_stream` processing across chunk boundaries |
+| Collect typed arguments for formatting | [valist vectors](base/basic/testvector_valist.cpp); [ASN.1 notation/DER output](asn.1/testcase_basic1.cpp) | Build a `valist` from typed values and render them through a format string |
+| Search generic sequences | [KMP testcase](base/pattern/testcase_kmp.cpp) | Learn a pattern, search byte/object/pointer sequences, and supply a custom comparator |
+| Load and publish semantic modules | [ASN.1 loader testcase](asn.1/loader/testcase_loader.cpp) | Keep file parsing, semantic publishing, registry lookup, and module resolution as separate steps |
+| Parse and compare protocol representations | [CBOR vectors](cbor/testvector_cbor.cpp); [ASN.1 DER vectors](asn.1/testvector_der.cpp) | Compare encoded bytes with decoded/diagnostic representations and inspect output through the logger |
+
+When adding a practical example to an SDK document, prefer the smallest source-backed sequence that reveals the API relationship. Keep expected-value assertions and meaningful lifetime/error-handling notes, and link the original testcase under Relationships rather than copying an entire test function.
+
+### Additional source-backed paths worth following
+
+| Area | Representative source | Practical sequence exposed |
+|---|---|---|
+| Command-line parsing | [base/basic/testcase_cmdline.cpp](base/basic/testcase_cmdline.cpp) | Register required/optional tokens, dispatch callbacks into an application option object, and reject missing required input |
+| ASN.1 semantic loading | [asn.1/loader/testcase_loader.cpp](asn.1/loader/testcase_loader.cpp) | Load source into a parse tree, publish semantic modules, resolve a module/type through the registry |
+| Symmetric cipher | [crypto/crypt/testcase_cipher_encrypt.cpp](crypto/crypt/testcase_cipher_encrypt.cpp) | Build an algorithm/mode-specific wrapper, encrypt, decrypt, and release the operation object |
+| Authenticated encryption | [crypto/crypt/testcase_crypto_aead.cpp](crypto/crypt/testcase_crypto_aead.cpp) | Keep key, IV/nonce, AAD, ciphertext, and authentication tag as distinct values across encrypt/decrypt |
+| Key agreement | [crypto/key/testcase_keyexchange.cpp](crypto/key/testcase_keyexchange.cpp) | Generate two local key pairs, exchange public shares, derive secrets independently, compare the result |
+| JWE processing | [jose/testcase_rfc7516.cpp](jose/testcase_rfc7516.cpp) | Load key material, open a JOSE context, decrypt a serialized JWE, inspect the result, close the context |
+| COSE processing | [cose/testcase_cose.cpp](cose/testcase_cose.cpp) | Compose a signed/encrypted CBOR message and pass the encoded message through processing/verification |
+| Network ACL | [net/basic/testcase_acl.cpp](net/basic/testcase_acl.cpp) | Add exact/prefix/range rules, switch whitelist/blacklist defaults, and check peer-address decisions |
+
+These paths extend the initial examples across argument handling, ASN.1, symmetric and authenticated encryption, key agreement, JOSE/COSE, and network admission. They are navigation aids for source-backed examples, not a test-coverage summary or a claim that this documentation pass executed the cases.
+
 ## Build and CTest flow
 
 `test/testcase/CMakeLists.txt` adds the testcase groups and copies `test.sh` into the build tree. At the project level, the root `maketest()` helper creates each `test-<module>` executable and registers it with CTest when that target is configured for CTest.

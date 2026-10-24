@@ -132,9 +132,38 @@ EXCEPT
 
 This makes the same machinery useful for both direct membership tests and composition of nested ASN.1 constraints.
 
+### Practical example: subtract an open interval
+
+`test_range_set_open_closed()` uses floating-point intervals to demonstrate why endpoint flags are part of the set's meaning. Start with two closed intervals, then remove the closed interval `[1.5, 3.5]`:
+
+```cpp
+using range_set = t_range_set<float>;
+using interval = t_interval<float>;
+
+range_set rs;
+rs.clear().add(1.0, 2.0).add(3.0, 4.0).subtract(1.5, 3.5);
+
+range_set expect;
+expect.clear()
+    .add(interval(1.0, 1.5, range_flag_t::closed, range_flag_t::open))
+    .add(interval(3.5, 4.0, range_flag_t::open, range_flag_t::closed));
+
+_test_case.assert(rs == expect, __FUNCTION__, "[1.0..1.5)(3.5..4.0]");
+```
+
+The operation is set subtraction, not merely clipping the numeric endpoints:
+
+```text
+before:  [1.0, 2.0] ∪ [3.0, 4.0]
+remove:             [1.5, 3.5]
+result:  [1.0, 1.5) ∪ (3.5, 4.0]
+```
+
+The removed endpoints themselves are excluded, so `1.5` and `3.5` do not belong to the result. The outer endpoints `1.0` and `4.0` remain included. This is why the test constructs the expected intervals with explicit `closed/open` flags instead of comparing only their numeric bounds. The test verifies the complete resulting set against that expectation.
+
 ## 4. Relationships
 
-- `test/testcase/base/nostd/testcase_set.cpp` exercises `t_range_set` merging, subtraction, equality, and QUIC ACK-range use cases.
+- `test/testcase/base/nostd/testcase_set.cpp` exercises `t_range_set` merging, subtraction, equality, special bounds, open/closed endpoints, and QUIC ACK-range use cases. The `test_range_set_open_closed()` case demonstrates interval subtraction with floating-point endpoints.
 
 ### Role in the set engine
 
@@ -157,3 +186,7 @@ sdk/base/nostd/range_set.hpp
 ```
 
 `range_set.hpp` implements normalized range operations using the range primitives in `range.hpp`; `set.hpp` is the higher-level runtime facade. ASN.1 constraint evaluation consumes this representation under `sdk/io/asn.1/basic/semantic/constraints/`, but the ASN.1 layer owns the meaning of each constraint.
+
+## 5. References
+
+No external references are listed.

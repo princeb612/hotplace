@@ -73,6 +73,20 @@ The public API provides:
 
 The distinction between these operations matters for ASN.1 constraints: a literal value, a permitted string range, a `FROM` restriction, and a `PATTERN` restriction are different semantic forms even though they ultimately describe allowed strings.
 
+### Practical example: exact membership versus substring matching
+
+```cpp
+string_set names;
+names.add("ABC");
+names.add("XYZ");
+
+bool exact = names.has("ABC");  // true
+bool prefix = names.from("AB"); // true: "AB" occurs in "ABC"
+bool absent = names.from("CD"); // false
+```
+
+`has()` asks whether the whole string is a stored literal; `from()` asks whether the requested text occurs in a stored value. They answer different questions even though both return `bool`. The example follows the first case in `test_string_set()` in `test/testcase/base/nostd/testcase_set.cpp`.
+
 ## 4. Relationships
 
 - `test/testcase/base/nostd/testcase_set.cpp` covers literal membership, `FROM` matching, string ranges, open/closed range removal, regex matching, and `t_set_runtime<std::string>` integration.
@@ -103,3 +117,7 @@ A INTERSECTION B   → intersect_with()
 A EXCEPT B         → erase_from()
 ALL EXCEPT A       → invert()
 ```
+
+## 5. References
+
+No external references are listed.

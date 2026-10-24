@@ -111,8 +111,18 @@ The handshake-record path has its own TLS 1.3 preprocessing behavior: it resets 
 - **DTLS over datagrams:** record headers include DTLS-specific sequencing context; datagram boundaries, epoch and sequence handling are not TCP stream semantics.
 - **QUIC:** TLS handshake messages bypass this record framing and enter the QUIC CRYPTO-frame/packet path.
 
-## 5. Relationships
+### Real-code example: separate record protection from handshake negotiation
 
+`test/testcase/tls/testcase_tls12_aead.cpp` exercises the record-protection boundary with a captured TLS 1.2 record: it configures the cipher suite and key block, then attempts to decrypt the record and checks the result. The TLS server applet (`test/applet/tlsserver/run_server.cpp`) is the complementary integration example, where the session/backend invokes record processing below the application callback.
+
+```text
+focused testcase: fixed secret/randoms -> key block -> record decrypt/check
+live server:      socket/session -> handshake state -> record protection -> application bytes
+```
+
+Use the testcase to reason about record inputs and cryptographic outputs; use the applet to reason about where records sit in the connection lifecycle. They answer different questions.
+
+## 5. Relationships
 - Parent module: [TLS implementation](../../README.md).
 - [Handshake messages](../handshake/README.md) — structured handshake content inside records.
 - [Extensions](../extension/README.md) — extension data nested in handshake messages.
@@ -122,7 +132,6 @@ The handshake-record path has its own TLS 1.3 preprocessing behavior: it resets 
 - [QUIC integration](../../quic/README.md) — CRYPTO frames and packet protection instead of ordinary TLS record framing.
 
 ## 6. References
-
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)

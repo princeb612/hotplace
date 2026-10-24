@@ -237,6 +237,20 @@ The group-specific key-generation path obtains group metadata, checks support fl
 
 When the peer share arrives, `exchange()` dispatches according to the selected group and combines the peer's encoded public material with local private material. The group metadata determines how the incoming bytes are split and which algorithm implementation handles each component. The resulting shared secret is operation output; it is not the original public share and must be passed into the protocol's subsequent key schedule by the appropriate consumer.
 
+The concrete flow in `test/testcase/crypto/key/testcase_keyexchange.cpp` uses two independent local stores and exchange objects:
+
+```text
+Alice: keygen(local store) -> public share A
+Bob:   keygen(local store) -> public share B
+
+Bob derives using share A  -> secret B
+Alice derives using share B -> secret A
+
+compare(secret A, secret B)
+```
+
+The testcase checks the generated share lengths against the selected group's metadata and compares the two derived secret byte strings. Key dumps are diagnostic output; the shared-secret equality is the central agreement assertion. This is a group-level key-agreement example, not a complete TLS handshake or key-schedule test.
+
 ### 3.5 TLS owns handshake orchestration
 
 TLS uses `crypto_keyexchange` for key-share operations, but the key layer does not own the TLS handshake. TLS chooses and negotiates supported groups, places key shares in handshake extensions, retains the relevant state, processes peer messages, and feeds the shared secret into the TLS key schedule. The key layer supplies the cryptographic material and group-level operation.
@@ -324,8 +338,73 @@ The implementation returns status codes for invalid parameters, unsupported algo
 
 OpenSSL reference counting controls object lifetime; it does not erase application copies of private values or derived secrets. Callers remain responsible for the lifetime and handling of sensitive byte buffers. Borrowed pointers must not outlive the object or collection that owns their reference, and callers that request `up_ref = true` must release the extra reference.
 
-## 5. Relationships
+### Practical use: exchange public shares and compare derived secrets
 
+The key-exchange testcase creates independent key stores for two peers. Each side generates a local key pair and a public share, then consumes the other peer's share to derive a secret:
+
+```cpp
+return_t exchange_two_peers(tls_group_t group) {
+    crypto_key keystore_alice;
+    crypto_keyexchange keyexch_alice(group);
+    binary_t share_alice;
+    binary_t secret_alice;
+
+    return_t ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    crypto_key keystore_bob;
+    crypto_keyexchange keyexch_bob(group);
+    binary_t share_bob;
+    binary_t secret_bob;
+
+    ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    ret = keyexch_bob.exchange(&keystore_bob, "bob", share_alice, secret_bob);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    ret = keyexch_alice.exchange(&keystore_alice, "alice", share_bob, secret_alice);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    return (secret_alice == secret_bob) ? errorcode_t::success : errorcode_t::mismatch;
+}
+```
+
+The function parameter makes the negotiated/tested group explicit; each peer gets an independent key store, and every operation status is checked before the derived secrets are compared. The example separates three values that are easy to conflate: each peer's local key object, the public share exchanged over the protocol, and the locally derived shared secret. The testcase compares both secrets; a real protocol must also authenticate the peer and bind the exchange to its handshake transcript. A matching secret alone does not authenticate the peer or establish a secure channel.
+
+Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
+
+### 3.9 Concrete TLS consumer: key-share serialization
+
+TLS 1.3's client key-share extension asks the key-exchange layer for the public share for each selected group, then serializes the group identifier, share length and share bytes into the extension payload:
+
+```cpp
+// Reduced from sdk/net/tls/tls/extension/tls_extension_key_share.cpp
+crypto_keyexchange keyexchange;
+binary_t pubkey;
+keyexchange.keyshare(group, &tlskey,
+                    KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
+
+if (!pubkey.empty()) {
+    payload pl;
+    pl << new payload_member(uint16(group), true, constexpr_group)
+       << new payload_member(uint16(pubkey.size()), true, constexpr_pubkey_len)
+       << new payload_member(pubkey, constexpr_pubkey);
+    pl.write(bin_keyshare);
+}
+```
+
+This is a concrete example of the distinction between the local key object and the transmitted share: `keyshare()` extracts the public bytes for a protocol extension; the private component remains in the local key store for the later exchange. The extension layer owns TLS wire encoding, while `crypto_keyexchange` owns group-specific key/share handling. A non-empty share is serialized here, but this snippet alone does not prove that the peer's share will be accepted or that both sides will derive the same secret.
+
+## 4. Relationships
 ### 4.1 Internal implementation boundaries
 
 - `sdk/crypto/basic/crypto_key.hpp` declares `keydesc`, `crypto_key_object`, and `crypto_key`.
@@ -402,11 +481,11 @@ OKP raw public/private bytes --> add_okp()
 
 This diagram maps the construction interfaces; it does not imply that every family supports every `crypto_keygen::build()` parameter route. In particular, the OpenSSL 3 named-algorithm path and the empty ML-KEM/ML-DSA/SLH-DSA cases in the generic `build()` dispatcher must be treated separately.
 
-### Implementation entry points
+### 4.4 Implementation entry points
 
 The source files listed in §4.1 define the key object, key collection, key construction, key generation, and group exchange boundaries. The links in §4.2 and §4.3 are conceptual maps of those boundaries, not a substitute for the concrete contracts and limitations described in the Data Model and Behavior Model.
 
-### Local implementation documents
+### 4.5 Local implementation documents
 - [Crypto primitives](../README.md)
 - [Crypto advisor](../../advisor/README.md)
 - [JOSE](../../jose/README.md)
@@ -414,7 +493,7 @@ The source files listed in §4.1 define the key object, key collection, key cons
 - [TLS](../../../net/tls/README.md)
 - [Key testcases](../../../../test/testcase/crypto/key/README.md)
 
-### Source-test coverage map
+### 4.6 Source-test coverage map
 
 The key testcase directory covers several distinct contracts rather than one undifferentiated “key support” claim:
 
@@ -427,8 +506,7 @@ The key testcase directory covers several distinct contracts rather than one und
 
 These are source-level coverage references. They do not mean every algorithm/provider combination runs successfully in every build. In particular, post-quantum key generation and KEM paths depend on the OpenSSL version and provider capabilities described above.
 
-## 6. References
-
+## 5. References
 - [RFC 7517 — JSON Web Key (JWK)](https://www.rfc-editor.org/rfc/rfc7517) — JWK key parameter names and representation.
 - [RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE](https://www.rfc-editor.org/rfc/rfc8037) — OKP keys in JOSE.
 - [RFC 7748 — Elliptic Curves for Security](https://www.rfc-editor.org/rfc/rfc7748) — X25519 and X448 key agreement.

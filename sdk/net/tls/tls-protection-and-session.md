@@ -155,7 +155,6 @@ When a protected record or packet is processed, direction and the relevant prote
 SSLKEYLOG import/export is an auxiliary diagnostic path for labeled secret material. It does not replace live session state and the exported values are sensitive because they can help decrypt captured traffic.
 
 ## 5. Relationships
-
 - `protection/tls_protection*.cpp`
 - `session/tls_session.cpp`, `session/dtls_record_arrange.cpp`, `session/dtls_record_publisher.cpp`
 - `session/quic_packet_publisher.cpp`, `session/quic_session.cpp`, `session/quic_streams.cpp`
@@ -164,7 +163,7 @@ SSLKEYLOG import/export is an auxiliary diagnostic path for labeled secret mater
 - [TLS session overview](session/README.md)
 - [TLS/DTLS/QUIC overview](README.md)
 - [TLS message model](tls-message-model.md)
-- [TLS advisor](tls_advisor.md)
+- [TLS advisor](advisor/README.md)
 - [QUIC/TLS integration](quic-tls-integration.md)
 
 ### Related areas
@@ -175,7 +174,6 @@ SSLKEYLOG import/export is an auxiliary diagnostic path for labeled secret mater
 - `sdk/crypto/` — underlying HKDF, HMAC, AEAD and signature/key operations
 
 ## 6. References
-
 - [RFC 5246 — TLS 1.2](https://www.rfc-editor.org/rfc/rfc5246)
 - [RFC 8446 — TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

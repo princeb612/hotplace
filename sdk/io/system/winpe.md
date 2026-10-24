@@ -54,8 +54,7 @@ A PE checksum is not an Authenticode digest. Authenticode hashing has format-spe
 
 No dedicated testcase for `winpe_checksum` was identified in the reviewed source paths. `sdk/crypto/authenticode/` is a related consumer of PE/certificate structures, but its verification flow is not evidence that each checksum API path is independently tested.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Platform-specific I/O support](platform.md) — OS-specific PE declarations.
 - `sdk/crypto/authenticode/` — separate image-digest and certificate/signature verification path.
 
@@ -66,7 +65,6 @@ No dedicated testcase for `winpe_checksum` was identified in the reviewed source
 - `sdk/io/system/linux/winnt.hpp`
 - `sdk/crypto/authenticode/`
 
-## 6. References
-
+## 5. References
 - [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE image layout and checksum field.
 - [Microsoft Learn: Authenticode](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/authenticode) — signature digest and verification, distinct from the PE checksum.

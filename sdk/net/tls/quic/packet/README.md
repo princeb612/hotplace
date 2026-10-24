@@ -20,7 +20,7 @@ The packet layer represents QUIC packet variants and their packet-level header/p
 
 Packet variants include Initial, Handshake, 0-RTT, 1-RTT, Retry, and Version Negotiation. Common packet abstractions, packet collections, and builders compose headers and frame payloads. Packet-number state is associated with QUIC packet-number spaces and session state; it is not a TLS record sequence number or DTLS epoch/sequence pair.
 
-The packet layer owns the packet-number space and protection context; its key derivation inputs and timing are described in Behavior Model. These contexts do not turn QUIC packets into TLS records.
+A packet object carries packet-specific header and packet-number fields, but packet-number-space tracking and the applicable protection context come from the QUIC session/publisher path. The packet layer encodes and protects a packet using that supplied state; it does not own the connection-wide packet-number counters. These contexts do not turn QUIC packets into TLS records.
 
 Packet construction combines the packet header, packet-number context, frame payload, and packet-protection output. The order of these operations belongs to Behavior Model.
 
@@ -50,8 +50,20 @@ The packet builder encodes packet-level structure; the session/publisher supplie
 
 The shared `hotplace::io::payload` abstraction describes binary fields where used by the implementation; it does not replace QUIC-specific packet-header rules, packet-number reconstruction, or protection logic.
 
-## 5. Relationships
+### Real-code example: packet keys change with packet-number space
 
+Follow `sdk/net/tls/quic-tls-integration.md` alongside `sdk/net/basic/trial/trial-socket-composer.md` to trace the sender. Initial keys derive from the version salt and destination connection ID; later Handshake/Application keys derive from TLS 1.3 traffic secrets using QUIC-specific labels.
+
+```text
+TLS handshake output -> CRYPTO frame -> packet builder
+  -> choose direction + packet-number space
+  -> QUIC key/IV/header-protection secret
+  -> packet protection -> UDP datagram
+```
+
+The `tlsserver` applet is a TLS-over-socket example, not a QUIC packet test. Keep the packet path distinct from TLS record framing and from the HTTP/2 applet.
+
+## 5. Relationships
 - `quic_packet.hpp/.cpp`, `quic_packets.hpp/.cpp`, `quic_packet_builder.hpp/.cpp`.
 - `quic_packet_initial.*`, `quic_packet_handshake.*`, `quic_packet_0rtt.*`, `quic_packet_1rtt.*`, `quic_packet_retry.*`, `quic_packet_version_negotiation.*`.
 - [QUIC overview](../README.md) and [frame implementation](../frame/README.md).
@@ -60,6 +72,5 @@ The shared `hotplace::io::payload` abstraction describes binary fields where use
 - `../../protection/` — QUIC Initial derivation from the destination connection ID, later TLS-derived QUIC secrets, and the shared cryptographic protection operations.
 
 ## 6. References
-
 - [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)

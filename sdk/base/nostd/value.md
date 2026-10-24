@@ -55,3 +55,7 @@ This is a low-level utility contract, not a claim that ASN.1 notation parsing an
 - `sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp` — creates deferred parameter values that can be referenced before a specialization binds the actual value.
 - `std::promise` / `std::future` — the deferred value mechanism used internally; this class deliberately catches retrieval/fulfillment exceptions rather than exposing a full future error contract.
 - `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` — source-level usage in the parameterized ASN.1 prototype.
+
+## 5. References
+
+No external references are listed.

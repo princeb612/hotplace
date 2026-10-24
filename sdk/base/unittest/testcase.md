@@ -85,3 +85,7 @@ The result code remains the input to classification; the console label/color is 
 - sdk/base/unittest/console_color.hpp — console color presentation.
 - `testcase.hpp/.cpp` implement result recording and reporting; `logger.hpp` and `console_color.hpp` provide output integration. `error.hpp` and `error_advisor.cpp` provide result/category interpretation.
 - `test/testcase/base/unittest/testcase_unittest.cpp` — `test_error()` checks advisor name/message lookup; `test_testcase()` submits representative result categories; `test_fail()`, `test_trace()`, and `test_try_leave()` cover error-flow and leave-trace paths. This describes source coverage, not execution in this documentation task.
+
+## 5. References
+
+No external references are listed.

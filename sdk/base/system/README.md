@@ -83,3 +83,7 @@ base/system
 ```
 
 - [System testcase directory](../../../test/testcase/base/system/README.md) and [system testcase note](../../../test/testcase/base/system/testcase_system.md) own the source-level coverage descriptions for these modules. The shared [base testcase report snapshot](../../../test/testcase/test-report-status.md) should be interpreted only with its stated revision/environment limitations.
+
+## 5. References
+
+No external references are listed.

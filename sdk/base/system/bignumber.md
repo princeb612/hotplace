@@ -78,6 +78,10 @@ The sign is represented separately from the magnitude limbs, and the number of l
 - sdk/base/system/endian.hpp — byte-order context for the big-endian stream interface.
 - test/testcase/base/system/testcase_bignumber.cpp — the test_bn3() source checks signed minimum/maximum and unsigned maximum values through 128 bits, using shifts and expected decimal strings. This is source-level coverage, not a claim that a particular build/test run has executed.
 
+## 5. References
+
+No external references are listed.
+
 ## 6. Development Notes (for maintainer review)
 
 The following signed/unsigned boundary-value list is retained as a maintainer reference rather than as the document's primary explanation. It records named fixed-width boundaries through 4096 bits where present in the prior note; it should not be read as a claim that bignumber itself has a 4096-bit maximum.

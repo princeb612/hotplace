@@ -38,6 +38,18 @@ After the input is consumed, trailing zero-or-more wildcards may be skipped. The
 
 The longest-common-prefix helper found in the testcase is test-local code, not part of `t_wildcards`.
 
+### Practical example: match a filename-like pattern
+
+```cpp
+std::string text = "baaabab";
+t_wildcards<char> wild('?', '*');
+
+bool matches = wild.match(text.c_str(), text.size(), "ba?a*b", 6); // true
+bool rejected = wild.match(text.c_str(), text.size(), "ba?ab?c", 7); // false
+```
+
+Here `?` matches exactly one character and `*` matches zero or more characters. The first pattern can match the input by letting `?` consume `a` and `*` consume the remaining middle characters; the second requires a final `c` that the input does not have. This follows `test_wildcards1()` in `testcase_wildcard.cpp`. The API reports only whether the whole input matches; it does not return captures.
+
 ### Source flow: greedy expansion of the most recent `*`
 
 ```text

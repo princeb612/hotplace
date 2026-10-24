@@ -85,6 +85,33 @@ regex::close(context)
 
 The wrapper exposes `range_t` coordinates rather than backend match objects. That makes results usable after the search call, but it also means the caller must preserve the original input when interpreting those coordinates. The context has a separate lifetime from the input and from the returned ranges; a successful `open()` must be paired with `close()`.
 
+### Concrete caller path: URL component extraction
+
+The URL helper includes the regex API and uses it to split an already unescaped URL into components:
+
+```cpp
+size_t pos = 0;
+std::list<std::string> tokens;
+
+regex_token(url, "^[a-z].*://[a-zA-Z0-9@:._]*", pos, tokens);
+if (tokens.size()) {
+    size_t tpos = 0;
+    std::list<std::string> authority;
+    regex_token(*tokens.begin(), "[a-zA-Z0-9.]*", tpos, authority);
+
+    if (authority.size() >= 2) {
+        auto iter = authority.begin();
+        info->scheme = *iter++;
+        info->host = *iter++;
+    }
+}
+info->uri = url + pos;
+```
+
+The caller uses `pos` to preserve the source offset where the matched prefix ends, and turns returned strings into URL fields. This is a concrete example of the wrapper's token-oriented API; it is not a complete URL validation example. The surrounding code applies several separate expressions for path, query, and fragment, and its grammar/edge-case limitations belong to that URL helper rather than to the regex engine.
+
+Source: `sdk/io/string/url.cpp`, `split_url()`.
+
 ## 4. Relationships
 
 - `sdk/base/nostd/range.hpp` — source-range representation.

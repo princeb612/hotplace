@@ -72,7 +72,31 @@ Signing and verification must use compatible algorithm parameters and intended p
 
 For TLS, the selected signature scheme constrains key type and digest/version semantics. For JOSE, the `jws_t` identifier is part of the JWS algorithm contract; this module does not serialize the JWS signing input or produce compact/JSON JOSE messages.
 
-### 3.2 Comparative map
+### 3.2 Concrete caller path from `testcase_crypto_sign.cpp`
+
+The common-interface testcase loads named key material into a `crypto_key`, then resolves a key by both key identifier and key type. Each case builds a signing object from a signature category and digest, signs the same sample message, and verifies the produced signature:
+
+```text
+test key collection (Ed25519 / Ed448 / P-521 / P-384 / P-256 / ...)
+  -> find(kid, kty)
+  -> crypto_sign_builder
+       set_category(category)
+       set_digest(digest)
+       build()
+  -> sign(pkey, message, signature)
+  -> verify(pkey, message, signature)
+  -> check operation result
+  -> for EC keys, check the expected signature size
+  -> release signing object
+```
+
+This testcase is useful because it varies the **key family/curve and digest combination**, rather than merely repeating one successful round trip. EdDSA cases use an empty digest selection; ECDSA cases pair named curves with SHA-2 digests. The P-521/SHA-256 and P-521/SHA-384 cases, and the P-384/SHA-256 case, are marked as expected failures, while compatible combinations are expected to sign and verify successfully.
+
+The `expect` flag controls the assertion path: expected-success cases check the sign and verify return codes; expected-failure cases require signing to fail and record verification through the negative-test helper. The testcase also checks the ECDSA signature length using the advisor's expected-size result. If the requested key cannot be found, it records `not_supported` rather than silently treating the case as a successful signature test.
+
+This is a primitive-level test of the common signing interface. It does not construct JWS/COSE messages, and a same-key sign/verify round trip does not by itself establish interoperability with an independent implementation or a protocol's complete algorithm policy.
+
+### 3.3 Comparative map
 
 The directory names mix three different dimensions: operation/API path, cryptographic family, and signature encoding. They should not be read as ten unrelated signature algorithms.
 
@@ -89,7 +113,7 @@ The directory names mix three different dimensions: operation/API path, cryptogr
 | `mldsa` | ML-DSA key (post-quantum public-key signature) | Uses the combined signing path and the algorithm's own parameter set; the hotplace builder enables this category only when compiled against OpenSSL 3.5 or later. | Checks an ML-DSA signature using the matching ML-DSA key and parameter set. |
 | `slhdsa` | SLH-DSA key (post-quantum, hash-based public-key signature) | Uses the combined signing path and the selected SLH-DSA variant. It is also guarded in the builder by the OpenSSL 3.5 version check. | Checks an SLH-DSA signature using the matching variant and key. Its hash-based construction differs from ML-DSA; the two are not interchangeable. |
 
-### 3.3 Verification dispatch: signature algorithm first, key type second
+### 3.4 Verification dispatch: signature algorithm first, key type second
 
 The primary decision is the requested signature algorithm, not the key type alone. In the source, `sig` is resolved through `hintof_signature(sig)`; the resulting hint supplies both the signature category and digest. Only then does the backend combine that category with the actual key type to choose an operation or reject the request.
 
@@ -144,7 +168,7 @@ This is a two-dimensional dispatch: **the signature identifier selects the inten
 
 The same separation matters in TLS. A TLS signature-scheme identifier (such as an RSA-PSS or ECDSA scheme) determines the signature operation and associated digest rules, while the peer's key and negotiated protocol constraints determine whether that scheme is usable. In TLS 1.3, this is distinct from the cipher suite: the cipher suite selects the record-protection algorithms and hash, whereas CertificateVerify uses a signature scheme. Avoid using “cipher suite” as a synonym for the signature algorithm.
 
-### 3.4 What is actually different during verification?
+### 3.5 What is actually different during verification?
 
 The common `verify()` interface hides the dispatch, not the mathematics. In `openssl_sign.cpp`, hotplace selects the operation from the key type and signature category:
 
@@ -156,7 +180,7 @@ The common `verify()` interface hides the dispatch, not the mathematics. In `ope
 
 The caller must provide the original message bytes expected by the selected path, not a pre-hashed digest unless that specific API contract explicitly calls for one. The wrapper's digest setting, the algorithm's own message-processing rules, and protocol-level signing input are separate concepts.
 
-### 3.5 OpenSSL 3 support: version and provider matter
+### 3.6 OpenSSL 3 support: version and provider matter
 
 The following is an upstream capability guide, not a guarantee that every hotplace build can execute every operation. The concrete hotplace code has its own compile-time gates, and runtime availability also depends on the OpenSSL build, provider configuration, key encoding, and parameters.
 
@@ -170,8 +194,28 @@ The following is an upstream capability guide, not a guarantee that every hotpla
 
 For operational compatibility notes, record the exact OpenSSL minor version and provider (for example, default or FIPS), rather than a single “OpenSSL 3: yes/no” flag. Provider presence, FIPS approval, compile-time availability, and successful execution are four different claims.
 
-## 5. Relationships
+### 3.7 Concrete protocol consumer: TLS CertificateVerify
 
+TLS CertificateVerify uses the negotiated TLS signature scheme to build the primitive signer. The TLS layer constructs the protocol-defined CertificateVerify input; `crypto_sign` performs only the selected signature operation:
+
+```cpp
+// Reduced from sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.cpp
+crypto_sign_builder builder;
+auto sign = builder.set_tls_sign_scheme(scheme).build();
+if (sign) {
+    basic_stream tosign;
+    construct_certificate_verify_message(session, dir, tosign);
+    ret = sign->sign(pkey, tosign.data(), tosign.size(),
+                     signature, sign_flag_format_der);
+    sign->release();
+} else {
+    ret = errorcode_t::not_supported;
+}
+```
+
+This caller makes the protocol/primitive boundary concrete: TLS selects the scheme and constructs the signed message; the common signature layer dispatches by scheme and key type. The corresponding verification path reconstructs the same CertificateVerify input before verifying. A successful primitive signature operation alone does not validate the certificate chain or complete the TLS handshake.
+
+## 4. Relationships
 - `../../advisor/README.md` maps signature names, key types, TLS signature schemes, JOSE identifiers and backend metadata.
 - `../key/README.md` supplies key objects and key-generation/serialization facilities.
 - `../digest/README.md` provides digest operations for digest-sign paths.
@@ -195,8 +239,7 @@ For operational compatibility notes, record the exact OpenSSL minor version and 
 - `testcase_mldsa.cpp` and `testcase_slhdsa.cpp` cover post-quantum signature paths. Availability depends on the build/provider used for those tests.
 - The source paths establish coverage targets, not execution in the current environment.
 
-## 6. References
-
+## 5. References
 - RFC 8017 — PKCS #1: RSA Cryptography Specifications Version 2.2.
 - RFC 8032 — Edwards-Curve Digital Signature Algorithm (EdDSA).
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.

@@ -83,3 +83,7 @@ The diagram follows separate implementation paths rather than implying that the 
 - `function_pipeline` coordinates execution/error flow but does not replace each operation's own error semantics.
 - `builtinmemory` allocator adapters allow pool allocation to be used with container-style interfaces.
 - Source-level coverage is organized under [`test/testcase/base/basic/`](../../../test/testcase/base/basic/README.md). The testcase overview links the focused test sources and command-line vectors; it owns detailed assertions and verification status, while this directory document describes the SDK interfaces and their relationships.
+
+## 5. References
+
+No external references are listed.

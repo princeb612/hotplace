@@ -50,13 +50,11 @@ This translation intentionally compresses native status into a small hotplace st
 
 `sync_query` follows the normal execution path and is treated as immediately ready by `odbc_sinker`. `async_query` allows `execute_statement()` to report `busy`, which the sinker polls until completion or timeout. The mode selects behavior in the wrapper; actual support and timing remain dependent on the ODBC driver and statement operation.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`basic/README.md`](basic/README.md) — module-level data and control flow
 - [`basic/odbc_connector.md`](basic/odbc_connector.md) and [`basic/odbc_query.md`](basic/odbc_query.md) — consumers of the shared types and query mode
 - [`basic/odbc_diagnose.md`](basic/odbc_diagnose.md) — detailed native diagnostic reporting
 - [`test/testcase/odbc/testcase_odbc.md`](../../test/testcase/odbc/testcase_odbc.md) — integration sample and its coverage boundaries
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

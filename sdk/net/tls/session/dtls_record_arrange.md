@@ -96,10 +96,19 @@ The later record (sequence 2) remains buffered until the expected sequence 1 is 
 
 Records older than the current expected position are treated as stale/retransmitted input. The pool provides bounded ordering of records that arrived; it does not reconstruct missing records, guarantee complete retransmission behavior, or replace DTLS handshake-flight management.
 
+### Real-code example: out-of-order DTLS records are not a TCP stream
+
+The DTLS record arranger is used below the socket/session path, not directly by an application callback. Compare the DTLS path described in `sdk/net/basic/openssl/README.md` and the TLS/DTLS publication table in `sdk/net/basic/trial/trial-socket-composer.md`: UDP datagrams can carry records that arrive out of sequence, so records are ordered by peer, epoch, and record sequence before the handshake/session consumes the expected one.
+
+```text
+UDP datagram -> parse complete DTLS records -> key by peer + epoch + sequence
+  -> bounded record pool -> request expected record
+  -> deliver expected / wait for missing / discard stale
+```
+
+This is a DTLS-specific ordering aid; it does not replace retransmission or handshake-flight logic, and it should not be described as TCP-style stream reassembly.
+
 ## 5. Relationships
-
-
-
 - `dtls_record_arrange.hpp`
 - `session/dtls_record_arrange.cpp`
 - `test/testcase/tls/testcase_dtls_record_arrange.cpp`
@@ -127,6 +136,5 @@ tls_session
 The class is concerned with **receive-side ordering**. It does not construct DTLS handshake fragments; that responsibility belongs to `dtls_record_publisher`.
 
 ## 6. References
-
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)

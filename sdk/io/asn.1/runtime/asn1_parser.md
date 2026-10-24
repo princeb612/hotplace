@@ -106,6 +106,29 @@ parse(notation, result)
 
 `to_result()` gets the shared publisher from `asn1_advisor` and asks it to reconstruct semantic objects from the parse tree. It does not embed production handlers in the parser.
 
+### Concrete caller path: notation to a published object
+
+A caller that only needs the reconstructed result can use the `parse(notation, result)` overload. It performs the parse-tree stage and semantic publication internally:
+
+```cpp
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
+
+asn1_parser parser(parser_type_t::glr, true);
+asn1_build_resultset result;
+return_t ret = parser.parse("Type1 ::= VisibleString", result);
+
+if (errorcode_t::success == ret && result.object) {
+    basic_stream output;
+    result.object->publish(&output);
+    // output now contains the reconstructed ASN.1 notation.
+}
+```
+
+This is the convenience path for consumers interested in the published result. When debugging tokenization or grammar behavior, use the overload that returns a `parse_tree*` and inspect that tree before calling the publisher; otherwise those intermediate stages remain hidden behind the single call.
+
+The same parse-tree-to-publisher boundary is exercised separately by `test/testcase/asn.1/runtime/testcase_publish.cpp`.
+
 ### Source-level test paths
 
 - `test/testcase/asn.1/runtime/testcase_parser.cpp::test_asn1parser()` — notation through parser and parse-result assertions.
@@ -113,8 +136,7 @@ parse(notation, result)
 - `test/testcase/asn.1/loader/testcase_loader.cpp` — separately inspects tokenization, parse-tree creation, and result publication.
 
 These links describe source-level test paths; this documentation update did not execute the tests.
-## 5. Relationships
-
+## 4. Relationships
 - [Generic parser](../../parser/README.md) — lexer, parser engines, parse-tree model, and table resources.
 - [ASN.1 publisher](asn1_publisher.md) — semantic reconstruction from the parse tree.
 - [ASN.1 runtime](README.md) — module registry and runtime data model.

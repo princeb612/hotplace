@@ -120,7 +120,7 @@ The syntax tree is the hand-off point between generic parser execution and domai
 
 test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In parse_tree.cpp, SHIFT calls on_shift(typestring, current_token.value) and REDUCE calls on_reduce(rule_id, rule.lhs, rule.rhs.size()). The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
 
-## 5. Relationships
+## 4. Relationships
 ### Related areas
 
 - `../asn.1/basic/`

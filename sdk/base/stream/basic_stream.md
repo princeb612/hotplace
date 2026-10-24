@@ -33,7 +33,7 @@ Copy construction clones the underlying buffer context, so the copy has its own 
 - **Byte storage:** `write()`, `fill()`, `clear()`, and `resize()` mutate the buffer; `insert()` and `cut()` edit a selected range.
 - **Standard-style formatting:** `printf()`, `vprintf()`, and `println()` use the low-level formatting path.
 - **Hotplace indexed formatting:** `vaprintf()` and `vaprintln()` delegate to the custom formatter and consume the project's `valist` representation.
-- **Insertion operators:** primitive numeric, enum, and floating-point values use `printf_traits<char, T>`; strings, byte arrays, variants, and other stream values use their corresponding overloads.
+- **Insertion operators:** primitive numeric, enum, and floating-point values use `printf_traits<char, T>`; strings, byte arrays, variants, and other stream values use their corresponding overloads. In particular, `operator<<(const variant&)` delegates to `vtprintf(this, value, vtprintf_style_t::vtprintf_style_debugmode)`, so variants are rendered with type-appropriate diagnostic text rather than appended as raw object bytes.
 - **Encoding destination:** the `encoder_stream_traits<basic_stream>` specialization implements `trunc()`, `reserve()`, and `commit()` so encoding routines can write into the stream's buffer.
 
 The standard-style formatting path and indexed `vaprintf()` path are separate interfaces. The latter supports positional fields such as `{1:04x}` and uses the type metadata retained by `valist`.
@@ -50,6 +50,7 @@ SDK caller
        ├─ printf / vprintf ─► low-level printf helper
        ├─ vaprintf / vaprintln ─► custom sprintf helper + valist
        └─ operator<< ─► printf_traits or type-specific overload
+                         └─ variant overload ─► vtprintf(debugmode)
                               │
                               ▼
                      bufferio_context_t (_handle)
@@ -67,9 +68,15 @@ SDK caller
 
 ## 4. Relationships
 
+- [`variant.md`](../basic/variant.md) — typed runtime values supplied to the variant insertion overload.
+- `vtprintf.hpp/.cpp` — renders `variant_t` / `variant` into this stream; `basic_stream` selects debug style for `operator<<(const variant&)`. The formatter's style changes the textual presentation, not the stored value.
 - `stream_t` — base abstraction inherited by `basic_stream`.
 - `stream_policy.hpp` — allocation policy types; `basic_stream.hpp` contains the concrete stream interface and implementation hooks.
 - `lowlevel/` — lower-level buffered output and formatting implementation.
 - `string-stream.md` — string-oriented stream classes; related, but not the same abstraction.
 - `sdk/io/stream/` — OS/file-oriented stream adapters.
 - `test/testcase/base/stream/testcase_stream.cpp` — [testcase notes](../../../test/testcase/base/stream/testcase_stream.md) — see `test_stream_basic_stream()` for formatting and append behavior, `t_test_rule_of_5<basic_stream>()` for object-lifetime semantics, and `test_stream_i128()` for integer-formatting examples. These tests illustrate exercised behavior; this document does not assert that they were executed in a particular environment.
+
+## 5. References
+
+No external references are listed.

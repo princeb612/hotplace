@@ -59,12 +59,10 @@ run_handlers(code, state, message, control, context)
 
 This is an explicitly requested diagnostic path, not automatic enrichment of every failed call. Callers should first interpret the original operation's return status, then request diagnostics when native driver detail is needed. Since callbacks execute while the handler-list critical section is held, callback behavior should account for that synchronization boundary.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`odbc_connector.md`](odbc_connector.md) and [`odbc_query.md`](odbc_query.md) — native handles whose failures may have diagnostic records
 - [`../README.md`](README.md) — shared ODBC wrapper model
 - [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample registers a callback that logs diagnostic details
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

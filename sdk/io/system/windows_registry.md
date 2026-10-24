@@ -48,8 +48,7 @@ The wrapper checks that the callback is non-null, then enumerates names and invo
 
 The header's example opens a key under `HKEY_LOCAL_MACHINE` with enumeration/query rights, enumerates subkeys through a callback, and closes the handle. This documents the API shape, not a runtime test result. No dedicated testcase for this wrapper was identified in the reviewed source paths.
 
-## 5. Relationships
-
+## 4. Relationships
 - [Platform-specific I/O support](platform.md) — Windows-only boundary.
 - `sdk/io/system/windows/windows_registry_charset.cpp` — character-set-dependent Win32 calls.
 - `sdk/io/system/windows_registry.hpp` — public wrapper declaration.
@@ -60,6 +59,5 @@ The header's example opens a key under `HKEY_LOCAL_MACHINE` with enumeration/que
 - `sdk/io/system/windows/windows_registry.cpp`
 - `sdk/io/system/windows/windows_registry_charset.cpp`
 
-## 6. References
-
+## 5. References
 - [Microsoft Learn: Registry functions](https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-functions) — Win32 registry APIs including RegCreateKeyEx, RegOpenKeyEx, RegEnumKeyEx, RegEnumValue, RegQueryValueEx, and RegDeleteKey.

@@ -52,3 +52,7 @@ This is distinct from basic_stream's indexed sprintf/vaprintf formatting syntax:
 - sdk/base/stream/stream.hpp and basic_stream.hpp — adapt stream destinations and use printf_traits for insertion formatting.
 - sdk/base/nostd/binary.hpp and set.hpp — other examples of project traits controlling overloads and representation.
 - test/testcase/base/nostd/testcase_int.cpp and testcase_narrowcast.cpp — adjacent coverage for integer classification/conversion, not direct coverage of every encoder or formatting adapter.
+
+## 5. References
+
+No external references are listed.

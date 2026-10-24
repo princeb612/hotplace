@@ -73,3 +73,7 @@ Process termination, output draining, and redirection cleanup are distinct conce
 - `sdk/base/system/windows/process.hpp` — Windows process and handle implementation.
 - `sdk/base/system/dir.hpp` — independent filesystem helper; process working-directory configuration is not directory creation.
 - Higher-level code should treat executable argument construction and child-process policy as application responsibilities.
+
+## 5. References
+
+No external references are listed.

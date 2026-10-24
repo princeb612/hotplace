@@ -120,7 +120,7 @@ The AST visitor provides traversal-oriented access. The constraint notation visi
 
 These are source-level verification paths; this documentation update did not execute them.
 
-## 5. Relationships
+## 4. Relationships
 ### Related areas
 
 - `../semantic/` — semantic object hierarchy

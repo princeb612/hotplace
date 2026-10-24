@@ -30,6 +30,23 @@ lexical_token[]
 
 The parser itself consumes parser tokens; the lexer is responsible for recognizing source-level words/symbols and preserving their positions.
 
+### Practical example: tokenize a small ASN.1 assignment
+
+Consider `Name ::= VisibleString`. The lexer can recognize the assignment's name, assignment operator, and type token before any grammar rule decides whether that sequence is valid:
+
+```cpp
+lexical_analyzer lexer;
+lexical_context context;
+prepare_lexer_asn1(lexer);  // testcase helper: registers the ASN.1 vocabulary
+lexer.get_config().set("handle_comments", 1).set("handle_lvalue_usertype", 1);
+lexer.add_token("::=", token_assign);
+
+const char* source = "Name ::= VisibleString";
+lexer.parse(context, source, strlen(source));
+```
+
+The matching testcase expects three tokens for this configuration. `prepare_lexer_asn1()` is a testcase helper that sets up the ASN.1 vocabulary, not a standalone public SDK entry point; a consumer supplies its own token registration/configuration. The important result is not merely the count: each token retains a source span, so a diagnostic can identify the original spelling and location without copying every lexeme. Lexer token IDs still need to be mapped to the grammar's terminal symbols by the consumer.
+
 ## 2. Data Model
 
 ### lexical_analyzer: vocabulary and configuration
@@ -121,7 +138,7 @@ A lexical context represents tokenization, not grammar acceptance. The next stag
 
 test/testcase/io/parser/testcase_lexer.cpp::test_lexer() feeds a multi-line PersonnelRecord fragment to the lexer. The basic pass asserts 105 tokens; the ASN.1-configured pass registers ::= and --, enables handle_lvalue_usertype, and asserts 93 tokens. test_lexer_hexstring() enables handle_hexstring and compares the actual token-ID sequence for Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String } against an expected sequence.
 
-## 5. Relationships
+## 4. Relationships
 ### Related document
 
 - `parser-generation.md` — grammar symbols and parser table construction

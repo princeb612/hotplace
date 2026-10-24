@@ -105,8 +105,42 @@ caller enforces the decision
 
 The rule collection is synchronized during insertion and matching. This does not make mode changes, clearing, and server accept lifecycle coordination an atomic server-wide operation.
 
-## 5. Relationships
+### Practical use: configure rules and ask for a decision
 
+The ACL testcase combines exact addresses, a CIDR prefix, and an inclusive range, then evaluates the same rule set in both modes:
+
+```cpp
+ipaddr_acl acl;
+acl.add_rule("127.0.0.1", true);          // exact allow
+acl.add_rule("10.20.13.25", 24, false);   // deny the /24 range
+acl.add_rule("10.20.1.25", "10.20.2.10", false);
+
+acl.setmode(ipaddr_acl_t::whitelist);
+bool allowed = false;
+return_t ret = acl.determine("127.0.0.1", allowed);
+if (errorcode_t::success == ret) {
+    // Caller decides whether to admit or reject the peer.
+}
+```
+
+The rule engine only returns a decision; it does not close a socket or reject a server session. The testcase also switches to blacklist mode and checks IPv6 loopback/interval behavior when IPv6 support is compiled in. Because conflicting matching rules resolve to deny, do not assume a more-specific allow overrides a broader deny.
+
+Source: [testcase_acl.cpp](../../../../test/testcase/net/basic/testcase_acl.cpp).
+
+### Real-code entry point: enforce the ACL decision
+
+The testcase demonstrates how rules are evaluated; `test/applet/tcpserver2/run_server.cpp` shows how a real caller enforces the result. Its accept callback calls `acl.determine(client_addr, result)` and maps the decision to `CONTINUE_CONTROL` or `STOP_CONTROL`. During setup, `echo_server()` inserts IPv4/IPv6 loopback allow rules, selects whitelist mode, and registers the callback with `network_server`.
+
+```text
+echo_server(): add rules -> setmode(whitelist)
+  -> network_server.set_accept_control_handler(...)
+  -> accept_handler(peer address)
+  -> acl.determine(peer address, result)
+  -> CONTINUE_CONTROL / STOP_CONTROL
+```
+
+This is the distinction to retain: `ipaddr_acl` computes a policy decision, while the server callback enforces it at the accept boundary. Compare the rule-focused testcase with `test/applet/tcpserver2/run_server.cpp` to see the policy API and its integration point.
+## 5. Relationships
 - `ipaddr_acl.hpp/.cpp` — public API, normalized rule representation, and matching implementation.
 - `sdk.hpp/.cpp` — SDK-facing integration.
 - [Basic socket layer](../README.md) — socket abstractions and caller-side admission boundary.
@@ -115,5 +149,4 @@ The rule collection is synchronized during insertion and matching. This does not
 - `test/testcase/net/basic/testcase_acl.cpp` — source-level ACL assertions; this documentation update does not claim that tests were executed.
 
 ## 6. References
-
 No external references are currently listed.

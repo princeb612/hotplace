@@ -58,6 +58,24 @@ The directories use different intermediate representations. These objects are no
 
 The map summarizes the main retained data at each boundary; it does not mean every operation traverses every directory.
 
+### Find a starting point by task
+
+| If the problem is… | Start here | What the example helps you decide |
+|---|---|---|
+| A message has known binary fields and lengths | [Payload](basic/payload.md) | Describe fields once and use that layout to read or write bytes. |
+| A file needs random byte access | [File stream](stream/file_stream.md) | Choose ordinary reads/writes or an explicit memory-mapped view. |
+| A URL must be split for request routing | [URL utilities](string/url.md) | Separate the path, query, host, and other components. |
+| A delimited text field needs extracting | [String utilities](string/string.md) | Use tokenization for simple separators without treating it as grammar validation. |
+| A dotted OID needs lookup or conversion | [OID utilities](basic/oid.md) | Convert text to numeric arcs before dictionary lookup; this is not BER/DER encoding. |
+| JSON text or a file needs loading | [JSON wrapper](basic/json.md) | Obtain a Jansson value tree and respect the caller's reference ownership. |
+| Text must be recognized according to a grammar | [Parser lexer](parser/parser-lexer.md), then [parser overview](parser/README.md) | See where tokenization ends and grammar recognition begins. |
+| Encoded CBOR needs inspection or conversion | [CBOR reader and encoder](cbor/cbor-reader-encoder.md) | Compare the logical value, diagnostic notation, and wire bytes. |
+| ASN.1 notation must become usable types and values | [ASN.1 overview](asn.1/README.md) | Follow loading, syntax reconstruction, and semantic/module handling as distinct stages. |
+| Many sockets need event-driven handling | [Event multiplexer](system/multiplexer.md) | Distinguish OS readiness/completion notifications from application work scheduling. |
+| Bytes need compression or decompression | [zlib wrapper](basic/zlib.md) | Select the framing expected by the surrounding protocol. |
+
+These are entry points, not a promise that one helper performs all validation for the larger protocol. Each component document distinguishes the operation it implements from checks that belong to its caller.
+
 ## 3. Behavior Model
 
 ### Distinct processing paths
@@ -96,8 +114,7 @@ These are separate paths. Payload is for a known field layout; the generic parse
 
 The detailed documents below record the actual component-level flow and supported behavior. A standard reference or a conceptual diagram is not, by itself, evidence of complete conformance or test execution.
 
-## 5. Relationships
-
+## 4. Relationships
 ### Dependency direction
 
 ```text
@@ -125,8 +142,7 @@ This is an architectural orientation map, not a complete include graph or a clai
 - The [CBOR Appendix A examples](cbor/rfc8949-examples.md) and [ASN.1 notation study notes](asn.1/basic/README.md#developer-notes) connect the directory overviews to retained component-level study material.
 - Component-level source references and implementation details are maintained in the corresponding directory documents. Test-specific coverage and run evidence belong in the relevant testcase documentation, which is currently being reviewed separately.
 
-## 6. References
-
+## 5. References
 ### Standards and specifications
 
 - [RFC 8949 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949).
@@ -134,8 +150,7 @@ This is an architectural orientation map, not a complete include graph or a clai
 - ITU-T X.680 — ASN.1 notation.
 
 
-## 7. Developer Notes
-
+## 6. Developer Notes
 - The directory map is intentionally a responsibility map, not a dependency graph. In particular, the ASN.1 and CBOR implementations should not be described as one mandatory pipeline.
 - When documenting behavior, distinguish the source implementation from the behavior defined by a referenced standard. A citation alone does not imply full conformance.
 - Preserve the distinction between general-purpose facilities and protocol-specific interpretation: the former provides representation or mechanics, while higher layers decide what those results mean.

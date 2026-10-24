@@ -82,3 +82,7 @@ The decimal implementation uses `bignumber::pow10()` to align exponents during a
 ### Relationship to other system types
 
 `bignumber` supplies the integer foundation; `floating_point` combines decimal and rational forms into a higher-level arithmetic interface. The implementations are `decimal_float.hpp/.cpp`, `rational_float.hpp/.cpp`, and `floating_point.hpp/.cpp`; `testcase_floatingpoint.cpp` and its vector files cover source-level arithmetic cases.
+
+## 5. References
+
+No external references are listed.

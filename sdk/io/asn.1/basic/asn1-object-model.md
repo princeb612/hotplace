@@ -176,7 +176,7 @@ Constraints remain attached to the semantic type model. Visitors then perform di
 
 These are source-level examples of semantic model behavior; this documentation update did not execute them.
 
-## 5. Relationships
+## 4. Relationships
 ### Runtime relationship
 
 The current high-level relationship is:

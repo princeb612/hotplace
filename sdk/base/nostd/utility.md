@@ -33,3 +33,7 @@ This page groups stateless helpers rather than defining one shared stored repres
 ## 4. Relationships
 
 - `atoi.hpp` provides string-to-integer conversion; `cast.hpp` and `utility.hpp` provide conversion/casting helpers; `enumclass.hpp` supplies enum-class support. [Memory ownership helpers](memory.md) cover object/array ownership and custom deleters. The adjacent tests `testcase_int.cpp` and `testcase_narrowcast.cpp` cover integer classification and narrowing/conversion behavior.
+
+## 5. References
+
+No external references are listed.

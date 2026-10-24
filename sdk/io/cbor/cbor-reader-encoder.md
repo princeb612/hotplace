@@ -113,8 +113,34 @@ test vector bytes ─► reader.parse()
 
 This is the source-level test path described by `testvector_cbor.cpp`; this documentation update did not execute it.
 
-## 5. Relationships
+### Practical use: compare a parsed value in two representations
 
+The vector testcase parses encoded CBOR, then publishes the parsed value both as diagnostic notation and as encoded bytes. It compares the byte representation with the supplied vector; selected floating-point cases may instead compare diagnostic notation because equivalent values can have different encoded widths.
+
+```cpp
+cbor_reader reader;
+cbor_reader_context_t* handle = nullptr;
+ansi_string diagnostic;
+binary_t encoded;
+
+reader.open(&handle);
+auto ret = reader.parse(handle, input);
+if (errorcode_t::success == ret) {
+    reader.publish(handle, &diagnostic);
+    reader.publish(handle, &encoded);
+    reader.close(handle);
+
+    bool match = (encoded == base16_decode(input));
+    if (!match) {
+        match = (diagnostic == expected_diagnostic);
+    }
+    _test_case.assert(match, __FUNCTION__, "CBOR vector");
+}
+```
+
+This pattern keeps three questions distinct: whether parsing succeeds, what diagnostic value the reader reconstructs, and what bytes the publisher emits. When adapting the code, ensure the reader context is closed on every exit path; the reduced snippet follows the testcase's successful-parse path rather than providing general-purpose cleanup.
+
+## 4. Relationships
 ### Related source
 
 - `cbor_reader.*` — parse context and major-type dispatch.
@@ -124,10 +150,9 @@ This is the source-level test path described by `testvector_cbor.cpp`; this docu
 
 ### Related tests
 
-- `test/testcase/cbor/testvector_cbor.cpp` — encoded input → object → binary/diagnostic comparison.
-- `test/testcase/cbor/testcase_rfc7049.cpp` — direct encoder and object publisher expected-byte assertions.
-- `test/testcase/cbor/sample.cpp` — sample construction and output.
+- [`test/testcase/cbor/testvector_cbor.cpp`](../../../test/testcase/cbor/testvector_cbor.cpp) — encoded input → object → binary/diagnostic comparison.
+- [`test/testcase/cbor/testcase_rfc7049.cpp`](../../../test/testcase/cbor/testcase_rfc7049.cpp) — direct encoder and object publisher expected-byte assertions.
+- [`test/testcase/cbor/sample.cpp`](../../../test/testcase/cbor/sample.cpp) — sample construction and output.
 
-## 6. References
-
+## 5. References
 - [RFC 8949 — CBOR](https://www.rfc-editor.org/rfc/rfc8949), especially major types, additional information, and encoding considerations.

@@ -70,9 +70,37 @@ value = (value << 7) | (byte & 0x7f)
 
 The `uint64` path checks malformed/overlong input and reports `bad_data` when the available input ends before a terminating byte. The `bignumber` path has a maximum-byte guard to bound processing. Invalid parameters and malformed encodings are distinct from a successfully decoded value.
 
+### Concrete caller path: ASN.1 object identifier encoding
+
+ASN.1 DER encoding uses Base128 for each OID arc after the first two arcs have been combined according to the ASN.1 rule:
+
+```cpp
+oid_t oid;
+str_to_oid(v.data.str, oid);
+
+if (oid.size() >= 2) {
+    base128_encode((oid[0] * 40) + oid[1], bin);
+    for (size_t i = 2; i < oid.size(); ++i) {
+        auto node = oid[i];
+        if (0 == node) {
+            break;
+        }
+        base128_encode(node, bin);
+    }
+}
+```
+
+This shows the boundary between layers: the ASN.1 encoder parses the dotted OID into arcs and combines the first two arcs; `base128_encode()` then emits the numeric values as continuation-bit groups. The helper does not know that the values represent OID arcs. The surrounding ASN.1 encoder also applies its own zero-node termination convention, so the snippet should be read as this implementation's caller path rather than a general-purpose OID API recipe.
+
+Source: `sdk/io/asn.1/basic/asn1_encode_write.cpp`, `asn1_encode::write()`.
+
 ## 4. Relationships
 
 - `sdk/io/asn.1/` consumes Base128 continuation-byte encoding for OID arcs. ASN.1 owns OID semantics; this directory owns the numeric representation.
 - `base128.hpp/.cpp` declare and implement the public overloads.
 - `test/testcase/encode/testcase_base128.cpp` provides fixed vectors and large-number source-level coverage.
 
+
+## 5. References
+
+No external references are listed.

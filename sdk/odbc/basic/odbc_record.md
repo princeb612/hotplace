@@ -50,12 +50,10 @@ fetch(record)
 
 `clear()` releases the stored field references and empties the vector so it can be reused. `get_field(index)` is zero-based and uses bounds-checked vector access; valid indices are `0..count()-1`. `get_field(name)` is useful when column metadata is present, but callers should not assume names are unique in every SQL result.
 
-## 5. Relationships
-
+## 4. Relationships
 - [`odbc_query.md`](odbc_query.md) — populates records during row fetching
 - [`odbc_field.md`](odbc_field.md) — metadata and values for individual columns
 - [`../README.md`](README.md) — wrapper-class flow
 
-## 6. References
-
+## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)

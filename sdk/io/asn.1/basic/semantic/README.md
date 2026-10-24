@@ -86,8 +86,7 @@ The semantic objects may also be assembled directly by client code or tests. In 
 
 These paths indicate which behavior the source tests address; they are not a blanket claim of full X.680 conformance or complete end-to-end support for every grammar family.
 
-## 5. Relationships
-
+## 4. Relationships
 - [ASN.1 object model](../asn1-object-model.md) — common object, type/reference and value relationships.
 - [Structural representation](../structural/README.md) — wire-level TLV structure versus semantic schema.
 - [Constraints](constraints/README.md) — constraint nodes and runtime set evaluation.

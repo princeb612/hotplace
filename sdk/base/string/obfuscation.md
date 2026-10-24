@@ -41,3 +41,7 @@ The runtime wrapper supports conversion to `binary_t` and `std::string`, compari
 - `test/testcase/base/string/testcase_string.cpp` — `test_string_obfuscate_string()` compares reconstructed output bytes with the original character array; see the [testcase guide](../../../test/testcase/base/string/README.md).
 - [Compile-time obfuscation](constexpr-obfuscation.md) documents a separate C++14+ facility.
 - The module remains part of `sdk/base/string`; it is not the project's cryptographic API. The runtime implementation is in `obfuscate_string.hpp/.cpp`.
+
+## 5. References
+
+No external references are listed.

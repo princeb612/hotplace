@@ -43,3 +43,7 @@ The interval-set operation details are described in [range_set.md](range_set.md)
 
 - `range.hpp` defines range primitives; `range_set.hpp` builds normalized interval operations from them, while `set.hpp` provides the runtime facade that selects a set backend.
 - `testcase_set.cpp` exercises the set family. The ASN.1 constraint evaluator in `sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.hpp` is a higher-level consumer of runtime set operations; ASN.1 owns the constraint semantics.
+
+## 5. References
+
+No external references are listed.

@@ -36,12 +36,20 @@
 - **Generic socket wrapper vs kernel integration:** the socket wrapper creates and manages ordinary sockets; netlink subscribes to a Linux kernel process-event stream and uses its own producer/consumer pipeline.
 - **PE checksum vs file authentication:** the PE checksum is a format-level checksum helper. Authenticode verification in `sdk/crypto/authenticode/` handles signature and digest rules.
 
+### Choose a component by the task
+
+- **Make a TCP connection:** start with [Socket utilities](socket.md) to create/connect the socket and handle its native-resource lifetime.
+- **React to many sockets:** pair the socket layer with the [event multiplexer](multiplexer.md). On Linux, epoll reports readiness; on Windows, IOCP reports completion for submitted overlapped operations.
+- **Schedule application work by priority:** use [MLFQ](mlfq.md) when consumers should retrieve queued work according to priority. It is not a replacement for the OS event multiplexer.
+- **Observe Linux process lifecycle events:** use [Netlink](netlink.md), then query `/proc` separately if details such as executable path or command line are needed.
+
+A typical event-driven server therefore has two different decisions: the multiplexer tells it when socket I/O can proceed (or has completed), while an application queue can decide which resulting work item to process next.
+
 ### Resource and thread lifetime
 
 A common wrapper does not automatically join worker threads or transfer ownership of native resources. Callers must coordinate callback completion before releasing socket/session contexts, wait for MLFQ consumers before freeing their work context, and close Registry handles explicitly. Platform-specific error and access rules still apply.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/net/basic/` — higher-level socket/client/server abstractions.
 - `sdk/net/server/` — uses the multiplexer and may compose event dispatch with work scheduling.
 - `sdk/base/system/` — synchronization, thread and process primitives.
@@ -55,8 +63,7 @@ A common wrapper does not automatically join worker threads or transfer ownershi
 
 These are source-level examples, not a claim that the tests ran during this documentation update or that they cover every platform branch.
 
-## 6. References
-
+## 5. References
 - [Linux man-pages: epoll_create(2)](https://man7.org/linux/man-pages/man2/epoll_create.2.html) — Linux event notification API.
 - [Microsoft Learn: Windows Sockets](https://learn.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2) — Winsock API.
 - [Microsoft Learn: I/O completion ports](https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports) — IOCP model.

@@ -43,9 +43,29 @@ Delegates category classification to `error_advisor`; the category is not inferr
 
 On Linux, positive values are treated as errno values. Negative values are disambiguated between resolver errors and negative kernel errno conventions, with `EAI_SYSTEM` using the current `errno`. On Windows, a zero flag selects `GetLastError()`; the Winsock flag selects `WSAGetLastError()`. The input parameter is therefore interpreted differently by platform and flag.
 
+### Concrete caller path: normalize a platform resolver error
+
+Socket creation uses `get_lasterror()` when the platform's address-resolution call fails:
+
+```cpp
+ret_function = getaddrinfo(address_pointer, string_port, &hints, &addrinf);
+if (0 != ret_function) {
+    ret = get_lasterror(ret_function, wsaerror);
+    __leave2;
+}
+```
+
+This is the practical reason for a shared return representation: the socket layer returns one `return_t` shape even though the native resolver error conventions differ by platform. The helper interprets the supplied result and flag; it does not merely read the current `errno` in every case. The caller then propagates `ret` through its own failure path.
+
+Source: `sdk/io/system/socket.cpp`, `create_socket()`.
+
 ## 4. Relationships
 
 - `sdk/base/system/error.hpp` — `error_advisor`, `error_traits`, categories and diagnostic hints.
 - `sdk/base/syntax.hpp` — uses `errorcode_t` in allocation/error-handling macros.
 - `sdk/base/callback.hpp` — callback signatures return `return_t`.
 - `sdk/base/unittest/` — reports test outcomes using shared error/category conventions. `error.hpp/.cpp` define the shared codes and wrapper; this is the common representation that the system error-advisor layer interprets.
+
+## 5. References
+
+No external references are listed.

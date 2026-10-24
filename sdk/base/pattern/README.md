@@ -93,3 +93,7 @@ The shared element extractor is an adaptation point, not a shared execution engi
 - `sdk/io/string/url.cpp` — uses the regex helpers to decompose URL components.
 - `test/testcase/base/pattern/` — owns source-level testcase descriptions and report-derived verification context; see [pattern testcase overview](../../../test/testcase/base/pattern/README.md).
 - Algorithm-specific details are documented in the linked pages above.
+
+## 5. References
+
+No external references are listed.

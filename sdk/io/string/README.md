@@ -42,6 +42,24 @@ split_url()
 HTTP URI/request handling and other URL consumers
 ```
 
+### Practical example: identify the request path and query
+
+For a URL such as `https://test.com:8443/path/test.script?no=1&category=xfile#file`, the helper makes the parts available without requiring the caller to scan delimiters itself:
+
+```cpp
+url_info_t info;
+split_url("https://test.com:8443/path/test.script?no=1&category=xfile#file", &info);
+
+// info.scheme   == "https"
+// info.host     == "test.com"
+// info.port     == 8443
+// info.uripath  == "/path/test.script"
+// info.query    == "no=1&category=xfile"
+// info.fragment == "file"
+```
+
+This is useful when an HTTP handler needs the path for routing and the query for parameter handling. The `uri` field retains the query and fragment text in this implementation; `uripath` is the path-only field. `split_url()` decomposes the supported input form—it is not a complete URL validator or normalizer.
+
 
 `tokenize()` advances a caller-owned position through delimiter-separated text; `gettoken()` selects a token by index and is implemented using tokenization. The API is intentionally lightweight and should not be mistaken for a grammar-aware parser.
 
@@ -51,8 +69,7 @@ HTTP URI/request handling and other URL consumers
 
 URL decomposition, percent escaping/unescaping, tokenization, and character conversion are related string utilities but have different contracts. URL tests do not establish the behavior of the platform-specific character-conversion paths; check the relevant implementation selected by the build.
 
-## 5. Relationships
-
+## 4. Relationships
 - `sdk/base/string/` — general string helpers; names such as `tokenize`/`gettoken` may look similar, so confirm the namespace and header being used.
 - `sdk/base/encoding/base16` — percent-escape hexadecimal representation.
 - `sdk/base/pattern/` — regular-expression helper used by URL decomposition.
@@ -61,8 +78,7 @@ URL decomposition, percent escaping/unescaping, tokenization, and character conv
 - `sdk/crypto/authenticode/` — uses URL decomposition when processing CRL URLs.
 - Implementation entry points are `string.hpp`, `string_charset.cpp`, and `url.cpp`, with platform variants under `windows/` and `unicode/`; check these when determining which conversion path a build selects.
 
-## 6. References
-
+## 5. References
 - RFC 2396 — URI syntax referenced by the implementation comments.
 - RFC 2068 — historical HTTP syntax reference in the source comments.
 
