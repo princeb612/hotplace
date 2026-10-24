@@ -253,7 +253,7 @@ resolve()
 reference dependency validation
 ```
 
-## 5. Relationships
+## 4. Relationships
 - `asn1_parser` and `asn1_publisher` provide syntax parsing and semantic publication.
 - `asn1_modules` owns the module registry; each `asn1_module` resolves local and imported definitions.
 - `sdk/io/asn.1/basic/semantic/` supplies the semantic objects whose references are linked into modules.
