@@ -104,6 +104,26 @@ TLS handshake processing hashes handshake messages in protocol-defined order. In
 
 The advisor's algorithm metadata does not guarantee that the active OpenSSL build/provider offers a particular digest. Keep the selected algorithm, context lifecycle and backend availability separate in diagnostics.
 
+### 3.3 Concrete caller path: accumulate a handshake transcript
+
+The transcript testcase compares three ways to hash the same ordered message sequence. The facade form is the one most relevant to a caller that wants checkpoints as messages arrive:
+
+```cpp
+#include <hotplace/sdk/crypto/basic/transcript_hash.hpp>
+
+transcript_hash_builder builder;
+auto transcript = builder.set(hash_algorithm_t::sha2_256).build();
+if (transcript) {
+    binary_t after_client_hello;
+    binary_t after_server_hello;
+    transcript->digest(client_hello, client_hello_size, after_client_hello);
+    transcript->digest(server_hello, server_hello_size, after_server_hello);
+    transcript->release();
+}
+```
+
+`after_server_hello` represents the digest of the concatenated ordered transcript, not a digest of `server_hello` alone. The testcase checks that this final value matches the `openssl_hash` incremental-update path. The snippet omits error handling around each `digest()` call for readability; production callers should check each return value and keep protocol-defined message ordering under the TLS layer's control.
+
 ## 4. Relationships
 - `../../advisor/README.md` maps digest names/aliases and resolves backend methods.
 - `../mac/README.md` documents keyed HMAC/CMAC contracts that share hash-context machinery.
