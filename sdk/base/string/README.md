@@ -55,8 +55,12 @@ The compile-time obfuscation note is intentionally retained as an isolated C++14
 
 String operations do not automatically provide protocol parsing or validation. For example, splitting text into segments does not establish whether those segments satisfy a URL, HTTP, or other protocol grammar; the higher-level consumer owns that interpretation.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/stream/` — stream formatting and buffered output, distinct from string algorithms.
 - `sdk/io/string/` — URL, tokenization and platform character-conversion utilities used closer to I/O and protocol boundaries.
 - [String testcase guide](../../../test/testcase/base/string/README.md) — source examples and verification notes. The principal test source is `testcase_string.cpp`; assertions and report-derived verification belong in the testcase document.
+
+## 6. References
+
+No external references are listed.
