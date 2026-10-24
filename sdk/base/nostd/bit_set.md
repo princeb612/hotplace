@@ -46,6 +46,23 @@ The constructor fixes the low/high domain for the lifetime of the object. Each v
 
 This is a bounded integral set. It does not automatically grow its domain when an out-of-range value arrives.
 
+### Practical example: track selected values in a bounded domain
+
+A bit set can answer membership questions for a known range without storing a separate node for each value:
+
+```cpp
+t_bit_set<int> selected(0, 15);
+selected.add(1);
+selected.add(3);
+selected.add(5);
+
+bool has_three = selected.has(3);  // true
+selected.subtract(3);
+bool still_has_three = selected.has(3);  // false
+```
+
+The configured domain is `0..15`; adding values sets their corresponding bits, and `subtract()` clears a bit. This small example is the same direct membership pattern used in `testcase_bitset.cpp`; the ASN.1 example below shows how the same representation is used for a protocol value.
+
 ### Concrete caller path: ASN.1 named-bit value construction
 
 The ASN.1 value layer uses the bounded bit set to collect selected non-negative named-bit values before appending the packed bytes to its output:
