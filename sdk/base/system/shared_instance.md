@@ -82,7 +82,7 @@ In this pattern, the root map owns the composed CBOR object graph through its pa
 
 This recursive behavior is specific to composite types such as `cbor_map` that implement propagation. Do not assume every class using `t_shared_reference` automatically manages child objects.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/nostd/set.hpp` — `t_set_runtime` uses a shared-instance handle for its concrete set object.
 - `sdk/base/nostd/value.hpp` — a separate deferred-value abstraction; it uses future/promise state rather than this ownership counter.
@@ -90,3 +90,7 @@ This recursive behavior is specific to composite types such as `cbor_map` that i
 - `test/testcase/base/system/testcase_shared.cpp` — explicit reference release and move/ownership lifetime checks, including single destruction at the end of ownership.
 - `sdk/io/cbor/cbor_map.hpp` — includes the nested-map ownership example; `cbor_map.cpp` implements member-wise reference propagation.
 - This utility is distinct from `std::shared_ptr`; callers must follow its own attach/release contract.
+
+## 6. References
+
+No external references are listed.
