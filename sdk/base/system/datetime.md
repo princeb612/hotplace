@@ -77,6 +77,18 @@ For raw `timespec` values, `time_diff()` calculates a normalized difference and 
 
 Nanosecond arithmetic is normalized across the one-second boundary. Both positive carry and negative borrow are handled so the resulting `timespec` remains normalized.
 
+### Practical example: calculate a deadline relative to now
+
+```cpp
+datetime now(time(nullptr));
+datetime deadline(now);
+deadline += timespan_t(0, 30, 0);  // add 30 seconds
+
+bool later = deadline > now;       // true
+```
+
+The `datetime` object supports comparison and duration arithmetic directly, so callers do not need to manually add to `time_t` or manage second/nanosecond carry. The calendar representation is only needed when displaying the result; the internal timestamp remains the basis for arithmetic. This is the same `datetime += timespan_t` operation exercised by `testcase_datetime.cpp`.
+
 ### Realtime and monotonic clocks
 
 `system_gettime()` abstracts platform-specific clock access.
