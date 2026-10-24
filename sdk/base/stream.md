@@ -55,12 +55,12 @@ This is the pattern used by the `valist` testcase: `basic_stream` supplies the d
 
 Source: `test/testcase/base/basic/testcase_valist.cpp`.
 
-## 5. Relationships
+## 4. Relationships
 
 - `sdk/base/stream.hpp` declares the abstract contract; `sdk/base/stream/` supplies concrete in-memory streams and low-level buffers.
 - `sdk/io/stream/` — stream adapters that interact with external I/O.
 - `sdk/base/basic/valist.md` — formatting argument representation used by stream formatting paths.
 
-## 6. References
+## 5. References
 
 No external references are listed.
