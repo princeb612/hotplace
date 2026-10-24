@@ -82,8 +82,8 @@ The same testcase also searches contiguous memory and uses a custom comparator f
 ## 4. Relationships
 
 - `pattern.hpp` — shared element-access conventions; KMP's equality comparator is specific to `t_kmp`. The implementation is in `kmp.hpp`.
-- `test/testcase/base/pattern/testcase_kmp.cpp` — asserts match index `0xa` for byte vectors, contiguous memory, value objects and pointer objects with a custom comparator.
-- `test/testcase/base/pattern/testvector_kmp.cpp` and `testvector_kmp.yml` — additional vector-driven cases.
+- [`test/testcase/base/pattern/testcase_kmp.cpp`](../../../test/testcase/base/pattern/testcase_kmp.cpp) — asserts match index `0xa` for byte vectors, contiguous memory, value objects and pointer objects with a custom comparator.
+- [`testvector_kmp.cpp`](../../../test/testcase/base/pattern/testvector_kmp.cpp) and [`testvector_kmp.yml`](../../../test/testcase/base/pattern/testvector_kmp.yml) — additional vector-driven cases.
 - `sdk/io/parser/` — related parser pattern-search APIs, but not the same class as `t_kmp`.
 
 ## 5. References
