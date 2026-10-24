@@ -79,7 +79,7 @@ application headers
 
 This is the key intent of the abstraction: an index is meaningful only against the corresponding static/dynamic table state. The applet demonstrates the integration boundary; the focused testcase demonstrates the compression operation.
 
-## 4. Relationships
+## 5. Relationships
 - `http_header_compression.hpp/.cpp` — shared compression operations and decode data.
 - `http_header_compression_stream.hpp` — compression-stream abstraction.
 - `http_static_table.hpp/.cpp` — base lookup/select behavior for protocol-specific static tables.
@@ -89,6 +89,6 @@ This is the key intent of the abstraction: an index is meaningful only against t
 - [HTTP/2 frames and session](../http2/README.md) and [HTTP/3 frames](../http3/README.md) — the protocol layers that carry compressed header blocks/field sections.
 - `../../../../test/testcase/net/hpack/` and `../../../../test/testcase/net/qpack/` — source-level vectors and behavior tests.
 
-## 5. References
+## 6. References
 - [RFC 7541 — HPACK: Header Compression for HTTP/2](https://www.rfc-editor.org/rfc/rfc7541)
 - [RFC 9204 — QPACK: Field Compression for HTTP/3](https://www.rfc-editor.org/rfc/rfc9204)
