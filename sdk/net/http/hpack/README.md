@@ -59,6 +59,17 @@ The diagram follows the decode path: `hpack_encoder` exposes both encoding and d
 
 HPACK's dynamic table is associated with the relevant HTTP/2 compression context; do not reuse it as a generic dictionary across unrelated connections. This stateful behavior is why table updates and decoder state matter in addition to the byte-level encoder.
 
+### Practical example: test the field codec separately
+
+Use the focused cases in `test/testcase/net/hpack/` to follow the encoder and decoder with known header fields and inspect the representation/table state. For an end-to-end consumer, compare `test/applet/httpserver2/run_server.cpp`: its callback receives a completed `http_request` and responds through the HTTP server, without directly constructing HPACK bytes.
+
+```text
+focused HPACK testcase: fields -> hpack encoder -> encoded block -> decoder -> fields
+HTTP/2 applet:           request bytes -> HTTP/2 session / HPACK -> http_request -> router
+```
+
+The split is intentional. HPACK tests isolate compression state and wire representation; the applet shows that HPACK is an internal HTTP/2 concern rather than an application callback responsibility.
+
 ## 4. Relationships
 - `hpack_encoder.hpp/.cpp` — field encoding and decoding.
 - `hpack_static_table.hpp/.cpp`, `hpack_dynamic_table.hpp/.cpp` — HPACK-specific tables.
