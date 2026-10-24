@@ -324,6 +324,34 @@ The implementation returns status codes for invalid parameters, unsupported algo
 
 OpenSSL reference counting controls object lifetime; it does not erase application copies of private values or derived secrets. Callers remain responsible for the lifetime and handling of sensitive byte buffers. Borrowed pointers must not outlive the object or collection that owns their reference, and callers that request `up_ref = true` must release the extra reference.
 
+### Practical use: exchange public shares and compare derived secrets
+
+The key-exchange testcase creates independent key stores for two peers. Each side generates a local key pair and a public share, then consumes the other peer's share to derive a secret:
+
+```cpp
+crypto_key keystore_alice;
+crypto_keyexchange keyexch_alice(group);
+binary_t share_alice;
+binary_t secret_alice;
+return_t ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
+
+crypto_key keystore_bob;
+crypto_keyexchange keyexch_bob(group);
+binary_t share_bob;
+binary_t secret_bob;
+ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
+
+keyexch_bob.exchange(&keystore_bob, "bob", share_alice, secret_bob);
+ret = keyexch_alice.exchange(&keystore_alice, "alice", share_bob, secret_alice);
+if (secret_alice != secret_bob) {
+    ret = errorcode_t::mismatch;
+}
+```
+
+The example separates three values that are easy to conflate: each peer's local key object, the public share exchanged over the protocol, and the locally derived shared secret. The testcase compares both secrets; a real protocol must also authenticate the peer and bind the exchange to its handshake transcript. A matching secret alone does not authenticate the peer or establish a secure channel.
+
+Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
+
 ## 4. Relationships
 ### 4.1 Internal implementation boundaries
 
