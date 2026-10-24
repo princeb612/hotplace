@@ -178,6 +178,42 @@ Unlike most data-driven test suites in which each YAML row supplies input and ex
 This relationship is central to the fixture model: `keys` is test setup and key material; `items` is the operation-level test vector that refers to that setup by name. When adding or changing a vector, check both sides of the `keyset` reference and the consumer's handling of the selected key type.
 
 
+### Source-to-case index
+
+Use this compact map to move from the dispatcher to the detailed procedures above and the evidence paths below.
+
+```text
+sample.cpp
+  ├─ testcase_resources()                 → testcase_resource.cpp
+  │    algorithm metadata → expected key-size assertions
+  ├─ testcase_rfc8152()                   → testcase_rfc8152.cpp
+  │    .cbor fixtures → CBOR round-trip
+  │    RFC B / C.1–C.7 message construction and COSE_Key selection
+  ├─ testcase_testvector_cose_examples()  → testvector_cose_examples.cpp + YAML
+  │    mapped key sets / shared parameters / CBOR → process status
+  ├─ testcase_cose()                      → testcase_cose.cpp
+  │    generated-key sign, encrypt and MAC algorithm matrices
+  ├─ testcase_rfc8392()                   → testcase_rfc8392.cpp
+  │    fixed CWT CBOR inputs → verify/decrypt/process status
+  └─ testcase_akp() + testcase_testvector_akp()
+       → testcase_akp.cpp / testvector_akp.cpp + JSON vectors
+       OpenSSL >= 3.5 → ML-DSA sign/verify and raw public-key comparison
+```
+
+| Case family | Primary source | Input | Principal explicit check |
+|---|---|---|---|
+| RFC 8152 basic CBOR | `testcase_rfc8152.cpp` | Paired `.cbor` fixtures | Parsed/published bytes equal original fixture |
+| RFC 8152 message examples | `testcase_rfc8152.cpp` | Source-built CBOR and RFC fixtures | Operation status; fixture/round-trip byte comparisons only with `-v` |
+| COSE_Key import/selection | `testcase_rfc8152.cpp` | Public/private COSE_Key CBOR | Selected key/`kid` and sign/verify status |
+| COSE Examples | `testvector_cose_examples.cpp` | YAML key sets and CBOR hex | Processing status; parse/compose equality only with `-v` |
+| Generated algorithm matrices | `testcase_cose.cpp` | Generated keys and `hello world` | Operation statuses; no plaintext equality or verification-result boolean assertion |
+| Resource metadata | `testcase_resource.cpp` | Fixed algorithm/key-size table | Reported key size equals expected size |
+| CWT | `testcase_rfc8392.cpp` | Embedded RFC 8392 CBOR hex | Verify/decrypt/process status |
+| AKP / ML-DSA | `testcase_akp.cpp`, `testvector_akp.cpp` | Generated keys and JSON vectors | Operation status and raw public-key equality; OpenSSL 3.5+ required |
+
+`-b` skips the basic RFC 8152 fixture round-trip, `-g` skips generated-key matrices, and `-v` enables several explicit serialization comparisons. Consult the detailed procedures and Evidence section before interpreting a report: a successful operation status does not by itself prove expected plaintext or a true verification-result boolean.
+
+
 ## 3. Evidence
 
 ### Source-level coverage
