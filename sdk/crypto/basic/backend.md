@@ -164,7 +164,7 @@ crypto_keychain::pkey_keygen_byname(algorithm)
 The testcase checks the reconstructed public-key objects and the final shared-secret equality. It logs capsule/secret bytes for inspection, but those logs are not fixed expected values. This is a KEM operation demonstration, not a complete TLS 1.3 handshake or key schedule; TLS still defines the key-share framing and how the shared secret is consumed. On older OpenSSL builds, the testcase reports `not_supported` rather than exercising these operations.
 
 ## 4. Relationships
-### 5.1 Source-test evidence
+### 4.1 Source-test evidence
 
 `test/testcase/crypto/prng/testcase_random.cpp` is the direct random-generation source path. PQC behavior is exercised by the key/signature tests under `test/testcase/crypto/key/`, `test/testcase/crypto/sign/`, and `test/testcase/crypto/pqc/` where present. These cover specific backend configurations and are not proof of universal provider availability.
 
