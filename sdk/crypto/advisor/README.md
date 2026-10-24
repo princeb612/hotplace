@@ -243,6 +243,22 @@ The advisor reports mappings and backend availability; it does not itself implem
 
 A `hint_*` pointer may be null when there is no matching entry. Even when metadata exists, backend resolution may fail because of the active OpenSSL version, provider configuration, or build options. Callers must check both lookup results and backend objects before using them.
 
+### 3.3 Concrete caller path: enumerate advertised JWS features
+
+The advisor testcase iterates signature metadata and checks whether each JWS name has the corresponding feature registered:
+
+```cpp
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
+
+crypto_advisor* advisor = crypto_advisor::get_instance();
+advisor->for_each_jws([&](const hint_signature_t* item) {
+    bool available = advisor->query_feature(item->jws_name, advisor_feature_jws);
+    // Use the result as a capability hint for this runtime build.
+});
+```
+
+This is a metadata/capability query, not a signature operation. A registered JWS mapping does not by itself prove that a given key type, key size, provider, or protocol policy will permit the operation. The testcase also enumerates cipher, digest, COSE, and curve features; it is useful for understanding the advisor as a runtime index rather than as a cryptographic primitive.
+
 ## 4. Relationships
 - [`../basic/`](../basic/README.md) — primitive implementations and core crypto types.
 - [`../cose/`](../cose/README.md) — COSE structures and algorithm identifiers.
