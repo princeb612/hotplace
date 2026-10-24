@@ -143,7 +143,7 @@ The assertions verify that both branches produce three-node paths beginning at `
 
 backtrack_string() walks from the supplied node toward its first parent until it reaches a node without parents, then prints states in root-to-head order. When a node has multiple parents, this helper follows only parents[0]; it is a single-path diagnostic and is not a complete representation of all GSS branches.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test/testcase/base/graph/testcase_gss.cpp` builds a four-node fork-and-merge graph and checks that `traverse_all()` visits all four unique nodes, a linear retrace returns `[B, A, Root]` at depth two, and a fork-and-merge retrace returns two three-node paths. It does not assert every intermediate state of every traversal helper; the testcase README records those limits.
 - [Graph module overview](README.md) distinguishes the GSS from the general weighted graph t_graph<T>.
@@ -151,7 +151,7 @@ backtrack_string() walks from the supplied node toward its first parent until it
 - sdk/io/parser/glr_parser.cpp is the parser-side GLR implementation; the GSS remains generic and has no dependency on parse-tree semantics.
 - When VALUE is parse_treenode*, GSS node lifetime and parse-tree object lifetime are separate concerns.
 
-## 6. References
+## 5. References
 
 - [Graph-structured stack](https://en.wikipedia.org/wiki/Graph-structured_stack) — background on the shared-ancestry stack model.
 - [Cloning a directed acyclic graph](https://www.geeksforgeeks.org/dsa/clone-directed-acyclic-graph/) — graph traversal and shared-node background referenced by the source header.
