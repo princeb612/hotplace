@@ -38,7 +38,11 @@ Do not infer that every API throws: the call site determines which contract appl
 
 Copy/move operations preserve the error code and copy or move the description. Throwing the object is a caller decision; this utility does not force callers to use exceptions.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/nostd/bit_set.hpp` — throws this exception for oversized storage allocation.
 - `sdk/base/system/error.hpp` — supplies error-advisor message lookup for exception diagnostics. The implementation is in `exception.hpp/.cpp`, and `testcase_exception.cpp` covers the exception behavior.
+
+## 6. References
+
+No external references are listed.
