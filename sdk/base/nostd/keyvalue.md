@@ -42,5 +42,9 @@ Duplicate-key behavior depends on the selected mode; see the operation rules bel
 - copy(), copyfrom(), and copyto() transfer entries between maps. kv_move clears the destination before copying, kv_update overwrites duplicate keys, and kv_keep preserves existing destination values.
 - key_value_case_sensitive controls whether lookup keys are normalized to lowercase. The default constructor enables case-sensitive keys.
 
-## 4. Relationships
+## 5. Relationships
 - `keyvalue.hpp` implements the value map and ordering indexes; it uses `critical_section.hpp` to serialize access.
+
+## 6. References
+
+No external references are listed.
