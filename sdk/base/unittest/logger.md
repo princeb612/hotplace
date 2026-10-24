@@ -264,7 +264,7 @@ caller writes message
 
 Log-level filtering and output delivery are separate stages. A message that passes the threshold can still be waiting in a buffer until the consumer or an explicit flush processes it. File rotation and console color affect presentation/output handling, not test pass/fail accounting.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test_case` can attach a logger for diagnostic output, but the test-case object owns the pass/fail/result accounting.
 - [`test/testcase/asn.1/loader/testcase_loader.cpp`](../../../test/testcase/asn.1/loader/testcase_loader.cpp) — renders ASN.1 modules into `basic_stream` and passes the completed stream to `write()`.
@@ -290,6 +290,6 @@ Pre-existing notes or development-oriented material retained for the maintainer 
 
 The two `sketch_logger_2008_*.jpg` files in this directory are retained as historical design material. They document earlier ideas such as schedulable stream handling and conditional flush; they should not be read as a current implementation diagram.
 
-## 6. References
+## 5. References
 
 No external references are listed.
