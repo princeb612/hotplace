@@ -129,6 +129,20 @@ The ordering above is the literal `close()` sequence; the manager's `shutdown()`
 
 A manager lookup returns a referenced session, so work already holding a reference can outlive removal from the lookup map. Conversely, `close()` waits for the worker groups before clearing protocol references and closing the multiplexer, and context destruction then releases sessions still retained by manager maps. These are distinct lifetime stages: worker quiescence, lookup deregistration, multiplexer unbinding/closure, and reference-counted object destruction should not be conflated.
 
+### Real-code example: listener setup and event loops
+
+`test/applet/tcpserver2/run_server.cpp` shows the caller-side lifecycle: construct `network_server` and a `naive_tcp_server_socket`, call `open()` for IPv4/IPv6, register `accept_handler`, then start consumer and event loops. The callback handles connect/read/disconnect events and echoes read bytes.
+
+```text
+configure server_conf + socket
+  -> network_server.open(...)
+  -> set_accept_control_handler(...)
+  -> consumer_loop_run(...) + event_loop_run(...)
+  -> consumer_routine(event, session, bytes)
+```
+
+Compare this with `test/applet/tlsserver/run_server.cpp` to see the same orchestration around a secure socket. The applet owns configuration and application behavior; `network_server` owns the listener/event/session machinery.
+
 ## 4. Relationships
 - `network_server.hpp/.cpp` — context fields and worker routines.
 - [Server overview](README.md) — integrated socket-to-application flow.
