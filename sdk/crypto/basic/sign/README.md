@@ -194,6 +194,27 @@ The following is an upstream capability guide, not a guarantee that every hotpla
 
 For operational compatibility notes, record the exact OpenSSL minor version and provider (for example, default or FIPS), rather than a single “OpenSSL 3: yes/no” flag. Provider presence, FIPS approval, compile-time availability, and successful execution are four different claims.
 
+### 3.4 Concrete protocol consumer: TLS CertificateVerify
+
+TLS CertificateVerify uses the negotiated TLS signature scheme to build the primitive signer. The TLS layer constructs the protocol-defined CertificateVerify input; `crypto_sign` performs only the selected signature operation:
+
+```cpp
+// Reduced from sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.cpp
+crypto_sign_builder builder;
+auto sign = builder.set_tls_sign_scheme(scheme).build();
+if (sign) {
+    basic_stream tosign;
+    construct_certificate_verify_message(session, dir, tosign);
+    ret = sign->sign(pkey, tosign.data(), tosign.size(),
+                     signature, sign_flag_format_der);
+    sign->release();
+} else {
+    ret = errorcode_t::not_supported;
+}
+```
+
+This caller makes the protocol/primitive boundary concrete: TLS selects the scheme and constructs the signed message; the common signature layer dispatches by scheme and key type. The corresponding verification path reconstructs the same CertificateVerify input before verifying. A successful primitive signature operation alone does not validate the certificate chain or complete the TLS handshake.
+
 ## 4. Relationships
 - `../../advisor/README.md` maps signature names, key types, TLS signature schemes, JOSE identifiers and backend metadata.
 - `../key/README.md` supplies key objects and key-generation/serialization facilities.
