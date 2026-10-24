@@ -97,6 +97,77 @@ The predicate is therefore part of the error policy: the same pipeline control f
 
 `run_pipe()` expands to a source-location-aware `run()` overload in debug builds and to ordinary `run()` otherwise. When a tracer is installed with `set_tracer()`, the debug path can report a failing result together with the source file and line. The `processed()` and `size()` counters describe pipeline progress; failure-handling steps are not counted the same way as ordinary expected-success steps.
 
+### Production use: EC key generation
+
+A more representative application of the pipeline appears in `sdk/crypto/basic/key/crypto_keygen_ec.cpp`, in `crypto_keygen::add_ec()`. Unlike the focused unit test, this is production code: it chains parameter validation, OpenSSL context setup, EC key generation, ownership transfer, and insertion into the caller's key collection. The callbacks deliberately return both hotplace `return_t` values and OpenSSL-style `int` results, which is why the pipeline uses `function_pipeline<int, osslerror_category>`.
+
+```cpp
+return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
+    EVP_PKEY* pk = nullptr;
+    EVP_PKEY_CTX_ptr ctx;
+    EVP_PKEY_ptr pkey;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    int type = EVP_PKEY_EC;
+
+    function_pipeline<int, osslerror_category> pipeline;
+    pipeline
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != cryptokey); })
+        .run_pipe([&]() -> return_t {
+            auto hint = advisor->hintof_curve_nid(nid);
+            if (nullptr == hint) return errorcode_t::not_supported;
+            auto kty = ktyof(hint);
+            if (kty_ec != kty) return errorcode_t::different_type;
+            return errorcode_t::success;
+        })
+        .run_pipe([&]() -> int {
+            ctx = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new_id(type, nullptr)));
+            return ctx.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_keygen_init(ctx.get()); })
+        .run_pipe([&]() -> int { return EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx.get(), nid); })
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+        .run_pipe([&]() -> int {
+            return EVP_PKEY_CTX_set_ec_param_enc(ctx.get(), OPENSSL_EC_NAMED_CURVE);
+        })
+#endif
+        .run_pipe([&]() -> int {
+            auto rc = EVP_PKEY_keygen(ctx.get(), &pk);
+            return ((rc > 0) && pk) ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            pkey = std::move(EVP_PKEY_ptr(pk));
+            return pkey.get() ? 1 : 0;
+        })
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+        .run_pipe([&]() -> int {
+            return EC_KEY_set_asn1_flag(
+                (EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);
+        })
+#endif
+        .run_pipe([&]() -> return_t {
+            crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
+            auto ret = cryptokey->add(std::move(key));
+            if (errorcode_t::success == ret) {
+                pkey.release();  // cryptokey owns pkey
+            }
+            return ret;
+        });
+
+    return pipeline.result_to_return_t();
+}
+```
+
+The stages are meaningful application steps rather than artificial callbacks:
+
+1. Validate the destination collection and confirm that `nid` identifies an EC curve known to the advisor.
+2. Create and initialize the OpenSSL key-generation context, then configure the selected curve and (where supported) named-curve encoding.
+3. Generate the key and explicitly reject the case where OpenSSL reports success but leaves `pk` null.
+4. Wrap the generated key in RAII ownership, apply the legacy OpenSSL ASN.1 flag when required, and transfer ownership to `cryptokey` only if insertion succeeds.
+5. Convert the final pipeline result back to hotplace's `return_t` using `result_to_return_t()`.
+
+This example also shows why the pipeline's result policy matters: OpenSSL's positive-success convention and hotplace's richer `return_t` errors share one ordered control flow without losing an explicit hotplace error returned by a callback. The source contains OpenSSL-version-specific stages; the snippet is an implementation example, not a recommendation to reproduce those version checks independently of the SDK.
+
 ### Source-level verification
 
 `test/testcase/base/basic/testcase_pipeline.cpp` exercises the control-flow and conversion contract:
