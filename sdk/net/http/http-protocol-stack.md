@@ -144,7 +144,7 @@ network bytes -> network_stream -> network_protocol_group
 
 Use these applets to understand the real caller boundary, then follow `network-stream-and-protocol.md` for the buffered framing details. A single socket read is not a protocol message and does not select the application callback by itself.
 
-## 4. Relationships
+## 5. Relationships
 - `http1/http_protocol.hpp/.cpp` — HTTP/1.x framing implementation.
 - `http2/http2_protocol.hpp/.cpp` — HTTP/2 preface and frame framing.
 - `http2/http2_frame*.*` and `http2/http2_session.*` — frame codec and per-stream request state.
@@ -155,7 +155,7 @@ Use these applets to understand the real caller boundary, then follow `network-s
 - [Network stream and protocol](../server/network-stream-and-protocol.md) and [network server](../server/network-server-model.md) — generic framing and session boundaries.
 - [TLS/QUIC transport](../tls/README.md) — transport-side QUIC implementation.
 
-## 5. References
+## 6. References
 - [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112) — message framing over a byte stream.
 - [RFC 9113 — HTTP/2](https://www.rfc-editor.org/rfc/rfc9113) — connection preface, frame structure, streams, and protocol state.
 - [RFC 9114 — HTTP/3](https://www.rfc-editor.org/rfc/rfc9114) and [RFC 9000 — QUIC](https://www.rfc-editor.org/rfc/rfc9000) — HTTP/3 framing and transport boundaries.
