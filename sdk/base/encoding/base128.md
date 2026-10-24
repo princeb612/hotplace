@@ -70,9 +70,13 @@ value = (value << 7) | (byte & 0x7f)
 
 The `uint64` path checks malformed/overlong input and reports `bad_data` when the available input ends before a terminating byte. The `bignumber` path has a maximum-byte guard to bound processing. Invalid parameters and malformed encodings are distinct from a successfully decoded value.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/io/asn.1/` consumes Base128 continuation-byte encoding for OID arcs. ASN.1 owns OID semantics; this directory owns the numeric representation.
 - `base128.hpp/.cpp` declare and implement the public overloads.
 - `test/testcase/encode/testcase_base128.cpp` provides fixed vectors and large-number source-level coverage.
 
+
+## 6. References
+
+No external references are listed.
