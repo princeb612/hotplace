@@ -50,6 +50,19 @@ The packet builder encodes packet-level structure; the session/publisher supplie
 
 The shared `hotplace::io::payload` abstraction describes binary fields where used by the implementation; it does not replace QUIC-specific packet-header rules, packet-number reconstruction, or protection logic.
 
+### Real-code example: packet keys change with packet-number space
+
+Follow `sdk/net/tls/quic-tls-integration.md` alongside `sdk/net/basic/trial/trial-socket-composer.md` to trace the sender. Initial keys derive from the version salt and destination connection ID; later Handshake/Application keys derive from TLS 1.3 traffic secrets using QUIC-specific labels.
+
+```text
+TLS handshake output -> CRYPTO frame -> packet builder
+  -> choose direction + packet-number space
+  -> QUIC key/IV/header-protection secret
+  -> packet protection -> UDP datagram
+```
+
+The `tlsserver` applet is a TLS-over-socket example, not a QUIC packet test. Keep the packet path distinct from TLS record framing and from the HTTP/2 applet.
+
 ## 4. Relationships
 - `quic_packet.hpp/.cpp`, `quic_packets.hpp/.cpp`, `quic_packet_builder.hpp/.cpp`.
 - `quic_packet_initial.*`, `quic_packet_handshake.*`, `quic_packet_0rtt.*`, `quic_packet_1rtt.*`, `quic_packet_retry.*`, `quic_packet_version_negotiation.*`.
