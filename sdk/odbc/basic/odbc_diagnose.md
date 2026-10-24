@@ -62,7 +62,7 @@ This is an explicitly requested diagnostic path, not automatic enrichment of eve
 ## 4. Relationships
 - [`odbc_connector.md`](odbc_connector.md) and [`odbc_query.md`](odbc_query.md) — native handles whose failures may have diagnostic records
 - [`../README.md`](README.md) — shared ODBC wrapper model
-- [`../../../test/testcase/odbc/testcase_odbc.md`](../../../test/testcase/odbc/testcase_odbc.md) — sample registers a callback that logs diagnostic details
+- [`../../../test/testcase/odbc/README.md`](../../../test/testcase/odbc/README.md) — sample registers a callback that logs diagnostic details
 
 ## 5. References
 - [Microsoft ODBC API Reference](https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/odbc-api-reference?view=sql-server-ver17)
