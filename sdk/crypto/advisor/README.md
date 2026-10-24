@@ -243,7 +243,7 @@ The advisor reports mappings and backend availability; it does not itself implem
 
 A `hint_*` pointer may be null when there is no matching entry. Even when metadata exists, backend resolution may fail because of the active OpenSSL version, provider configuration, or build options. Callers must check both lookup results and backend objects before using them.
 
-## 5. Relationships
+## 4. Relationships
 - [`../basic/`](../basic/README.md) — primitive implementations and core crypto types.
 - [`../cose/`](../cose/README.md) — COSE structures and algorithm identifiers.
 - [`../jose/`](../jose/README.md) — JOSE/JWA/JWE/JWS integration.
