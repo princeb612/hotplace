@@ -45,8 +45,12 @@ Control exception-tracing behavior through the implementation in the system trac
 
 The option storage is a plain static integer rather than an atomic or locked value. Callers changing trace options concurrently should provide their own synchronization.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/system/trace.hpp/.cpp` — trace advisor/output implementation and platform backtrace integration.
 - `sdk/base/types.hpp` — common integer aliases used by event and option enums.
 - Higher-level crypto/network modules — consume event IDs when emitting diagnostic information.
+
+## 6. References
+
+No external references are listed.
