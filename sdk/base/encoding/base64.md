@@ -95,14 +95,14 @@ Chunk boundaries therefore do not have to align with Base64 groups. Finalization
 
 Radix-64 reuses Base64 for its payload and adds CRC-24 checksum processing.
 
-## 4. Relationships
+## 5. Relationships
 
 - `lowlevel/base64.*` provides byte-level conversion used by public overloads.
 - `encoder_stream` and `decoder_stream` preserve incomplete units across chunk boundaries.
 - `radix64.*` composes Base64 with CRC-24 and armor-oriented processing.
 - `test/testcase/encode/testcase_base64.cpp` provides source-level coverage for ordinary Base64, Base64URL, chunked streaming, multiline processing, and RFC 4880 Radix-64 vectors/armor examples.
 
-## 5. References
+## 6. References
 
 - [RFC 4648 — The Base16, Base32, and Base64 Data Encodings](https://www.rfc-editor.org/rfc/rfc4648)
 - [RFC 7515 — JSON Web Signature (JWS), Appendix C](https://www.rfc-editor.org/rfc/rfc7515)
