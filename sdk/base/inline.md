@@ -48,6 +48,20 @@ The trim helpers mutate the supplied string and return it by reference. `lowerna
 
 Prefix/suffix helpers operate on the selected string representation. Callers should check empty/length edge cases at their call site rather than assuming every helper implements the same policy.
 
+### Concrete caller path: calculate required byte width
+
+The capacity testcase uses `bit_length()` and `byte_capacity()` to distinguish the number of significant bits from the number of bytes needed to hold them:
+
+```cpp
+_test_case.assert(bit_length((uint32)255) == 8, __FUNCTION__, "bit length");
+_test_case.assert(bit_length((uint32)0x100) == 9, __FUNCTION__, "bit length");
+_test_case.assert(byte_capacity((uint64)0x800) == 2, __FUNCTION__, "byte capacity");
+```
+
+The boundary between `0xff` and `0x100` demonstrates why byte width changes only when a new significant bit crosses an octet boundary. The `byte_capacity()` case rounds the significant-bit count up to whole bytes. The full testcase also exercises zero, 16/32/64-bit values, and signed-width boundaries; these examples are selected boundary checks, not an exhaustive test of every overload.
+
+Source: `test/testcase/base/system/testcase_capacity.cpp`.
+
 ## 4. Relationships
 
 - `sdk/base/charset.hpp` — platform text aliases.
