@@ -47,6 +47,21 @@ For multi-recipient JSON serialization, recipient-specific key-management result
 
 The combined `json_object_signing_encryption` API exposes signing, verification, encryption and decryption through one JOSE-facing context. The focused signing and encryption classes contain the specific processing logic and composer paths.
 
+### Real-code example: sign and verify through the JOSE context
+
+`test/testcase/jose/testcase_rfc7515.cpp` demonstrates the caller-facing signing path with the shared JOSE context:
+
+```cpp
+json_object_signing_encryption jose;
+jose_context_t* context = nullptr;
+jose.open(&context, &key);
+
+ret = jose.sign(context, jws_t::hs256, claim, signature);
+ret = jose.verify(context, signature, result);
+```
+
+The example makes the division of responsibility concrete: the caller supplies a key, operation identifier, claim, and output object; the JOSE facade handles the serialized signing/verification path. The test also tries different serialization modes. The result flag and return code remain distinct, and the context must be closed on every exit path.
+
 ## 4. Relationships
 ### Source-test evidence
 
