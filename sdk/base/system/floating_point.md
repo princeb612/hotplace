@@ -76,9 +76,13 @@ The decimal implementation uses `bignumber::pow10()` to align exponents during a
 
 **Important implementation limitation:** the current fallback returns the left operand when `diff > 1024`; when `diff < -1024`, both `add()` and `subtract()` construct a result from the negated right-hand mantissa. These extreme-gap branches are not general exact-arithmetic results; the addition branch in particular should be reviewed before relying on its mathematical meaning. The 1024 bound is a performance guard with observable semantics, not an optimization that always preserves exactness.
 
-## 4. Relationships
+## 5. Relationships
 
 - `test/testcase/base/system/testcase_floatingpoint.cpp`, `testvector_floatingpoint.cpp`, and `testvector_floatingpoint.yml` exercise exact decimal/rational cases and large decimal values.
 ### Relationship to other system types
 
 `bignumber` supplies the integer foundation; `floating_point` combines decimal and rational forms into a higher-level arithmetic interface. The implementations are `decimal_float.hpp/.cpp`, `rational_float.hpp/.cpp`, and `floating_point.hpp/.cpp`; `testcase_floatingpoint.cpp` and its vector files cover source-level arithmetic cases.
+
+## 6. References
+
+No external references are listed.
