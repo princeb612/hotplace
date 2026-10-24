@@ -135,7 +135,7 @@ trial backend selected
 
 Use the applet to understand the caller lifecycle and this composer model to inspect transport-specific serialization. This is not evidence that every TLS/DTLS/QUIC option has identical feature support.
 
-## 4. Relationships
+## 5. Relationships
 - `secure_prosumer.hpp/.cpp` — secure I/O composition and status coordination.
 - `secure_client_socket.hpp/.cpp` and `trial_tls_server_socket.hpp/.cpp` — client/server secure socket integration.
 - `client_socket_prosumer.hpp/.cpp` — asynchronous socket I/O and buffering.
@@ -146,8 +146,8 @@ Use the applet to understand the caller lifecycle and this composer model to ins
 - `../server_socket_adapter.hpp/.cpp`, `../server_socket_builder.hpp/.cpp` — backend selection.
 - [Trial backend](README.md), [network server](../../server/README.md), and [TLS implementation](../../tls/README.md).
 
-## 5. References
+## 6. References
 No external references are currently listed.
 
-## 6. Developer Notes
+## Developer Notes
 The `trial` prefix marks an experimental composition path, not guaranteed feature parity with OpenSSL. Review a concrete handshake by following the receive path and state update as carefully as the outgoing composer flight.
