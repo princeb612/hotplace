@@ -99,7 +99,7 @@ These keys are not general listener switches interpreted by `network_server::ope
 | `serverconf_enable_https` | Enables secure HTTP service setup. HTTP/1.1 or HTTP/2 causes TLS startup; HTTP/3 causes QUIC startup. | 0 (disabled) |
 | `serverconf_port_http` | Port supplied to each enabled IPv4/IPv6 plain HTTP listener. | 80 |
 | `serverconf_port_https` | Port supplied to each enabled IPv4/IPv6 HTTPS and HTTP/3 listener. | 443 |
-| `serverconf_enable_h1` | Enables HTTP/1.1 in the builder's HTTPS setup path and selects HTTP/1.1 ALPN when neither HTTP/3 nor HTTP/2 takes precedence. | 1 |
+| `serverconf_enable_h1` | Combined with `serverconf_enable_h2`, determines whether the builder starts the TLS path for HTTPS. The ALPN selection falls back to `http/1.1` whenever neither HTTP/3 nor HTTP/2 is enabled; that fallback does not separately test this flag. | 1 |
 | `serverconf_enable_h2` | Adds the HTTP/2 protocol to each HTTP server context and enables the HTTP/2 request path. It also participates in choosing TLS startup and ALPN. | Not explicitly set by the builder; absent key reads as 0 in this configuration path. |
 | `serverconf_enable_h3` | Enables the QUIC-based HTTP/3 startup path and selects `h3` ALPN. The builder currently uses `serverconf_port_https` for its listener port. | Not explicitly set by the builder; absent key reads as 0 in this configuration path. |
 
