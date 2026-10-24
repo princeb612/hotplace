@@ -94,6 +94,19 @@ The adapter maps the requested scheme to a backend marker; the builder creates a
 
 The applet documentation provides concrete caller paths without duplicating them here: [`tlsserver`](../../../test/applet/tlsserver/README.md) and [`dtlsserver`](../../../test/applet/dtlsserver/README.md) select `socket_scheme_openssl` or `socket_scheme_trial`; [`httpserver1`](../../../test/applet/httpserver1/README.md) and [`httpserver2`](../../../test/applet/httpserver2/README.md) configure an adapter through `http_server_builder`; [`netclient`](../../../test/applet/netclient/README.md) selects TCP, UDP, TLS, or DTLS with `-P` and the trial path with `-T`. These are runnable integration paths, not evidence of universal protocol/certificate compatibility.
 
+### Real-code entry point: select a socket backend
+
+Start with `test/applet/tlsserver/run_server.cpp`. The applet turns command-line choices into a scheme, then uses the server builder to create the selected backend; `network_server` still owns listener and event processing.
+
+```text
+command-line options
+  -> socket_scheme_tls + TLS version flags
+  -> socket_scheme_trial or socket_scheme_openssl
+  -> server_socket_builder
+  -> network_server listener and session callbacks
+```
+
+This is the useful usage example for the socket abstraction: the caller chooses a capability/backend combination, while the concrete socket and server layer perform transport and lifecycle work. Read the complete setup and cleanup in `test/applet/tlsserver/run_server.cpp`; this outline is an orientation aid, not a replacement for the full routine.
 ## 5. Relationships
 - [Socket model](socket-model.md) — shared client/server contracts and scheme metadata.
 - [Naive sockets](naive/README.md) — direct TCP/UDP.
