@@ -119,6 +119,39 @@ The source calls `hmac_kdf()` and checks the output against the known-answer byt
 
 For TLS 1.3-style derivation, the caller uses `hkdf_expand_tls13_label()` with the secret, label, context and requested length. That helper encodes the protocol-defined label structure and performs expansion; the TLS state machine must still select the correct secret, label and transcript context for each stage.
 
+### 3.4 Concrete protocol consumers: TLS 1.3 Finished and QUIC packet keys
+
+The same TLS-label expansion primitive is consumed by both TLS 1.3 protection and QUIC packet protection, but the protocol layer supplies different labels, contexts and output lengths.
+
+TLS 1.3 Finished derives a per-direction Finished key from the corresponding handshake traffic secret, then uses HMAC over the transcript hash:
+
+```cpp
+// Reduced from sdk/net/tls/protection/tls_protection_calc_finished.cpp
+binary_t fin_key;
+openssl_kdf kdf;
+kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen,
+                            handshake_traffic_secret, "finished", context);
+
+crypto_hmac_builder builder;
+crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
+if (hmac) {
+    hmac->mac(transcript_hash, finished_verify_data);
+    hmac->release();
+}
+```
+
+QUIC uses the TLS 1.3 label encoding for packet-protection key, IV, header-protection key and key-update secret. The RFC 9001 testcase compares these derived values against the published vectors:
+
+```cpp
+// Reduced from test/testcase/quic/testcase_rfc9001.cpp
+kdf.hkdf_expand_tls13_label(key, "sha256", 32, secret, to_binary("quic key"), context);
+kdf.hkdf_expand_tls13_label(iv,  "sha256", 12, secret, to_binary("quic iv"),  context);
+kdf.hkdf_expand_tls13_label(hp,  "sha256", 32, secret, to_binary("quic hp"),  context);
+kdf.hkdf_expand_tls13_label(ku,  "sha256", 32, secret, to_binary("quic ku"),  context);
+```
+
+This is the key boundary between a generic KDF and protocol state: the helper encodes the label and expands bytes, while TLS/QUIC select the right secret, label, context and length at each protocol stage. The QUIC testcase checks the outputs against RFC 9001 vectors; it does not independently validate the complete TLS handshake or packet-protection state machine.
+
 ## 4. Relationships
 - `../../advisor/README.md` resolves digest names used by HMAC/HKDF and backend operations.
 - `../digest/README.md` provides digest primitives used by digest-based KDFs.
