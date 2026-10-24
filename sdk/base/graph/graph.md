@@ -110,7 +110,7 @@ The implementation uses integer weights and a Dijkstra priority queue but does n
 
 topological_sort(sorted_list) is independent of the graph_search builder flow. It clears the output, calculates in-degrees, queues vertices with zero in-degree, then repeatedly emits a vertex and decrements its neighbors' in-degrees. If fewer vertices are emitted than the graph contains, the method clears the list and returns false to signal a cycle; an empty graph returns true with an empty list.
 
-## 5. Relationships
+## 4. Relationships
 
 - `test/testcase/base/graph/testcase_graph.cpp` constructs integer, character, and string-valued graphs; its helpers call `learn().infer()`, invoke traversal callbacks, and delete each heap-allocated search object. The adjacency/DFS/BFS and Dijkstra helpers end with unconditional `assert(true, ...)`, so printed routes and traversal order are diagnostic rather than compared with expected results. The topological-sort helper does compare the complete returned list with expected orders for two fixtures.
 - [Graph module overview](README.md) explains how the general graph differs from the graph-structured stack.
@@ -118,7 +118,7 @@ topological_sort(sorted_list) is independent of the graph_search builder flow. I
 - basic_stream.hpp is used by testcase callbacks to format adjacency lists, routes, and distances; it is not part of the graph's topology model.
 - CHANGELOG.md records project revision history. Consult it for revision chronology rather than inferring chronology from file timestamps.
 
-## 6. References
+## 5. References
 
 - [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) — background for weighted shortest-path search.
 - [Graph Online](https://graphonline.ru/en/) — graph visualization resource referenced by the original source documentation.
