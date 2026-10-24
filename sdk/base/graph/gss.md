@@ -109,6 +109,36 @@ retrace_paths() delegates to the start node's recursive retrace(). Each step app
 
 The implementation uses a path-local visited set to avoid cycles during deeper retracing while allowing separate branches to be enumerated. A missing parent before the requested depth yields no complete path at that depth.
 
+### Concrete caller path from `testcase_gss.cpp`
+
+This example includes the fork-and-merge setup and the callback passed to `retrace_paths()`. The callback receives each complete path in head-to-ancestor order:
+
+```cpp
+t_gss<int, std::string> stack;
+
+auto root = stack.create_node(0, "Root");
+auto branch_a = stack.create_node(1, "A1");
+auto branch_b = stack.create_node(2, "A2");
+auto merge = stack.create_node(3, "Merge");
+
+branch_a->add_parent(root);
+branch_b->add_parent(root);
+merge->add_parent(branch_a);
+merge->add_parent(branch_b);
+
+size_t path_count = 0;
+stack.retrace_paths(merge, 2, [&](const std::vector<t_gss_node<int, std::string>::ptr>& path) {
+    ++path_count;
+    _test_case.assert(path.size() == 3, __FUNCTION__, "path length");
+    _test_case.assert(path[0]->value == "Merge", __FUNCTION__, "head");
+    _test_case.assert(path[2]->value == "Root", __FUNCTION__, "ancestor");
+});
+
+_test_case.assert(path_count == 2, __FUNCTION__, "fork and merge retrace");
+```
+
+The assertions verify that both branches produce three-node paths beginning at `Merge` and ending at `Root`. This is a project-context example because it uses the testcase assertion helper and the GSS public types. Unlike `traverse_all()`, which visits each reachable node once through a shared visited set, `retrace_paths()` enumerates distinct ancestry paths.
+
 ### Backtrack string
 
 backtrack_string() walks from the supplied node toward its first parent until it reaches a node without parents, then prints states in root-to-head order. When a node has multiple parents, this helper follows only parents[0]; it is a single-path diagnostic and is not a complete representation of all GSS branches.
