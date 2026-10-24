@@ -382,6 +382,28 @@ The function parameter makes the negotiated/tested group explicit; each peer get
 
 Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
 
+### 3.5 Concrete TLS consumer: key-share serialization
+
+TLS 1.3's client key-share extension asks the key-exchange layer for the public share for each selected group, then serializes the group identifier, share length and share bytes into the extension payload:
+
+```cpp
+// Reduced from sdk/net/tls/tls/extension/tls_extension_key_share.cpp
+crypto_keyexchange keyexchange;
+binary_t pubkey;
+keyexchange.keyshare(group, &tlskey,
+                    KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
+
+if (!pubkey.empty()) {
+    payload pl;
+    pl << new payload_member(uint16(group), true, constexpr_group)
+       << new payload_member(uint16(pubkey.size()), true, constexpr_pubkey_len)
+       << new payload_member(pubkey, constexpr_pubkey);
+    pl.write(bin_keyshare);
+}
+```
+
+This is a concrete example of the distinction between the local key object and the transmitted share: `keyshare()` extracts the public bytes for a protocol extension; the private component remains in the local key store for the later exchange. The extension layer owns TLS wire encoding, while `crypto_keyexchange` owns group-specific key/share handling. A non-empty share is serialized here, but this snippet alone does not prove that the peer's share will be accepted or that both sides will derive the same secret.
+
 ## 4. Relationships
 ### 4.1 Internal implementation boundaries
 
