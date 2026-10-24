@@ -38,6 +38,20 @@ Do not infer that every API throws: the call site determines which contract appl
 
 Copy/move operations preserve the error code and copy or move the description. Throwing the object is a caller decision; this utility does not force callers to use exceptions.
 
+### Practical example: catch a hotplace error and inspect its message
+
+```cpp
+try {
+    throw exception(errorcode_t::not_specified);
+} catch (const exception& e) {
+    errorcode_t code = e.get_errorcode();
+    std::string message = e.get_error_message();
+    // inspect or log code and message
+}
+```
+
+Catch the project `exception` type explicitly: it does not derive from `std::exception`. The error code is the programmatic result; `get_error_message()` provides a human-readable description through `error_advisor`. This follows the behavior exercised by `testcase_exception.cpp`.
+
 ## 4. Relationships
 
 - `sdk/base/nostd/bit_set.hpp` — throws this exception for oversized storage allocation.
