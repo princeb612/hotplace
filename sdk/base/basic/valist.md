@@ -108,9 +108,13 @@ _test_case.assert(bs == "value=256, value=0x0100, value=0256",
 
 The format specifier changes the textual presentation, not the stored value. The testcase also permutes argument references (for example, `{2} {3} {1}`) and includes ABI-sensitive integer widths, making it useful to distinguish format behavior from native variadic argument construction.
 
-## 4. Relationships
+## 5. Relationships
 
 - `variant_t` is the intermediate typed-value representation; `valist` adapts stored values to the native variadic calling convention.
 - The adapter is general-purpose; `sprintf()` is one consumer of `valist`. `basic_stream::vaprintf()` and `basic_stream::vaprintln()` are convenience entry points that forward to the formatter, not the definition of the `valist` abstraction.
 - [`testcase_valist.cpp`](../../../test/testcase/base/basic/testcase_valist.cpp), [`testvector_valist.cpp`](../../../test/testcase/base/basic/testvector_valist.cpp), and [`testvector_valist.yml`](../../../test/testcase/base/basic/testvector_valist.yml) provide source-level coverage for the adapter and formatting paths.
 - `valist` is ABI-sensitive; do not infer portability from the high-level `operator<<()` interface alone. The adapter is implemented in `valist.hpp/.cpp`, uses `variant.hpp` as its intermediate representation, and is exercised by `testcase_valist.cpp`.
+
+## 6. References
+
+No external references are listed.
