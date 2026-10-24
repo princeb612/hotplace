@@ -171,6 +171,34 @@ parser -> publisher -> runtime
                  regenerated ASN.1
 ```
 
+### Practical use: load, publish, then resolve a module
+
+The loader testcase deliberately separates file parsing from semantic publishing so each stage can be checked independently:
+
+```cpp
+parse_tree pt;
+asn1_loader loader;
+auto ret = loader.load_file("example3.asn1", &pt);
+_test_case.test(ret, __FUNCTION__, "load ASN.1 file");
+
+asn1_build_resultset result;
+auto publisher = asn1_advisor::get_instance()->get_publisher();
+ret = publisher->build(&pt, result);
+_test_case.test(ret, __FUNCTION__, "publish ASN.1 modules");
+
+auto modules = asn1_modules::get_instance();
+for (const auto& name : result.module_names) {
+    auto module = modules->get(name);
+    if (module) {
+        basic_stream bs;
+        module->represent(&bs);
+        _logger->write(bs);
+    }
+}
+```
+
+The important boundary is between `parse_tree` and `asn1_build_resultset`: loading creates the syntax tree; publishing constructs and registers semantic modules. The registry lookup and `represent()` call then inspect the published result. The testcase additionally asserts expected module/type names and checks module import/export resolvability.
+
 ### Related tests
 
 - `test/testcase/asn.1/testcase_basic3.cpp` — strongly typed decoding and reference resolution.
