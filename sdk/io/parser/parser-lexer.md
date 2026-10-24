@@ -37,7 +37,7 @@ Consider `Name ::= VisibleString`. The lexer can recognize the assignment's name
 ```cpp
 lexical_analyzer lexer;
 lexical_context context;
-prepare_lexer_asn1(lexer);
+prepare_lexer_asn1(lexer);  // testcase helper: registers the ASN.1 vocabulary
 lexer.get_config().set("handle_comments", 1).set("handle_lvalue_usertype", 1);
 lexer.add_token("::=", token_assign);
 
@@ -45,7 +45,7 @@ const char* source = "Name ::= VisibleString";
 lexer.parse(context, source, strlen(source));
 ```
 
-The matching testcase expects three tokens for this configuration. The important result is not merely the count: each token retains a source span, so a diagnostic can identify the original spelling and location without copying every lexeme. Lexer token IDs still need to be mapped to the grammar's terminal symbols by the consumer.
+The matching testcase expects three tokens for this configuration. `prepare_lexer_asn1()` is a testcase helper that sets up the ASN.1 vocabulary, not a standalone public SDK entry point; a consumer supplies its own token registration/configuration. The important result is not merely the count: each token retains a source span, so a diagnostic can identify the original spelling and location without copying every lexeme. Lexer token IDs still need to be mapped to the grammar's terminal symbols by the consumer.
 
 ## 2. Data Model
 
