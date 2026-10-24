@@ -237,6 +237,20 @@ The group-specific key-generation path obtains group metadata, checks support fl
 
 When the peer share arrives, `exchange()` dispatches according to the selected group and combines the peer's encoded public material with local private material. The group metadata determines how the incoming bytes are split and which algorithm implementation handles each component. The resulting shared secret is operation output; it is not the original public share and must be passed into the protocol's subsequent key schedule by the appropriate consumer.
 
+The concrete flow in `test/testcase/crypto/key/testcase_keyexchange.cpp` uses two independent local stores and exchange objects:
+
+```text
+Alice: keygen(local store) -> public share A
+Bob:   keygen(local store) -> public share B
+
+Bob derives using share A  -> secret B
+Alice derives using share B -> secret A
+
+compare(secret A, secret B)
+```
+
+The testcase checks the generated share lengths against the selected group's metadata and compares the two derived secret byte strings. Key dumps are diagnostic output; the shared-secret equality is the central agreement assertion. This is a group-level key-agreement example, not a complete TLS handshake or key-schedule test.
+
 ### 3.5 TLS owns handshake orchestration
 
 TLS uses `crypto_keyexchange` for key-share operations, but the key layer does not own the TLS handshake. TLS chooses and negotiates supported groups, places key shares in handshake extensions, retains the relevant state, processes peer messages, and feeds the shared secret into the TLS key schedule. The key layer supplies the cryptographic material and group-level operation.
