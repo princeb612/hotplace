@@ -46,11 +46,11 @@ The custom-deleter overloads preserve the supplied deleter type in the returned 
 
 `t_pointer_proxy` invokes its deleter on destruction. `release()` clears the stored pointer to prevent deletion after ownership has been transferred. The caller must explicitly release the proxy when another object has accepted responsibility for the pointer; otherwise the proxy remains the owner.
 
-## 4. Relationships
+## 5. Relationships
 
 - `sdk/base/nostd/utility.md` — other conversion and generic helper functions.
 - `sdk/net/server/network_stream.cpp` — uses `make_promise_on_destruction` to ensure a reference-counted `network_protocol` is released when temporary processing finishes.
 - C++11 compatibility — these helpers should not be mistaken for a new language-standard requirement.
-## 5. References
+## 6. References
 
 - [cppreference: std::make_unique](https://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique) — C++14 standard-library API used as a comparison point for the C++11-compatible helper.
