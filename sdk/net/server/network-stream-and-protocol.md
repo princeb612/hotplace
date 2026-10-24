@@ -102,7 +102,7 @@ socket read events -> queued network_stream_data nodes
 
 Use `test/applet/tcpserver2/run_server.cpp` as the contrasting raw echo path: there the callback intentionally works with received bytes rather than an HTTP message object.
 
-## 4. Relationships
+## 5. Relationships
 - `network_stream.hpp/.cpp` — queue nodes, byte accumulation, and framing loop.
 - `network_protocol.hpp/.cpp` and `network_protocol_group.hpp/.cpp` — protocol contract, registry, and selector.
 - [Network server overview](README.md) — complete worker path.
@@ -112,5 +112,5 @@ Use `test/applet/tcpserver2/run_server.cpp` as the contrasting raw echo path: th
 - `sdk/net/http/http1/` and `sdk/net/http/http2/` — TCP-stream protocol implementations; HTTP/3 additionally depends on QUIC and ALPN.
 - `test/testcase/net/http/testvector_http2.cpp` and `testcase_http.cpp` — source-level framing examples.
 
-## 5. References
+## 6. References
 No external references are currently listed.
