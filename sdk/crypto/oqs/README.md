@@ -32,9 +32,73 @@ OSSL_LIB_CTX
 The `oqs_alg_oid_registered` flag records whether an algorithm can be mapped through OpenSSL's NID/OID machinery. This is a capability boundary used by the current tests, not a guarantee that every algorithm exposed by the provider is fully usable through every hotplace path.
 
 ## 3. Behavior Model
-`pqc_oqs::open()` initializes provider state; `for_each()` enumerates discovered names and flags; `close()` unloads the providers and releases the library context. Callers should close a successfully opened context and should not treat the context or provider handles as process-global stateless data.
 
-The adapter delegates key generation and serialization to `crypto_keychain`, and KEM/signature operations to the common OpenSSL PQC helpers. The implementation is guarded for OpenSSL 3 provider APIs; older OpenSSL versions return `not_supported`.
+### 3.1 Open a provider context and discover operations
+
+```text
+pqc_oqs::open(&context)
+        |
+        v
+create isolated OSSL_LIB_CTX
+        |
+        +--> load "default" provider
+        |
+        +--> load "oqsprovider"
+        |
+        v
+query provider operations
+  OSSL_OP_KEM       -> context.kemalgs
+  OSSL_OP_SIGNATURE -> context.sigalgs
+        |
+        v
+for_each(context, opid, callback)
+        |
+        v
+caller chooses an algorithm and checks its flags
+        |
+        v
+pqc_oqs::close(context)
+  unload providers + free library context
+```
+
+The algorithm lists are discovered from the provider at runtime. The adapter records whether each name maps to an OpenSSL NID/OID, but the flag is only one capability gate used by the current tests; it does not establish support for every key encoding or higher-level protocol. A successfully opened context owns provider handles and an `OSSL_LIB_CTX`, so close it after the operation sequence. On OpenSSL versions before 3.0, these methods return `not_supported`.
+
+### 3.2 Concrete KEM caller path from `testcase_oqs_kem.cpp`
+
+```text
+open provider context
+  -> enumerate OSSL_OP_KEM algorithms
+  -> keep algorithms with oqs_alg_oid_registered
+  -> keygen(algorithm)
+  -> encode public key as DER
+  -> decode DER public key as a separate EVP_PKEY
+  -> encapsulate(decoded public key)
+       -> capsule + Bob shared secret
+  -> decapsulate(original private key, capsule)
+       -> Alice shared secret
+  -> assert Alice secret == Bob secret
+  -> free EVP_PKEY objects
+  -> close provider context
+```
+
+The testcase compares the two derived shared-secret buffers, which is stronger than checking only that encapsulation and decapsulation returned success. The capsule is the value sent to the private-key holder; it is not the shared secret. The test also encodes the private key for diagnostics/serialization exercise, but decapsulation uses the original in-memory key object. The loop treats algorithms without registered OIDs as `not_supported`; it does not test every provider-listed algorithm.
+
+### 3.3 Concrete signature caller path from `testcase_oqs_dsa.cpp`
+
+```text
+open provider context
+  -> enumerate OSSL_OP_SIGNATURE algorithms
+  -> keep algorithms with oqs_alg_oid_registered
+  -> keygen -> DER public-key encode/decode
+  -> sign(message, private key) -> signature
+  -> verify(message, decoded public key, signature)
+  -> free EVP_PKEY objects
+  -> close provider context
+```
+
+This source checks sign/verify statuses for the same message and signature; it is not a fixed signature-byte vector and does not mutate the message/signature to demonstrate rejection cases.
+
+The adapter delegates key generation and serialization to `crypto_keychain`, and KEM/signature operations to the common OpenSSL PQC helpers. Provider discovery, algorithm naming, OID registration and successful cryptographic operations are separate conditions; none alone guarantees interoperability with a different provider or protocol.
 
 ## 4. Relationships
 - `../basic/` provides common key, serialization, and crypto operations.
