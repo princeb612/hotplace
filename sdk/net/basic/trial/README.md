@@ -62,6 +62,19 @@ The prosumer layer coordinates socket input/output and buffering. Incoming bytes
 
 The trial implementation is experimental. In particular, the existence of TLS/DTLS/QUIC classes should not be interpreted as proof of feature parity or complete production-ready handshakes across all versions and paths.
 
+### Real-code entry point: the trial TLS server path
+
+`test/applet/tlsserver/run_server.cpp` is the easiest caller to follow from the public socket scheme into the trial implementation. With the trial option selected, the applet adds `socket_scheme_trial`; otherwise it selects `socket_scheme_openssl`. Both are passed through the server socket builder and then opened by `network_server`.
+
+```text
+TLS server options
+  -> socket scheme + TLS version flags
+  -> server_socket_builder::set(...).build()
+  -> network_server listener / accept / session callback
+  -> trial TLS session and composer, when trial is selected
+```
+
+The applet callback echoes application bytes with `session->send(...)`; it does not implement the handshake. Follow `trial_tls_server_socket`, `tls_session`, and `tls_composer` from the backend path to inspect how handshake status drives outbound records. The example establishes an integration route, not feature parity with OpenSSL or complete TLS conformance.
 ## 5. Relationships
 - `trial_server_socket_adapter.hpp/.cpp` — scheme mapping and adapter API.
 - `trial_*_socket.hpp/.cpp` — concrete transport-specific socket operations.
