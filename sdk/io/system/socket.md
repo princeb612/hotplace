@@ -46,6 +46,27 @@ The Windows build additionally exposes `winsock_startup()` and `winsock_cleanup(
 
 Sockets are native resources. Every successful create/connect/listener path must be paired with the appropriate close path, and a socket must not be closed while another thread or callback can still use it. For listeners, the caller owns each socket in the output vector. On Windows, overlapped sockets and Winsock startup/cleanup must be coordinated with the lifetime of the code using them. A minimal caller flow is to initialize the socket to `INVALID_SOCKET`, call `create_socket()` with an output `sockaddr_storage_t`, use the successfully created socket, and finish with `close_socket()`; the exact cleanup path must account for failures and platform-specific startup requirements.
 
+### Concrete consumer path: TCP client connection
+
+The naive TCP client calls `create_socket()` to resolve the address and create the native socket, then passes the resulting socket and resolved address to `connect_socket_addr()`:
+
+```cpp
+#include <hotplace/sdk/io/system/socket.hpp>
+
+// Reduced from sdk/net/basic/naive/naive_tcp_client_socket.cpp
+auto type = socket_type();
+sockaddr_storage_t address_info;
+ret = create_socket(&_fd, &address_info, type, address, port);
+if (errorcode_t::success == ret) {
+    ret = connect_socket_addr(
+        _fd, (sockaddr*)&address_info, sizeof(address_info), timeout);
+}
+```
+
+The two calls have different responsibilities: socket creation/resolution does not complete the connection. The owning client class later closes the socket and resets its handle to `INVALID_SOCKET`; callers using the low-level functions directly must provide equivalent cleanup on both success and failure paths.
+
+Source: `sdk/net/basic/naive/naive_tcp_client_socket.cpp`, `naive_tcp_client_socket::connect()` and `close()`.
+
 ## 4. Relationships
 - [Event multiplexer](multiplexer.md) — classifies sockets and dispatches readiness/completion callbacks.
 - `sdk/net/basic/` — adds client/server role, transport and secure-backend behavior.
