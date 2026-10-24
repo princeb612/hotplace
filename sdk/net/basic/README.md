@@ -94,7 +94,7 @@ The adapter maps the requested scheme to a backend marker; the builder creates a
 
 The applet documentation provides concrete caller paths without duplicating them here: [`tlsserver`](../../../test/applet/tlsserver/README.md) and [`dtlsserver`](../../../test/applet/dtlsserver/README.md) select `socket_scheme_openssl` or `socket_scheme_trial`; [`httpserver1`](../../../test/applet/httpserver1/README.md) and [`httpserver2`](../../../test/applet/httpserver2/README.md) configure an adapter through `http_server_builder`; [`netclient`](../../../test/applet/netclient/README.md) selects TCP, UDP, TLS, or DTLS with `-P` and the trial path with `-T`. These are runnable integration paths, not evidence of universal protocol/certificate compatibility.
 
-## 4. Relationships
+## 5. Relationships
 - [Socket model](socket-model.md) — shared client/server contracts and scheme metadata.
 - [Naive sockets](naive/README.md) — direct TCP/UDP.
 - [OpenSSL sockets](openssl/README.md) and [OpenSSL socket adapter](openssl/openssl-socket-adapter.md) — TLS/DTLS backend selection.
@@ -103,10 +103,10 @@ The applet documentation provides concrete caller paths without duplicating them
 - [Network server](../server/README.md) — accept, multiplexer, session, stream, and protocol orchestration.
 - [TLS/DTLS/QUIC](../tls/README.md) — protocol state, record protection, and QUIC packet/frame handling.
 
-## 5. References
+## 6. References
 No external references are currently listed.
 
-## 6. Developer Notes
+## Developer Notes
 ### Class-family orientation
 
 This is a compact orientation map, not a UML inheritance claim.
