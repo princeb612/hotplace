@@ -69,7 +69,7 @@ naive_tcp_server_socket -> listen/accept/read/write
 
 Compare with `test/applet/tlsserver/run_server.cpp`: the higher-level server flow is similar, but the selected socket backend adds secure-session processing below the application callback.
 
-## 4. Relationships
+## 5. Relationships
 - `naive_tcp_client_socket.hpp/.cpp`, `naive_tcp_server_socket.hpp/.cpp`
 - `naive_udp_client_socket.hpp/.cpp`, `naive_udp_server_socket.hpp/.cpp`
 - [Common socket model](../socket-model.md) — common client/server contract.
@@ -78,5 +78,5 @@ Compare with `test/applet/tlsserver/run_server.cpp`: the higher-level server flo
 - [Trial socket composer](../trial-socket-composer.md) — contrast with the experimental prosumer/handshake path.
 - `../../../../test/testcase/net/basic/` — basic network socket testcase sources.
 
-## 5. References
+## 6. References
 No external references are currently listed.
