@@ -101,6 +101,30 @@ In `test/applet/authenticode/sample.cpp`, `test1()` creates a verifier, opens a 
 - [`../../../io/string/`](../../io/string/) — URL decomposition for CRL cache paths.
 - [`../../../test/applet/authenticode/sample.cpp`](../../../test/applet/authenticode/sample.cpp) — concrete API usage.
 
+### 3.6 Concrete caller path: verify a PE file
+
+The command-line applet demonstrates the public lifecycle and the fact that trust configuration is caller policy:
+
+```cpp
+#include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
+
+authenticode_verifier verifier;
+authenticode_context_t* context = nullptr;
+uint32 result = 0;
+return_t ret = verifier.open(&context);
+if (errorcode_t::success == ret) {
+    int check_crl = 1;
+    verifier.set(context, authenticode_ctrl_t::set_crl,
+                 &check_crl, sizeof(check_crl));
+    verifier.add_trusted_rootcert(context, "trust.crt", nullptr);
+    ret = verifier.verify(context, filename,
+                          authenticode_flag_t::flag_separated, result);
+}
+verifier.close(context);
+```
+
+This is reduced from `test/applet/authenticode/sample.cpp`. The applet configures CRL checking and a trusted root before verification; deployments may need different trust stores and revocation/network policy. The returned status and `result` are separate outputs, so callers should not interpret a successful function return as a substitute for inspecting the verifier's result flags. The applet is an integration example, not a guarantee that every PE signature or chain is trusted on every machine.
+
 ## 4. Relationships
 ### Implementation and test sources
 
