@@ -120,10 +120,14 @@ trace macro / trace_debug_event
 
 Compiling with `DEBUG` only enables the diagnostic macro implementations; it does not automatically enable event delivery. The option mask, category/level checks, and registered handler must also permit the event. In non-debug builds, leave-trace macros retain their control-flow role without the same diagnostic output.
 
-## 4. Relationships
+## 5. Relationships
 
 - [Global trace options](../trace.md) — option mask and backtrace/exception controls.
 - [Error handling](error-handling.md) — symbolic error-code names used by leave-trace diagnostics.
 - [Basic stream](../stream/basic_stream.md) — formatting of trace messages.
 - [Test case](../unittest/testcase.md) — sample test executable command-line activation and logger forwarding.
 - `trace.hpp/.cpp` and `trace_advisor.cpp` implement system-level event handling; the root `trace.hpp/.cpp` defines global controls. `test/testcase/io/sample.cpp` and `test/testcase/crypto/sample.cpp` show concrete debug-option setup examples.
+
+## 6. References
+
+No external references are listed.
