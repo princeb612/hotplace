@@ -105,7 +105,7 @@ scan(input, pos)
 
 That terminal marker is the semantic boundary between a stored key and an internal prefix. For example, after inserting `ab` and `abcd`, the node for `ab` is terminal even though it has descendants; a path such as `abc` may exist without being a stored key. `scan()` uses the last terminal visited rather than simply returning the deepest node reached.
 
-## 4. Relationships
+## 5. Relationships
 
 ### Huffman coding: decode a prefix code
 
@@ -125,7 +125,7 @@ This is a direct use of longest-prefix matching: the trie is not building the Hu
 - `aho_corasick.md` — shares trie-shaped prefix storage, but adds failure links to find multiple patterns throughout a source.
 - `test/testcase/base/pattern/testcase_trie.cpp` — tests exact search, prefix checks, erase, suggestions, longest-prefix lookup, reverse lookup by index and Huffman-code scanning.
 
-## 5. References
+## 6. References
 
 - [Trie data structure in C++](https://www.geeksforgeeks.org/trie-data-structure-in-cpp/)
 - [Autocomplete using a Trie](https://www.geeksforgeeks.org/auto-complete-feature-using-trie/)
