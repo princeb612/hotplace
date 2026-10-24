@@ -155,6 +155,25 @@ cfg_grammar ─► generation ─► ACTION/GOTO table ─► build or import
 
 Lexical errors, table-generation conflicts, .ptb integrity errors, syntax errors and domain-semantic errors belong to different boundaries. A successful syntax parse does not prove ASN.1 type, reference, tag or constraint validity.
 
+### Concrete caller paths from `testcase_parser.cpp`
+
+The testcase exercises table build and table import as separate ways to obtain a ready parser, then feeds the same notation inputs through both paths:
+
+```text
+asn1_advisor
+  ├─ get_notation_parser_by_build()  ──► LALR table built in memory
+  ├─ get_notation_parser_by_import() ──► LALR table imported
+  ├─ get_parser_by_build()           ──► GLR table built in memory
+  └─ get_parser_by_import()          ──► GLR table imported
+                         │
+                         ▼
+             test_asn1parser(parser, notation, notation)
+```
+
+`test_asn1_notation()` asserts that all four parser instances are ready and iterates concrete notation strings, including assignments, tagged types, nested `SEQUENCE`/`CHOICE` forms, and constraints. The separate `test_load_parsingtable()` path reads `asn1notation.ptb` into a `lalr1_parser`, checks the read status, and parses `Type1 ::= VisibleString`. These are useful minimal examples for consumers choosing between runtime table generation and a prebuilt artifact.
+
+The testcase does not make those paths interchangeable: the imported table still needs the matching lexer/token-to-terminal setup, and the parser's syntax result remains distinct from ASN.1 semantic publication and constraint evaluation.
+
 ## 4. Relationships
 - `../basic/` — payload and stream primitives used by table serialization and other I/O operations.
 - `../asn.1/` — the main higher-level grammar and semantic consumer. Its lexer registration, grammar productions, table revision, and semantic builder must stay coordinated.
