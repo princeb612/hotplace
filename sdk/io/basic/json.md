@@ -89,6 +89,34 @@ The wrappers assign the output pointer only after Jansson returns a non-null roo
 
 No dedicated JSON testcase is present under `test/testcase/io/basic`. The helper is used by JOSE/COSE test-vector loaders and JOSE header-processing code. Those consumers demonstrate integration and ownership patterns, but they are not a dedicated assertion suite for every invalid-parameter, parse-error, or suppression branch.
 
+### Concrete consumer path: importing a JWK set
+
+The JSON wrapper is used by `json_web_key::read()` to parse a JSON Web Key Set (JWK Set). The caller first obtains a Jansson tree, interprets the top-level `keys` member, and releases the root after key import:
+
+```cpp
+#include <hotplace/sdk/io/basic/json.hpp>
+
+// Reduced from sdk/crypto/jose/json_web_key.cpp
+json_t* root = nullptr;
+ret = json_open_stream(&root, buffer);
+if (errorcode_t::success == ret) {
+    json_t* keys_node = json_object_get(root, "keys");
+    if (keys_node) {
+        // The JWK Set path expects "keys" to be an array.
+        // Each entry is passed to the key importer.
+    } else {
+        // A single JWK object can be imported directly.
+    }
+}
+if (root) {
+    json_decref(root);
+}
+```
+
+This is more than syntax parsing: the JOSE caller applies the JWK-specific shape rules after obtaining the generic JSON tree. The snippet is abbreviated; the production routine also validates the input pointer, checks the `keys` type, and releases the root on its shared cleanup path. A successful `json_open_stream()` transfers a Jansson reference to the caller, so the caller owns the matching `json_decref()`.
+
+Source: `sdk/crypto/jose/json_web_key.cpp`, `json_web_key::read()`.
+
 ## 4. Relationships
 - Jansson — owns parsing, JSON value representation, unpacking, and reference counting.
 - `sdk/base/system/trace.hpp` — supplies trace/error reporting used when parsing fails.
