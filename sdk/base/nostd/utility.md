@@ -30,6 +30,10 @@ This page groups stateless helpers rather than defining one shared stored repres
 - `enumclass.hpp` and `utility.hpp` provide small generic helpers; they do not establish a common error policy for every conversion.
 - `capacity.hpp` calculates the minimum signed byte width for an integer representation. It complements, but is not the same operation as, the unsigned bit-width helpers in `sdk/base/inline.hpp`.
 
-## 4. Relationships
+## 5. Relationships
 
 - `atoi.hpp` provides string-to-integer conversion; `cast.hpp` and `utility.hpp` provide conversion/casting helpers; `enumclass.hpp` supplies enum-class support. [Memory ownership helpers](memory.md) cover object/array ownership and custom deleters. The adjacent tests `testcase_int.cpp` and `testcase_narrowcast.cpp` cover integer classification and narrowing/conversion behavior.
+
+## 6. References
+
+No external references are listed.
