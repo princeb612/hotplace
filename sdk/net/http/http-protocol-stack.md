@@ -131,6 +131,19 @@ The HTTP/3 source has frame representations and QPACK components, but the full s
 
 The generic stream layer can retain input when the protocol reports insufficient data and clear queued invalid input for states such as `forged`, `crash`, or `large`. The exact interpretation of malformed headers, invalid frame fields, body-length conflicts, or protocol-specific errors belongs to the relevant HTTP parser/session implementation; do not attribute all validation to `network_protocol_group` or the multiplexer.
 
+### Real-code example: protocol selection is below the callback
+
+`test/applet/httpserver1/run_server.cpp` and `test/applet/httpserver2/run_server.cpp` are paired integration examples. Both callbacks operate on `http_request` and `http_response`; the HTTP server configuration and registered protocol handlers determine whether HTTP/1.x framing or HTTP/2 preface/frame processing is used before the callback receives a request.
+
+```text
+network bytes -> network_stream -> network_protocol_group
+                                  ├─ HTTP/1.x protocol -> request
+                                  └─ HTTP/2 protocol  -> request
+                                                       -> applet callback
+```
+
+Use these applets to understand the real caller boundary, then follow `network-stream-and-protocol.md` for the buffered framing details. A single socket read is not a protocol message and does not select the application callback by itself.
+
 ## 4. Relationships
 - `http1/http_protocol.hpp/.cpp` — HTTP/1.x framing implementation.
 - `http2/http2_protocol.hpp/.cpp` — HTTP/2 preface and frame framing.
