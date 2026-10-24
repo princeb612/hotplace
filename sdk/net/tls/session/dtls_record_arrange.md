@@ -108,7 +108,7 @@ UDP datagram -> parse complete DTLS records -> key by peer + epoch + sequence
 
 This is a DTLS-specific ordering aid; it does not replace retransmission or handshake-flight logic, and it should not be described as TCP-style stream reassembly.
 
-## 4. Relationships
+## 5. Relationships
 - `dtls_record_arrange.hpp`
 - `session/dtls_record_arrange.cpp`
 - `test/testcase/tls/testcase_dtls_record_arrange.cpp`
@@ -135,6 +135,6 @@ tls_session
 
 The class is concerned with **receive-side ordering**. It does not construct DTLS handshake fragments; that responsibility belongs to `dtls_record_publisher`.
 
-## 5. References
+## 6. References
 - [RFC 6347 — DTLS 1.2](https://www.rfc-editor.org/rfc/rfc6347)
 - [RFC 9147 — DTLS 1.3](https://www.rfc-editor.org/rfc/rfc9147)
