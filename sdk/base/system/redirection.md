@@ -57,13 +57,13 @@ close() ─► release remaining platform handles
 
 The API transfers bytes only; it does not add line boundaries, character encoding, or message framing. The parent must interpret the byte count returned by reads and must not keep using the redirection object after its owning process/lifecycle has closed it.
 
-## 5. Relationships
+## 4. Relationships
 
 - [Process execution](process.md) — creates the child and exposes its redirection object.
 - `sdk/base/system/linux/redirection.hpp` — POSIX pipe/file-action implementation.
 - `sdk/base/system/windows/redirection.hpp` — Windows pipe-handle implementation.
 - `sdk/base/stream/` — in-memory stream and buffer operations; it does not itself redirect a process's standard handles.
 
-## 6. References
+## 5. References
 
 No external references are listed.
