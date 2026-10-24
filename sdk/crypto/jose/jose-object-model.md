@@ -36,6 +36,23 @@ The data model preserves the distinction between a JWE content-encryption key (C
 
 `json_object_signing_encryption` manages context lifecycle through `open`, `close`, and `clear_context`; callers should follow that lifecycle instead of assuming the context is a stateless value object.
 
+### Real-code example: serialized input through an explicit context lifetime
+
+`test/testcase/jose/testcase_rfc7516.cpp` shows the context and message objects used together for a JWE operation:
+
+```cpp
+json_object_signing_encryption jose;
+jose_context_t* context = nullptr;
+binary_t plaintext;
+bool authenticated = false;
+
+jose.open(&context, &key);
+ret = jose.decrypt(context, serialized_jwe, plaintext, authenticated);
+jose.close(context);
+```
+
+The `jose_context_t` holds operation state and key association; the serialized JWE and plaintext are caller-owned inputs/outputs. Do not treat the facade as a stateless parser or consume plaintext solely because the function returned normally: interpret both the return code and the authentication result according to the caller's policy. Ensure `close()` runs on failure paths as well.
+
 ## 4. Relationships
 ### Source-test evidence
 
