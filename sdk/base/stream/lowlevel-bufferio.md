@@ -51,10 +51,14 @@ insert() / cut() / replace() / clear() ─► mutate or reset content
 - `close()` clears the buffered blocks and destroys the context. `memzero_free` requests clearing the used bytes before a block is freed.
 - The `test_bufferio1()` source checks a formatted `hello world` write, the resulting length of 11, the `world` offset of 6, removal of the intervening whitespace, and comparison with `helloworld`. These assertions exercise mutation and retrieval on the same context.
 
-## 4. Relationships
+## 5. Relationships
 
 - `bufferio.hpp` / `bufferio.cpp` — public operations and implementation of the context and block queue.
 - `printf.hpp` and `printf_charset.cpp` — low-level formatted-output runtime and character-set-specific support.
 - `basic_stream.md` — higher-level in-memory stream abstraction built over stream-related utilities; do not treat the two APIs as interchangeable.
 - `test/testcase/base/stream/testcase_bufferio.cpp` — `test_bufferio1()` covers edits, searches, replacement, and content comparisons; `test_bufferio2()` checks non-null returned storage with a nonzero pad size.
 - `test/testcase/base/stream/testcase_bufferio.md` — describes source-level test coverage and separates it from runtime execution status.
+
+## 6. References
+
+No external references are listed.
