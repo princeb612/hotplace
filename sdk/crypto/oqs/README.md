@@ -126,7 +126,7 @@ This source checks sign/verify statuses for the same message and signature; it i
 
 The adapter delegates key generation and serialization to `crypto_keychain`, and KEM/signature operations to the common OpenSSL PQC helpers. Provider discovery, algorithm naming, OID registration and successful cryptographic operations are separate conditions; none alone guarantees interoperability with a different provider or protocol.
 
-## 5. Relationships
+## 4. Relationships
 - `../basic/` provides common key, serialization, and crypto operations.
 - `../advisor/` provides algorithm and OID-related metadata.
 - `../../../test/testcase/crypto/pqc/` contains provider-backed and common PQC tests.
@@ -145,6 +145,6 @@ The adapter delegates key generation and serialization to `crypto_keychain`, and
 - OpenSSL 3 provider API documentation
 
 
-## 6. References
+## 5. References
 - [OpenSSL provider](https://docs.openssl.org/3.0/man7/provider/) — provider loading and algorithm discovery.
 - [OpenSSL provider KEM](https://docs.openssl.org/3.0/man7/provider-kem/) — provider-side key encapsulation operations.
