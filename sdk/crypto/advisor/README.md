@@ -226,7 +226,7 @@ On destruction, `cleanup()` frees the `EVP_CIPHER*` and `EVP_MD*` objects retain
 
 The advisor reports mappings and backend availability; it does not itself implement the selected cipher, digest, signature, key exchange, or encoding operation, and it does not decide whether an algorithm is suitable for a security policy.
 
-### 3.5 Lookup entry points by caller question
+### 3.6 Lookup entry points by caller question
 
 | Caller question | Lookup entry point |
 |---|---|
@@ -243,7 +243,7 @@ The advisor reports mappings and backend availability; it does not itself implem
 
 A `hint_*` pointer may be null when there is no matching entry. Even when metadata exists, backend resolution may fail because of the active OpenSSL version, provider configuration, or build options. Callers must check both lookup results and backend objects before using them.
 
-### 3.3 Concrete caller path: enumerate advertised JWS features
+### 3.7 Concrete caller path: enumerate advertised JWS features
 
 The advisor testcase iterates signature metadata and checks whether each JWS name has the corresponding feature registered:
 
