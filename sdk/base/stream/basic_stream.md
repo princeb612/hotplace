@@ -66,7 +66,7 @@ SDK caller
 - The stream can be edited after writing, so append-only assumptions should not be made when using insertion or cutting operations.
 - Allocation policy is part of the stream configuration, not a separate stream format.
 
-## 5. Relationships
+## 4. Relationships
 
 - [`variant.md`](../basic/variant.md) — typed runtime values supplied to the variant insertion overload.
 - `vtprintf.hpp/.cpp` — renders `variant_t` / `variant` into this stream; `basic_stream` selects debug style for `operator<<(const variant&)`. The formatter's style changes the textual presentation, not the stored value.
@@ -77,6 +77,6 @@ SDK caller
 - `sdk/io/stream/` — OS/file-oriented stream adapters.
 - `test/testcase/base/stream/testcase_stream.cpp` — [testcase notes](../../../test/testcase/base/stream/testcase_stream.md) — see `test_stream_basic_stream()` for formatting and append behavior, `t_test_rule_of_5<basic_stream>()` for object-lifetime semantics, and `test_stream_i128()` for integer-formatting examples. These tests illustrate exercised behavior; this document does not assert that they were executed in a particular environment.
 
-## 6. References
+## 5. References
 
 No external references are listed.
