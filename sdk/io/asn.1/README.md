@@ -105,7 +105,7 @@ if (module) {
 
 The parse tree is the syntax-stage output; `asn1_build_resultset` reports the semantic publishing result; `asn1_modules` is the registry used for later module lookup. Keeping these stages visible makes failures easier to localize. In a production path, check each return value before consuming the next stage, and validate every module/type lookup before dereferencing it.
 
-Source: [testcase_loader.cpp](../../test/testcase/asn.1/loader/testcase_loader.cpp).
+Source: [testcase_loader.cpp](../../../test/testcase/asn.1/loader/testcase_loader.cpp).
 
 ## 4. Relationships
 ### Follow the source and tests
