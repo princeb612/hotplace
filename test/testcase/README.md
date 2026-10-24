@@ -33,6 +33,21 @@ Documented with GPT-6
 
 The exact source/testcase layout can evolve independently of the SDK source tree; the stable meaning is the verification boundary represented by each group.
 
+## Practical usage patterns found in testcases
+
+The testcase tree also records how SDK APIs are composed in real code. These examples are useful entry points when documenting a component's Behavior Model; they are representative usage paths, not a claim that every possible input or failure mode is covered.
+
+| Usage pattern | Representative source | What the code demonstrates |
+|---|---|---|
+| Configure and route diagnostics | `test/applet/tcpserver1/sample.cpp`; `test/testcase/asn.1/sample.cpp` | `logger_builder` setup, callback-based output, and formatted token diagnostics |
+| Encode/decode with incremental input | `test/testcase/encode/testcase_base16.cpp` | One-shot round trip compared with `encoder_stream` / `decoder_stream` processing across chunk boundaries |
+| Collect typed arguments for formatting | `test/testcase/base/basic/testvector_valist.cpp`; `test/testcase/asn.1/testcase_basic1.cpp` | Build a `valist` from typed values and render them through a format string |
+| Search generic sequences | `test/testcase/base/pattern/testcase_kmp.cpp` | Learn a pattern, search byte/object/pointer sequences, and supply a custom comparator |
+| Load and publish semantic modules | `test/testcase/asn.1/loader/testcase_loader.cpp` | Keep file parsing, semantic publishing, registry lookup, and module resolution as separate steps |
+| Parse and compare protocol representations | `test/testcase/cbor/testvector_cbor.cpp`; `test/testcase/asn.1/testvector_der.cpp` | Compare encoded bytes with decoded/diagnostic representations and inspect output through the logger |
+
+When adding a practical example to an SDK document, prefer the smallest source-backed sequence that reveals the API relationship. Keep expected-value assertions and meaningful lifetime/error-handling notes, and link the original testcase under Relationships rather than copying an entire test function.
+
 ## Build and CTest flow
 
 `test/testcase/CMakeLists.txt` adds the testcase groups and copies `test.sh` into the build tree. At the project level, the root `maketest()` helper creates each `test-<module>` executable and registers it with CTest when that target is configured for CTest.
