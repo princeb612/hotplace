@@ -72,7 +72,7 @@ QUIC option -> not this adapter; follow the trial/QUIC path
 
 Use the applet for the caller/configuration boundary and the adapter document for scheme mapping. A successful TLS applet run does not establish DTLS or QUIC support.
 
-## 4. Relationships
+## 5. Relationships
 - `openssl_tls_client_socket.hpp/.cpp`, `openssl_tls_server_socket.hpp/.cpp`
 - `openssl_dtls_client_socket.hpp/.cpp`, `openssl_dtls_server_socket.hpp/.cpp`
 - `openssl_tls_context.hpp/.cpp`, `openssl_tls_context_sdk.cpp`
@@ -84,5 +84,5 @@ Use the applet for the caller/configuration boundary and the adapter document fo
 - [TLS/DTLS/QUIC implementation](../../tls/README.md) — protocol messages, protection, and session behavior.
 - [Certificate-generation instructions](../../../../etc/cert/README.md) and [self-signed certificate](../self-signed-certificate.md) — local certificate setup.
 
-## 5. References
+## 6. References
 No external references are currently listed.
