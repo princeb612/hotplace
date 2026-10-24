@@ -71,9 +71,60 @@ For a pool constructed over external memory, the backing buffer must outlive all
 
 The allocation and reallocation paths above are the core state transitions. The testcase creates a one-megabyte backing buffer, checks `total_size()`, allocates two blocks, writes patterns to the returned regions, and exercises release/reallocation paths. See `test/testcase/base/basic/testcase_builtinmemory.cpp` for the source-level sequence. The pool's backing storage and any containers using `builtinpool_allocator<T>` must remain alive for the duration of their allocations.
 
-## 4. Relationships
+### Practical use: STL allocator and scoped pool selection
+
+The allocator adapter is easiest to understand at its consumer boundary. The testcase constructs a fixed pool over caller-owned storage, passes that pool to a standard container's allocator, and checks both the container values and the pool's capacity after the container is destroyed.
+
+```cpp
+constexpr std::size_t BUFFER_SIZE = 1 << 20;
+std::vector<char> raw_buffer(BUFFER_SIZE);
+builtinpool pool(raw_buffer.data(), BUFFER_SIZE);
+
+{
+    std::vector<int, builtinpool_allocator<int> > values{
+        builtinpool_allocator<int>(&pool)
+    };
+
+    for (int i = 0; i < 100; ++i) {
+        values.push_back(i);
+    }
+
+    _test_case.assert(values.size() == 100, __FUNCTION__, "container size");
+    _test_case.assert(values[99] == 99, __FUNCTION__, "last value");
+}
+
+_test_case.assert(pool.total_size() == pool.available_size(),
+                  __FUNCTION__, "pool capacity restored");
+```
+
+The braces are significant: the container releases its storage before the pool-capacity check. The backing `raw_buffer` is declared before the pool and remains alive throughout, because the pool does not own that externally supplied buffer. This example demonstrates allocator compatibility and release behavior; it is not a performance comparison with the default allocator.
+
+The `pooled::scope` adapter offers a different composition: pooled containers created inside the active scope pick up its pool without receiving an allocator argument.
+
+```cpp
+builtinpool local_pool(nullptr, 64 * 1024, builtinpool_policy::expandable);
+
+{
+    pooled::scope scope(&local_pool);
+    pooled::vector<int> values;
+    values.push_back(100);
+    // Allocations made by this container use local_pool.
+}
+
+// The previous thread-local pool binding is restored when scope is destroyed.
+pooled::vector<int> fallback;
+fallback.push_back(200);
+```
+
+The scope is an RAII binding of a thread-local pool pointer, not an ownership wrapper for `local_pool`. The pool must outlive containers using it, and the scope restores the previous binding on exit. The testcase exercises this selection path and logs the in-scope allocation count, but it does not assert an exact allocation count or explicitly assert restoration of the previous pointer.
+
+## 5. Relationships
 
 - `builtinpool_allocator<T>` adapts the pool to standard-container allocation conventions.
 - The fixed-buffer constructor ties pool validity to the supplied backing buffer's lifetime.
 - `variant` and `basic_stream` are separate utilities; neither is a required part of pool allocation.
 - The allocator implementation is in `builtinmemory.hpp/.cpp`; `testcase_builtinmemory.cpp` exercises the pool and allocator-facing behavior. These links help check the adapter contract.
+
+## 6. References
+
+No external references are listed.
