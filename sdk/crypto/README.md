@@ -40,6 +40,7 @@ The module pages retain the implementation and standards detail. If you are new 
 | Problem to solve | Start here | What the example helps you see |
 |---|---|---|
 | Encrypt bytes and recover them | [Symmetric encryption and AEAD](basic/crypt/README.md#practical-use-build-a-cipher-round-trip-bytes-then-release-it) | How the algorithm, key, nonce/IV and output relate; for AEAD, why AAD and the authentication tag are part of the contract. |
+| Calculate a digest or keep a running protocol transcript hash | [Digest and transcript hash](basic/digest/README.md) | Distinguish a one-shot hash from accumulated ordered messages and checkpoint snapshots. |
 | Check whether a message was changed and came from a key holder | [MAC and OTP](basic/mac/README.md) or [digital signatures](basic/sign/README.md) | MACs require shared secret material; signatures separate signing with private material from verification with public material. |
 | Derive key bytes from existing secret material | [KDF](basic/kdf/README.md) | How digest, input keying material, salt, context/info and output length determine a derivation. Password hardening is a different task from HKDF. |
 | Establish matching key-agreement output between peers | [Key material and exchange](basic/key/README.md#practical-use-exchange-public-shares-and-compare-derived-secrets) | Each peer retains local private material, exchanges public share bytes, and derives a secret; this alone is not peer authentication or a complete handshake. |
