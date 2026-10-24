@@ -45,6 +45,21 @@ Control exception-tracing behavior through the implementation in the system trac
 
 The option storage is a plain static integer rather than an atomic or locked value. Callers changing trace options concurrently should provide their own synchronization.
 
+### Practical caller example: configure tracing before emitting events
+
+The detailed integration example is in `sdk/base/system/trace.md`, where command-line options select the debug handler, option mask, and trace level. The root wrapper's role is narrower: update the option mask and synchronize the exception-tracing hook when that bit changes.
+
+```text
+application options
+  -> set_trace_debug(handler)   [optional]
+  -> set_trace_option(mask)
+  -> set_trace_level(level)
+  -> trace macros / trace events
+  -> configured handler
+```
+
+This makes the wrapper-to-system relationship visible without duplicating the full event-dispatch implementation. Because the option storage is not synchronized, callers that change it concurrently must provide synchronization.
+
 ## 4. Relationships
 
 - `sdk/base/system/trace.hpp/.cpp` — trace advisor/output implementation and platform backtrace integration.
