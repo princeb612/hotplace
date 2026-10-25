@@ -32,7 +32,7 @@ class critical_section_t {
 
 namespace hotplace {
 
-class critical_section_guard {
+class HOTPLACE_BASE_API critical_section_guard {
    public:
     critical_section_guard(critical_section& cs) {
         cs.enter();

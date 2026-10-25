@@ -28,7 +28,7 @@ namespace net {
  *              }
  *          }
  */
-class tls_record_builder {
+class HOTPLACE_NET_API tls_record_builder {
    public:
     tls_record_builder();
 

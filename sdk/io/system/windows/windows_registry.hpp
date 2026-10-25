@@ -44,7 +44,7 @@ typedef struct _ENUM_VALUE_CONTEXTW {
 #define ENUM_VALUE_CONTEXT ENUM_VALUE_CONTEXTW
 #endif
 
-class windows_registry {
+class HOTPLACE_IO_API windows_registry {
    public:
     /**
      * @brief   constructor

@@ -33,7 +33,7 @@ namespace io {
  *          value->release();
  *          type->release();
  */
-class asn1_sequence : public asn1_container {
+class HOTPLACE_IO_API asn1_sequence : public asn1_container {
    public:
     asn1_sequence();
     asn1_sequence(const std::string& name);

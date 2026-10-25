@@ -37,7 +37,7 @@ namespace io {
  *          // Type5 ::= [2] implicit Type2
  *          auto type5 = asn1_referenced_type::define("Type5", new asn1_tagged_type(asn1_class_context, 2, asn1_implicit, type2->clone()));
  */
-class asn1_tagged_type : public asn1_type {
+class HOTPLACE_IO_API asn1_tagged_type : public asn1_type {
    public:
     asn1_tagged_type(int ctype, int cnumber, int tmode, asn1_entity_t entity);
     asn1_tagged_type(int ctype, int cnumber, int tmode, asn1_object* object);

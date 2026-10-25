@@ -32,7 +32,7 @@ namespace hotplace {
  *          rational_float r2("1/3");  // 1/3
  *          // ...
  */
-class rational_float {
+class HOTPLACE_BASE_API rational_float {
     friend class floating_point;
 
    public:

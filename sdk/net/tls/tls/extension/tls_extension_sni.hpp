@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   server_name (SNI, server name indicator, 0x0000)
  */
-class tls_extension_sni : public tls_extension {
+class HOTPLACE_NET_API tls_extension_sni : public tls_extension {
    public:
     tls_extension_sni(tls_handshake* handshake);
     virtual ~tls_extension_sni();

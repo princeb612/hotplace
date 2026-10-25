@@ -45,7 +45,7 @@ openssl_kdf
 
 ## 3. Behavior Model
 
-### 3.1 Select the derivation family from the input model
+### Select the derivation family from the input model
 
 ```text
 password ──► PBKDF2 / scrypt / Argon2 ──► derived key material
@@ -75,7 +75,7 @@ TLS/DTLS secret + label + context + length
 
 The input model selects the family: password KDFs deliberately impose a configurable guessing cost, while HKDF and the CMAC-based KDF derive purpose-specific material from existing secret input. The TLS/DTLS label helpers are wrappers around HKDF expansion with protocol-defined input encoding; they do not run the handshake or decide which secret belongs at a particular protocol stage.
 
-### 3.2 Parameters are part of the derivation contract
+### Parameters are part of the derivation contract
 
 - PBKDF2's iteration count determines repeated PRF work; the caller chooses a deployment-appropriate cost.
 - scrypt's `N`, `r` and `p` affect the work and memory profile.
@@ -85,7 +85,7 @@ The input model selects the family: password KDFs deliberately impose a configur
 
 A KDF does not generate random salts or nonces, store passwords, or manage key lifetime. Password KDFs should not be substituted for HKDF, and HKDF should not be treated as a password-hardening function.
 
-### 3.3 Concrete caller path: inline HKDF known-answer test
+### Concrete caller path: inline HKDF known-answer test
 
 `testcase_hkdf.cpp` shows the complete caller-side shape without a builder: instantiate `openssl_kdf`, pass the digest, output length, IKM, salt and `info`, then compare the derived bytes with a fixed expected value.
 
@@ -119,7 +119,7 @@ The source calls `hmac_kdf()` and checks the output against the known-answer byt
 
 For TLS 1.3-style derivation, the caller uses `hkdf_expand_tls13_label()` with the secret, label, context and requested length. That helper encodes the protocol-defined label structure and performs expansion; the TLS state machine must still select the correct secret, label and transcript context for each stage.
 
-### 3.4 Concrete protocol consumers: TLS 1.3 Finished and QUIC packet keys
+### Concrete protocol consumers: TLS 1.3 Finished and QUIC packet keys
 
 The same TLS-label expansion primitive is consumed by both TLS 1.3 protection and QUIC packet protection, but the protocol layer supplies different labels, contexts and output lengths.
 

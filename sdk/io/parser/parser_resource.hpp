@@ -30,7 +30,7 @@ extern const size_t sizeof_parser_basic_tokens;
 extern const parser_token_resource parser_asn1_tokens[];
 extern const size_t sizeof_parser_asn1_tokens;
 
-class parser_resource {
+class HOTPLACE_IO_API parser_resource {
    public:
     static parser_resource* get_instance();
 

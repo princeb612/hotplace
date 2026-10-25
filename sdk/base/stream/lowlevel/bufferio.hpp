@@ -56,7 +56,7 @@ struct bufferio_context_t : printf_context_t {
     bufferio_context_t() : printf_context_t() {}
 };
 
-class bufferio {
+class HOTPLACE_BASE_API bufferio {
    public:
     bufferio();
     ~bufferio();
@@ -326,7 +326,8 @@ class bufferio {
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(bufferio_context_t* context, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(bufferio_context_t* context, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0,
+                                       int flags = 0);
 
 }  // namespace hotplace
 

@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-class bearer_authentication_provider : public http_authentication_provider {
+class HOTPLACE_NET_API bearer_authentication_provider : public http_authentication_provider {
    public:
     bearer_authentication_provider(const std::string& realm);
     virtual ~bearer_authentication_provider();

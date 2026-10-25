@@ -26,7 +26,7 @@
 namespace hotplace {
 namespace net {
 
-class quic_session {
+class HOTPLACE_NET_API quic_session {
    public:
     quic_session();
     ~quic_session();

@@ -23,7 +23,7 @@ namespace hotplace {
 /**
  * @brief   string
  */
-class ansi_string : public stream_t {
+class HOTPLACE_BASE_API ansi_string : public stream_t {
    public:
     ansi_string();
     ansi_string(const local_stream_policy& policy);

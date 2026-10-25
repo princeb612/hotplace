@@ -31,12 +31,12 @@ namespace hotplace {
  * @param   std::list<std::string>& tokens [out]
  * @sa      split_url
  */
-void regex_token(const std::string& input, const std::string& expr, size_t& pos, std::list<std::string>& tokens);
-void regex_token(const char* input, size_t len, const char* expr, size_t& pos, std::list<range_t>& tokens);
+HOTPLACE_BASE_API void regex_token(const std::string& input, const std::string& expr, size_t& pos, std::list<std::string>& tokens);
+HOTPLACE_BASE_API void regex_token(const char* input, size_t len, const char* expr, size_t& pos, std::list<range_t>& tokens);
 /**
  * @param std::list<std::map<size_t, range_t>>& tokens [out] smatch, cmatch role
  */
-void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, std::list<std::map<size_t, range_t>>& tokens);
+HOTPLACE_BASE_API void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, std::list<std::map<size_t, range_t>>& tokens);
 
 struct regex_context_t;  // encapsulation structure
 /**
@@ -48,7 +48,7 @@ struct regex_context_t;  // encapsulation structure
  *          The GNU C++ standard library supports <regex>, but not until GCC version 4.9.0.
  *          undefined reference to re_expr/sregex_iterator/smatch in GCC 4.8.5 (fixed in GCC 4.9.0)
  */
-class regex final {
+class HOTPLACE_BASE_API regex final {
    public:
     regex() = default;
     ~regex() = default;

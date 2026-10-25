@@ -37,7 +37,7 @@ namespace net {
  *          }
  *          cli->release();
  */
-class naive_udp_client_socket : public client_socket {
+class HOTPLACE_NET_API naive_udp_client_socket : public client_socket {
    public:
     naive_udp_client_socket();
     virtual ~naive_udp_client_socket();

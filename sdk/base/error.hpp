@@ -376,7 +376,7 @@ enum class error_category_t : uint8 {
  * ret = ERROR_OUTOFMEMORY; | HRESULT/LONG | windows  |
  * ret = SQL_ERROR;         | int          | ODBC     |
  */
-struct return_t {
+struct HOTPLACE_BASE_API return_t {
     uint32 code;
 
     // constexpr, noexcept (Literal Type)
@@ -484,7 +484,7 @@ typedef struct _error_description {
 enum errorflag_t {
     wsaerror = 1,
 };
-return_t get_lasterror(int code, int flags = 0);
+HOTPLACE_BASE_API return_t get_lasterror(int code, int flags = 0);
 
 }  // namespace hotplace
 

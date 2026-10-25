@@ -70,7 +70,7 @@ enum session_conf_t : uint16 {
     session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
 };
 
-class tls_session {
+class HOTPLACE_NET_API tls_session {
     friend class tls_protection;
 
    public:

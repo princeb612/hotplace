@@ -21,7 +21,7 @@ namespace net {
 /**
  * QUIC FRAME STREAM specific implementation
  */
-class quic_streams : public t_binaries<uint64, uint8> {
+class HOTPLACE_NET_API quic_streams : public t_binaries<uint64, uint8> {
    public:
     quic_streams();
 

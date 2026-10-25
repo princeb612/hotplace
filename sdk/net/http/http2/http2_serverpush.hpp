@@ -63,7 +63,7 @@ namespace net {
  *                  }
  *              }
  */
-class http2_serverpush {
+class HOTPLACE_NET_API http2_serverpush {
    public:
     http2_serverpush();
 

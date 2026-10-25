@@ -20,7 +20,7 @@ namespace hotplace {
 struct _debug_trace_context_t {};
 typedef struct _debug_trace_context_t debug_trace_context_t;
 
-class debug_trace {
+class HOTPLACE_BASE_API debug_trace {
    public:
     debug_trace();
     ~debug_trace();
@@ -36,7 +36,7 @@ class debug_trace {
    protected:
 };
 
-LONG __stdcall exception_handler(struct _EXCEPTION_POINTERS* exception_ptr);
+HOTPLACE_BASE_API LONG __stdcall exception_handler(struct _EXCEPTION_POINTERS* exception_ptr);
 
 }  // namespace hotplace
 

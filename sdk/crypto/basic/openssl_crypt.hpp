@@ -67,7 +67,7 @@ typedef struct _encrypt_option_t {
  *              crypt.close (handle);
  *          }
  */
-class openssl_crypt : public crypt_t {
+class HOTPLACE_CRYPTO_API openssl_crypt : public crypt_t {
    public:
     /**
      * @brief constructor

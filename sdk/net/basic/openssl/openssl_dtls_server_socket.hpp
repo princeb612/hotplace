@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   DTLS server socket
  */
-class openssl_dtls_server_socket : public naive_udp_server_socket {
+class HOTPLACE_NET_API openssl_dtls_server_socket : public naive_udp_server_socket {
    public:
     openssl_dtls_server_socket(openssl_tls* tls);
     virtual ~openssl_dtls_server_socket();

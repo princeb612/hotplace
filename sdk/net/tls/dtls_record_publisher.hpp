@@ -65,7 +65,7 @@ enum dtls_record_publisher_flag_t : uint32 {
  *          // fragmentation
  *          ret = record.get_session()->get_dtls_record_publisher().publish(record, dir, func);
  */
-class dtls_record_publisher {
+class HOTPLACE_NET_API dtls_record_publisher {
     friend class tls_session;
 
    public:

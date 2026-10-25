@@ -69,11 +69,11 @@ return_t base64_encode(const binary_t& source, T& streambuf, encoding_t encoding
     return base64_encode(source.data(), source.size(), streambuf, encoding, flags);
 }
 
-std::string base64_encode(const char* source, encoding_t encoding = encoding_t::encoding_base64);
-std::string base64_encode(const byte_t* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
-std::string base64_encode(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
-std::string base64_encode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
-std::string base64_encode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_encode(const char* source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_encode(const byte_t* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_encode(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_encode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_encode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
 
 template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base64_decode(const char* source, size_t size, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
@@ -104,29 +104,29 @@ return_t base64_decode(const std::string& source, T& streambuf, encoding_t encod
     return base64_decode(source.c_str(), source.size(), streambuf, encoding, flags);
 }
 
-binary_t base64_decode(const char* source, encoding_t encoding = encoding_t::encoding_base64);
-binary_t base64_decode(const char* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
-binary_t base64_decode(const byte_t* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
-binary_t base64_decode(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
-binary_t base64_decode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
-binary_t base64_decode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API binary_t base64_decode(const char* source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API binary_t base64_decode(const char* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API binary_t base64_decode(const byte_t* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API binary_t base64_decode(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API binary_t base64_decode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API binary_t base64_decode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
 
 /**
  * @brief   decode (use this only if the original source is a string)
  * @param   const std::string& source [in]
  * @param   encoding_t encoding [inopt] see encoding_t
  */
-std::string base64_decode_careful(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_decode_careful(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
 /**
  * @brief   decode (use this only if the original source is a string)
  * @param   const char* source [in]
  * @param   size_t source_size [in]
  * @param   encoding_t encoding [inopt] see encoding_t
  */
-std::string base64_decode_careful(const char* source, size_t source_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API std::string base64_decode_careful(const char* source, size_t source_size, encoding_t encoding = encoding_t::encoding_base64);
 
-return_t base64_encode_multiline(const byte_t* data, size_t data_size, uint16 column, std::string& encoded);
-return_t base64_decode_multiline(const char* encoded, size_t encoded_size, binary_t& decoded);
+HOTPLACE_BASE_API return_t base64_encode_multiline(const byte_t* data, size_t data_size, uint16 column, std::string& encoded);
+HOTPLACE_BASE_API return_t base64_decode_multiline(const char* encoded, size_t encoded_size, binary_t& decoded);
 
 }  // namespace hotplace
 

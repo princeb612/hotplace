@@ -24,7 +24,7 @@ namespace hotplace {
 /**
  * @brief   unicode string
  */
-class wide_string : public stream_t {
+class HOTPLACE_BASE_API wide_string : public stream_t {
    public:
     wide_string();
     wide_string(const local_stream_policy& policy);

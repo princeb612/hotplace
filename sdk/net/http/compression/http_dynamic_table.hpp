@@ -22,7 +22,7 @@ namespace net {
  * @brief   dynamic table
  * @sa      hpack_dynamic_table, qpack_dynamic_table
  */
-class http_dynamic_table {
+class HOTPLACE_NET_API http_dynamic_table {
    public:
     virtual ~http_dynamic_table();
     /**

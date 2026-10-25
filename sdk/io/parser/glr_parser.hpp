@@ -31,7 +31,7 @@
 namespace hotplace {
 namespace io {
 
-class glr_parser : public parser_t {
+class HOTPLACE_IO_API glr_parser : public parser_t {
    public:
     glr_parser();
     explicit glr_parser(const cfg_grammar& g);

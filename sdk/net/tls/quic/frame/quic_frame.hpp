@@ -32,7 +32,7 @@
 namespace hotplace {
 namespace net {
 
-class quic_frame {
+class HOTPLACE_NET_API quic_frame {
    public:
     quic_frame(quic_frame_t type, tls_session* session);
     virtual ~quic_frame();

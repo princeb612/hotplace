@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_record {
+class HOTPLACE_NET_API tls_record {
     friend class tls_record_application_data;
     friend class dtls13_ciphertext;
 

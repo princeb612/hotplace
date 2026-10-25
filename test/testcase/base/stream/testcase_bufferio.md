@@ -87,7 +87,7 @@ _test_case.assert((true == test), __FUNCTION__, "compare");
 
 ## Relationships
 - Test source: [`testcase_bufferio.cpp`](testcase_bufferio.cpp)
-- Module description: [`sdk/base/stream/lowlevel-bufferio.md`](../../../../sdk/base/stream/lowlevel-bufferio.md)
+- Module description: [`sdk/base/stream/lowlevel/bufferio.md`](../../../../sdk/base/stream/lowlevel/bufferio.md)
 - Related module: [`sdk/base/stream/basic_stream.md`](../../../../sdk/base/stream/basic_stream.md)
 - Related tests: [`testcase_stream.cpp`](testcase_stream.cpp)
 

@@ -305,7 +305,7 @@ void for_each(container_t& c, typename std::function<void(typename container_t::
     }
 }
 
-struct print_style_t {
+struct HOTPLACE_BASE_API print_style_t {
     std::string prologue;
     std::string delimiter;
     std::string epilogue;

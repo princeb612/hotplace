@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-class dtls_handshake_fragmented : public tls_handshake {
+class HOTPLACE_NET_API dtls_handshake_fragmented : public tls_handshake {
     friend class dtls_record_publisher;
 
    public:

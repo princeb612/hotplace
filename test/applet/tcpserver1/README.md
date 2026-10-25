@@ -67,6 +67,8 @@ The project-local [netclient](../netclient/README.md) can act as a peer for the 
 - [HTTP/1.1 server](../httpserver1/README.md) and [HTTP/2 server](../httpserver2/README.md) — application-protocol examples.
 - [Network server implementation](../../../sdk/net/server/README.md) — session/event abstractions.
 
-## Developer Notes
+## 5. References
+
+## 6. Developer Notes
 
 The applet contains distinct Linux and Windows event paths. When modifying one path, do not assume the other follows automatically; verify accept, receive, disconnect, and context cleanup behavior on the relevant platform. No new runtime test was performed as part of this documentation change.

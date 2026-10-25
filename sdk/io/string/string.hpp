@@ -24,11 +24,11 @@ namespace io {
 //
 
 #if defined _WIN32 || defined _WIN64
-std::wstring A2W(const char* source, uint32 codepage = 0);
-return_t A2W(std::wstring& target, const char* source, uint32 codepage = 0);
+HOTPLACE_IO_API std::wstring A2W(const char* source, uint32 codepage = 0);
+HOTPLACE_IO_API return_t A2W(std::wstring& target, const char* source, uint32 codepage = 0);
 
-std::string W2A(const wchar_t* source, uint32 codepage = 0);
-return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
+HOTPLACE_IO_API std::string W2A(const wchar_t* source, uint32 codepage = 0);
+HOTPLACE_IO_API return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
 #endif
 
 //
@@ -50,9 +50,9 @@ return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
  *  gettoken (data, token, 1, value);  // "item1"
  *  _test_case.assert (value == "item1", __FUNCTION__, "gettoken");
  */
-bool gettoken(const std::string& source, const std::string& token, size_t index, std::string& value);
+HOTPLACE_IO_API bool gettoken(const std::string& source, const std::string& token, size_t index, std::string& value);
 #if defined _WIN32 || defined _WIN64
-bool gettoken(const std::wstring& source, const std::wstring& token, size_t index, std::wstring& value);
+HOTPLACE_IO_API bool gettoken(const std::wstring& source, const std::wstring& token, size_t index, std::wstring& value);
 #endif
 
 /**
@@ -72,9 +72,9 @@ bool gettoken(const std::wstring& source, const std::wstring& token, size_t inde
 enum tokenize_mode_t {
     token_quoted = 1,
 };
-std::string tokenize(const std::string& source, const std::string& tokens, size_t& pos, int mode = 0);
+HOTPLACE_IO_API std::string tokenize(const std::string& source, const std::string& tokens, size_t& pos, int mode = 0);
 #if defined _WIN32 || defined _WIN64
-std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, size_t& pos, int mode = 0);
+HOTPLACE_IO_API std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, size_t& pos, int mode = 0);
 #endif
 
 /**
@@ -83,7 +83,7 @@ std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, si
  * @param  stream_t* s [out]
  * @param  uint32 flags [inopt] reserved
  */
-return_t escape_url(const char* url, stream_t* s, uint32 flags = 0);
+HOTPLACE_IO_API return_t escape_url(const char* url, stream_t* s, uint32 flags = 0);
 /**
  * @brief unescape
  * @param  const char* url [in]
@@ -93,7 +93,7 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags = 0);
  *        unescape("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb", &bs);
  *        std::cout << bs << std::endl; // https://client.example.com/cb
  */
-return_t unescape_url(const char* url, stream_t* s);
+HOTPLACE_IO_API return_t unescape_url(const char* url, stream_t* s);
 
 //
 // split_url
@@ -136,7 +136,7 @@ typedef struct _url_info_t {
  *        // info.query => client_id=12345
  *        // info.fragment => part1
  */
-return_t split_url(const char* url, url_info_t* info);
+HOTPLACE_IO_API return_t split_url(const char* url, url_info_t* info);
 
 }  // namespace io
 }  // namespace hotplace

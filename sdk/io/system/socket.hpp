@@ -34,7 +34,7 @@ namespace io {
  *          // ...
  *          close_socket (sock, true, 0);
  */
-return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_created, int address_type, const char* address, uint16 port);
+HOTPLACE_IO_API return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_created, int address_type, const char* address, uint16 port);
 /**
  * @brief   create a socket and listen, see alse CloseListener to free
  * @param   unsigned int size_vector    [in]
@@ -53,8 +53,8 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
  *              close_socket(sock, true, 0);
  *          }
  */
-return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint16 port,
-                         bool support_win32_acceptex = false);
+HOTPLACE_IO_API return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint16 port,
+                                         bool support_win32_acceptex = false);
 /**
  * @brief   create_socket and connect_socket_addr
  * @param   socket_t*   socket  [out]
@@ -63,7 +63,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
  * @param   uint32      timeout [in] second
  * @error   error code (see error.hpp)
  */
-return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint32 timeout);
+HOTPLACE_IO_API return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint32 timeout);
 /**
  * @brief   connect to address
  * @param   socket_t            sock        [in]
@@ -71,14 +71,14 @@ return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint
  * @param   socklen_t           addrlen     [in]
  * @param   uint32              timeout     [in]
  */
-return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 timeout);
+HOTPLACE_IO_API return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 timeout);
 /**
  * @brief   disconnect
  * @param   socket_t    sock    [in]
  * @param   bool        onoff   [in]
  * @param   uint16      linger  [in]
  */
-return_t close_socket(socket_t sock, bool onoff, uint16 linger);
+HOTPLACE_IO_API return_t close_socket(socket_t sock, bool onoff, uint16 linger);
 
 enum SOCK_WAIT_FLAGS {
     SOCK_WAIT_READABLE = 1 << 0,
@@ -90,9 +90,9 @@ enum SOCK_WAIT_FLAGS {
  * @param   uint32      milliSeconds    [in]
  * @param   uint32      flags           [in] see SOCK_WAIT_FLAGS
  */
-return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags);
+HOTPLACE_IO_API return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags);
 
-return_t set_sock_nbio(socket_t sock, uint32 nbio_mode);
+HOTPLACE_IO_API return_t set_sock_nbio(socket_t sock, uint32 nbio_mode);
 
 /**
  * @brief   sockaddr_storage
@@ -100,8 +100,8 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode);
  * @param   const char* address [in]
  * @param   uint16 port [in]
  */
-return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint16 port);
-void sockaddr_string(const sockaddr_storage_t& addr, std::string& address);
+HOTPLACE_IO_API return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint16 port);
+HOTPLACE_IO_API void sockaddr_string(const sockaddr_storage_t& addr, std::string& address);
 
 /**
  * @brief   type of socket
@@ -113,14 +113,14 @@ void sockaddr_string(const sockaddr_storage_t& addr, std::string& address);
  *          bool is_stream = (SOCK_STREAM == socktype);
  *          bool is_dgram = (SOCK_DGRAM == socktype);
  */
-return_t typeof_socket(socket_t sock, int& type);
+HOTPLACE_IO_API return_t typeof_socket(socket_t sock, int& type);
 
 #if defined _WIN32 || defined _WIN64
-return_t winsock_startup();
-void winsock_cleanup();
+HOTPLACE_IO_API return_t winsock_startup();
+HOTPLACE_IO_API void winsock_cleanup();
 #endif
 
-class socket_advisor {
+class HOTPLACE_IO_API socket_advisor {
    public:
     static socket_advisor* get_instance();
     std::string nameof_family(int code) const;

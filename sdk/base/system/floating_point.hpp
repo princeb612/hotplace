@@ -33,7 +33,7 @@ enum class fp_type_t {
     rational_type = 1,
     decimal_type = 2,
 };
-class floating_point {
+class HOTPLACE_BASE_API floating_point {
    public:
     floating_point(int64 x = 0);
 

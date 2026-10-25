@@ -117,7 +117,7 @@ struct buitinmemory_context {
     }
 };
 
-class builtinpool {
+class HOTPLACE_BASE_API builtinpool {
    public:
     builtinpool() = default;
     builtinpool(void* base, size_t limit, builtinpool_policy policy = builtinpool_policy::fixed, size_t expansion_size = BUILTINMEMORY_EXPANSION_SIZE);
@@ -280,7 +280,7 @@ namespace pooled {
 /**
  * @brief isolation scope manager using thread-local context
  */
-class scope final {
+class HOTPLACE_BASE_API scope final {
    public:
     explicit scope(builtinpool* pool) noexcept : _prev_pool(get_current_pool()) { get_current_pool() = pool; }
 

@@ -35,7 +35,7 @@ namespace io {
  *      std::string concise;
  *      base16_encode (bin, concise);   // base16 "83010203"
  */
-class cbor_publisher {
+class HOTPLACE_IO_API cbor_publisher {
    public:
     cbor_publisher();
 

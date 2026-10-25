@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace io {
 
-class winpe_checksum {
+class HOTPLACE_IO_API winpe_checksum {
    public:
     winpe_checksum();
     ~winpe_checksum();

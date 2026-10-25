@@ -23,7 +23,7 @@ namespace net {
  * @brief   TLS
  * @sa      trial_tls_client_socket, trial_tls_server_socket
  */
-class tls_composer {
+class HOTPLACE_NET_API tls_composer {
    public:
     tls_composer(tls_session* session);
     virtual ~tls_composer();

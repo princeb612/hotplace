@@ -21,7 +21,7 @@ namespace hotplace {
  *          huffman_coding huff;
  *          huff.imports(_h2hcodes);
  */
-class http_huffman_coding : public huffman_coding {
+class HOTPLACE_BASE_API http_huffman_coding : public huffman_coding {
    public:
     static http_huffman_coding* get_instance();
 

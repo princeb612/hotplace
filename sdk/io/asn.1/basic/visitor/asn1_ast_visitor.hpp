@@ -51,7 +51,7 @@ struct asn1_ast_descriptor {
     asn1_ast_descriptor() : object(nullptr) {}
 };
 
-class asn1_ast_visitor {
+class HOTPLACE_IO_API asn1_ast_visitor {
    public:
     using asn1_tree = t_tree<asn1_ast_descriptor>;
     using asn1_treenode = t_treenode<asn1_ast_descriptor>;

@@ -20,7 +20,7 @@ namespace net {
 /**
  * RFC 9114 7.2.2.  HEADERS
  */
-class http3_frame_headers : public http3_frame {
+class HOTPLACE_NET_API http3_frame_headers : public http3_frame {
    public:
     http3_frame_headers(tls_session* session);
 

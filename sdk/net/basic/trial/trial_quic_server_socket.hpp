@@ -19,7 +19,7 @@ namespace net {
 /**
  * @brief   QUIC server socket
  */
-class trial_quic_server_socket : public trial_dtls_server_socket {
+class HOTPLACE_NET_API trial_quic_server_socket : public trial_dtls_server_socket {
    public:
     trial_quic_server_socket();
     virtual ~trial_quic_server_socket();

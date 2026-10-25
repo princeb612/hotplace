@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_modules {
+class HOTPLACE_IO_API asn1_modules {
    public:
     static asn1_modules* get_instance();
 

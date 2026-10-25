@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.10. CONTINUATION
  */
-class http2_frame_continuation : public http2_frame {
+class HOTPLACE_NET_API http2_frame_continuation : public http2_frame {
    public:
     http2_frame_continuation();
     http2_frame_continuation(const http2_frame_continuation& other);

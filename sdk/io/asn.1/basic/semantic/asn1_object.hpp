@@ -79,7 +79,7 @@ struct asn1_option {
 /**
  * @brief   ASN.1
  */
-class asn1_object {
+class HOTPLACE_IO_API asn1_object {
     friend class asn1_module;
     friend class asn1_referenced_type;
     friend class asn1_tagged_type;

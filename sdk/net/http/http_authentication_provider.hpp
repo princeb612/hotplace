@@ -31,7 +31,7 @@ namespace net {
  *              }
  *          }
  */
-class http_authentication_provider {
+class HOTPLACE_NET_API http_authentication_provider {
    public:
     http_authentication_provider(const std::string& realm);
     virtual ~http_authentication_provider();

@@ -160,22 +160,22 @@ static inline double bin_to_fp(uint64 bin) { return fp64_from_binary64(bin); }
  * @param   variant& vt [out]
  * @param   float fp [in]
  */
-uint8 ieee754_as_small_as_possible(variant& vt, float fp);
-uint8 ieee754_as_small_as_possible(variant& vt, double fp);
+HOTPLACE_BASE_API uint8 ieee754_as_small_as_possible(variant& vt, float fp);
+HOTPLACE_BASE_API uint8 ieee754_as_small_as_possible(variant& vt, double fp);
 
-uint16 fp16_from_float(float single);
+HOTPLACE_BASE_API uint16 fp16_from_float(float single);
 /**
  * @brief    Fast Half Float Conversions
  * @refer   http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf
  */
-float float_from_fp16(uint16 half);
-double double_from_fp16(uint16 half);
+HOTPLACE_BASE_API float float_from_fp16(uint16 half);
+HOTPLACE_BASE_API double double_from_fp16(uint16 half);
 
 /**
  * @brief   single precision to half precision
  * @refer   https://www.corsix.org/content/converting-fp32-to-fp16
  */
-uint16 fp16_from_fp32(uint32 single);
+HOTPLACE_BASE_API uint16 fp16_from_fp32(uint32 single);
 
 enum class ieee754_typeof_t {
     ieee754_finite = 0,
@@ -191,13 +191,13 @@ enum class ieee754_typeof_t {
     ieee754_quadruple_precision,
     ieee754_octuple_precision,
 };
-ieee754_typeof_t ieee754_typeof(uint16 f);
-ieee754_typeof_t ieee754_typeof(float f);
-ieee754_typeof_t ieee754_typeof(double d);
+HOTPLACE_BASE_API ieee754_typeof_t ieee754_typeof(uint16 f);
+HOTPLACE_BASE_API ieee754_typeof_t ieee754_typeof(float f);
+HOTPLACE_BASE_API ieee754_typeof_t ieee754_typeof(double d);
 // understanding frexpf, frexp
-ieee754_typeof_t ieee754_exp(uint16 value, int* s, int* e, uint* m);
-ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m);
-ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m);
+HOTPLACE_BASE_API ieee754_typeof_t ieee754_exp(uint16 value, int* s, int* e, uint* m);
+HOTPLACE_BASE_API ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m);
+HOTPLACE_BASE_API ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m);
 
 static inline float ieee754_fabs(float v) { return fabsf(v); }
 static inline double ieee754_fabs(double v) { return fabs(v); }

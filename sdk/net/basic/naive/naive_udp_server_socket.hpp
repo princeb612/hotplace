@@ -20,7 +20,7 @@ namespace net {
  * @brief   UDP server socket
  * @sa      openssl_dtls_server_socket
  */
-class naive_udp_server_socket : public server_socket {
+class HOTPLACE_NET_API naive_udp_server_socket : public server_socket {
    public:
     naive_udp_server_socket();
     virtual ~naive_udp_server_socket();

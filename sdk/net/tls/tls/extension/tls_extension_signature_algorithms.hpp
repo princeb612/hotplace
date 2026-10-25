@@ -20,7 +20,7 @@ namespace net {
 /**
  * RFC 5246 7.4.1.4.1.  Signature Algorithms
  */
-class tls_extension_signature_algorithms : public tls_extension {
+class HOTPLACE_NET_API tls_extension_signature_algorithms : public tls_extension {
    public:
     tls_extension_signature_algorithms(tls_handshake* handshake);
     virtual ~tls_extension_signature_algorithms();

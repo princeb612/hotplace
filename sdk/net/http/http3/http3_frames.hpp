@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-class http3_frames {
+class HOTPLACE_NET_API http3_frames {
    public:
     http3_frames();
 

@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace io {
 
-class cbor_bstrings : public cbor_object {
+class HOTPLACE_IO_API cbor_bstrings : public cbor_object {
     friend class cbor_concise_visitor;
     friend class cbor_diagnostic_visitor;
 

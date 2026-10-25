@@ -31,7 +31,7 @@ namespace io {
  *          value->release();
  *          type->release();
  */
-class asn1_enum : public asn1_type {
+class HOTPLACE_IO_API asn1_enum : public asn1_type {
    public:
     asn1_enum();
     asn1_enum(const std::string& name);

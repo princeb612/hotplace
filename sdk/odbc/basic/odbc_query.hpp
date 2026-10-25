@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace odbc {
 
-class odbc_query {
+class HOTPLACE_ODBC_API odbc_query {
     friend class odbc_connector;
 
    public:
@@ -225,7 +225,7 @@ class odbc_query {
  *          jobqueue-based (merlin)
  *          leave it to developer (hotplace)
  */
-class odbc_sinker {
+class HOTPLACE_ODBC_API odbc_sinker {
    public:
     odbc_sinker(odbc_query* dbquery, uint32 timeout);
     ~odbc_sinker();

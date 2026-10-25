@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.9. WINDOW_UPDATE
  */
-class http2_frame_window_update : public http2_frame {
+class HOTPLACE_NET_API http2_frame_window_update : public http2_frame {
    public:
     http2_frame_window_update();
     http2_frame_window_update(const http2_frame_window_update& other);

@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace io {
 
-class cbor_data : public cbor_object {
+class HOTPLACE_IO_API cbor_data : public cbor_object {
     friend class cbor_pair;
     friend class cbor_bstrings;
     friend class cbor_tstrings;

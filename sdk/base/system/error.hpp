@@ -28,7 +28,7 @@ struct error_category_hint {
     std::string longname;       // "success", "expect_failure", "severe", ...
 };
 
-class error_advisor {
+class HOTPLACE_BASE_API error_advisor {
    public:
     static error_advisor* get_instance();
 

@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   encrypted_client_hello (0xfe0d)
  */
-class tls_extension_encrypted_client_hello : public tls_extension {
+class HOTPLACE_NET_API tls_extension_encrypted_client_hello : public tls_extension {
    public:
     tls_extension_encrypted_client_hello(tls_handshake* handshake);
     virtual ~tls_extension_encrypted_client_hello();

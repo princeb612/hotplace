@@ -21,7 +21,7 @@ namespace net {
 /**
  * RFC 9204 QPACK: Field Compression for HTTP/3
  */
-class qpack_encoder : public http_header_compression {
+class HOTPLACE_NET_API qpack_encoder : public http_header_compression {
    public:
     qpack_encoder();
     virtual ~qpack_encoder();

@@ -38,7 +38,7 @@ enum advisor_feature_t {
 /**
  * @brief   advisor
  */
-class crypto_advisor {
+class HOTPLACE_CRYPTO_API crypto_advisor {
    public:
     static crypto_advisor* get_instance();
 

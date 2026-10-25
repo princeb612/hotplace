@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-class http_header {
+class HOTPLACE_NET_API http_header {
    public:
     http_header();
     http_header(const http_header& object);

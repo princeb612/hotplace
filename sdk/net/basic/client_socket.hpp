@@ -24,7 +24,7 @@ namespace net {
  *          TLS - openssl_tls_client_socket, trial_tls_client_socket
  *          DTLS - openssl_dtls_client_socket, trial_dtls_client_socket
  */
-class client_socket : public basic_socket {
+class HOTPLACE_NET_API client_socket : public basic_socket {
    public:
     virtual ~client_socket();
 

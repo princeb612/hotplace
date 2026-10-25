@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_node {
+class HOTPLACE_IO_API asn1_node {
    public:
     asn1_node(const asn1_node& other);
     virtual ~asn1_node();

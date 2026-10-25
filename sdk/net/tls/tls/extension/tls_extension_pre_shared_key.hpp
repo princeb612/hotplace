@@ -20,13 +20,13 @@ namespace net {
 /**
  * @brief   pre_shared_key (0x0029)
  */
-class tls_extension_psk : public tls_extension {
+class HOTPLACE_NET_API tls_extension_psk : public tls_extension {
    protected:
     tls_extension_psk(tls_handshake* handshake);
     virtual ~tls_extension_psk();
 };
 
-class tls_extension_client_psk : public tls_extension_psk {
+class HOTPLACE_NET_API tls_extension_client_psk : public tls_extension_psk {
    public:
     tls_extension_client_psk(tls_handshake* handshake);
     virtual ~tls_extension_client_psk();
@@ -44,7 +44,7 @@ class tls_extension_client_psk : public tls_extension_psk {
     // size_t _offset_psk_binders_len;
 };
 
-class tls_extension_server_psk : public tls_extension_psk {
+class HOTPLACE_NET_API tls_extension_server_psk : public tls_extension_psk {
    public:
     tls_extension_server_psk(tls_handshake* handshake);
     virtual ~tls_extension_server_psk();

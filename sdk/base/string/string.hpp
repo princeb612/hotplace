@@ -21,8 +21,8 @@ namespace hotplace {
  * @example
  *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
  */
-std::string format(const char* fmt, ...);
-std::string format(const char* fmt, va_list ap);
+HOTPLACE_BASE_API std::string format(const char* fmt, ...);
+HOTPLACE_BASE_API std::string format(const char* fmt, va_list ap);
 
 /**
  * @brief replace
@@ -30,9 +30,9 @@ std::string format(const char* fmt, va_list ap);
  *  std::string data ("hello world");
  *  replace (data, "world", "neighbor");
  */
-void replace(std::string& source, const std::string& a, const std::string& b);
+HOTPLACE_BASE_API void replace(std::string& source, const std::string& a, const std::string& b);
 #if defined _WIN32 || defined _WIN64
-void replace(std::wstring& source, const std::wstring& a, const std::wstring& b);
+HOTPLACE_BASE_API void replace(std::wstring& source, const std::wstring& a, const std::wstring& b);
 #endif
 
 /**
@@ -55,9 +55,9 @@ void replace(std::wstring& source, const std::wstring& a, const std::wstring& b)
  *      pos = brk + 1;
  *  }
  */
-return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
+HOTPLACE_BASE_API return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
 #if defined _WIN32 || defined _WIN64
-return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
+HOTPLACE_BASE_API return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
 #endif
 
 /**
@@ -81,9 +81,9 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
  *      pos = brk + strlen (match) + 1;
  *  }
  */
-return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, const char* match);
+HOTPLACE_BASE_API return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, const char* match);
 #if defined _WIN32 || defined _WIN64
-return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk, const wchar_t* token);
+HOTPLACE_BASE_API return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk, const wchar_t* token);
 #endif
 
 /**
@@ -110,9 +110,9 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
  *      pos = brk + 1;
  *  }
  */
-return_t getline(const char* stream, size_t sizestream, size_t startpos, size_t* brk);
+HOTPLACE_BASE_API return_t getline(const char* stream, size_t sizestream, size_t startpos, size_t* brk);
 #if defined _WIN32 || defined _WIN64
-return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk);
+HOTPLACE_BASE_API return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk);
 #endif
 
 static inline int isnewline(int c) {

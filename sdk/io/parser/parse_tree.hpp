@@ -43,7 +43,7 @@ struct parse_treenode {
     void print(basic_stream& bs, int depth = 0) const;
 };
 
-class parse_tree {
+class HOTPLACE_IO_API parse_tree {
    public:
     parse_tree() = default;
     ~parse_tree();
@@ -134,7 +134,7 @@ class parse_tree {
  *          parse_tree_visitor visitor(lambda);
  *          pt.accept(&visitor);
  */
-class parse_tree_visitor {
+class HOTPLACE_IO_API parse_tree_visitor {
    public:
     parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*)>);
     ~parse_tree_visitor() = default;

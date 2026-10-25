@@ -26,7 +26,7 @@ namespace net {
  *                          .set_verify(0)
  *                          .build();
  */
-class server_socket_builder {
+class HOTPLACE_NET_API server_socket_builder {
    public:
     server_socket_builder();
 

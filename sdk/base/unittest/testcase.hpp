@@ -78,7 +78,7 @@ namespace hotplace {
  *      MSVC variable arguments ambiguity ... / va_list
  *      so, prefixed 'v' to functions that use the va_list parameter
  */
-class test_case {
+class HOTPLACE_BASE_API test_case {
    public:
     test_case();
 
@@ -228,7 +228,7 @@ class test_case {
  *          // do not count time this code block
  *      }
  */
-class test_case_notimecheck {
+class HOTPLACE_BASE_API test_case_notimecheck {
    public:
     test_case_notimecheck(test_case& tc) {
         tc.pause_time();

@@ -106,7 +106,7 @@ enum ipaddr_acl_t {
  *          ac.determine("10.21.13.25", check); // true
  *          ac.determine("10.20.2.11",  check); // true
  */
-class ipaddr_acl {
+class HOTPLACE_NET_API ipaddr_acl {
    public:
     ipaddr_acl();
     ipaddr_acl(ipaddr_acl& obj);

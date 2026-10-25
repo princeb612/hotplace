@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-class qpack_dynamic_table : public http_dynamic_table {
+class HOTPLACE_NET_API qpack_dynamic_table : public http_dynamic_table {
    public:
     qpack_dynamic_table();
     virtual ~qpack_dynamic_table();

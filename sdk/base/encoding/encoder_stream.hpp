@@ -29,7 +29,7 @@ namespace hotplace {
  *          encoder.add("hello world").add(uint32(value));
  *          auto result = encoder.str();
  */
-class encoder_stream {
+class HOTPLACE_BASE_API encoder_stream {
    public:
     /**
      * @brief   ctor

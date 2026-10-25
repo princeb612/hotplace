@@ -39,7 +39,7 @@ enum asn1_real_info_octet {
     asn1_real_exp_octs = 0x03,  // bit 2-1 11
 };
 
-class asn1_encode {
+class HOTPLACE_IO_API asn1_encode {
    public:
     asn1_encode();
 

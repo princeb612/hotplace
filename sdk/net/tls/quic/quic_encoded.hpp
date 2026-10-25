@@ -66,7 +66,7 @@ namespace net {
  *          pl4.read(bin3);
  *          pl4.write(bin4);
  */
-class quic_encoded : public payload_encoded {
+class HOTPLACE_NET_API quic_encoded : public payload_encoded {
    public:
     quic_encoded();
     quic_encoded(const quic_encoded& other);

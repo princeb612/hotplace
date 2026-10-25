@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_extension_unknown : public tls_extension {
+class HOTPLACE_NET_API tls_extension_unknown : public tls_extension {
    public:
     tls_extension_unknown(tls_extension_type_t type, tls_handshake* handshake);
     virtual ~tls_extension_unknown();

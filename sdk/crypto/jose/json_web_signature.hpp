@@ -61,7 +61,7 @@ namespace crypto {
  *  }
  *
  */
-class json_web_signature {
+class HOTPLACE_CRYPTO_API json_web_signature {
    public:
     json_web_signature();
     ~json_web_signature();

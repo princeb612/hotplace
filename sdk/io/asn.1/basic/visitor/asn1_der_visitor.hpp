@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_der_visitor {
+class HOTPLACE_IO_API asn1_der_visitor {
    public:
     asn1_der_visitor(binary_t* b, asn1_module* module, const asn1_value* value = nullptr);
     virtual ~asn1_der_visitor();

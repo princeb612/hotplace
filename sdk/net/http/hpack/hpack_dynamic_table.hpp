@@ -20,7 +20,7 @@ namespace net {
  * @brief   separate dynamic table per dyntable
  * @sa      hpack_encoder
  */
-class hpack_dynamic_table : public http_dynamic_table {
+class HOTPLACE_NET_API hpack_dynamic_table : public http_dynamic_table {
    public:
     hpack_dynamic_table();
     virtual ~hpack_dynamic_table();

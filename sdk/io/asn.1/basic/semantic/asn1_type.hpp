@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_type : public asn1_object {
+class HOTPLACE_IO_API asn1_type : public asn1_object {
     friend class asn1_builtin_type;
     friend class asn1_referenced_type;
     friend class asn1_tagged_type;

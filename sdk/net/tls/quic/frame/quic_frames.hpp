@@ -33,7 +33,7 @@
 namespace hotplace {
 namespace net {
 
-class quic_frames {
+class HOTPLACE_NET_API quic_frames {
    public:
     /**
      * @constructor

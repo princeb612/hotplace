@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_records {
+class HOTPLACE_NET_API tls_records {
    public:
     tls_records();
 

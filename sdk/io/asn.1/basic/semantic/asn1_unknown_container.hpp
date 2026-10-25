@@ -25,7 +25,7 @@ namespace io {
  *          asn1_sequence << asn1_unknown_container
  * @sa      production - ComponentTypeList, SequenceTypeSpec, SetTypeSpec, ChoiceTypeSpec
  */
-class asn1_unknown_container : public asn1_type {
+class HOTPLACE_IO_API asn1_unknown_container : public asn1_type {
     friend class asn1_container;
 
    public:

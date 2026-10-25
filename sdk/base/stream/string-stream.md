@@ -51,7 +51,7 @@ These references establish source-level test coverage for selected behavior, not
 ## 4. Relationships
 
 - [Base Stream](README.md) — stream layer overview
-- [Low-Level Buffer I/O](lowlevel-bufferio.md) — storage and formatted-output machinery
+- [Low-Level Buffer I/O](lowlevel/bufferio.md) — storage and formatted-output machinery
 - `sdk/base/string/` — general-purpose string and bounded-buffer helpers
 - `ansi_string.hpp/.cpp` and `unicode/wide_string.hpp/.cpp` implement the ANSI/wide string streams; `lowlevel/bufferio.*`, `unicode/bufferio_wcs.cpp`, `unicode/printf_wcs.cpp`, and `types.hpp` supply the lower-level storage, formatting, and conversion interfaces.
 - `sdk/io/string/` — I/O/protocol-facing string utilities

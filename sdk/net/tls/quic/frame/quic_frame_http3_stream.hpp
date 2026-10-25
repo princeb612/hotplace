@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-class quic_frame_http3_stream : public quic_frame_stream {
+class HOTPLACE_NET_API quic_frame_http3_stream : public quic_frame_stream {
    public:
     quic_frame_http3_stream(tls_session* session, uint8 type);
     virtual ~quic_frame_http3_stream();

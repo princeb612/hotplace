@@ -531,7 +531,8 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
  * @param const std::multimap<hotplace::range_t, size_t>& results [in] sorted results
  * @param std::function<bool(matched_t, hotplace::range_t, size_t)> func [in]
  */
-return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results, std::function<bool(matched_t, hotplace::range_t, size_t)> func);
+HOTPLACE_BASE_API return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results,
+                                         std::function<bool(matched_t, hotplace::range_t, size_t)> func);
 
 }  // namespace hotplace
 

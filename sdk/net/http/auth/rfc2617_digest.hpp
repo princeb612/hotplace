@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-class rfc2617_digest {
+class HOTPLACE_NET_API rfc2617_digest {
    public:
     rfc2617_digest();
 

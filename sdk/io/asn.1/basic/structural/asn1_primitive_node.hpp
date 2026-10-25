@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_primitive_node : public asn1_node {
+class HOTPLACE_IO_API asn1_primitive_node : public asn1_node {
    public:
     asn1_primitive_node(uint8 identifier, uint64 tag, uint64 len, const byte_t* stream, size_t size, size_t pos);
     asn1_primitive_node(const asn1_primitive_node& other);

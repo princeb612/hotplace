@@ -25,7 +25,7 @@ namespace crypto {
  *          hash.digest((byte_t*)" ", 1, hash2);      // hash2 = sha2_256(" ")
  *          hash.digest((byte_t*)"world", 5, hash3);  // hash3 = sha2_256("world")
  */
-class crypto_hash {
+class HOTPLACE_CRYPTO_API crypto_hash {
    public:
     crypto_hash(hash_algorithm_t alg);
 
@@ -51,7 +51,7 @@ class crypto_hash {
  *              hash->release();
  *          }
  */
-class crypto_hash_builder {
+class HOTPLACE_CRYPTO_API crypto_hash_builder {
    public:
     crypto_hash_builder();
     crypto_hash* build();

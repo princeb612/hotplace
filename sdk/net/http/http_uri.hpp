@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-class http_uri {
+class HOTPLACE_NET_API http_uri {
    public:
     http_uri();
     http_uri(const http_uri& object);

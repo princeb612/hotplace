@@ -24,7 +24,7 @@ namespace crypto {
 /**
  * @brief Windows PE authenticode
  */
-class authenticode_plugin_pe : public authenticode_plugin {
+class HOTPLACE_CRYPTO_API authenticode_plugin_pe : public authenticode_plugin {
    public:
     authenticode_plugin_pe();
     virtual ~authenticode_plugin_pe();

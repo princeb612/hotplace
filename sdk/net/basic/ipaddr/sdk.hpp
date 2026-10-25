@@ -20,7 +20,7 @@ namespace net {
  * @brief   dtls cookie
  * @remarks hmac("sha256", app_instance_nonce, (sockaddr*)&address, sizeof(address));
  */
-return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, socklen_t addrlen);
+HOTPLACE_NET_API return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, socklen_t addrlen);
 
 }  // namespace net
 }  // namespace hotplace

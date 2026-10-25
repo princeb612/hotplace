@@ -28,7 +28,7 @@ namespace io {
  *          asn1_enum << asn1_namedlist
  * @sa      production - EnumeratedType, Enumerations, Enumeration
  */
-class asn1_namedlist : public asn1_type {
+class HOTPLACE_IO_API asn1_namedlist : public asn1_type {
     friend class asn1_integer;
     friend class asn1_bitstring;
     friend class asn1_enum;

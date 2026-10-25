@@ -51,7 +51,7 @@ namespace io {
  *          value->release();
  *          type->release();
  */
-class asn1_builtin_type : public asn1_type {
+class HOTPLACE_IO_API asn1_builtin_type : public asn1_type {
    public:
     // INTEGER
     asn1_builtin_type(asn1_entity_t entity);

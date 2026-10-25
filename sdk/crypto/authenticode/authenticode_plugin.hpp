@@ -25,7 +25,7 @@ namespace crypto {
 /**
  * @brief abstract engine class for PE, MSI, Cabinet
  */
-class authenticode_plugin {
+class HOTPLACE_CRYPTO_API authenticode_plugin {
    public:
     authenticode_plugin();
     virtual ~authenticode_plugin();

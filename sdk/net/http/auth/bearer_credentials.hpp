@@ -20,7 +20,7 @@ namespace hotplace {
 namespace net {
 
 class http_authentication_provider;
-class bearer_credentials {
+class HOTPLACE_NET_API bearer_credentials {
    public:
     bearer_credentials();
 

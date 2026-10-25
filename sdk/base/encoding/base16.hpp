@@ -57,11 +57,11 @@ return_t base16_encode(const binary_t& source, T& streambuf, uint32 flags = 0) {
     return base16_encode(source.data(), source.size(), streambuf, flags);
 }
 
-std::string base16_encode(const char* source, uint32 flags = 0);
-std::string base16_encode(const byte_t* source, size_t size, uint32 flags = 0);
-std::string base16_encode(const std::string& source, uint32 flags = 0);
-std::string base16_encode(const binary_t& source, uint32 flags = 0);
-std::string base16_encode(const basic_stream& source, uint32 flags = 0);
+HOTPLACE_BASE_API std::string base16_encode(const char* source, uint32 flags = 0);
+HOTPLACE_BASE_API std::string base16_encode(const byte_t* source, size_t size, uint32 flags = 0);
+HOTPLACE_BASE_API std::string base16_encode(const std::string& source, uint32 flags = 0);
+HOTPLACE_BASE_API std::string base16_encode(const binary_t& source, uint32 flags = 0);
+HOTPLACE_BASE_API std::string base16_encode(const basic_stream& source, uint32 flags = 0);
 
 template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 flags = 0) {
@@ -90,12 +90,12 @@ return_t base16_decode(const std::string& source, T& streambuf, uint32 flags = 0
     return base16_decode(source.c_str(), source.size(), streambuf, flags);
 }
 
-binary_t base16_decode(const char* source);
-binary_t base16_decode(const char* source, size_t size);
-binary_t base16_decode(const byte_t* source, size_t size);
-binary_t base16_decode(const std::string& source);
-binary_t base16_decode(const binary_t& source);
-binary_t base16_decode(const basic_stream& source);
+HOTPLACE_BASE_API binary_t base16_decode(const char* source);
+HOTPLACE_BASE_API binary_t base16_decode(const char* source, size_t size);
+HOTPLACE_BASE_API binary_t base16_decode(const byte_t* source, size_t size);
+HOTPLACE_BASE_API binary_t base16_decode(const std::string& source);
+HOTPLACE_BASE_API binary_t base16_decode(const binary_t& source);
+HOTPLACE_BASE_API binary_t base16_decode(const basic_stream& source);
 
 /**
  * @brief   encode (support various rfc-style)
@@ -113,27 +113,27 @@ binary_t base16_decode(const basic_stream& source);
  *      binary_t key = base16_encode_rfc("80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f"
  *                                       "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f");
  */
-std::string base16_encode_rfc(const std::string& source);
+HOTPLACE_BASE_API std::string base16_encode_rfc(const std::string& source);
 /**
  * @brief   decode
  * @param   const std::string& source [in]
  * @return  binary_t
  * @sample  base16_encode_rfc
  */
-binary_t base16_decode_rfc(const std::string& source);
+HOTPLACE_BASE_API binary_t base16_decode_rfc(const std::string& source);
 /**
  * @param   const char* source [in]
  * @example
  *          binary_t key = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f"));
  * @sample  base16_encode_rfc
  */
-binary_t base16_decode_rfc(const char* source);
+HOTPLACE_BASE_API binary_t base16_decode_rfc(const char* source);
 
-bool base16_compare(const std::string& lhs, const std::string& rhs);
-bool base16_compare(const char* lhs, const char* rhs);
+HOTPLACE_BASE_API bool base16_compare(const std::string& lhs, const std::string& rhs);
+HOTPLACE_BASE_API bool base16_compare(const char* lhs, const char* rhs);
 
 // when a string like '01 02'H is provided, check the encoding of the string enclosed within the single quotes.
-bool is_base16_rfc_encoded(const char* p, size_t size);
+HOTPLACE_BASE_API bool is_base16_rfc_encoded(const char* p, size_t size);
 
 }  // namespace hotplace
 

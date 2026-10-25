@@ -30,7 +30,7 @@ enum asn1_builder_flag_t : uint32 {
     flag_as_constructed = (1 << 2),  // constructed
 };
 
-class asn1_builder {
+class HOTPLACE_IO_API asn1_builder {
    public:
     asn1_builder();
 

@@ -25,7 +25,7 @@ namespace net {
 
 typedef std::function<bool(http_authentication_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
 
-class http_authentication_resolver {
+class HOTPLACE_NET_API http_authentication_resolver {
    public:
     http_authentication_resolver();
 

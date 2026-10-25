@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7838 4.  The ALTSVC HTTP/2 Frame
  */
-class http2_frame_alt_svc : public http2_frame {
+class HOTPLACE_NET_API http2_frame_alt_svc : public http2_frame {
    public:
     http2_frame_alt_svc();
     http2_frame_alt_svc(const http2_frame_alt_svc& other);

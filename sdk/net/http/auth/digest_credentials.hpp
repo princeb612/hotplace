@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-class digest_credentials {
+class HOTPLACE_NET_API digest_credentials {
    public:
     digest_credentials();
 

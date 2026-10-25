@@ -74,19 +74,19 @@ enum trace_option_t : uint32 {
  * @brief trace
  * @param uint32 option [in] see trace_option_t
  */
-uint32 set_trace_option(uint32 option);
-uint32 get_trace_option();
+HOTPLACE_BASE_API uint32 set_trace_option(uint32 option);
+HOTPLACE_BASE_API uint32 get_trace_option();
 
 /**
  * @brief backtrace
  */
-return_t trace_backtrace(return_t errorcode);
+HOTPLACE_BASE_API return_t trace_backtrace(return_t errorcode);
 
 /**
  * @brief exception
  */
-void set_trace_exception();
-void reset_trace_exception();
+HOTPLACE_BASE_API void set_trace_exception();
+HOTPLACE_BASE_API void reset_trace_exception();
 
 }  // namespace hotplace
 

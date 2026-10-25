@@ -21,12 +21,12 @@
 namespace hotplace {
 namespace io {
 
-struct oid_metadata {
+struct HOTPLACE_IO_API oid_metadata {
     std::string name;
     std::string description;
 };
 
-class oid_dictionary {
+class HOTPLACE_IO_API oid_dictionary {
    public:
     static oid_dictionary* get_instance();
     ~oid_dictionary();

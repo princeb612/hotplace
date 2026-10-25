@@ -22,7 +22,7 @@ namespace io {
 /**
  * dedicated container cf. ("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "SubtypeElement"})
  */
-class asn1_constraint_container : public asn1_constraint_t {
+class HOTPLACE_IO_API asn1_constraint_container : public asn1_constraint_t {
     friend class asn1_constraints;
 
    public:

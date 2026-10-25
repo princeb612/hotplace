@@ -30,7 +30,7 @@ namespace net {
  *              }
  *          }
  */
-class trial_dtls_client_socket : public secure_client_socket {
+class HOTPLACE_NET_API trial_dtls_client_socket : public secure_client_socket {
    public:
     trial_dtls_client_socket(tls_version_t spec = dtls_12);
     virtual ~trial_dtls_client_socket();

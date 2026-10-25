@@ -42,7 +42,7 @@ enum sign_flag_t : uint32 {
 /**
  * @brief openssl_sign
  */
-class openssl_sign {
+class HOTPLACE_CRYPTO_API openssl_sign {
    public:
     /**
      * @brief constructor

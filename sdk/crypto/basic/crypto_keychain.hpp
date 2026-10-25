@@ -75,7 +75,7 @@ enum keyflag_t {
  *                  algorithm : algorithm description
  *                  usage : use_any, use_enc, use_sig (each of them stand for any, encryption, signature)
  */
-class crypto_keychain {
+class HOTPLACE_CRYPTO_API crypto_keychain {
    public:
     /**
      * @brief constructor

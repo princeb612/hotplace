@@ -52,20 +52,20 @@ namespace crypto {
  *    #define NID_ML_KEM_768            1455
  *    #define NID_ML_KEM_1024           1456
  */
-return_t nidof_evp_pkey(const EVP_PKEY* key, uint32& nid);
+HOTPLACE_CRYPTO_API return_t nidof_evp_pkey(const EVP_PKEY* key, uint32& nid);
 /**
  * @brief kindof
  * @param const EVP_PKEY* pkey [in]
  */
-bool kindof_ecc(const EVP_PKEY* pkey);
+HOTPLACE_CRYPTO_API bool kindof_ecc(const EVP_PKEY* pkey);
 
 /**
  * @brfief key type
  * @param const EVP_PKEY* key [in]
  * @return crypto_kty_t
  */
-crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* key);
-crypto_kty_t ktyof_nid(uint32 nid);
+HOTPLACE_CRYPTO_API crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* key);
+HOTPLACE_CRYPTO_API crypto_kty_t ktyof_nid(uint32 nid);
 
 /**
  * @brief is private key
@@ -73,7 +73,7 @@ crypto_kty_t ktyof_nid(uint32 nid);
  * @param bool& result [out]
  * @return error code (see error.hpp)
  */
-return_t is_private_key(const EVP_PKEY* pkey, bool& result);
+HOTPLACE_CRYPTO_API return_t is_private_key(const EVP_PKEY* pkey, bool& result);
 
 /**
  * @brief kindof
@@ -81,32 +81,32 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result);
  * @return bool
  * @remarks kty_ec, kty_okp
  */
-bool kindof_ecc(crypto_kty_t type);
+HOTPLACE_CRYPTO_API bool kindof_ecc(crypto_kty_t type);
 /**
  * @brief kty from key
  * @param crypto_kty_t type
  * @return oct, RSA, EC, OKP
  */
-const char* nameof_key_type(crypto_kty_t type);
+HOTPLACE_CRYPTO_API const char* nameof_key_type(crypto_kty_t type);
 /**
  * @brief compare
  * @param const EVP_PKEY* pkey [in]
  * @param crypto_kty_t type [in]
  */
-bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type);
+HOTPLACE_CRYPTO_API bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type);
 
 /**
  * @brief bn2bin
  * @param const BIGNUM* bn [in]
  * @param binary_t& bin [out]
  */
-return_t bn2bin(const BIGNUM* bn, binary_t& bin);
+HOTPLACE_CRYPTO_API return_t bn2bin(const BIGNUM* bn, binary_t& bin);
 /**
  * @brief bin2bn
  * @param const binary_t& bin [in]
  * @param BIGNUM** bn [out]
  */
-return_t bin2bn(const binary_t& bin, BIGNUM** bn);
+HOTPLACE_CRYPTO_API return_t bin2bn(const binary_t& bin, BIGNUM** bn);
 
 }  // namespace crypto
 }  // namespace hotplace

@@ -19,15 +19,15 @@ namespace hotplace {
 
 // ASN.1 OID
 
-return_t base128_encode(uint64 value, binary_t& bin);
-return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, uint64& value);
+HOTPLACE_BASE_API return_t base128_encode(uint64 value, binary_t& bin);
+HOTPLACE_BASE_API return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, uint64& value);
 
-return_t base128_encode(const byte_t* stream, size_t size, binary_t& bin);
-return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, binary_t& value);
+HOTPLACE_BASE_API return_t base128_encode(const byte_t* stream, size_t size, binary_t& bin);
+HOTPLACE_BASE_API return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, binary_t& value);
 
-return_t base128_encode(const bignumber& value, binary_t& bin);
-return_t base128_decode(const binary_t& bin, bignumber& value);
-return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, bignumber& value);
+HOTPLACE_BASE_API return_t base128_encode(const bignumber& value, binary_t& bin);
+HOTPLACE_BASE_API return_t base128_decode(const binary_t& bin, bignumber& value);
+HOTPLACE_BASE_API return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, bignumber& value);
 
 }  // namespace hotplace
 

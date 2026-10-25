@@ -37,7 +37,7 @@ enum oqs_alg_flag_t {
  *                                                  decode public key
  *      sign message                      --->      verify message
  */
-class pqc_oqs {
+class HOTPLACE_CRYPTO_API pqc_oqs {
    public:
     pqc_oqs();
     ~pqc_oqs();

@@ -23,7 +23,7 @@ namespace net {
 /**
  * @brief session data
  */
-class network_session_data : public skey_value {
+class HOTPLACE_NET_API network_session_data : public skey_value {
    public:
     network_session_data() {}
     virtual ~network_session_data() {}
@@ -32,7 +32,7 @@ class network_session_data : public skey_value {
 /**
  * @brief session
  */
-class network_session {
+class HOTPLACE_NET_API network_session {
     friend class network_server;
 
    public:
@@ -167,7 +167,7 @@ class network_session {
 /**
  * @brief network_session container
  */
-class network_session_manager {
+class HOTPLACE_NET_API network_session_manager {
    public:
     network_session_manager();
     ~network_session_manager();

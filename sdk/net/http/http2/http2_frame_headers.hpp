@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.2 HEADERS
  */
-class http2_frame_headers : public http2_frame {
+class HOTPLACE_NET_API http2_frame_headers : public http2_frame {
    public:
     http2_frame_headers();
     http2_frame_headers(const http2_frame_headers& other);

@@ -33,7 +33,7 @@ namespace io {
  * Type6 ::= [1] EXPLICIT Type1,            "A1 07 1A 05 4A 6F 6E 65 73"       (PC=1 CONTEXT 1, PC=0 UNIVERSAL)
  * Type7 ::= [2] EXPLICIT Type6,            "A2 09 A1 07 1A 05 4A 6F 6E 65 73" (PC=1 CONTEXT 2, PC=1 CONTEXT 1, PC=0 UNIVERSAL)
  */
-class asn1_weakly_typed {
+class HOTPLACE_IO_API asn1_weakly_typed {
     friend class asn1_module;
 
    public:

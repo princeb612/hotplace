@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace io {
 
-class cbor_visitor {
+class HOTPLACE_IO_API cbor_visitor {
    public:
     virtual ~cbor_visitor() = default;
     virtual return_t visit(cbor_object* object) = 0;
@@ -30,7 +30,7 @@ class cbor_visitor {
  * @brief concise
  * @sa cbor_publisher
  */
-class cbor_concise_visitor : public cbor_visitor {
+class HOTPLACE_IO_API cbor_concise_visitor : public cbor_visitor {
    public:
     cbor_concise_visitor(binary_t* concise);
     virtual ~cbor_concise_visitor();
@@ -46,7 +46,7 @@ class cbor_concise_visitor : public cbor_visitor {
  * @brief diagnostic
  * @sa cbor_publisher
  */
-class cbor_diagnostic_visitor : public cbor_visitor {
+class HOTPLACE_IO_API cbor_diagnostic_visitor : public cbor_visitor {
    public:
     cbor_diagnostic_visitor(stream_t* stream);
     virtual ~cbor_diagnostic_visitor();

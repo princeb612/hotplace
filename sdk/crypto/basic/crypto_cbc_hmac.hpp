@@ -87,7 +87,7 @@ namespace crypto {
  *          ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, plaintext);
  */
 
-class crypto_cbc_hmac {
+class HOTPLACE_CRYPTO_API crypto_cbc_hmac {
    public:
     crypto_cbc_hmac();
 

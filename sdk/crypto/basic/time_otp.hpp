@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-class time_otp {
+class HOTPLACE_CRYPTO_API time_otp {
    public:
     time_otp();
     ~time_otp();

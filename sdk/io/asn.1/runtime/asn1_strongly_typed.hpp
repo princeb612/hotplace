@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_strongly_typed {
+class HOTPLACE_IO_API asn1_strongly_typed {
     friend class asn1_module;
 
    public:

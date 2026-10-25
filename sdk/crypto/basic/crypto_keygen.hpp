@@ -58,7 +58,7 @@ namespace crypto {
  *              .set("d", "...")
  *              .build();  // private key (x, d)
  */
-class crypto_keygen {
+class HOTPLACE_CRYPTO_API crypto_keygen {
    public:
     /**
      * @brief   key generator

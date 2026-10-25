@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-class custom_credentials {
+class HOTPLACE_NET_API custom_credentials {
    public:
     custom_credentials();
 

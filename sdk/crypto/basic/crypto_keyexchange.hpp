@@ -89,7 +89,7 @@ namespace crypto {
  *          // bob -> alice
  *          keyexch_alice.decaps(&keystore_alice, "alice", share_bob, sharedsecret_alice);
  */
-class crypto_keyexchange {
+class HOTPLACE_CRYPTO_API crypto_keyexchange {
    public:
     crypto_keyexchange(tls_group_t group = tls_group_t{});
     ~crypto_keyexchange();

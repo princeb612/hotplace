@@ -35,7 +35,7 @@ struct bpt_goto_item_t {
 /**
  * @brief   parsing table
  */
-class binary_parsing_table {
+class HOTPLACE_IO_API binary_parsing_table {
    public:
     binary_parsing_table();
 

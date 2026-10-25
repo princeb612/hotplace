@@ -29,7 +29,7 @@ namespace io {
  *          {_ "Fun": true, "Amt": -2}
  * @sa      cbor_map
  */
-class cbor_pair : public cbor_object {
+class HOTPLACE_IO_API cbor_pair : public cbor_object {
     friend class cbor_map;
     friend class cbor_concise_visitor;
     friend class cbor_diagnostic_visitor;

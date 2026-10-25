@@ -21,7 +21,7 @@ namespace io {
 /**
  * @brief   SEQUENCE OF, SET OF
  */
-class asn1_container_of : public asn1_type {
+class HOTPLACE_IO_API asn1_container_of : public asn1_type {
    public:
     virtual ~asn1_container_of();
 

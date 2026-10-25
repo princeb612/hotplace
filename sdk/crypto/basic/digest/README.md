@@ -29,7 +29,7 @@ This directory provides message-digest operations and a stateful transcript-hash
 
 ## 3. Behavior Model
 
-### 3.1 One-shot digest lifecycle
+### One-shot digest lifecycle
 
 ```text
 algorithm enum/name
@@ -49,7 +49,7 @@ open hash_context_t → update(input) → finalize → digest bytes
 
 The builder chooses the algorithm-bound facade; it does not hash the input. The backend opens the selected digest context, consumes the bytes, finalizes the digest and releases the context according to the concrete API path.
 
-### 3.2 Incremental transcript lifecycle
+### Incremental transcript lifecycle
 
 ```text
 transcript_hash_builder
@@ -104,7 +104,7 @@ TLS handshake processing hashes handshake messages in protocol-defined order. In
 
 The advisor's algorithm metadata does not guarantee that the active OpenSSL build/provider offers a particular digest. Keep the selected algorithm, context lifecycle and backend availability separate in diagnostics.
 
-### 3.3 Concrete caller path: accumulate a handshake transcript
+### Concrete caller path: accumulate a handshake transcript
 
 The transcript testcase compares three ways to hash the same ordered message sequence. The facade form is the one most relevant to a caller that wants checkpoints as messages arrive:
 

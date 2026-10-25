@@ -21,7 +21,7 @@ namespace hotplace {
 namespace net {
 
 class http_authentication_provider;
-class basic_credentials {
+class HOTPLACE_NET_API basic_credentials {
    public:
     basic_credentials();
 

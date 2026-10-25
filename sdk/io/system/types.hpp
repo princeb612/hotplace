@@ -19,8 +19,8 @@ namespace io {
 
 #if defined __SIZEOF_INT128__
 
-int128 atoi128(const std::string& in);
-uint128 atou128(const std::string& in);
+HOTPLACE_IO_API int128 atoi128(const std::string& in);
+HOTPLACE_IO_API uint128 atou128(const std::string& in);
 
 #endif
 

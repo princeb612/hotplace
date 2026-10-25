@@ -23,20 +23,20 @@ enum zlib_windowbits_t {
     windowbits_gzip = 2,     /* RFC1952 : GZIP file format specification version 4.3, using windowBits MAX_WBITS + 16(31) */
 };
 
-return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output);
-return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output);
-return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output);
-return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output);
-return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t const* input, binary_t& output);
-return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, binary_t& output);
-return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output);
-return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output);
-return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output);
-return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output);
-return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t const* input, stream_t* output);
-return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, stream_t* output);
-int zlib_def(FILE* source, FILE* dest, int level);
-int zlib_inf(FILE* source, FILE* dest);
+HOTPLACE_IO_API return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output);
+HOTPLACE_IO_API return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output);
+HOTPLACE_IO_API return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output);
+HOTPLACE_IO_API return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output);
+HOTPLACE_IO_API return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t const* input, binary_t& output);
+HOTPLACE_IO_API return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, binary_t& output);
+HOTPLACE_IO_API return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output);
+HOTPLACE_IO_API return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output);
+HOTPLACE_IO_API return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output);
+HOTPLACE_IO_API return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output);
+HOTPLACE_IO_API return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t const* input, stream_t* output);
+HOTPLACE_IO_API return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, stream_t* output);
+HOTPLACE_IO_API int zlib_def(FILE* source, FILE* dest, int level);
+HOTPLACE_IO_API int zlib_inf(FILE* source, FILE* dest);
 
 }  // namespace io
 }  // namespace hotplace

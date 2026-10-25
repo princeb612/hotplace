@@ -36,7 +36,7 @@ namespace crypto {
  *      oqs-provider - openssl-3.0 required
  */
 
-class openssl_pqc {
+class HOTPLACE_CRYPTO_API openssl_pqc {
    public:
     openssl_pqc();
     ~openssl_pqc();

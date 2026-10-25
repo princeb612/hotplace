@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-class json_object_signing {
+class HOTPLACE_CRYPTO_API json_object_signing {
    public:
     json_object_signing();
     ~json_object_signing();

@@ -177,7 +177,7 @@ namespace crypto {
  *  json_object_encryption - implementation of encryption
  *  json_object_signing - implementation of signing
  */
-class json_object_signing_encryption {
+class HOTPLACE_CRYPTO_API json_object_signing_encryption {
     friend class json_object_encryption;
 
    public:

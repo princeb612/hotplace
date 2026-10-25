@@ -42,7 +42,7 @@ enum netserver_config_t {
     serverconf_udp_bufsize = 16,
 };
 
-class server_conf : public t_key_value<netserver_config_t, uint16> {
+class HOTPLACE_NET_API server_conf : public t_key_value<netserver_config_t, uint16> {
    public:
     server_conf();
     server_conf(const server_conf& other);
@@ -120,7 +120,7 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *  }
  *
  */
-class network_server {
+class HOTPLACE_NET_API network_server {
    public:
     network_server();
     ~network_server();

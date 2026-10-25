@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-class sslkeylog_importer {
+class HOTPLACE_NET_API sslkeylog_importer {
    public:
     static sslkeylog_importer* get_instance();
 

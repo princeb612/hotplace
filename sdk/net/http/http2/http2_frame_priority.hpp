@@ -22,7 +22,7 @@ namespace net {
  *          RFC 7540 6.3. PRIORITY
  *          RFC 7540 Figure 8: PRIORITY Frame Payload
  */
-class http2_frame_priority : public http2_frame {
+class HOTPLACE_NET_API http2_frame_priority : public http2_frame {
    public:
     http2_frame_priority();
     http2_frame_priority(const http2_frame_priority& other);

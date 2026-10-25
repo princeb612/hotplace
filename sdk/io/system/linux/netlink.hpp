@@ -41,7 +41,7 @@ typedef struct _PROC_EVENT {
 /*
  * @brief (event-driven) process monitoring
  */
-class netlink {
+class HOTPLACE_IO_API netlink {
    public:
     netlink();
     ~netlink();

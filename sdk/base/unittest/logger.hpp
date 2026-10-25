@@ -57,7 +57,7 @@ enum logger_t {
 
 class test_case;
 class logger;
-class logger_builder {
+class HOTPLACE_BASE_API logger_builder {
    public:
     logger_builder();
     logger_builder& set(logger_t key, uint16 value);
@@ -76,7 +76,7 @@ class logger_builder {
 /**
  * @brief   logger
  */
-class logger {
+class HOTPLACE_BASE_API logger {
     friend class logger_builder;
 
    private:

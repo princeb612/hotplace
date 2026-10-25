@@ -20,7 +20,7 @@ namespace net {
  * @brief   static table
  * @remarks cannot access directly, use hpack_static_table or qpack_static_table instead
  */
-class http_static_table {
+class HOTPLACE_NET_API http_static_table {
    public:
     /**
      * @brief   match

@@ -45,11 +45,13 @@ typedef struct _split_context_t {
     std::string source;
     split_map_list info;
 } split_context_t;
-return_t split_begin(split_context_t** handle, const char* str, const char* delim);
-return_t split_count(split_context_t* handle, size_t& result);
-return_t split_get(split_context_t* handle, size_t index, binary_t& data);
-return_t split_get(split_context_t* handle, size_t index, std::string& data);
-return_t split_end(split_context_t* handle);
+
+HOTPLACE_BASE_API return_t split_begin(split_context_t** handle, const char* str, const char* delim);
+HOTPLACE_BASE_API return_t split_count(split_context_t* handle, size_t& result);
+HOTPLACE_BASE_API return_t split_get(split_context_t* handle, size_t index, binary_t& data);
+HOTPLACE_BASE_API return_t split_get(split_context_t* handle, size_t index, std::string& data);
+HOTPLACE_BASE_API return_t split_end(split_context_t* handle);
+
 template <typename F>  // void(const std::string&)
 return_t split_foreach(split_context_t* handle, F func) {
     if (nullptr == handle) return errorcode_t::invalid_parameter;
@@ -61,6 +63,7 @@ return_t split_foreach(split_context_t* handle, F func) {
     }
     return errorcode_t::success;
 }
+
 template <typename F>  // bool(const std::string&)
 return_t split_chained_foreach(split_context_t* handle, F func) {
     if (nullptr == handle) return errorcode_t::invalid_parameter;

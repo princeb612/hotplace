@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace crypto {
 
-class json_object_encryption {
+class HOTPLACE_CRYPTO_API json_object_encryption {
    public:
     json_object_encryption();
     ~json_object_encryption();

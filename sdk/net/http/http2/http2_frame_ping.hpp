@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.7. PING
  */
-class http2_frame_ping : public http2_frame {
+class HOTPLACE_NET_API http2_frame_ping : public http2_frame {
    public:
     http2_frame_ping();
     http2_frame_ping(const http2_frame_ping& other);

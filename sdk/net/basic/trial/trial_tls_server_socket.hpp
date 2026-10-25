@@ -24,7 +24,7 @@ namespace net {
 /**
  * @brief   TLS server socket
  */
-class trial_tls_server_socket : public naive_tcp_server_socket {
+class HOTPLACE_NET_API trial_tls_server_socket : public naive_tcp_server_socket {
    public:
     trial_tls_server_socket(tls_version_t minspec = tls_12, tls_version_t maxspec = tls_13);
     virtual ~trial_tls_server_socket();

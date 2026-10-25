@@ -28,7 +28,7 @@ namespace io {
 /**
  * ITU-T X.682 ISO/IEC 8824-3
  */
-class asn1_constraints {
+class HOTPLACE_IO_API asn1_constraints {
     friend class asn1_object;
 
    public:

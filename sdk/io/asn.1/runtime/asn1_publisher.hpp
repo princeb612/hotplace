@@ -27,7 +27,7 @@
 namespace hotplace {
 namespace io {
 
-struct asn1_semantic_node {
+struct HOTPLACE_IO_API asn1_semantic_node {
     // parse_tree
     std::string symbol;
     std::string value;
@@ -123,7 +123,7 @@ struct asn1_semantic_node {
     }
 };
 
-class asn1_publisher_context {
+class HOTPLACE_IO_API asn1_publisher_context {
    public:
     asn1_publisher_context() = default;
     ~asn1_publisher_context() = default;
@@ -156,7 +156,7 @@ class asn1_publisher_context {
  *          auto publisher = asn1_advisor::get_instance()->get_publisher();
  *          publisher->parse(pt, result);
  */
-class asn1_publisher {
+class HOTPLACE_IO_API asn1_publisher {
     friend class asn1_advisor;
 
    public:

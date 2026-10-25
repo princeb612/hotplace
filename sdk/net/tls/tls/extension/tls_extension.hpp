@@ -24,7 +24,7 @@ namespace net {
 /**
  * @brief   TLS extension
  */
-class tls_extension {
+class HOTPLACE_NET_API tls_extension {
    public:
     tls_extension(tls_handshake* hs);
     tls_extension(tls_extension_type_t type, tls_handshake* hs);

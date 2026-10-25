@@ -24,7 +24,7 @@ namespace net {
  *          record.get_handshakes().add(handshake);
  *          record.write(from_server, bin);  // S -> C finished
  */
-class tls_handshake_finished : public tls_handshake {
+class HOTPLACE_NET_API tls_handshake_finished : public tls_handshake {
    public:
     tls_handshake_finished(tls_session* session);
     virtual ~tls_handshake_finished();

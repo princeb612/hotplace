@@ -19,7 +19,7 @@ namespace hotplace {
 /**
  * https://man7.org/linux/man-pages/man3/posix_spawn.3.html
  */
-class process : public process_t {
+class HOTPLACE_BASE_API process : public process_t {
    public:
     process();
     virtual ~process();

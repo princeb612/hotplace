@@ -16,7 +16,7 @@
 
 namespace hotplace {
 
-class exception {
+class HOTPLACE_BASE_API exception {
    private:
     errorcode_t _errorcode;
     std::string _desc;

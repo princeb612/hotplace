@@ -71,6 +71,8 @@ The project-local [netclient](../netclient/README.md) can exercise the echo path
 - [Network-server implementation](../../../sdk/net/server/README.md) — event loops, accept control, and session management.
 - [IP address ACL](../../../sdk/net/basic/README.md) — address-policy implementation.
 
-## Developer Notes
+## 5. References
+
+## 6. Developer Notes
 
 The source's whitelist currently permits `127.0.0.1` and `::1`. If this applet is adapted for non-loopback tests, update the rule set intentionally and test both address families; do not quietly treat the local-only policy as a production access-control default.

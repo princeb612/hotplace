@@ -59,7 +59,7 @@ class lexical_analyzer;
  * @brief   lexical token
  * @sa      lexical_analyzer::parse
  */
-class lexical_token {
+class HOTPLACE_IO_API lexical_token {
     friend class lexical_context;
 
    public:
@@ -97,7 +97,7 @@ class lexical_token {
     uint32 _index;  // 0 reserved, start with 1
 };
 
-class lexical_context {
+class HOTPLACE_IO_API lexical_context {
     friend class lexical_analyzer;
 
    public:
@@ -141,7 +141,7 @@ struct tokenptr_to_int_t {
     }
 };
 
-class lexical_analyzer {
+class HOTPLACE_IO_API lexical_analyzer {
     friend class lexical_context;
 
    public:

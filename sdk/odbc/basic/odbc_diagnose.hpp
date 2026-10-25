@@ -28,7 +28,7 @@ typedef struct _errorhandler_item_t {
 } errorhandler_item_t;
 typedef std::list<errorhandler_item_t> database_errorhandler_list_t;
 
-class odbc_diagnose {
+class HOTPLACE_ODBC_API odbc_diagnose {
    public:
     static odbc_diagnose* get_instance();
 

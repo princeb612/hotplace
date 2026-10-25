@@ -35,7 +35,7 @@ typedef TYPE_CALLBACK_HANDLEREXV http_server_handler_t;
  * @brief   http server
  * @sa      http_server_builder
  */
-class http_server {
+class HOTPLACE_NET_API http_server {
     friend class http_server_builder;
 
    public:

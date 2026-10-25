@@ -32,7 +32,7 @@ namespace io {
  *          Extension ::= SEQUENCE {extnID OBJECT IDENTIFIER, extnValue OCTET STRING}
  * @sa      ITU-T X.681 Information Object
  */
-class asn1_any : public asn1_type {
+class HOTPLACE_IO_API asn1_any : public asn1_type {
    public:
     asn1_any(const std::string& name = "", bool optional = false);
     virtual ~asn1_any();

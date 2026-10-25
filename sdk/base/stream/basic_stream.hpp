@@ -38,7 +38,7 @@ class valist;
 /**
  * @brief   basic_stream
  */
-class basic_stream : public stream_t {
+class HOTPLACE_BASE_API basic_stream : public stream_t {
    public:
     basic_stream();
     basic_stream(const local_stream_policy& policy);

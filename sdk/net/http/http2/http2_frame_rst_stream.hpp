@@ -22,7 +22,7 @@ namespace net {
  *          RFC 7540 6.4. RST_STREAM
  *          RFC 7540 Figure 9: RST_STREAM Frame Payload
  */
-class http2_frame_rst_stream : public http2_frame {
+class HOTPLACE_NET_API http2_frame_rst_stream : public http2_frame {
    public:
     http2_frame_rst_stream();
     http2_frame_rst_stream(const http2_frame_rst_stream& other);

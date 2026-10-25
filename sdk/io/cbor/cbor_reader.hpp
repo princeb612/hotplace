@@ -37,7 +37,7 @@ namespace io {
  *          std::string concise;
  *          base16_encode (bin, concise);   // base16 "8301820203820405"
  */
-class cbor_reader {
+class HOTPLACE_IO_API cbor_reader {
    public:
     cbor_reader();
 
@@ -131,7 +131,7 @@ class cbor_reader {
  *          1. if(0 == cbor.size()) return
  *          2. if(errorcode_t::no_data == cbor_parse()) return
  */
-return_t cbor_parse(cbor_object** object, const binary_t& cbor);
+HOTPLACE_IO_API return_t cbor_parse(cbor_object** object, const binary_t& cbor);
 
 }  // namespace io
 }  // namespace hotplace

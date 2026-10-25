@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_extensions {
+class HOTPLACE_NET_API tls_extensions {
    public:
     tls_extensions();
 

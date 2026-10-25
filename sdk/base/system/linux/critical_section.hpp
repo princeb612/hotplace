@@ -17,7 +17,7 @@
 
 namespace hotplace {
 
-class critical_section : public critical_section_t {
+class HOTPLACE_BASE_API critical_section : public critical_section_t {
    public:
     /**
      * @brief constructor

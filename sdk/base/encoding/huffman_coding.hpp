@@ -43,7 +43,7 @@ enum huffman_coding_flags : uint32 {
  *          huff.imports(_h2hcodes);
  */
 
-class huffman_coding {
+class HOTPLACE_BASE_API huffman_coding {
    private:
     struct hc_t {
         uint8 symbol;

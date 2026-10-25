@@ -43,8 +43,8 @@ enum class vtprintf_style_t {
     vtprintf_style_debugmode = 3,
     vtprintf_style_asn1 = 4,
 };
-return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style = vtprintf_style_t::vtprintf_style_normal);
-return_t vtprintf(stream_t* stream, const variant& vt, vtprintf_style_t style = vtprintf_style_t::vtprintf_style_normal);
+HOTPLACE_BASE_API return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style = vtprintf_style_t::vtprintf_style_normal);
+HOTPLACE_BASE_API return_t vtprintf(stream_t* stream, const variant& vt, vtprintf_style_t style = vtprintf_style_t::vtprintf_style_normal);
 
 }  // namespace hotplace
 

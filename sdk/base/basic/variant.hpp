@@ -368,7 +368,7 @@ T t_vtoi(const variant_t& vt) {
     return i;
 }
 
-class variant {
+class HOTPLACE_BASE_API variant {
    public:
     variant();
     variant(const variant& value);

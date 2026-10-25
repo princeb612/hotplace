@@ -23,7 +23,7 @@ namespace io {
  *          TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
  *          Tag ::= "[" Class ClassNumber "]"
  */
-class asn1_tag : public asn1_object {
+class HOTPLACE_IO_API asn1_tag : public asn1_object {
     friend class asn1_tagged_type;
 
    public:

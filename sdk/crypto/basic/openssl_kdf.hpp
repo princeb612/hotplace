@@ -40,7 +40,7 @@ enum argon2_t {
     argon2id = 3,
 };
 
-class openssl_kdf {
+class HOTPLACE_CRYPTO_API openssl_kdf {
    public:
     openssl_kdf();
     ~openssl_kdf();

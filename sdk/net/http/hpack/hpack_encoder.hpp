@@ -19,7 +19,7 @@ namespace net {
 /**
  * @brief   RFC 7541 HPACK: Header Compression for HTTP/2
  */
-class hpack_encoder : public http_header_compression {
+class HOTPLACE_NET_API hpack_encoder : public http_header_compression {
    public:
     hpack_encoder();
     virtual ~hpack_encoder();

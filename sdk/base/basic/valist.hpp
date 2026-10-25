@@ -71,7 +71,7 @@ typedef struct _valist_t {
  *              vprintf (&bs, "param1 {1} param2 {2} param3 {3}\n", 1, 3.141592, "hello");
  *
  */
-class valist {
+class HOTPLACE_BASE_API valist {
    public:
     valist();
     valist(const valist& object);

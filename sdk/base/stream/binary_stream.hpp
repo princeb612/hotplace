@@ -19,7 +19,7 @@
 
 namespace hotplace {
 
-class binary_stream {
+class HOTPLACE_BASE_API binary_stream {
    public:
     binary_stream();
     binary_stream(const binary_t& other);

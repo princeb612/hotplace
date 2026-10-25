@@ -66,12 +66,12 @@ return_t wide2ansi(T& target, WRITER&& writer, const wchar_t* source, uint32 cod
     return ret;
 }
 
-return_t A2W(wide_string& target, const char* source, uint32 codepage = 0);
-return_t W2A(ansi_string& target, const wchar_t* source, uint32 codepage = 0);
-return_t A2W(stream_t* stream, const char* source, uint32 codepage = 0);
-return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage = 0);
-return_t A2W(std::wstring& target, const char* source, uint32 codepage = 0);
-return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
+HOTPLACE_BASE_API return_t A2W(wide_string& target, const char* source, uint32 codepage = 0);
+HOTPLACE_BASE_API return_t W2A(ansi_string& target, const wchar_t* source, uint32 codepage = 0);
+HOTPLACE_BASE_API return_t A2W(stream_t* stream, const char* source, uint32 codepage = 0);
+HOTPLACE_BASE_API return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage = 0);
+HOTPLACE_BASE_API return_t A2W(std::wstring& target, const char* source, uint32 codepage = 0);
+HOTPLACE_BASE_API return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
 
 #endif
 

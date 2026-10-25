@@ -69,6 +69,8 @@ The project-local [netclient](../netclient/README.md) can send a UDP datagram to
 - [Network-server implementation](../../../sdk/net/server/README.md) — shared event loops and session lifecycle.
 - [TLS server](../tlsserver/README.md) — stream-oriented secure transport for comparison.
 
-## Developer Notes
+## 5. References
+
+## 6. Developer Notes
 
 Keep runtime results tied to the corresponding report, environment, or live integration record. Do not infer successful IPv6 operation from the existence of an IPv6 listener setup alone.

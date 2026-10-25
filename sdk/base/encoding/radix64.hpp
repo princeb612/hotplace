@@ -21,7 +21,7 @@
 
 namespace hotplace {
 
-uint32 crc24(const unsigned char* octets, size_t len);
+HOTPLACE_BASE_API uint32 crc24(const unsigned char* octets, size_t len);
 
 #define radix64_encode base64_encode
 #define radix64_decode base64_decode
@@ -34,7 +34,7 @@ uint32 crc24(const unsigned char* octets, size_t len);
  * @param std::string& encoded [out]
  * @param std::string& crc [out]
  */
-return_t radix64_armor_encode(const byte_t* data, size_t data_size, std::string& encoded, std::string& crc);
+HOTPLACE_BASE_API return_t radix64_armor_encode(const byte_t* data, size_t data_size, std::string& encoded, std::string& crc);
 /**
  * @param const char* encoded [in]
  * @param size_t encoded_size [in]
@@ -42,7 +42,7 @@ return_t radix64_armor_encode(const byte_t* data, size_t data_size, std::string&
  * @param size_t armor_size [in]
  * @param binary_t& decoded [out]
  */
-return_t radix64_armor_decode(const char* encoded, size_t encoded_size, const char* armor, size_t armor_size, binary_t& decoded);
+HOTPLACE_BASE_API return_t radix64_armor_decode(const char* encoded, size_t encoded_size, const char* armor, size_t armor_size, binary_t& decoded);
 
 }  // namespace hotplace
 

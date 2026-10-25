@@ -97,6 +97,8 @@ This evidence is specific to the recorded command, selected adapter, certificate
 - [Network client applet](../netclient/README.md) — matching client-side protocol options.
 - [HTTP/1.1 server](../httpserver1/README.md) and [HTTP/2 server](../httpserver2/README.md) — application-protocol examples layered over secure transport.
 
-## Developer Notes
+## 5. References
+
+## 6. Developer Notes
 
 The original maintainer notes include TLS 1.3 ML-KEM, ECDHE-ML-KEM, and ML-DSA draft-era experiments. Keep exact draft labels and tool commands as historical records; do not silently reinterpret them as statements of final-standard conformance. Revalidate the scenario against the source revision and external client version before publishing a current compatibility claim.

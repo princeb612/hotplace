@@ -18,7 +18,7 @@
 
 namespace hotplace {
 
-struct execparam {
+struct HOTPLACE_BASE_API execparam {
     std::string executable;
     std::vector<std::string> arguments;
     std::string workdir;

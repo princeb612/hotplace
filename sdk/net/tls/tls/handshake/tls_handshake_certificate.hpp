@@ -26,7 +26,7 @@ namespace net {
  *          record.get_handshakes().add(handshake);
  *          record.write(from_server, packet);
  */
-class tls_handshake_certificate : public tls_handshake {
+class HOTPLACE_NET_API tls_handshake_certificate : public tls_handshake {
    public:
     tls_handshake_certificate(tls_session* session);
     virtual ~tls_handshake_certificate();

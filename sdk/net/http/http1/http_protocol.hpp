@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   protocol interpreter
  */
-class http_protocol : public network_protocol {
+class HOTPLACE_NET_API http_protocol : public network_protocol {
    public:
     http_protocol();
     virtual ~http_protocol();

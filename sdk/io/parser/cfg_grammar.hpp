@@ -30,7 +30,7 @@ namespace io {
  *  keyword : non-terminal set, terminal set, production set, start symbol
  */
 
-class cfg_grammar {
+class HOTPLACE_IO_API cfg_grammar {
     friend class glr_parser;
     friend class lalr1_parser;
 

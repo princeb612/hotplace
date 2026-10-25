@@ -26,7 +26,7 @@ namespace io {
  *          asn1_visitor visitor(&module, lambda);
  *          visitor.visit(schema);
  */
-class asn1_visitor {
+class HOTPLACE_IO_API asn1_visitor {
    public:
     asn1_visitor(const asn1_module* module, std::function<void(asn1_object*)> func);
     virtual ~asn1_visitor() = default;

@@ -33,7 +33,7 @@
 
 namespace hotplace {
 
-struct printf_context_t {
+struct HOTPLACE_BASE_API printf_context_t {
     uint8 indent;
 
     printf_context_t() : indent(0) {}
@@ -84,9 +84,9 @@ typedef int (*CALLBACK_PRINTFW)(printf_context_t* context, const wchar_t* buf, i
  * @param   const char  *   fmt0
  * @param   ...
  */
-int printf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, ...);
+HOTPLACE_BASE_API int printf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, ...);
 #if defined _WIN32 || defined _WIN64
-int printf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, ...);
+HOTPLACE_BASE_API int printf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, ...);
 #endif
 /**
  * @brief vprintf
@@ -95,9 +95,9 @@ int printf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, 
  * @param   const char  *   fmt0
  * @param   va_list         ap
  */
-int vprintf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, va_list ap);
+HOTPLACE_BASE_API int vprintf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, va_list ap);
 #if defined _WIN32 || defined _WIN64
-int vprintf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, va_list ap);
+HOTPLACE_BASE_API int vprintf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, va_list ap);
 #endif
 
 }  // namespace hotplace

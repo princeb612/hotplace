@@ -128,7 +128,7 @@ struct bn_underlying_type<T, true> {
  *              _logger->writeln("XOR %s, bit_xor.hex().c_str());
  *          }
  */
-class bignumber {
+class HOTPLACE_BASE_API bignumber {
     static constexpr uint64 base2p32 = 0x100000000;  // intuitive 2^32
 
    public:

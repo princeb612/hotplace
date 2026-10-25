@@ -19,7 +19,7 @@ namespace net {
 /**
  * @brief stream data that produced and consumed by network_stream
  */
-class network_stream_data {
+class HOTPLACE_NET_API network_stream_data {
     friend class network_stream;
 
    public:
@@ -77,7 +77,7 @@ class network_stream_data {
  * @brief network_stream_data container
  *        member of network_session
  */
-class network_stream {
+class HOTPLACE_NET_API network_stream {
    public:
     network_stream();
     ~network_stream();

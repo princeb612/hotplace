@@ -33,7 +33,7 @@ namespace hotplace {
  *          basic_stream bs;
  *          bs << "hello world";
  */
-class stream_policy {
+class HOTPLACE_BASE_API stream_policy {
    public:
     static stream_policy* get_instance();
     stream_policy& set_allocsize(size_t allocsize);
@@ -50,7 +50,7 @@ class stream_policy {
 /**
  * @brief   local policy
  */
-class local_stream_policy {
+class HOTPLACE_BASE_API local_stream_policy {
    public:
     local_stream_policy(size_t allocsize);
     size_t get_allocsize() const;

@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   ec_point_formats (0x000b)
  */
-class tls_extension_ec_point_formats : public tls_extension {
+class HOTPLACE_NET_API tls_extension_ec_point_formats : public tls_extension {
    public:
     tls_extension_ec_point_formats(tls_handshake* handshake);
     virtual ~tls_extension_ec_point_formats();

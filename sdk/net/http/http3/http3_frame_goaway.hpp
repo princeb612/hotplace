@@ -19,7 +19,7 @@ namespace net {
 /**
  * RFC 9114 7.2.6.  GOAWAY
  */
-class http3_frame_goaway : public http3_frame {
+class HOTPLACE_NET_API http3_frame_goaway : public http3_frame {
    public:
     http3_frame_goaway();
 };

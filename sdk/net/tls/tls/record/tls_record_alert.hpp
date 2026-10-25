@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_record_alert : public tls_record {
+class HOTPLACE_NET_API tls_record_alert : public tls_record {
    public:
     tls_record_alert(tls_session* session);
     tls_record_alert(tls_session* session, tls_alertlevel_t level, tls_alertdesc_t desc);

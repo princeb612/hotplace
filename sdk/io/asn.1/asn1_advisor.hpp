@@ -36,7 +36,7 @@ struct asn1_entity_resource_t {
 extern const struct asn1_entity_resource_t resource_asn1_entities[];
 extern const size_t sizeof_resource_asn1_entities;
 
-class asn1_advisor {
+class HOTPLACE_IO_API asn1_advisor {
    public:
     static asn1_advisor* get_instance();
 

@@ -27,7 +27,7 @@ struct http_static_table_entry {
     const char* value;
 };
 
-class http_resource {
+class HOTPLACE_NET_API http_resource {
    public:
     /**
      * @brief   singleton instance

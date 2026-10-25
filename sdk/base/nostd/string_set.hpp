@@ -23,7 +23,7 @@
 namespace hotplace {
 
 // "a".."z"
-struct string_range {
+struct HOTPLACE_BASE_API string_range {
     std::string begin;
     std::string end;
     range_flag_t begin_flag;
@@ -33,7 +33,7 @@ struct string_range {
         : begin(s), end(e), begin_flag(bf), end_flag(ef) {}
 };
 
-class string_set {
+class HOTPLACE_BASE_API string_set {
    public:
     string_set();
     string_set(const string_set& other);

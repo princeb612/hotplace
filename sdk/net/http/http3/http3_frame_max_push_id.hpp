@@ -19,7 +19,7 @@ namespace net {
 /**
  * RFC 9114 7.2.7.  MAX_PUSH_ID
  */
-class http3_frame_max_push_id : public http3_frame {
+class HOTPLACE_NET_API http3_frame_max_push_id : public http3_frame {
    public:
     http3_frame_max_push_id();
 };

@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_record_unknown : public tls_record {
+class HOTPLACE_NET_API tls_record_unknown : public tls_record {
    public:
     tls_record_unknown(tls_content_type_t type, tls_session* session);
     virtual ~tls_record_unknown();

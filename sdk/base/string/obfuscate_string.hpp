@@ -42,7 +42,7 @@ namespace hotplace {
  *      #endif
  *
  */
-class obfuscate_string {
+class HOTPLACE_BASE_API obfuscate_string {
    public:
     obfuscate_string();
     obfuscate_string(const char* source);

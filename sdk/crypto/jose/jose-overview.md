@@ -82,28 +82,3 @@ The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE k
 
 ## Interpretation notes
 These tables are a snapshot from the existing document, not a normative declaration of current backend support. Actual behavior also depends on provider/build configuration and key availability. The presence of source tests is useful evidence but does not by itself establish support in every build environment.
-
-## 4. Relationships
-### Implementation and test sources
-
-
-### Source-test evidence
-
-The direct source-level examples and fixture index are documented in the [JOSE testcase README](../../../test/testcase/jose/README.md). In particular, RFC 7515 tests exercise signature/MAC operations, RFC 7516 and RFC 7520 tests exercise encryption and key management, and RFC 7638/8037/AKP sources cover thumbprints and additional key/algorithm families.
-
-- [JWS signing and JWE encryption](jose-signing-encryption.md)
-- [JWK and algorithm mapping](jose-key-and-algorithms.md)
-- [JOSE object model and context](jose-object-model.md)
-
-## 5. References
-- RFC 7515 — JSON Web Signature (JWS).
-- RFC 7516 — JSON Web Encryption (JWE).
-- RFC 7517 — JSON Web Key (JWK).
-- RFC 7518 — JSON Web Algorithms (JWA).
-- RFC 7520 — Examples of Protecting Content Using JOSE.
-- RFC 7638 — JSON Web Key (JWK) Thumbprint.
-- RFC 8037 — CFRG Elliptic Curve Diffie-Hellman and Signatures in JOSE.
-
-## Development Notes (for maintainer review)
-
-The older status matrix is preserved as historical material, not as a verified statement of current support. Earlier unchecked items included thumbprints and post-quantum work; the current source includes an RFC 7638 thumbprint testcase and an AKP/ML-DSA testcase. Presence of a testcase does not establish broad interoperability or runtime availability in every build.

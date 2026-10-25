@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-class hmac_otp {
+class HOTPLACE_CRYPTO_API hmac_otp {
    public:
     hmac_otp();
     ~hmac_otp();

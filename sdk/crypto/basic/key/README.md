@@ -152,7 +152,7 @@ The model distinguishes locally retained key material from public share bytes, K
 
 ## 3. Behavior Model
 
-### 3.1 Key construction: named input to family-specific object
+### Key construction: named input to family-specific object
 
 ```text
 algorithm name ──> crypto_advisor (key type + NID)
@@ -212,7 +212,7 @@ It does not infer missing coordinates from an incomplete set of parameters. The 
 
 For DH, the dispatcher first checks whether `y` is present. If so, it sends `y` and optional `x` to the public/private-value construction path. Otherwise, it sends `p`, `q`, `g` and optional `x` to the explicit-domain-parameter path. DSA uses its family constructor with the available public/private and domain values. Family constructors and OpenSSL remain responsible for validating whether the resulting key material is valid.
 
-### 3.2 Key selection is where protocol vocabulary meets key material
+### Key selection is where protocol vocabulary meets key material
 
 JWK and COSE_Key carry standard key parameters and format-specific metadata. The key layer is responsible for turning supported representations into common key objects and making those objects available to operations. The protocol layer still determines which algorithm is negotiated or declared and what constraints apply.
 
@@ -225,13 +225,13 @@ The selection overloads make this boundary visible:
 
 A `kid` is a lookup identity, not proof that the key is suitable. Algorithm, key type, usage, group, and available key components must still match the operation. A selection result also does not by itself prove that an encoded key is valid for every use allowed by the surrounding protocol.
 
-### 3.3 Loading and construction are not protocol validation
+### Loading and construction are not protocol validation
 
 The load path determines how bytes are decoded and which object type is attempted. The construction path determines whether the supplied components can form a supported OpenSSL key. Neither path alone implements all protocol-level validation, authorization, trust decisions, or algorithm-policy checks.
 
 This matters especially for keys with both public and private components. A public-only JWK or COSE_Key can be appropriate for verification or peer key agreement, while a private key may be required for signing or decapsulation. The key container does not make private material public merely because it can export a public representation; callers must request the intended representation and operation.
 
-### 3.4 Classical key agreement: share bytes are not key objects
+### Classical key agreement: share bytes are not key objects
 
 The group-specific key-generation path obtains group metadata, checks support flags, and creates the appropriate local component keys. `keyshare()` extracts public components into the output buffer. For hybrid groups it extracts the additional component and appends it according to that group's layout.
 
@@ -251,13 +251,13 @@ compare(secret A, secret B)
 
 The testcase checks the generated share lengths against the selected group's metadata and compares the two derived secret byte strings. Key dumps are diagnostic output; the shared-secret equality is the central agreement assertion. This is a group-level key-agreement example, not a complete TLS handshake or key-schedule test.
 
-### 3.5 TLS owns handshake orchestration
+### TLS owns handshake orchestration
 
 TLS uses `crypto_keyexchange` for key-share operations, but the key layer does not own the TLS handshake. TLS chooses and negotiates supported groups, places key shares in handshake extensions, retains the relevant state, processes peer messages, and feeds the shared secret into the TLS key schedule. The key layer supplies the cryptographic material and group-level operation.
 
 This distinction is particularly important in TLS 1.3: the public key share is handshake data, while traffic secrets and record-protection keys are derived later through the TLS key schedule. The key directory should not be described as if `crypto_keyexchange` alone implements the TLS handshake or the full key schedule.
 
-### 3.6 Hybrid groups: how the three combinations are distinguished
+### Hybrid groups: how the three combinations are distinguished
 
 The implementation does not parse a group name to guess its components. It asks `crypto_advisor::hintof_tls_group()` for a `hint_group_t`. The hint contains a `first` component and, for hybrid groups, a `second` component. Each component specifies its key type (`kty`), algorithm NID, public-key size (`keysize`), and—when it is ML-KEM—capsule size (`capsulesize`). The `tls_flag_hybrid` flag selects the two-component path; the component types decide which algorithm is called and where each byte range belongs.
 
@@ -294,7 +294,7 @@ secp384r1mlkem1024
 
 The component order is therefore an explicit property of the group metadata and its implementation, not a convention that can safely be inferred from the group name alone. Keep the metadata, byte offsets, share generation, encapsulation, and decapsulation paths synchronized when adding or changing groups.
 
-### 3.7 Key-exchange lifecycle
+### Key-exchange lifecycle
 
 The group metadata selects both the operation family and the layout used to interpret the bytes:
 
@@ -332,7 +332,7 @@ For a classical group, `keygen()` creates local key material and `keyshare()` ex
 
 KEM encapsulation is a different exchange shape: the peer's public key produces a capsule and shared secret; the private-key holder uses its private key and that capsule in `decaps()` to derive the corresponding secret. A hybrid group composes multiple component operations, and the group metadata determines each component's byte offset and ordering. The caller passes the resulting shared secret to the protocol's key schedule; this class does not implement the TLS handshake or schedule itself.
 
-### 3.8 Failure handling and sensitive data
+### Failure handling and sensitive data
 
 The implementation returns status codes for invalid parameters, unsupported algorithms or groups, failed decoding/construction, and OpenSSL operation failures. A non-null output buffer or populated collection is not proof of success; callers must check the result of each operation.
 
@@ -382,7 +382,7 @@ The function parameter makes the negotiated/tested group explicit; each peer get
 
 Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
 
-### 3.9 Concrete TLS consumer: key-share serialization
+### Concrete TLS consumer: key-share serialization
 
 TLS 1.3's client key-share extension asks the key-exchange layer for the public share for each selected group, then serializes the group identifier, share length and share bytes into the extension payload:
 

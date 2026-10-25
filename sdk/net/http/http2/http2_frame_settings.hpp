@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.5. SETTINGS
  */
-class http2_frame_settings : public http2_frame {
+class HOTPLACE_NET_API http2_frame_settings : public http2_frame {
    public:
     http2_frame_settings();
     http2_frame_settings(const http2_frame_settings& other);

@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   application_layer_protocol_settings (ALPS, 0x4469)
  */
-class tls_extension_alps : public tls_extension {
+class HOTPLACE_NET_API tls_extension_alps : public tls_extension {
    public:
     tls_extension_alps(tls_handshake* handshake);
     virtual ~tls_extension_alps();

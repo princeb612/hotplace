@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-class dtls13_ciphertext : public tls_record {
+class HOTPLACE_NET_API dtls13_ciphertext : public tls_record {
    public:
     dtls13_ciphertext(tls_content_type_t type, tls_session* session);
     virtual ~dtls13_ciphertext();

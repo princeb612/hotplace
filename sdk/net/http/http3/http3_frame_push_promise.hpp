@@ -19,7 +19,7 @@ namespace net {
 /**
  * RFC 9114 7.2.5.  PUSH_PROMISE
  */
-class http3_frame_push_promise : public http3_frame {
+class HOTPLACE_NET_API http3_frame_push_promise : public http3_frame {
    public:
     http3_frame_push_promise();
 };

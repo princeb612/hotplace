@@ -10,7 +10,7 @@
 └──────────────────────────────────────────────┘
 ```
 
-# Low-Level Buffer I/O (`bufferio`)
+# Low-level buffer I/O (`bufferio`)
 
 ## 1. Role
 
@@ -20,7 +20,7 @@
 
 The context stores a queue of allocated blocks. Each block tracks its base address, current offset, and capacity (`limit`). The context also tracks the configured block size, padding size, total content size, flags, and a critical-section lock.
 
-This is a conceptual model derived from `bufferio.hpp` and `bufferio.cpp`. The context stores a queue of allocated blocks, each with a base address, current offset, and capacity (`limit`). It also tracks block size, padding size, total content size, flags, and a critical-section lock.
+The context layout is defined by `bufferio_context_t`; its block queue stores the allocated storage and per-block cursor/capacity state. The remaining fields control allocation granularity, padding behavior, aggregate content size, flags, and synchronization.
 
 ## 3. Behavior Model
 

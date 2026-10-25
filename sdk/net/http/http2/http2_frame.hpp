@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-class http2_frame {
+class HOTPLACE_NET_API http2_frame {
    public:
     http2_frame();
     http2_frame(h2_frame_t type);

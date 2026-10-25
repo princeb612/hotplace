@@ -30,15 +30,16 @@
 namespace hotplace {
 namespace lowlevel {
 
-return_t base64_encode(const byte_t* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
-return_t base64_encode(const binary_t& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
-return_t base64_encode(const char* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
-return_t base64_encode(const std::string& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_encode(const byte_t* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_encode(const binary_t& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_encode(const char* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_encode(const std::string& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
 
-return_t base64_decode(const char* source, size_t source_size, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
-return_t base64_decode(const std::string& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
-return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
-return_t base64_decode(const binary_t& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_decode(const char* source, size_t source_size, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_decode(const std::string& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size,
+                                         encoding_t encoding = encoding_t::encoding_base64);
+HOTPLACE_BASE_API return_t base64_decode(const binary_t& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
 
 }  // namespace lowlevel
 }  // namespace hotplace

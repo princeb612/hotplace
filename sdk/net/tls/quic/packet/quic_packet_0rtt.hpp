@@ -20,7 +20,7 @@ namespace net {
 /**
  * @breif   RFC 9000 17.2.3.  0-RTT
  */
-class quic_packet_0rtt : public quic_packet {
+class HOTPLACE_NET_API quic_packet_0rtt : public quic_packet {
    public:
     quic_packet_0rtt(tls_session* session);
     quic_packet_0rtt(const quic_packet_0rtt& other);

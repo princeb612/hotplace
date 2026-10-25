@@ -117,6 +117,8 @@ A listed peer or historical PASS label is not proof that the current working tre
 - [UDP server via multiplexer](../udpserver1/README.md) and [UDP server via network_server](../udpserver2/README.md).
 - [TLS server](../tlsserver/README.md), [DTLS server](../dtlsserver/README.md), [HTTP/1.1 server](../httpserver1/README.md), and [HTTP/2 server](../httpserver2/README.md).
 
-## Developer Notes
+## 5. References
+
+## 6. Developer Notes
 
 The historical integration matrix is intentionally retained for maintainer context. Its status labels should not be treated as a current test report without matching execution details.

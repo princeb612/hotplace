@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.8. GOAWAY
  */
-class http2_frame_goaway : public http2_frame {
+class HOTPLACE_NET_API http2_frame_goaway : public http2_frame {
    public:
     http2_frame_goaway();
     http2_frame_goaway(const http2_frame_goaway& other);

@@ -37,7 +37,7 @@ namespace io {
  *      convert each asn1_node* into asn1_object* form
  *      hierarchically link using asn1_sequence or asn_tagged_type
  */
-class asn1_bytestream {
+class HOTPLACE_IO_API asn1_bytestream {
    public:
     struct asn1_tlv_t {
         uint8 ident;          // identifier + P/C bit

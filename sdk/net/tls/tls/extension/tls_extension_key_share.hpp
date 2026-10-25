@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   tls_extension_type_t::key_share (0x0033)
  */
-class tls_extension_key_share : public tls_extension {
+class HOTPLACE_NET_API tls_extension_key_share : public tls_extension {
    public:
     virtual ~tls_extension_key_share();
 
@@ -37,7 +37,7 @@ class tls_extension_key_share : public tls_extension {
     return_t add_pubkey(tls_group_t group, const binary_t& pubkey, const keydesc& desc, tls_direction_t dir);
 };
 
-class tls_extension_client_key_share : public tls_extension_key_share {
+class HOTPLACE_NET_API tls_extension_client_key_share : public tls_extension_key_share {
    public:
     tls_extension_client_key_share(tls_handshake* handshake);
     virtual ~tls_extension_client_key_share();
@@ -54,7 +54,7 @@ class tls_extension_client_key_share : public tls_extension_key_share {
    private:
 };
 
-class tls_extension_server_key_share : public tls_extension_key_share {
+class HOTPLACE_NET_API tls_extension_server_key_share : public tls_extension_key_share {
    public:
     tls_extension_server_key_share(tls_handshake* handshake);
     virtual ~tls_extension_server_key_share();

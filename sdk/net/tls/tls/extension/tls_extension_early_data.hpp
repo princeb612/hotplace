@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   RFC 8446 4.2.10.  Early Data Indication
  */
-class tls_extension_early_data : public tls_extension {
+class HOTPLACE_NET_API tls_extension_early_data : public tls_extension {
    public:
     tls_extension_early_data(tls_handshake* handshake);
     virtual ~tls_extension_early_data();

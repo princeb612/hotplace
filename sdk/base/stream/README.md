@@ -74,7 +74,7 @@ caller
 - [`../basic/variant.md`](../basic/variant.md) — typed runtime value model consumed by `vtprintf`.
 - `vtprintf.hpp/.cpp` — renders `variant_t` / `variant` to `stream_t` with style-dependent textual conventions. Used by `basic_stream`, `dump_memory`, and ASN.1/CBOR-oriented display paths; it is a formatter, not a binary encoder.
 - [`binary_stream.md`](binary_stream.md) — primitive binary assembly; direct tests were not identified in the reviewed stream testcase source.
-- [`lowlevel-bufferio.md`](lowlevel-bufferio.md) — low-level storage and formatted output.
+- [`lowlevel/bufferio.md`](lowlevel/bufferio.md) — low-level storage and formatted output.
 - [`string-stream.md`](string-stream.md) — ANSI and wide-character string stream classes.
 - [`splitter.md`](splitter.md) — fixed-size segmentation and descriptor callbacks.
 - `sdk/io/stream/` — OS/file-oriented stream adapters.

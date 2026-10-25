@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace crypto {
 
-class openssl_hash : public hash_t {
+class HOTPLACE_CRYPTO_API openssl_hash : public hash_t {
    public:
     /**
      * @brief constructor
@@ -216,7 +216,7 @@ class openssl_hash : public hash_t {
     virtual crypt_poweredby_t get_type() const;
 };
 
-class openssl_digest : public openssl_hash {
+class HOTPLACE_CRYPTO_API openssl_digest : public openssl_hash {
    public:
     openssl_digest();
     virtual ~openssl_digest();
@@ -231,7 +231,7 @@ class openssl_digest : public openssl_hash {
     return_t digest(const char* alg, const std::string& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16) const;
 };
 
-class openssl_mac {
+class HOTPLACE_CRYPTO_API openssl_mac {
    public:
     openssl_mac();
 

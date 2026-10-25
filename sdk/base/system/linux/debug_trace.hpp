@@ -17,7 +17,7 @@
 
 namespace hotplace {
 
-return_t debug_trace(stream_t* stream);
+HOTPLACE_BASE_API return_t debug_trace(stream_t* stream);
 
 }  // namespace hotplace
 

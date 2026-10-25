@@ -73,6 +73,6 @@ Send application data after the handshake to observe the echo behavior. These ar
 - [UDP server examples](../udpserver1/README.md) and [network-server UDP example](../udpserver2/README.md) — plain datagram handling before adding DTLS.
 - [Network client applet](../netclient/README.md) — shared client integration entry point.
 
-## References
+## 5. References
 
 - RFC 6347 — Datagram Transport Layer Security (DTLS) 1.2.

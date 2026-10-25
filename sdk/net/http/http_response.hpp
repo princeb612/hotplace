@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-class http_response {
+class HOTPLACE_NET_API http_response {
     friend class http_router;
 
    public:

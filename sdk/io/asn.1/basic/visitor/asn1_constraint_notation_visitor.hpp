@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_constraint_notation_visitor : public asn1_constraint_visitor {
+class HOTPLACE_IO_API asn1_constraint_notation_visitor : public asn1_constraint_visitor {
    public:
     asn1_constraint_notation_visitor(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr);
     virtual ~asn1_constraint_notation_visitor();

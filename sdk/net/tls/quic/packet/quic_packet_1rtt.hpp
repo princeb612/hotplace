@@ -24,7 +24,7 @@ namespace net {
  *           Packet Number (8..32),
  *           Packet Payload (8..),
  */
-class quic_packet_1rtt : public quic_packet {
+class HOTPLACE_NET_API quic_packet_1rtt : public quic_packet {
    public:
     quic_packet_1rtt(tls_session* session);
     quic_packet_1rtt(const quic_packet_1rtt& other);

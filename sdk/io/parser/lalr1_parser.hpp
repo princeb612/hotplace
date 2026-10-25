@@ -61,7 +61,7 @@ namespace io {
  *                  return error;
  *          }
  */
-class lalr1_parser : public parser_t {
+class HOTPLACE_IO_API lalr1_parser : public parser_t {
    public:
     lalr1_parser();
     explicit lalr1_parser(const cfg_grammar& g);

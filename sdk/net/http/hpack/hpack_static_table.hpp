@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-class hpack_static_table : public http_static_table {
+class HOTPLACE_NET_API hpack_static_table : public http_static_table {
    public:
     static hpack_static_table* get_instance();
 

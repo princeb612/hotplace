@@ -23,7 +23,7 @@ namespace hotplace {
 /**
  * @brief thread
  */
-class thread : public thread_t {
+class HOTPLACE_BASE_API thread : public thread_t {
    public:
     thread() = delete;
     thread(const thread&) = delete;

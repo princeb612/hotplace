@@ -26,7 +26,7 @@ namespace net {
 typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*, http_router*);
 typedef std::function<void(network_session*, http_request*, http_response*, http_router*)> http_request_function_t;
 
-class http_router {
+class HOTPLACE_NET_API http_router {
     friend class http_server;  // set_owner
    public:
     http_router();

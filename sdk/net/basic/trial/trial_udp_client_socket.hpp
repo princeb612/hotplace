@@ -19,7 +19,7 @@ namespace net {
 /**
  * @brief   UDP client socket
  */
-class trial_udp_client_socket : public client_socket_prosumer {
+class HOTPLACE_NET_API trial_udp_client_socket : public client_socket_prosumer {
    public:
     trial_udp_client_socket();
     virtual ~trial_udp_client_socket();

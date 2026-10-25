@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_loader {
+class HOTPLACE_IO_API asn1_loader {
    public:
     asn1_loader();
     ~asn1_loader();

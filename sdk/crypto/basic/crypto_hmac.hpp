@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace crypto {
 
-class crypto_hmac {
+class HOTPLACE_CRYPTO_API crypto_hmac {
     friend class crypto_hmac_builder;
 
    public:
@@ -102,7 +102,7 @@ class crypto_hmac {
     binary_t _key;
 };
 
-class crypto_hmac_builder {
+class HOTPLACE_CRYPTO_API crypto_hmac_builder {
    public:
     crypto_hmac_builder();
     crypto_hmac_builder& set(hash_algorithm_t alg);

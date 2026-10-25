@@ -37,7 +37,7 @@ namespace net {
  *          arrange.produce(addr, addrlen, dgram, dgramsize);
  *          arrange.consume(addr, addrlen, epoch, seq, packet);  // reorder
  */
-class dtls_record_arrange {
+class HOTPLACE_NET_API dtls_record_arrange {
     friend class tls_session;
 
    public:

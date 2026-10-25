@@ -80,7 +80,7 @@ enum console_color_t : uint8 {
  *      std::cout << concolor.turnoff () << "default" << std::endl;
  */
 
-class console_color {
+class HOTPLACE_BASE_API console_color {
    public:
     console_color(console_style_t style = console_style_t::normal, console_color_t fg = console_color_t::white, console_color_t bg = console_color_t::black)
         : _use(true), _style(style), _fg(fg), _bg(bg) {

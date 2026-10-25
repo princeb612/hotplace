@@ -44,7 +44,7 @@ struct filetime_t {
     filetime_t() : low(0), high(0) {}
 };
 
-struct datetime_t {
+struct HOTPLACE_BASE_API datetime_t {
     uint16 year;
     uint16 month;
     uint16 day;
@@ -58,7 +58,7 @@ struct datetime_t {
         : year(yr), month(mo), day(d), hour(hr), minute(mi), second(s), milliseconds(ms) {}
 };
 
-struct timespan_t {
+struct HOTPLACE_BASE_API timespan_t {
     int32 days;
     int32 seconds;
     int32 milliseconds;
@@ -79,7 +79,7 @@ enum class DAYOFWEEK {
     SAT = 6,
 };
 
-class datetime {
+class HOTPLACE_BASE_API datetime {
    public:
     /**
      * @brief constructor
@@ -219,31 +219,31 @@ class datetime {
  * @remarks
  *        clock_gettime (kernel 2.6) replacement
  */
-void system_gettime(int clockid, struct timespec& ts);
+HOTPLACE_BASE_API void system_gettime(int clockid, struct timespec& ts);
 
-void time_monotonic(struct timespec& timespec);
+HOTPLACE_BASE_API void time_monotonic(struct timespec& timespec);
 /**
  * @brief   calculate difference
  * @param   struct timespec& timespec [out]
  * @param   struct timespec begin [in]
  * @param   struct timespec end [in]
  */
-return_t time_diff(struct timespec& timespec, struct timespec begin, struct timespec end);
+HOTPLACE_BASE_API return_t time_diff(struct timespec& timespec, struct timespec begin, struct timespec end);
 /**
  * @brief   sum
  * @param   struct timespec& timespec [out]
  * @param   std::list <struct timespec>& slices [in]
  */
-return_t time_sum(struct timespec& timespec, std::list<struct timespec>& slices);
+HOTPLACE_BASE_API return_t time_sum(struct timespec& timespec, std::list<struct timespec>& slices);
 
 /**
  * @brief   minutes to timespan
  */
-void timespan_m(timespan_t& ts, int minutes);
+HOTPLACE_BASE_API void timespan_m(timespan_t& ts, int minutes);
 /**
  * @brief   seconds to timespan
  */
-void timespan_s(timespan_t& ts, int seconds);
+HOTPLACE_BASE_API void timespan_s(timespan_t& ts, int seconds);
 
 static inline void msleep(uint32 msecs) {
 #if defined _WIN32 || defined _WIN64

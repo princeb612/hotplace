@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   TLS server socket
  */
-class openssl_tls_server_socket : public naive_tcp_server_socket {
+class HOTPLACE_NET_API openssl_tls_server_socket : public naive_tcp_server_socket {
    public:
     openssl_tls_server_socket(openssl_tls* tls);
     virtual ~openssl_tls_server_socket();

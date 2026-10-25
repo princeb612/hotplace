@@ -94,7 +94,7 @@ struct keydesc {
     uint16 get_group() const { return group; }
 };
 
-class crypto_key_object {
+class HOTPLACE_CRYPTO_API crypto_key_object {
    public:
     crypto_key_object();
     crypto_key_object(const crypto_key_object& other);
@@ -201,7 +201,7 @@ class crypto_key_object {
  *        ret = cwk.diagnose(&key, &bs);
  *        bs.clear();
  */
-class crypto_key {
+class HOTPLACE_CRYPTO_API crypto_key {
    public:
     crypto_key();
     crypto_key(const crypto_key& object);

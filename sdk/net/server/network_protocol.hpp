@@ -38,7 +38,7 @@ enum protocol_constraints_t {
 /**
  * @brief   protocol interpreter
  */
-class network_protocol {
+class HOTPLACE_NET_API network_protocol {
    public:
     network_protocol();
     virtual ~network_protocol();
@@ -86,7 +86,7 @@ class network_protocol {
     std::vector<size_t> _constraints;
 };
 
-class network_protocol_group {
+class HOTPLACE_NET_API network_protocol_group {
    public:
     network_protocol_group();
     virtual ~network_protocol_group();

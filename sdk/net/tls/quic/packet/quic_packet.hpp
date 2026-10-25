@@ -37,7 +37,7 @@ namespace net {
 /**
  * RFC 9000 17.  Packet Formats
  */
-class quic_packet {
+class HOTPLACE_NET_API quic_packet {
    public:
     quic_packet(tls_session* session);
     quic_packet(quic_packet_t type, tls_session* session);

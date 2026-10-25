@@ -29,7 +29,7 @@ namespace net {
  *     } exchange_keys;
  * } ClientKeyExchange;
  */
-class tls_handshake_client_key_exchange : public tls_handshake {
+class HOTPLACE_NET_API tls_handshake_client_key_exchange : public tls_handshake {
    public:
     tls_handshake_client_key_exchange(tls_session* session);
     virtual ~tls_handshake_client_key_exchange();

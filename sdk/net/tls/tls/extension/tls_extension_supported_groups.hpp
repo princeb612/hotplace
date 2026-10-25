@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   supported_groups (0x000a)
  */
-class tls_extension_supported_groups : public tls_extension {
+class HOTPLACE_NET_API tls_extension_supported_groups : public tls_extension {
    public:
     tls_extension_supported_groups(tls_handshake* handshake);
     virtual ~tls_extension_supported_groups();

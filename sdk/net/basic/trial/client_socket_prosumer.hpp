@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace net {
 
-class client_socket_prosumer : public client_socket {
+class HOTPLACE_NET_API client_socket_prosumer : public client_socket {
    public:
     virtual ~client_socket_prosumer();
 

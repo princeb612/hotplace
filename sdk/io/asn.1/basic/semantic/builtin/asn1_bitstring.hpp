@@ -32,7 +32,7 @@ namespace io {
  *          (*value).set("read").set("execute");
  *          // 03 02 05 A0
  */
-class asn1_bitstring : public asn1_builtin_type {
+class HOTPLACE_IO_API asn1_bitstring : public asn1_builtin_type {
    public:
     asn1_bitstring();
     asn1_bitstring(const std::string& name);

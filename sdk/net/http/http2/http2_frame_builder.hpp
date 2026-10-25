@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-class http2_frame_builder {
+class HOTPLACE_NET_API http2_frame_builder {
    public:
     http2_frame_builder();
 

@@ -31,7 +31,7 @@ namespace io {
  *          value->release();
  *          type->release();
  */
-class asn1_set : public asn1_container {
+class HOTPLACE_IO_API asn1_set : public asn1_container {
    public:
     asn1_set();
     asn1_set(const std::string& name);

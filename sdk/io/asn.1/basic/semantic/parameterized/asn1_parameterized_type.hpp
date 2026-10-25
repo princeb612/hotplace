@@ -43,7 +43,7 @@ enum class asn1_paramvalue_t {
     value,
 };
 
-struct asn1_paramtype {
+struct HOTPLACE_IO_API asn1_paramtype {
     std::string type;
     std::string name;
 
@@ -60,7 +60,7 @@ struct asn1_paramtype {
     void represent(stream_t* s, const asn1_value* value) const;
 };
 
-struct asn1_paramvalue {
+struct HOTPLACE_IO_API asn1_paramvalue {
     asn1_paramvalue_t type{asn1_paramvalue_t::entity};
     asn1_entity_t entity{asn1_entity_t::asn1_entity_unknown};
     std::string name;
@@ -91,7 +91,7 @@ typedef std::vector<asn1_paramvalue> asn1_paramvalues;
  *          asn1_parameter - link with name
  */
 
-class asn1_parameterized_type : public asn1_type {
+class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
    public:
     virtual ~asn1_parameterized_type();
 
@@ -147,7 +147,7 @@ class asn1_parameterized_type : public asn1_type {
     asn1_paramvalues _values;
 };
 
-class asn1_parameter : public asn1_type {
+class HOTPLACE_IO_API asn1_parameter : public asn1_type {
    public:
     asn1_parameter(asn1_parameterized_type* templ, const std::string& name, const std::string& paramtype);
     asn1_parameter(const asn1_parameter& other);

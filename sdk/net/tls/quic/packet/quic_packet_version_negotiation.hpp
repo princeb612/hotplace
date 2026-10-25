@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   RFC 9000 17.2.1.  Version Negotiation Packet
  */
-class quic_packet_version_negotiation : public quic_packet {
+class HOTPLACE_NET_API quic_packet_version_negotiation : public quic_packet {
    public:
     quic_packet_version_negotiation(tls_session* session);
     quic_packet_version_negotiation(const quic_packet_version_negotiation& other);

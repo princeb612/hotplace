@@ -33,6 +33,27 @@ The source is organized into cooperating layers:
 
 Conceptually, `basic` supplies operations and key abstractions; `advisor` supplies lookup metadata; COSE and JOSE compose those facilities into format-specific security objects; Authenticode verifies a PE-specific signed format; and OQS is an optional provider integration path rather than a peer message format.
 
+### Compact source map
+
+```text
+crypto
+├── basic
+│   ├── crypt: symmetric cipher / AEAD / public-key encryption
+│   ├── digest: hash / transcript hash
+│   ├── mac: HMAC / CMAC / OTP
+│   ├── sign: DSA / ECDSA / EdDSA / ML-DSA / RSA
+│   ├── key: key objects / generation / key exchange
+│   ├── kdf: HKDF / PBKDF2 / scrypt / Argon2
+│   └── PRNG / common PQC operations
+├── advisor: identifiers / algorithm parameters / backend mappings
+├── JOSE: JSON security-message formats
+├── COSE: CBOR security-message formats
+├── OQS: optional OpenSSL provider adapter
+└── Authenticode: Windows PE signature verification
+```
+
+This is a topic map, not a class-inheritance diagram or a guarantee that every algorithm is enabled in every build. In particular, the OQS path depends on build-time inclusion and runtime provider availability.
+
 ### Start from the problem you need to solve
 
 The module pages retain the implementation and standards detail. If you are new to a particular cryptographic task, start with the matching caller-level example below, then follow the data model and behavior flow in that page.
@@ -80,10 +101,57 @@ The Authenticode PE verifier calculates the PE-specific Authenticode image diges
 - [`test/testcase/crypto/`](../../test/testcase/crypto/README.md) — primitive and backend-oriented testcase entry point.
 - [`test/testcase/cose/`](../../test/testcase/cose/) and [`test/testcase/jose/`](../../test/testcase/jose/) — format-specific testcase sources and vectors.
 - [`test/applet/authenticode/`](../../test/applet/authenticode/) — external-file Authenticode example.
-- [`crypto-mindmap.md`](crypto-mindmap.md) — compact topic map.
-- [`crypto-references.md`](crypto-references.md) — curated external standards, book, and online-reference list.
 
 ## 5. References
+
+The following standards and background resources help interpret the source. Their inclusion does not imply that every feature is implemented, enabled, or fully conformant.
+
+### Books
+- *Secure Programming Cookbook for C and C++* — O'Reilly.
+
+### RFCs
+
+**Primitives, key derivation, and password-based functions**
+- [RFC 2104](https://www.rfc-editor.org/rfc/rfc2104) — HMAC: Keyed-Hashing for Message Authentication.
+- [RFC 3394](https://www.rfc-editor.org/rfc/rfc3394) — AES Key Wrap Algorithm.
+- [RFC 4226](https://www.rfc-editor.org/rfc/rfc4226) — HOTP: An HMAC-Based One-Time Password Algorithm.
+- [RFC 4493](https://www.rfc-editor.org/rfc/rfc4493) — The AES-CMAC Algorithm.
+- [RFC 5649](https://www.rfc-editor.org/rfc/rfc5649) — AES Key Wrap with Padding.
+- [RFC 5869](https://www.rfc-editor.org/rfc/rfc5869) — HMAC-based Extract-and-Expand Key Derivation Function (HKDF).
+- [RFC 6070](https://www.rfc-editor.org/rfc/rfc6070) — PKCS #5: PBKDF2 test vectors.
+- [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238) — TOTP: Time-Based One-Time Password Algorithm.
+- [RFC 7914](https://www.rfc-editor.org/rfc/rfc7914) — The scrypt Password-Based Key Derivation Function.
+- [RFC 8017](https://www.rfc-editor.org/rfc/rfc8017) — PKCS #1: RSA Cryptography Specifications Version 2.2.
+- [RFC 8439](https://www.rfc-editor.org/rfc/rfc8439) — ChaCha20 and Poly1305 for IETF Protocols.
+- [RFC 9106](https://www.rfc-editor.org/rfc/rfc9106) — Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications.
+
+**JOSE, COSE, and data representations**
+- [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515) — JSON Web Signature (JWS).
+- [RFC 7516](https://www.rfc-editor.org/rfc/rfc7516) — JSON Web Encryption (JWE).
+- [RFC 7517](https://www.rfc-editor.org/rfc/rfc7517) — JSON Web Key (JWK).
+- [RFC 7518](https://www.rfc-editor.org/rfc/rfc7518) — JSON Web Algorithms (JWA).
+- [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) — JSON Web Token (JWT).
+- [RFC 7520](https://www.rfc-editor.org/rfc/rfc7520) — Examples of Protecting Content Using JOSE.
+- [RFC 8037](https://www.rfc-editor.org/rfc/rfc8037) — ECDH and signatures in JOSE.
+- [RFC 8152](https://www.rfc-editor.org/rfc/rfc8152) — COSE, earlier version.
+- [RFC 8392](https://www.rfc-editor.org/rfc/rfc8392) — CBOR Web Token (CWT).
+- [RFC 8949](https://www.rfc-editor.org/rfc/rfc8949) — Concise Binary Object Representation (CBOR).
+- [RFC 9052](https://www.rfc-editor.org/rfc/rfc9052) — COSE: Structures and Process.
+- [RFC 9053](https://www.rfc-editor.org/rfc/rfc9053) — COSE: Initial Algorithms.
+- [RFC 9338](https://www.rfc-editor.org/rfc/rfc9338) — COSE Countersignatures.
+
+**Protocol and authenticated-encryption context**
+- [RFC 7366](https://www.rfc-editor.org/rfc/rfc7366) — Encrypt-then-MAC for TLS and DTLS.
+- [RFC 8446](https://www.rfc-editor.org/rfc/rfc8446) — The Transport Layer Security (TLS) Protocol Version 1.3.
+
+### Online resources
 - [OpenSSL libcrypto introduction](https://docs.openssl.org/master/man7/ossl-guide-libcrypto-introduction/)
 - [IANA JOSE registry](https://www.iana.org/assignments/jose/jose.xhtml)
 - [IANA COSE registry](https://www.iana.org/assignments/cose/cose.xhtml)
+- [IANA TLS parameters registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml)
+- [COSE examples](https://github.com/cose-wg/Examples)
+- [OID repository](https://oid-base.com/)
+- [Standard curve database](https://neuromancer.sk/std/)
+- [Authenticated Encryption with AES-CBC and HMAC-SHA](https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt)
+- [JSON parser performance comparison — nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark)
+- [JSON parser performance comparison — Java](https://github.com/fabienrenaud/java-json-benchmark)

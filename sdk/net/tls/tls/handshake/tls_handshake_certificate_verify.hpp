@@ -24,7 +24,7 @@ namespace net {
  *          record.get_handshakes().add(handshake);
  *          record.write(dir, bin);
  */
-class tls_handshake_certificate_verify : public tls_handshake {
+class HOTPLACE_NET_API tls_handshake_certificate_verify : public tls_handshake {
    public:
     tls_handshake_certificate_verify(tls_session* session);
     virtual ~tls_handshake_certificate_verify();

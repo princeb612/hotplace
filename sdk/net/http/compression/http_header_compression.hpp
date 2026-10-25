@@ -66,7 +66,7 @@ struct http_compression_decode_t {
  * @brief   HTTP header compression (HPACK, QPACK)
  * @sa      hpack_encoder
  */
-class http_header_compression {
+class HOTPLACE_NET_API http_header_compression {
    public:
     http_header_compression();
     virtual ~http_header_compression();

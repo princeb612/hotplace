@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_notation_visitor {
+class HOTPLACE_IO_API asn1_notation_visitor {
    public:
     asn1_notation_visitor(stream_t* s, asn1_value* value = nullptr);
     virtual ~asn1_notation_visitor();

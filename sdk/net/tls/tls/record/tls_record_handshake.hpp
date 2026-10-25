@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_record_handshake : public tls_record {
+class HOTPLACE_NET_API tls_record_handshake : public tls_record {
    public:
     tls_record_handshake(tls_session* session);
     virtual ~tls_record_handshake();

@@ -26,7 +26,7 @@ namespace net {
  *          auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
  *          sslkeylog->set(lambda);
  */
-class sslkeylog_exporter {
+class HOTPLACE_NET_API sslkeylog_exporter {
     friend class tls_protection;
 
    public:

@@ -22,7 +22,7 @@ namespace net {
  * @brief   TLS server socket adapter
  * @sa      http_server_builder
  */
-class openssl_server_socket_adapter : public server_socket_adapter {
+class HOTPLACE_NET_API openssl_server_socket_adapter : public server_socket_adapter {
    public:
     openssl_server_socket_adapter();
     virtual ~openssl_server_socket_adapter();

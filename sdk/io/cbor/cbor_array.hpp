@@ -33,7 +33,7 @@ namespace io {
  *          // ...
  *          array->release ();
  */
-class cbor_array : public cbor_object {
+class HOTPLACE_IO_API cbor_array : public cbor_object {
     friend class cbor_concise_visitor;
     friend class cbor_diagnostic_visitor;
 

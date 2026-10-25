@@ -37,6 +37,13 @@
     * CBOR
 
 * details
+  * Revision 1112
+    * [tested] mingw64 shared build
+      ```
+      $ cd /c/home/git/hotplace
+      $ source etc/script/env.mingw && export_path
+      $ cd build/test/testcase ; make && ctest
+      ```
   * Revision 1111
     * source-tree documentation 1106-1111
   * Revision 1105

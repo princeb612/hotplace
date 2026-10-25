@@ -18,7 +18,7 @@ namespace hotplace {
 namespace net {
 
 // RFC 9000 19.20.  HANDSHAKE_DONE Frames
-class quic_frame_handshake_done : public quic_frame {
+class HOTPLACE_NET_API quic_frame_handshake_done : public quic_frame {
    public:
     quic_frame_handshake_done(tls_session* session);
     virtual ~quic_frame_handshake_done();

@@ -103,7 +103,7 @@ enum payload_member_flag_t : uint8 {
  *          //         : 03 64617461 00001000 706164
  *          //  result : padlen->3, data->"data", value->0x00001000, pad->"pad"
  */
-class payload_member {
+class HOTPLACE_IO_API payload_member {
    public:
     payload_member(uint8 value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint8 value, uint16 repeat, const char* name = nullptr, const char* group = nullptr);
@@ -193,7 +193,7 @@ class payload_member {
  *          dump(stream + lsize, len);                      // 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
  *          p = v.data(stream, streamsize);                 // p = stream + lsize
  */
-class payload_encoded {
+class HOTPLACE_IO_API payload_encoded {
    public:
     virtual ~payload_encoded() = default;
 
@@ -212,7 +212,7 @@ class payload_encoded {
     // t_shared_reference<payload_encoded> _shared;
 };
 
-class payload {
+class HOTPLACE_IO_API payload {
    public:
     payload();
     ~payload();

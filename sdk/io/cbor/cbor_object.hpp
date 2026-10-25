@@ -38,7 +38,7 @@ enum cbor_flag : uint8 {
  *  \_ cbor_array
  *     - list <cbor_object*>
  */
-class cbor_object {
+class HOTPLACE_IO_API cbor_object {
     friend class cbor_array;
     friend class cbor_pair;
     friend class cbor_encode;

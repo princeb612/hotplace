@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_handshakes {
+class HOTPLACE_NET_API tls_handshakes {
    public:
     tls_handshakes();
     virtual ~tls_handshakes();

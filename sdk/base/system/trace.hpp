@@ -38,12 +38,12 @@ namespace hotplace {
  *  DEBUG only
  *  leave_trace_dbg_print(__FILE__, __LINE__, false, ret);
  */
-void leave_trace_dbg_print(const char* file, unsigned int line, bool bt, return_t ret);
+HOTPLACE_BASE_API void leave_trace_dbg_print(const char* file, unsigned int line, bool bt, return_t ret);
 /**
  *  DEBUG only
  *  leave_trace_dbg_printf(__FILE__, __LINE__, false, ret, "%s", message);
  */
-void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return_t ret, const char* msg, ...);
+HOTPLACE_BASE_API void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return_t ret, const char* msg, ...);
 
 #if defined DEBUG
 
@@ -105,18 +105,18 @@ void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return
  *          set_trace_option(trace_debug);
  *          set_trace_debug(handler);
  */
-void set_trace_debug(std::function<void(trace_category_t category, trace_event_t event, stream_t* s)> f);
-void trace_debug_event_stream(trace_category_t category, trace_event_t event, stream_t* s);
-void trace_debug_event_printf(trace_category_t category, trace_event_t event, const char* fmt, ...);
-void trace_debug_event(trace_category_t category, trace_event_t event, std::function<void(basic_stream& bs)> f);
-void trace_debug_filter(trace_category_t category, bool filter);
-bool trace_debug_filtered(trace_category_t category);
+HOTPLACE_BASE_API void set_trace_debug(std::function<void(trace_category_t category, trace_event_t event, stream_t* s)> f);
+HOTPLACE_BASE_API void trace_debug_event_stream(trace_category_t category, trace_event_t event, stream_t* s);
+HOTPLACE_BASE_API void trace_debug_event_printf(trace_category_t category, trace_event_t event, const char* fmt, ...);
+HOTPLACE_BASE_API void trace_debug_event(trace_category_t category, trace_event_t event, std::function<void(basic_stream& bs)> f);
+HOTPLACE_BASE_API void trace_debug_filter(trace_category_t category, bool filter);
+HOTPLACE_BASE_API bool trace_debug_filtered(trace_category_t category);
 /**
  * @brief trace (only debug build)
  */
-bool istraceable();
-bool istraceable(trace_category_t category);
-bool istraceable(trace_category_t category, loglevel_t level);
+HOTPLACE_BASE_API bool istraceable();
+HOTPLACE_BASE_API bool istraceable(trace_category_t category);
+HOTPLACE_BASE_API bool istraceable(trace_category_t category, loglevel_t level);
 /**
  * @remarks the higher level, the more informations
  * @param int8 level [in] see loglevel_t
@@ -125,8 +125,8 @@ bool istraceable(trace_category_t category, loglevel_t level);
  * @sample
  *          if (check_trace_level(loglevel_t::loglevel_debug) && istraceable()) { do_something(); }
  */
-bool check_trace_level(loglevel_t level);
-void set_trace_level(loglevel_t level);
+HOTPLACE_BASE_API bool check_trace_level(loglevel_t level);
+HOTPLACE_BASE_API void set_trace_level(loglevel_t level);
 
 /**
  * @sample
@@ -136,7 +136,7 @@ void set_trace_level(loglevel_t level);
  *          auto advisor = trace_advisor::get_instance();
  *          advisor->get_names(category, event, ct, ev);
  */
-class trace_advisor {
+class HOTPLACE_BASE_API trace_advisor {
    public:
     static trace_advisor* get_instance();
     void load();

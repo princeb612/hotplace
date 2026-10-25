@@ -29,7 +29,7 @@ enum cose_property_t {
     cose_property_countersign = 1,
 };
 
-class cose_recipient {
+class HOTPLACE_IO_API cose_recipient {
     friend class cose_composer;
     friend class cose_data;
 

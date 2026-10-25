@@ -22,7 +22,7 @@ namespace net {
  * @brief   TLS
  * @sa      trial_tls_client_socket, trial_tls_server_socket
  */
-class secure_prosumer {
+class HOTPLACE_NET_API secure_prosumer {
    public:
     secure_prosumer();
 

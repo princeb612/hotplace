@@ -23,7 +23,7 @@ namespace io {
  * @brief   SequenceType, SetType, ChoiceType
  * @remarks
  */
-class asn1_container : public asn1_type {
+class HOTPLACE_IO_API asn1_container : public asn1_type {
    public:
     virtual ~asn1_container();
     asn1_container& operator=(const asn1_container& other);

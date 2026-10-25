@@ -44,7 +44,7 @@ namespace io {
  *              fs.close ();
  *          }
  */
-class file_stream : public stream_t {
+class HOTPLACE_IO_API file_stream : public stream_t {
    public:
     /**
      * @brief constructor

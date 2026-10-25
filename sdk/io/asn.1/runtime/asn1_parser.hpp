@@ -31,7 +31,7 @@ namespace io {
  *          transform : notation -> token tree -> asn1_object*
  *
  */
-class asn1_parser {
+class HOTPLACE_IO_API asn1_parser {
    public:
     asn1_parser(parser_type_t type = parser_type_t::glr, bool imported = true);
 

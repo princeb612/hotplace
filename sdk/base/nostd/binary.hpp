@@ -46,7 +46,7 @@ namespace hotplace {
  *          // 00000000 : 00 00 00 00 00 00 00 00 01 23 45 67 89 AB CD EF | .........#Eg....
  *
  */
-return_t binary_push(binary_t& target, byte_t value);
+HOTPLACE_BASE_API return_t binary_push(binary_t& target, byte_t value);
 
 /*
  * @brief   int8~int128, uint8~uint128
@@ -108,12 +108,12 @@ return_t binary_append(binary_t& target, T value, uint64 (*func)(uint64) = nullp
     return binary_append(target, final_value, func);
 }
 
-return_t binary_append(binary_t& target, const std::string& value);
-return_t binary_append(binary_t& target, const binary_t& value);
-return_t binary_append(binary_t& target, const char* buf);
-return_t binary_append(binary_t& target, const char* buf, size_t size);
-return_t binary_append(binary_t& target, const byte_t* buf, size_t size);
-return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t to);
+HOTPLACE_BASE_API return_t binary_append(binary_t& target, const std::string& value);
+HOTPLACE_BASE_API return_t binary_append(binary_t& target, const binary_t& value);
+HOTPLACE_BASE_API return_t binary_append(binary_t& target, const char* buf);
+HOTPLACE_BASE_API return_t binary_append(binary_t& target, const char* buf, size_t size);
+HOTPLACE_BASE_API return_t binary_append(binary_t& target, const byte_t* buf, size_t size);
+HOTPLACE_BASE_API return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t to);
 
 /**
  * @brief   append
@@ -235,9 +235,9 @@ return_t binary_load(binary_t& target, size_t bnlen, T value) {
     return errorcode_t::success;
 }
 
-return_t binary_load(binary_t& target, size_t limit, const byte_t* data, size_t len);
+HOTPLACE_BASE_API return_t binary_load(binary_t& target, size_t limit, const byte_t* data, size_t len);
 
-return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
+HOTPLACE_BASE_API return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
 
 static inline binary_t& operator<<(binary_t& lhs, uint8 rhs) {
     lhs.push_back(rhs);
@@ -303,12 +303,12 @@ static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
 /**
  * @brief   util
  */
-std::string to_string(const binary_t& bin);
+HOTPLACE_BASE_API std::string to_string(const binary_t& bin);
 
 /**
  * @brief   util
  */
-binary_t to_binary(const std::string& source);
+HOTPLACE_BASE_API binary_t to_binary(const std::string& source);
 
 /**
  * @brief   binary to integer

@@ -40,7 +40,7 @@ namespace io {
  *          // Type1
  *          auto type = new asn1_referenced_type("Type1");  // using context pool (asn1_module class)
  */
-class asn1_referenced_type : public asn1_type {
+class HOTPLACE_IO_API asn1_referenced_type : public asn1_type {
    public:
     asn1_referenced_type(const asn1_referenced_type& other);
     virtual ~asn1_referenced_type();

@@ -21,7 +21,7 @@ namespace net {
  * @see
  *          RFC 7540 6.6. PUSH_PROMISE
  */
-class http2_frame_push_promise : public http2_frame {
+class HOTPLACE_NET_API http2_frame_push_promise : public http2_frame {
    public:
     http2_frame_push_promise();
     http2_frame_push_promise(const http2_frame_push_promise& other);

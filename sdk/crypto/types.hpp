@@ -1421,11 +1421,11 @@ typedef struct _hint_blockcipher_t {
     uint16 blockkw;    // blocksize for keywrap (AES)
 } hint_blockcipher_t;
 
-crypt_algorithm_t typeof_alg(const hint_blockcipher_t* hint);
-uint16 sizeof_key(const hint_blockcipher_t* hint);
-uint16 sizeof_iv(const hint_blockcipher_t* hint);
-uint16 sizeof_block(const hint_blockcipher_t* hint);
-uint16 sizeof_blockkw(const hint_blockcipher_t* hint);
+HOTPLACE_CRYPTO_API crypt_algorithm_t typeof_alg(const hint_blockcipher_t* hint);
+HOTPLACE_CRYPTO_API uint16 sizeof_key(const hint_blockcipher_t* hint);
+HOTPLACE_CRYPTO_API uint16 sizeof_iv(const hint_blockcipher_t* hint);
+HOTPLACE_CRYPTO_API uint16 sizeof_block(const hint_blockcipher_t* hint);
+HOTPLACE_CRYPTO_API uint16 sizeof_blockkw(const hint_blockcipher_t* hint);
 
 typedef struct _hint_cipher_t {
     crypto_scheme_t scheme;
@@ -1435,10 +1435,11 @@ typedef struct _hint_cipher_t {
     uint8 nsize;
     uint8 tsize;
 } hint_cipher_t;
-crypto_scheme_t typeof_sheme(const hint_cipher_t* hint);
-crypt_algorithm_t typeof_alg(const hint_cipher_t* hint);
-crypt_mode_t typeof_mode(const hint_cipher_t* hint);
-const char* nameof_alg(const hint_cipher_t* hint);
+
+HOTPLACE_CRYPTO_API crypto_scheme_t typeof_sheme(const hint_cipher_t* hint);
+HOTPLACE_CRYPTO_API crypt_algorithm_t typeof_alg(const hint_cipher_t* hint);
+HOTPLACE_CRYPTO_API crypt_mode_t typeof_mode(const hint_cipher_t* hint);
+HOTPLACE_CRYPTO_API const char* nameof_alg(const hint_cipher_t* hint);
 
 struct _crypt_context_t {};
 typedef struct _crypt_context_t crypt_context_t;
@@ -1454,9 +1455,9 @@ typedef struct _hint_digest_t {
     const char* rfcname;  // IANA style, SHA-256, SHA-1
 } hint_digest_t;
 
-hash_algorithm_t typeof_alg(const hint_digest_t* hint);
-const char* nameof_alg(const hint_digest_t* hint);
-uint16 sizeof_digest(const hint_digest_t* hint);
+HOTPLACE_CRYPTO_API hash_algorithm_t typeof_alg(const hint_digest_t* hint);
+HOTPLACE_CRYPTO_API const char* nameof_alg(const hint_digest_t* hint);
+HOTPLACE_CRYPTO_API uint16 sizeof_digest(const hint_digest_t* hint);
 
 struct _hash_context_t {};
 typedef struct _hash_context_t hash_context_t;
@@ -1480,12 +1481,12 @@ typedef struct _hint_signature_t {
     uint32 nid[3];            // ex. NID_ED25519, NID_ED448
 } hint_signature_t;
 
-sig_category_t categoryof(const hint_signature_t* hint);
-signature_t typeof_sig(const hint_signature_t* hint);
-jws_t typeof_jws(const hint_signature_t* hint);
-crypto_kty_t typeof_kty(const hint_signature_t* hint);
-const char* nameof_jws(const hint_signature_t* hint);
-hash_algorithm_t typeof_alg(const hint_signature_t* hint);
+HOTPLACE_CRYPTO_API sig_category_t categoryof(const hint_signature_t* hint);
+HOTPLACE_CRYPTO_API signature_t typeof_sig(const hint_signature_t* hint);
+HOTPLACE_CRYPTO_API jws_t typeof_jws(const hint_signature_t* hint);
+HOTPLACE_CRYPTO_API crypto_kty_t typeof_kty(const hint_signature_t* hint);
+HOTPLACE_CRYPTO_API const char* nameof_jws(const hint_signature_t* hint);
+HOTPLACE_CRYPTO_API hash_algorithm_t typeof_alg(const hint_signature_t* hint);
 
 typedef struct _hint_sigscheme_t {
     tls_sigscheme_t scheme;
@@ -1599,15 +1600,15 @@ struct hint_group_t {
 };
 
 ///////////////////////////////////////////////////////////////////////////
-uint32 nidof(const hint_curve_t* hint);
-cose_ec_curve_t coseof(const hint_curve_t* hint);
-crypto_kty_t ktyof(const hint_curve_t* hint);
-tls_group_t tlsgroupof(const hint_curve_t* hint);
-uint8 keysizeof(const hint_curve_t* hint);
-const char* oidof(const hint_curve_t* hint);
-bool support(const hint_curve_t* hint, hash_algorithm_t alg);
-bool support(const hint_curve_t* hint, const char* alg);
-bool support(const hint_curve_t* hint, const std::string& alg);
+HOTPLACE_CRYPTO_API uint32 nidof(const hint_curve_t* hint);
+HOTPLACE_CRYPTO_API cose_ec_curve_t coseof(const hint_curve_t* hint);
+HOTPLACE_CRYPTO_API crypto_kty_t ktyof(const hint_curve_t* hint);
+HOTPLACE_CRYPTO_API tls_group_t tlsgroupof(const hint_curve_t* hint);
+HOTPLACE_CRYPTO_API uint8 keysizeof(const hint_curve_t* hint);
+HOTPLACE_CRYPTO_API const char* oidof(const hint_curve_t* hint);
+HOTPLACE_CRYPTO_API bool support(const hint_curve_t* hint, hash_algorithm_t alg);
+HOTPLACE_CRYPTO_API bool support(const hint_curve_t* hint, const char* alg);
+HOTPLACE_CRYPTO_API bool support(const hint_curve_t* hint, const std::string& alg);
 
 ///////////////////////////////////////////////////////////////////////////
 // key
@@ -1663,7 +1664,7 @@ struct hint_jose_encryption_t {
         u.enc.group = group;
     }
 };
-const char* nameof_alg(const hint_jose_encryption_t* hint);
+HOTPLACE_CRYPTO_API const char* nameof_alg(const hint_jose_encryption_t* hint);
 
 enum jose_serialization_t {
     jose_compact = 0,
@@ -1834,7 +1835,7 @@ struct hint_advisor_t {
     }
 };
 
-std::string namesof(const hint_advisor_t* hint);
+HOTPLACE_CRYPTO_API std::string namesof(const hint_advisor_t* hint);
 
 }  // namespace crypto
 }  // namespace hotplace

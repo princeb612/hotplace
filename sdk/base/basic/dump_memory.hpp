@@ -47,8 +47,8 @@ enum dump_memory_flag_t : uint8 {
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0,
-                     int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0,
+                                       size_t rebase = 0x0, int flags = 0);
 /**
  * @brief   dump memory
  * @param   const char* data [in]
@@ -58,7 +58,7 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(const char* data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(const char* data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 /**
  * @brief   dump memory
  * @param   const std::string& data [in]
@@ -68,7 +68,7 @@ return_t dump_memory(const char* data, stream_t* stream_object, unsigned hex_par
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 /**
  * @brief   dump memory
  * @param   const binary_t& data [in]
@@ -78,7 +78,7 @@ return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned 
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 /**
  * @brief   dump memory
  * @param   const basic_stream& data [in]
@@ -88,7 +88,8 @@ return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0,
+                                       int flags = 0);
 /**
  * @brief   dump memory
  * @param   const variant_t& vt [in]
@@ -98,7 +99,7 @@ return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory(const variant_t& vt, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+HOTPLACE_BASE_API return_t dump_memory(const variant_t& vt, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 
 }  // namespace hotplace
 

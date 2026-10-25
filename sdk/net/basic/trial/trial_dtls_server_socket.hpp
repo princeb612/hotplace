@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   DTLS server socket
  */
-class trial_dtls_server_socket : public naive_udp_server_socket {
+class HOTPLACE_NET_API trial_dtls_server_socket : public naive_udp_server_socket {
    public:
     trial_dtls_server_socket(tls_version_t minspec = tls_12, tls_version_t maxspec = tls_12);
     virtual ~trial_dtls_server_socket();

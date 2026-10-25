@@ -19,7 +19,7 @@ namespace crypto {
 /**
  * @brief pseudo random number generator
  */
-class openssl_prng {
+class HOTPLACE_CRYPTO_API openssl_prng {
    public:
     openssl_prng();
     ~openssl_prng();

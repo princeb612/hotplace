@@ -25,7 +25,7 @@ namespace hotplace {
 /**
  * @brief   decoder stream
  */
-class decoder_stream {
+class HOTPLACE_BASE_API decoder_stream {
    public:
     /**
      * @brief   ctor

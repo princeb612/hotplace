@@ -131,7 +131,7 @@ hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 
 declare_tls_resource(quic_packet_type_code, uint8);
 
-class tls_advisor {
+class HOTPLACE_NET_API tls_advisor {
    public:
     static tls_advisor* get_instance();
     ~tls_advisor();

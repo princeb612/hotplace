@@ -36,7 +36,7 @@ namespace hotplace {
  *          decimal_float d6("0.2");
  *          // ...
  */
-class decimal_float {
+class HOTPLACE_BASE_API decimal_float {
     friend class floating_point;
 
    public:

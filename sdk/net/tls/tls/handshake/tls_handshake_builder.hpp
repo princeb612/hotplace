@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_handshake_builder {
+class HOTPLACE_NET_API tls_handshake_builder {
    public:
     tls_handshake_builder();
 

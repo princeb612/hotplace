@@ -33,8 +33,8 @@ enum splitter_flag_t : uint32 {
  *              size_t fragment_offset
  *              size_t fragment_size
  */
-return_t split(const binary_t& stream, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
-return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+HOTPLACE_BASE_API return_t split(const binary_t& stream, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+HOTPLACE_BASE_API return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
 /**
  * @brief split
  * @param const byte_t* stream [in]
@@ -46,8 +46,8 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::fun
  *                            size of first block of current stream 20 (not 50)
  * @param std::function<void(const byte_t*, size_t, size_t, size_t)> fn [in]
  */
-return_t split(const binary_t& stream, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
-return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+HOTPLACE_BASE_API return_t split(const binary_t& stream, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+HOTPLACE_BASE_API return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
 
 }  // namespace io
 }  // namespace hotplace

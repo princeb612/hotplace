@@ -23,7 +23,7 @@ namespace crypto {
 /**
  * @brief signature, ciphertext, tag
  */
-class cose_binary {
+class HOTPLACE_IO_API cose_binary {
     friend class cose_composer;
     friend class cose_data;
     friend class cose_recipient;

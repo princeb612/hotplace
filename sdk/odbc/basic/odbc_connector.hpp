@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace odbc {
 
-class odbc_connector {
+class HOTPLACE_ODBC_API odbc_connector {
    public:
     /**
      * @brief       constructor

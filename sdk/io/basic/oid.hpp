@@ -23,10 +23,10 @@ namespace io {
 // relative object identifier - nodeN positive
 typedef std::vector<uint32> oid_t;
 
-void str_to_oid(const std::string& value, oid_t& oid);
-void str_to_oid(const char* value, size_t size, oid_t& oid);
-void asn1str_to_oid(const char* value, size_t size, oid_t& oid);
-void oid_to_str(const oid_t& value, basic_stream& oid);
+HOTPLACE_IO_API void str_to_oid(const std::string& value, oid_t& oid);
+HOTPLACE_IO_API void str_to_oid(const char* value, size_t size, oid_t& oid);
+HOTPLACE_IO_API void asn1str_to_oid(const char* value, size_t size, oid_t& oid);
+HOTPLACE_IO_API void oid_to_str(const oid_t& value, basic_stream& oid);
 
 }  // namespace io
 }  // namespace hotplace

@@ -26,7 +26,7 @@ namespace crypto {
  *              aead->release();
  *          }
  */
-class crypto_aead_builder {
+class HOTPLACE_CRYPTO_API crypto_aead_builder {
    public:
     crypto_aead_builder();
 
@@ -40,7 +40,7 @@ class crypto_aead_builder {
     crypto_scheme_t _scheme;
 };
 
-class crypto_aead {
+class HOTPLACE_CRYPTO_API crypto_aead {
    public:
     crypto_aead(crypto_scheme_t scheme);
 

@@ -18,7 +18,7 @@ namespace hotplace {
 namespace net {
 
 // RFC 9000 19.8.  STREAM Frames
-class quic_frame_stream : public quic_frame {
+class HOTPLACE_NET_API quic_frame_stream : public quic_frame {
    public:
     quic_frame_stream(tls_session* session, uint8 type = quic_frame_type_stream);
     virtual ~quic_frame_stream();

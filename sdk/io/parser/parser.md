@@ -2430,7 +2430,105 @@ Table Generation Success!
 
 ---
 
-## 15. References
+## 15. GLR Implementation in hotplace
+
+The earlier sections introduce deterministic LR parsing. GLR retains competing ACTION entries and explores viable alternatives rather than rejecting a conflict at table-construction time. The hotplace implementation has two parts: table generation over LR(0) states, and runtime parsing with a graph-structured stack (GSS). Allowing conflicts in the table does not by itself guarantee correct handling of every ambiguous grammar.
+
+### 15.1 Deterministic stack vs. graph-structured stack
+
+A deterministic LR parser has one active stack. GLR can have several active histories at the same input position. GSS nodes can have multiple parents, so branches share common ancestry instead of copying complete stacks.
+
+```text
+LR stack                       GLR graph-structured stack
+  head                              active heads
+   |                                /        \
+ state                            head A    head B
+   |                                \        /
+ state                               shared
+   |                                ancestor
+  root
+```
+
+In `glr_parser_parse.cpp`, the parser uses `t_gss<uint32, parse_treenode*>`. The node state is an LR state and parent links represent predecessor stack paths. The parser currently creates GSS nodes with null values; syntax events are recorded separately through `parse_tree` SHIFT/REDUCE callbacks.
+
+### 15.2 Table construction path
+
+```text
+glr_parser::learn()
+       |
+       +-- compute_first_and_follow_sets()
+       +-- build_lr0_states() --> LR(0) states and GOTO transitions
+       +-- generate_glr_tables()
+                    |
+                    v
+       (state, lookahead) --> multiple ACTION entries
+```
+
+The ACTION table is a `std::multimap`, so multiple SHIFT/REDUCE/ACCEPT entries may share the same `(state, lookahead)` key. GOTO remains a single transition for a state and non-terminal.
+
+The current `cfg_grammar_glr.cpp` propagates lookahead-bearing items over the prebuilt LR(0) graph. It does not construct a complete canonical LR(1) collection and then merge states by identical cores. Its closure calculation uses FIRST of the immediate next RHS symbol when one exists. General LR(1) closure requires FIRST of the entire suffix after the non-terminal, adding the item's lookahead when that suffix can derive ε. Multi-symbol suffixes and nullable productions are important validation cases.
+
+### 15.3 Per-token execution: reduce closure, then shift
+
+For each input position, `glr_parser::parse()` derives a terminal key for the current token. Identifier-like token classes are normalized through `parser_resource`; other tokens use their token value. After the input is exhausted, the lookahead is `$`.
+
+```text
+current lookahead
+       |
+       v
+seed reduction queue with active GSS heads
+       |
+       v
+inspect all ACTION entries for each queued head
+       |
+       +-- REDUCE --> enumerate ancestor paths of RHS length
+       |                  |
+       |                  v
+       |              GOTO(ancestor, production LHS)
+       |                  |
+       |                  v
+       |              create/enqueue reduced head
+       |
+       +-- ACCEPT --> accept at end of input ($)
+       |
+       +-- SHIFT ----> defer until reduction processing ends
+                            |
+                            v
+                     shift current token
+                            |
+                            v
+                     replace active heads
+```
+
+A reduction can create a head that enables another reduction for the same lookahead, so the queue is processed until no new reduction work is added before shifting.
+
+For a production `A → β`, the runtime gets the RHS length, calls `stack.pop(head, rhs_len, callback)` to enumerate complete ancestor paths (not destructively pop nodes), uses each path's final node as the state before the reduced RHS, looks up `GOTO(ancestor.state, A)`, then creates and enqueues a reduced head.
+
+After reduction processing, SHIFT creates a node for the destination state and links it to a predecessor head. The token index advances only after a successful shift. If no viable shift remains and no ACCEPT was found, parsing returns a syntax error. When supplied, `parse_tree` receives `on_reduce()` and `on_shift()` callbacks; semantic interpretation remains the higher-level ASN.1 builder's responsibility.
+
+### 15.4 Implementation boundaries to review
+
+- SHIFT deduplication uses destination state alone. Distinct heads shifting to the same state may be collapsed before both parent links are retained.
+- REDUCE deduplication uses `(goto_state, ancestor)`. Different productions that converge on that pair may be treated as duplicate work even if their syntax alternatives differ.
+- Lookahead closure should be tested with multi-symbol suffixes and nullable productions.
+
+These are semantic correctness concerns, not just performance details. Useful tests should include ambiguous grammars and fork/merge cases in which alternatives converge on the same state but must retain distinct histories.
+
+### 15.5 Where to read the implementation
+
+| Concern | Source | What to follow |
+|---|---|---|
+| GLR table orchestration | `glr_parser.cpp` | `learn()`, readiness, table import/build |
+| Lookahead and ACTION generation | `cfg_grammar_glr.cpp` | `generate_glr_tables()`, lookahead propagation |
+| Runtime branching | `glr_parser_parse.cpp` | reduction queue, GSS `pop()`, GOTO, SHIFT, ACCEPT |
+| GSS ancestry | `sdk/base/graph/gss.md` | active heads, parent links, path enumeration |
+| Parser integration tests | `test/testcase/io/parser/testcase_parser.cpp` | ASN.1 notation with LALR/GLR, built/imported tables |
+| ASN.1 integration | `sdk/io/asn.1/` | token preparation and syntax-to-domain processing |
+
+The existing ASN.1 notation tests provide useful integration coverage across LALR/GLR and table build/import paths, but they do not by themselves prove coverage of every ambiguous grammar or GSS branch pattern.
+
+---
+## 16. References
 
 - book
   - Compilers Principles, Techniques, and Tools - Alfred V. Aho, Ravi Sethi, and Jeffrey D. Ullman

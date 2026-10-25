@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-class asn1_constraint_visitor {
+class HOTPLACE_IO_API asn1_constraint_visitor {
    public:
     ~asn1_constraint_visitor() = default;
 

@@ -37,7 +37,7 @@ namespace net {
  *      // ...
  *      response->release();
  */
-class http_client {
+class HOTPLACE_NET_API http_client {
    public:
     http_client();
     ~http_client();

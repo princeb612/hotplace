@@ -64,6 +64,8 @@ The project-local [netclient](../netclient/README.md) can send a UDP datagram to
 - [DTLS server](../dtlsserver/README.md) — secure datagram transport layered over UDP.
 - [Network-server implementation](../../../sdk/net/server/README.md) — higher-level event/session management.
 
-## Developer Notes
+## 5. References
+
+## 6. Developer Notes
 
 The current source comments identify IPv4-only support. Preserve that constraint in user-facing descriptions unless an IPv6 implementation and test path are added and verified. The Windows asynchronous receive path deserves separate testing from the Linux readiness path.

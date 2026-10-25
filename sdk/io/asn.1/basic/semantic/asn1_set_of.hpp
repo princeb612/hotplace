@@ -31,7 +31,7 @@ namespace io {
  *          value->release();
  *          type->release();
  */
-class asn1_set_of : public asn1_container_of {
+class HOTPLACE_IO_API asn1_set_of : public asn1_container_of {
    public:
     asn1_set_of(asn1_entity_t entity);
     asn1_set_of(asn1_object* object);

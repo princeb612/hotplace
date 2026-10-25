@@ -39,7 +39,7 @@ enum oauth2_grant_t {
 
 class http_router;
 
-class oauth2_grant_provider {
+class HOTPLACE_NET_API oauth2_grant_provider {
    public:
     oauth2_grant_provider();
     virtual ~oauth2_grant_provider();
@@ -59,7 +59,7 @@ class oauth2_grant_provider {
     t_shared_reference<oauth2_grant_provider> _instance;
 };
 
-class oauth2_authorization_code_grant_provider : public oauth2_grant_provider {
+class HOTPLACE_NET_API oauth2_authorization_code_grant_provider : public oauth2_grant_provider {
    public:
     oauth2_authorization_code_grant_provider();
     virtual ~oauth2_authorization_code_grant_provider();
@@ -72,7 +72,7 @@ class oauth2_authorization_code_grant_provider : public oauth2_grant_provider {
     virtual oauth2_grant_t type();
 };
 
-class oauth2_implicit_grant_provider : public oauth2_grant_provider {
+class HOTPLACE_NET_API oauth2_implicit_grant_provider : public oauth2_grant_provider {
    public:
     oauth2_implicit_grant_provider();
     virtual ~oauth2_implicit_grant_provider();
@@ -83,7 +83,7 @@ class oauth2_implicit_grant_provider : public oauth2_grant_provider {
     virtual oauth2_grant_t type();
 };
 
-class oauth2_resource_owner_password_credentials_grant_provider : public oauth2_grant_provider {
+class HOTPLACE_NET_API oauth2_resource_owner_password_credentials_grant_provider : public oauth2_grant_provider {
    public:
     oauth2_resource_owner_password_credentials_grant_provider();
     virtual ~oauth2_resource_owner_password_credentials_grant_provider();
@@ -94,7 +94,7 @@ class oauth2_resource_owner_password_credentials_grant_provider : public oauth2_
     virtual oauth2_grant_t type();
 };
 
-class oauth2_client_credentials_grant_provider : public oauth2_grant_provider {
+class HOTPLACE_NET_API oauth2_client_credentials_grant_provider : public oauth2_grant_provider {
    public:
     oauth2_client_credentials_grant_provider();
     virtual ~oauth2_client_credentials_grant_provider();
@@ -105,7 +105,7 @@ class oauth2_client_credentials_grant_provider : public oauth2_grant_provider {
     virtual oauth2_grant_t type();
 };
 
-class oauth2_unsupported_provider : public oauth2_grant_provider {
+class HOTPLACE_NET_API oauth2_unsupported_provider : public oauth2_grant_provider {
    public:
     oauth2_unsupported_provider();
     virtual ~oauth2_unsupported_provider();
@@ -143,7 +143,7 @@ enum oauth2_provider_key_t {
     oauth2_signpage = 3,
     oauth2_signin = 4,
 };
-class oauth2_provider {
+class HOTPLACE_NET_API oauth2_provider {
    public:
     oauth2_provider();
     virtual ~oauth2_provider();

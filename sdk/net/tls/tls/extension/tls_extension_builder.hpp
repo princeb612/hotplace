@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_extension_builder {
+class HOTPLACE_NET_API tls_extension_builder {
    public:
     tls_extension_builder();
     tls_extension_builder& set(tls_handshake* hs);

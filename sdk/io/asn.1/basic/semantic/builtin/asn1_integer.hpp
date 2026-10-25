@@ -40,7 +40,7 @@ namespace io {
  *              value->release();
  *              type->release();
  */
-class asn1_integer : public asn1_builtin_type {
+class HOTPLACE_IO_API asn1_integer : public asn1_builtin_type {
    public:
     // INTEGER
     asn1_integer();

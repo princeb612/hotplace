@@ -72,7 +72,7 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flag);
 return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr,
                                   const char* chain_file = nullptr);
 
-class openssl_tls_context {
+class HOTPLACE_NET_API openssl_tls_context {
    public:
     openssl_tls_context(uint32 flag = tlscontext_flag_tls);
     /**

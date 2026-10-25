@@ -28,7 +28,7 @@ namespace net {
  *              builder.builder.set(new trial_server_socket_adapter);
  *          }
  */
-class server_socket_adapter {
+class HOTPLACE_NET_API server_socket_adapter {
    public:
     virtual ~server_socket_adapter();
 

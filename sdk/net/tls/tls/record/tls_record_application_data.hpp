@@ -24,7 +24,7 @@ namespace net {
  *          record.get_records().add(new tls_record_application_data(session. "ping");
  *          record.write(dir, bin);
  */
-class tls_record_application_data : public tls_record {
+class HOTPLACE_NET_API tls_record_application_data : public tls_record {
    public:
     tls_record_application_data(tls_session* session);
     tls_record_application_data(tls_session* session, const std::string& data);

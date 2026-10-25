@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace crypto {
 
-class cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt {
    public:
     cipher_encrypt(crypt_algorithm_t alg, crypt_mode_t mode);
 
@@ -47,7 +47,7 @@ class cipher_encrypt {
  *              cipher->release();
  *          }
  */
-class cipher_encrypt_builder {
+class HOTPLACE_CRYPTO_API cipher_encrypt_builder {
    public:
     cipher_encrypt_builder();
     cipher_encrypt* build();
@@ -61,46 +61,46 @@ class cipher_encrypt_builder {
     crypt_mode_t _mode;
 };
 
-class cipher_encrypt_aes128cbc : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes128cbc : public cipher_encrypt {
    public:
     cipher_encrypt_aes128cbc() : cipher_encrypt(crypt_algorithm_t::aes128, crypt_mode_t::cbc) {}
 };
-class cipher_encrypt_aes128cfb : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes128cfb : public cipher_encrypt {
    public:
     cipher_encrypt_aes128cfb() : cipher_encrypt(crypt_algorithm_t::aes128, crypt_mode_t::cfb) {}
 };
-class cipher_encrypt_aes128ofb : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes128ofb : public cipher_encrypt {
    public:
     cipher_encrypt_aes128ofb() : cipher_encrypt(crypt_algorithm_t::aes128, crypt_mode_t::ofb) {}
 };
 
-class cipher_encrypt_aes192cbc : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes192cbc : public cipher_encrypt {
    public:
     cipher_encrypt_aes192cbc() : cipher_encrypt(crypt_algorithm_t::aes192, crypt_mode_t::cbc) {}
 };
-class cipher_encrypt_aes192cfb : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes192cfb : public cipher_encrypt {
    public:
     cipher_encrypt_aes192cfb() : cipher_encrypt(crypt_algorithm_t::aes192, crypt_mode_t::cfb) {}
 };
-class cipher_encrypt_aes192ofb : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes192ofb : public cipher_encrypt {
    public:
     cipher_encrypt_aes192ofb() : cipher_encrypt(crypt_algorithm_t::aes192, crypt_mode_t::ofb) {}
 };
 
-class cipher_encrypt_aes256cbc : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes256cbc : public cipher_encrypt {
    public:
     cipher_encrypt_aes256cbc() : cipher_encrypt(crypt_algorithm_t::aes256, crypt_mode_t::cbc) {}
 };
-class cipher_encrypt_aes256cfb : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes256cfb : public cipher_encrypt {
    public:
     cipher_encrypt_aes256cfb() : cipher_encrypt(crypt_algorithm_t::aes256, crypt_mode_t::cfb) {}
 };
-class cipher_encrypt_aes256ofb : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_aes256ofb : public cipher_encrypt {
    public:
     cipher_encrypt_aes256ofb() : cipher_encrypt(crypt_algorithm_t::aes256, crypt_mode_t::ofb) {}
 };
 
-class cipher_encrypt_chacha20 : public cipher_encrypt {
+class HOTPLACE_CRYPTO_API cipher_encrypt_chacha20 : public cipher_encrypt {
    public:
     cipher_encrypt_chacha20() : cipher_encrypt(crypt_algorithm_t::chacha20, crypt_mode_t::unknown) {}
 };

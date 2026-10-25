@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   quic_transport_parameters (0x0039)
  */
-class tls_extension_quic_transport_parameters : public tls_extension {
+class HOTPLACE_NET_API tls_extension_quic_transport_parameters : public tls_extension {
    public:
     tls_extension_quic_transport_parameters(tls_handshake* handshake);
     virtual ~tls_extension_quic_transport_parameters();

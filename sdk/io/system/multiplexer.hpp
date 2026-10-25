@@ -72,7 +72,7 @@ typedef struct {
  *          mplexer.close (handle);
  *
  */
-class multiplexer_iocp {
+class HOTPLACE_IO_API multiplexer_iocp {
    public:
     multiplexer_iocp();
     ~multiplexer_iocp();
@@ -195,7 +195,7 @@ class multiplexer_iocp {
  *    mplexer.close (handle);
  *
  */
-class multiplexer_epoll {
+class HOTPLACE_IO_API multiplexer_epoll {
    public:
     multiplexer_epoll();
     ~multiplexer_epoll();
@@ -288,7 +288,7 @@ class multiplexer_epoll {
 /**
  * @brief support event_loop_break (multiplexer_iocp, multiplexer_epoll, MultiplexerKqueue)
  */
-class multiplexer_controller {
+class HOTPLACE_IO_API multiplexer_controller {
    public:
     multiplexer_controller();
     ~multiplexer_controller();

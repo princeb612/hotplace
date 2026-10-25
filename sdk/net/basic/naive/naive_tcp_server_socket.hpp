@@ -20,7 +20,7 @@ namespace net {
  * @brief   TCP server socket
  * @sa      openssl_tls_server_socket, trial_tls_server_socket
  */
-class naive_tcp_server_socket : public server_socket {
+class HOTPLACE_NET_API naive_tcp_server_socket : public server_socket {
    public:
     naive_tcp_server_socket();
     virtual ~naive_tcp_server_socket();

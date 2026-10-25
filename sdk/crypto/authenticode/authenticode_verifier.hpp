@@ -52,7 +52,7 @@ enum authenticode_flag_t {
  *        verifier.close(handle);
  *        openssl_cleanup(); // end of application
  */
-class authenticode_verifier {
+class HOTPLACE_CRYPTO_API authenticode_verifier {
    public:
     authenticode_verifier();
     ~authenticode_verifier();

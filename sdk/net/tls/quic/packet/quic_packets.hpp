@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-class quic_packets {
+class HOTPLACE_NET_API quic_packets {
    public:
     quic_packets();
 

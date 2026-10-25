@@ -64,7 +64,7 @@ struct segment_t {
  *              .add(tls_handshake_type_t::server_hello, dir)
  *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
  */
-class quic_packet_publisher {
+class HOTPLACE_NET_API quic_packet_publisher {
    public:
     quic_packet_publisher();
     ~quic_packet_publisher();

@@ -17,7 +17,7 @@
 
 namespace hotplace {
 
-class redirection : public redirection_t {
+class HOTPLACE_BASE_API redirection : public redirection_t {
    public:
     redirection();
     virtual ~redirection();

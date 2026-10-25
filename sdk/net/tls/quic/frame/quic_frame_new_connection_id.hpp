@@ -24,7 +24,7 @@ namespace net {
 // RFC 9000 19.13. STREAM_DATA_BLOCKED Frames
 // RFC 9000 19.14. STREAMS_BLOCKED Frames
 // RFC 9000 19.15. NEW_CONNECTION_ID Frames
-class quic_frame_new_connection_id : public quic_frame {
+class HOTPLACE_NET_API quic_frame_new_connection_id : public quic_frame {
    public:
     quic_frame_new_connection_id(tls_session* session);
     virtual ~quic_frame_new_connection_id();

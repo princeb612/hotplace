@@ -22,7 +22,7 @@ namespace net {
  *          RFC 7540 6.1. DATA
  *          RFC 7540 Figure 6: DATA Frame Payload
  */
-class http2_frame_data : public http2_frame {
+class HOTPLACE_NET_API http2_frame_data : public http2_frame {
    public:
     http2_frame_data();
     http2_frame_data(const http2_frame_data& other);

@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   status_request (0x0005)
  */
-class tls_extension_status_request : public tls_extension {
+class HOTPLACE_NET_API tls_extension_status_request : public tls_extension {
    public:
     tls_extension_status_request(tls_handshake* handshake);
     virtual ~tls_extension_status_request();

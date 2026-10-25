@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   RFC 9000 17.2.5.  Retry Packet
  */
-class quic_packet_retry : public quic_packet {
+class HOTPLACE_NET_API quic_packet_retry : public quic_packet {
    public:
     quic_packet_retry(tls_session* session);
     quic_packet_retry(const quic_packet_retry& other);

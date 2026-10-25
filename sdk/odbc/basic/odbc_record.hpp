@@ -24,7 +24,7 @@ namespace odbc {
 /**
  * @brief   record (tuple)
  */
-class odbc_record {
+class HOTPLACE_ODBC_API odbc_record {
    public:
     /**
      * @brief   constructor

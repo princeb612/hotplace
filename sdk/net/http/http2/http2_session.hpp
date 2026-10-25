@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-class http2_session {
+class HOTPLACE_NET_API http2_session {
    public:
     http2_session();
 

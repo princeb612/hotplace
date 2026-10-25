@@ -17,6 +17,58 @@
 #include <hotplace/sdk/base/system/windows/types.hpp>
 #endif
 
+// clang-format off
+#if defined SUPPORT_SHARED
+# if defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) || defined(__MINGW64__)
+#  define HOTPLACE_EXPORT_API __declspec(dllexport)
+#  define HOTPLACE_IMPORT_API __declspec(dllimport)
+#  if defined HOTPLACE_BASE_SHARED
+#   define HOTPLACE_BASE_API HOTPLACE_EXPORT_API
+#  else
+#   define HOTPLACE_BASE_API HOTPLACE_IMPORT_API
+#  endif
+#  if defined HOTPLACE_IO_SHARED
+#   define HOTPLACE_IO_API HOTPLACE_EXPORT_API
+#  else
+#   define HOTPLACE_IO_API HOTPLACE_IMPORT_API
+#  endif
+#  if defined HOTPLACE_CRYPTO_SHARED
+#   define HOTPLACE_CRYPTO_API HOTPLACE_EXPORT_API
+#  else
+#   define HOTPLACE_CRYPTO_API HOTPLACE_IMPORT_API
+#  endif
+#  if defined HOTPLACE_NET_SHARED
+#   define HOTPLACE_NET_API HOTPLACE_EXPORT_API
+#  else
+#   define HOTPLACE_NET_API HOTPLACE_IMPORT_API
+#  endif
+#  if defined HOTPLACE_ODBC_SHARED
+#   define HOTPLACE_ODBC_API HOTPLACE_EXPORT_API
+#  else
+#   define HOTPLACE_ODBC_API HOTPLACE_IMPORT_API
+#  endif
+# else
+#  if __GNUC__ >= 4
+#   define HOTPLACE_API __attribute__((visibility("default")))
+#  else
+#   define HOTPLACE_API
+#  endif
+#  define HOTPLACE_BASE_API   HOTPLACE_API
+#  define HOTPLACE_IO_API     HOTPLACE_API
+#  define HOTPLACE_CRYPTO_API HOTPLACE_API
+#  define HOTPLACE_NET_API    HOTPLACE_API
+#  define HOTPLACE_ODBC_API   HOTPLACE_API
+# endif
+#else
+# define HOTPLACE_API
+# define HOTPLACE_BASE_API   HOTPLACE_API
+# define HOTPLACE_IO_API     HOTPLACE_API
+# define HOTPLACE_CRYPTO_API HOTPLACE_API
+# define HOTPLACE_NET_API    HOTPLACE_API
+# define HOTPLACE_ODBC_API   HOTPLACE_API
+#endif
+// clang-format on
+
 #if defined __linux__
 
 #include <fcntl.h>

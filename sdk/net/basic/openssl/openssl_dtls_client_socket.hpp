@@ -21,7 +21,7 @@ namespace net {
 /**
  * @brief   DTLS client socket
  */
-class openssl_dtls_client_socket : public client_socket {
+class HOTPLACE_NET_API openssl_dtls_client_socket : public client_socket {
    public:
     openssl_dtls_client_socket(openssl_tls* tls);
     virtual ~openssl_dtls_client_socket();

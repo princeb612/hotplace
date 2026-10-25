@@ -35,7 +35,7 @@ enum class asn1_build_t {
     non_assignment,     // non-assignment (SimpleType, Tag, etc.)
 };
 
-struct asn1_build_resultset {
+struct HOTPLACE_IO_API asn1_build_resultset {
     asn1_build_t type{asn1_build_t::unknown};
     std::vector<std::string> module_names;
     asn1_object* object{nullptr};
@@ -50,8 +50,8 @@ struct asn1_build_resultset {
     void release_name(const std::string& name);
 };
 
-return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
-return_t print_ast(const asn1_module* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
+HOTPLACE_IO_API return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
+HOTPLACE_IO_API return_t print_ast(const asn1_module* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 
 }  // namespace io
 }  // namespace hotplace

@@ -87,7 +87,7 @@ return_t b24_i32(const byte_t* p, size_t len, uint32& value);
 return_t i32_b24(byte_t* p, size_t len, uint32 value);
 
 /* TLS handshake length */
-struct uint24_t : t_uint_custom_t<uint32, 3> {
+struct HOTPLACE_BASE_API uint24_t : t_uint_custom_t<uint32, 3> {
     uint24_t();
     uint24_t(const uint24_t& other);
     uint24_t(const byte_t* p, size_t size);
@@ -97,14 +97,14 @@ struct uint24_t : t_uint_custom_t<uint32, 3> {
     return_t ntoh(const byte_t* p, size_t len, uint32& value) override;
 };
 
-return_t b24_i32(const uint24_t& u, uint32& value);
-return_t i32_b24(uint24_t& u, uint32 value);
+HOTPLACE_BASE_API return_t b24_i32(const uint24_t& u, uint32& value);
+HOTPLACE_BASE_API return_t i32_b24(uint24_t& u, uint32 value);
 
 /* DTLS record sequence */
-return_t b48_i64(const byte_t* p, size_t len, uint64& value);
-return_t i64_b48(byte_t* p, size_t len, uint64 value);
+HOTPLACE_BASE_API return_t b48_i64(const byte_t* p, size_t len, uint64& value);
+HOTPLACE_BASE_API return_t i64_b48(byte_t* p, size_t len, uint64 value);
 
-struct uint48_t : t_uint_custom_t<uint64, 6> {
+struct HOTPLACE_BASE_API uint48_t : t_uint_custom_t<uint64, 6> {
     uint48_t();
     uint48_t(const uint48_t& other);
     uint48_t(const byte_t* p, size_t size);
@@ -114,8 +114,8 @@ struct uint48_t : t_uint_custom_t<uint64, 6> {
     return_t ntoh(const byte_t* p, size_t len, uint64& value) override;
 };
 
-return_t b48_i64(const uint48_t& u, uint64& value);
-return_t i64_b48(uint48_t& u, uint64 value);
+HOTPLACE_BASE_API return_t b48_i64(const uint48_t& u, uint64& value);
+HOTPLACE_BASE_API return_t i64_b48(uint48_t& u, uint64 value);
 
 }  // namespace hotplace
 

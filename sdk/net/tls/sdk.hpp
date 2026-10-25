@@ -28,21 +28,21 @@ namespace net {
  *          load_certificate("rsa.crt", "rsa.key", nullptr);
  *          load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
  */
-return_t load_certificate(const char* certfile, const char* keyfile, const char* chainfile);
+HOTPLACE_NET_API return_t load_certificate(const char* certfile, const char* keyfile, const char* chainfile);
 
 /**
  * @brief   keylog callback
  */
-void set_tls_keylog_callback(std::function<void(const char*)> func);
+HOTPLACE_NET_API void set_tls_keylog_callback(std::function<void(const char*)> func);
 
-return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space);
-bool is_kindof_handshake(tls_handshake* handshake, protection_space_t space);
-return_t kindof_frame(quic_frame* frame, protection_space_t& space);
-bool is_kindof_frame(quic_frame* frame, protection_space_t space);
-return_t kindof_frame(quic_frame_t type, protection_space_t& space);
-bool is_kindof_frame(quic_frame_t type, protection_space_t space);
+HOTPLACE_NET_API return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space);
+HOTPLACE_NET_API bool is_kindof_handshake(tls_handshake* handshake, protection_space_t space);
+HOTPLACE_NET_API return_t kindof_frame(quic_frame* frame, protection_space_t& space);
+HOTPLACE_NET_API bool is_kindof_frame(quic_frame* frame, protection_space_t space);
+HOTPLACE_NET_API return_t kindof_frame(quic_frame_t type, protection_space_t& space);
+HOTPLACE_NET_API bool is_kindof_frame(quic_frame_t type, protection_space_t space);
 
-bool is_kindof_alpn(tls_session* session, const std::string& alpn);
+HOTPLACE_NET_API bool is_kindof_alpn(tls_session* session, const std::string& alpn);
 
 }  // namespace net
 }  // namespace hotplace

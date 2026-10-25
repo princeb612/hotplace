@@ -40,7 +40,7 @@ namespace net {
  *              frame->release();
  *          }
  */
-class quic_frame_builder {
+class HOTPLACE_NET_API quic_frame_builder {
    public:
     quic_frame_builder();
 

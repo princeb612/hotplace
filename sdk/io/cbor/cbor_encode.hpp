@@ -80,7 +80,7 @@ namespace io {
  *          variant_set_str (vt, "\u00fc");
  *          variant_set_str (vt, "\u6c34");
  */
-class cbor_encode {
+class HOTPLACE_IO_API cbor_encode {
    public:
     cbor_encode();
 

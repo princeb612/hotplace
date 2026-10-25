@@ -20,13 +20,13 @@ namespace net {
 /**
  * @brief   supported_versions (0x002b)
  */
-class tls_extension_supported_versions : public tls_extension {
+class HOTPLACE_NET_API tls_extension_supported_versions : public tls_extension {
    protected:
     tls_extension_supported_versions(tls_handshake* handshake);
     virtual ~tls_extension_supported_versions();
 };
 
-class tls_extension_client_supported_versions : public tls_extension_supported_versions {
+class HOTPLACE_NET_API tls_extension_client_supported_versions : public tls_extension_supported_versions {
    public:
     tls_extension_client_supported_versions(tls_handshake* handshake);
     virtual ~tls_extension_client_supported_versions();
@@ -43,7 +43,7 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
     std::list<tls_version_t> _versions;
 };
 
-class tls_extension_server_supported_versions : public tls_extension_supported_versions {
+class HOTPLACE_NET_API tls_extension_server_supported_versions : public tls_extension_supported_versions {
    public:
     tls_extension_server_supported_versions(tls_handshake* handshake);
     virtual ~tls_extension_server_supported_versions();

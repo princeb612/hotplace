@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   compress_certificate (0x001b)
  */
-class tls_extension_compress_certificate : public tls_extension {
+class HOTPLACE_NET_API tls_extension_compress_certificate : public tls_extension {
    public:
     tls_extension_compress_certificate(tls_handshake* handshake);
     virtual ~tls_extension_compress_certificate();

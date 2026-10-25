@@ -20,7 +20,7 @@ namespace hotplace {
 /**
  * @brief semaphore
  */
-class semaphore : public semaphore_t {
+class HOTPLACE_BASE_API semaphore : public semaphore_t {
    public:
     semaphore();
     semaphore(const semaphore&) = delete;

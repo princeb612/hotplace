@@ -59,7 +59,7 @@ namespace net {
  *
  *          record.get_handshakes().add(handshake);
  */
-class tls_handshake_server_hello : public tls_handshake {
+class HOTPLACE_NET_API tls_handshake_server_hello : public tls_handshake {
    public:
     tls_handshake_server_hello(tls_session* session);
     virtual ~tls_handshake_server_hello();

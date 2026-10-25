@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_handshake_end_of_early_data : public tls_handshake {
+class HOTPLACE_NET_API tls_handshake_end_of_early_data : public tls_handshake {
    public:
     tls_handshake_end_of_early_data(tls_session* session);
     virtual ~tls_handshake_end_of_early_data();

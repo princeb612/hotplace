@@ -37,7 +37,7 @@ namespace net {
 #define KID_TLS_CLIENT_CERTIFICATE_PRIVATE "CC.priv"
 #define KID_TLS_SERVER_CERTIFICATE_PRIVATE "SC.priv"
 
-class protection_context {
+class HOTPLACE_NET_API protection_context {
    public:
     protection_context();
 
@@ -108,7 +108,7 @@ class protection_context {
     uint16 _cipher_suite;
 };
 
-class tls_protection {
+class HOTPLACE_NET_API tls_protection {
     friend class tls_session;
 
    public:

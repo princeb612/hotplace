@@ -24,7 +24,7 @@ enum http_request_flag_t {
     http_request_compose = (1 << 0),
 };
 
-class http_request {
+class HOTPLACE_NET_API http_request {
     friend class http_router;
 
    public:

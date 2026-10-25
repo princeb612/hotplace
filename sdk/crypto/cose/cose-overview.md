@@ -78,18 +78,3 @@ This is a limitation of hotplace's current integration, not a statement that Ope
 
 ## Interpretation notes
 The X mark for ChaCha20/Poly1305 corresponds to the current resource group's explicit `cose_hint_not_supported` flag. The table's O marks record the inventory's implementation intent; confirm the current resource table, testcase arrays and active backend before treating any algorithm as available. The current source includes algorithm metadata for families beyond this older table, including RSA signature/key-management and ML-DSA entries; the README's inventory summarizes those separately.
-
-## 4. Relationships
-
-### Source-test evidence
-
-The primary operation-level example is `test/testcase/cose/testcase_cose.cpp`, especially `do_test_cose_encrypt`, `do_test_cose_sign`, `do_test_cose_mac`, and the `test_cose()` group.
-
-- `sdk/io/cbor/` provides CBOR parsing, encoding, and object representation.
-- `sdk/crypto/basic/` provides cryptographic primitives used by COSE.
-- `sdk/crypto/advisor/resource_cose.cpp` holds current algorithm/group metadata and support flags.
-## 5. References
-
-- RFC 9052 — CBOR Object Signing and Encryption (COSE): Structures and Process.
-- RFC 9053 — CBOR Object Signing and Encryption (COSE): Initial Algorithms.
-- IANA COSE registry — https://www.iana.org/assignments/cose/cose.xhtml

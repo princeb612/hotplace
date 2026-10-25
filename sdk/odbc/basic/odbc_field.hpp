@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace odbc {
 
-class odbc_field {
+class HOTPLACE_ODBC_API odbc_field {
    public:
     /**
      * @brief

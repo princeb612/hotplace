@@ -20,7 +20,7 @@ namespace net {
 /**
  * @brief   RFC 9000 17.2.2.  Initial Packet
  */
-class quic_packet_initial : public quic_packet {
+class HOTPLACE_NET_API quic_packet_initial : public quic_packet {
    public:
     quic_packet_initial(tls_session* session);
     quic_packet_initial(const quic_packet_initial& other);

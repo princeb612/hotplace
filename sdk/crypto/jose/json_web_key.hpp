@@ -33,7 +33,7 @@ namespace crypto {
  *          jwk.load_file (&key, "rfc7515.jwk", 0);
  *          jwk.load_pem_file (&key, "test.pem");
  */
-class json_web_key : public crypto_keychain {
+class HOTPLACE_CRYPTO_API json_web_key : public crypto_keychain {
     friend class json_object_signing_encryption;
 
    public:

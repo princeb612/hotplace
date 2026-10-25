@@ -105,6 +105,8 @@ if [ ${#args[@]} -ne 0 ]; then
             target=Debug
         elif [ $arg = 'disable_static' ]; then
             export SUPPORT_STATIC=0
+        elif [ $arg = 'nostatic' ]; then
+            export SUPPORT_STATIC=0
         elif [ $arg = 'format' ]; then
             do_clangformat=1
         elif [ $arg = 'msvc' ]; then

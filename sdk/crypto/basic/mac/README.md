@@ -29,7 +29,7 @@ This directory groups keyed authentication operations and two application-level 
 
 ## 3. Behavior Model
 
-### 3.1 HMAC lifecycle
+### HMAC lifecycle
 
 ```text
 hash algorithm + secret key
@@ -49,7 +49,7 @@ mac(message)   init → update(chunk)* → finalize
 
 The builder binds the selected hash and secret key to the higher-level object. A one-shot `mac()` call consumes a complete message; the incremental path retains keyed hash state across `update()` calls until finalization. `openssl_mac` is a separate one-shot helper, while `openssl_hash` is the context-level interface used for stateful backend work.
 
-### 3.2 Concrete caller paths: primitive, facade, and JOSE
+### Concrete caller paths: primitive, facade, and JOSE
 
 `test/testcase/crypto/sign/testcase_hmac.cpp` deliberately exercises three layers with the same message and key material:
 
@@ -68,7 +68,7 @@ The testcase compares the `openssl_hash` SHA-256 result with `EVP_Digest` output
 
 These are related but different API contracts: raw HMAC bytes are not a JOSE signature representation, and a successful sign/verify round trip is not a substitute for a known-answer vector. The RFC 4231 testcase supplies the independent known-answer HMAC checks.
 
-### 3.3 HOTP and TOTP data flow
+### HOTP and TOTP data flow
 
 ```text
 HOTP:

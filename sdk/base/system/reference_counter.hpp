@@ -38,7 +38,7 @@ namespace hotplace {
  *      sample_ptr->do_something();
  *      sample_ptr->release(); // --refcount
  */
-class reference_counter {
+class HOTPLACE_BASE_API reference_counter {
    public:
     /**
      * @brief constructor

@@ -18,7 +18,7 @@ namespace hotplace {
 namespace net {
 
 // RFC 9000 19.6.  CRYPTO Frames
-class quic_frame_crypto : public quic_frame {
+class HOTPLACE_NET_API quic_frame_crypto : public quic_frame {
    public:
     quic_frame_crypto(tls_session* session);
     virtual ~quic_frame_crypto();

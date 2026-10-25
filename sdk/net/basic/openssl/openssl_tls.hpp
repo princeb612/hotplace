@@ -32,7 +32,7 @@ namespace net {
  *      }
  *      cli.close(sock, tlshandle);
  */
-class openssl_tls {
+class HOTPLACE_NET_API openssl_tls {
    public:
     openssl_tls(SSL_CTX* sslctx);
     openssl_tls(openssl_tls_context* cert);

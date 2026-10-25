@@ -19,7 +19,7 @@ namespace net {
 /**
  * RFC 9114
  */
-class http3_frame_priority_update : public http3_frame {
+class HOTPLACE_NET_API http3_frame_priority_update : public http3_frame {
    public:
     http3_frame_priority_update(h3_frame_t type);
 };

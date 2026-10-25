@@ -84,7 +84,7 @@ struct asn1_symbol_module {
     bool operator==(const asn1_symbol_module& other) const { return (outer_module == other.outer_module) && (symbols == other.symbols); }
 };
 
-class asn1_module {
+class HOTPLACE_IO_API asn1_module {
     friend class asn1_weakly_typed;
 
    public:

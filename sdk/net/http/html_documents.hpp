@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-class html_documents {
+class HOTPLACE_NET_API html_documents {
    public:
     html_documents();
     html_documents(const std::string& root_uri, const std::string& directory);

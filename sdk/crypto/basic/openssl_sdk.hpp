@@ -20,27 +20,27 @@ namespace crypto {
  * @brief strings, algorithms
  * @remarks call in main function
  */
-void openssl_startup();
-void openssl_cleanup();
+HOTPLACE_CRYPTO_API void openssl_startup();
+HOTPLACE_CRYPTO_API void openssl_cleanup();
 /**
  * @brief openssl thread safe
  * @remarks call in main function
  */
-void openssl_thread_setup(void);
-void openssl_thread_cleanup(void);
-void openssl_thread_end(void);
+HOTPLACE_CRYPTO_API void openssl_thread_setup(void);
+HOTPLACE_CRYPTO_API void openssl_thread_cleanup(void);
+HOTPLACE_CRYPTO_API void openssl_thread_end(void);
 
-return_t get_opensslerror(int rc);
-return_t trace_openssl(return_t errorcode);
-return_t debug_trace_openssl(stream_t* stream);
+HOTPLACE_CRYPTO_API return_t get_opensslerror(int rc);
+HOTPLACE_CRYPTO_API return_t trace_openssl(return_t errorcode);
+HOTPLACE_CRYPTO_API return_t debug_trace_openssl(stream_t* stream);
 
 /**
  *  DEBUG only
  *  leave_trace_dbg_openssl_print(__FILE__, __LINE__, ret);
  */
-void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t ret);
+HOTPLACE_CRYPTO_API void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t ret);
 /* function_pipeline<int, osslerror_category> tracer */
-void pipeline_trace_dbg_openssl_print(const char* file, unsigned int line, int rc);
+HOTPLACE_CRYPTO_API void pipeline_trace_dbg_openssl_print(const char* file, unsigned int line, int rc);
 #ifdef DEBUG
 #define __leave2_trace_openssl(x)                             \
     {                                                         \
@@ -145,37 +145,37 @@ void pipeline_trace_dbg_openssl_print(const char* file, unsigned int line, int r
  * @remarks
  *      by default, ossl_cooltime_max is 1000ms (1second)
  */
-return_t ossl_set_cooltime(uint32 ms);
+HOTPLACE_CRYPTO_API return_t ossl_set_cooltime(uint32 ms);
 /**
  * @brief set a max cooltime to sleep while encryt and decrypt
  * @param uint32 ms [in] milliseconds, cannot be zero
  * @return
  *      errorcode_t::invalid_parameter - if given value is zero or lesser than current ossl_cooltime
  */
-return_t ossl_set_cooltime_max(uint32 ms);
+HOTPLACE_CRYPTO_API return_t ossl_set_cooltime_max(uint32 ms);
 /**
  * @brief return a cooltime
  */
-uint32 ossl_get_cooltime();
+HOTPLACE_CRYPTO_API uint32 ossl_get_cooltime();
 /**
  * @brief take a break after processing
  * @param uint32 blocks [in]
  * @return
  *      errorcode_t::invalid_parameter - cannot be zero
  */
-return_t ossl_set_unitsize(uint32 bytes);
+HOTPLACE_CRYPTO_API return_t ossl_set_unitsize(uint32 bytes);
 /**
  * @brief return ossl_cooltime_unitsize
  *        default 4096 bytes
  */
-uint32 ossl_get_unitsize();
+HOTPLACE_CRYPTO_API uint32 ossl_get_unitsize();
 
 /**
  * @brief BIO to stream
  * @param stream_t* stream [out]
  * @param BIO* bio [in]
  */
-return_t read_bio(stream_t* stream, BIO* bio);
+HOTPLACE_CRYPTO_API return_t read_bio(stream_t* stream, BIO* bio);
 
 }  // namespace crypto
 }  // namespace hotplace

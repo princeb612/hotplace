@@ -22,7 +22,7 @@ namespace crypto {
  *          const EVP_PKEY* alicePublicKey = get_public_key (alicePrivateKey);
  *          crypto_key_free ((EVP_PKEY*)alicePublicKey);
  */
-const EVP_PKEY* get_public_key(const EVP_PKEY* pkey);
+HOTPLACE_CRYPTO_API const EVP_PKEY* get_public_key(const EVP_PKEY* pkey);
 /**
  * @brief   Diffie–Hellman key exchange
  * @example
@@ -58,14 +58,14 @@ const EVP_PKEY* get_public_key(const EVP_PKEY* pkey);
  *          crypto_key_free ((EVP_PKEY*)alicePublicKey);
  *          crypto_key_free ((EVP_PKEY*)bobPublicKey);
  */
-return_t dh_key_agreement(const EVP_PKEY* privkey, const EVP_PKEY* pubkey, binary_t& secret);
+HOTPLACE_CRYPTO_API return_t dh_key_agreement(const EVP_PKEY* privkey, const EVP_PKEY* pubkey, binary_t& secret);
 
-binary_t kdf_parameter_int(uint32 source);
-binary_t kdf_parameter_string(const char* source);
-binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen);
-return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived);
-return_t compose_otherinfo(const char* algid, const char* apu, const char* apv, uint32 keybits, binary_t& otherinfo);
-return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen, binary_t& derived);
+HOTPLACE_CRYPTO_API binary_t kdf_parameter_int(uint32 source);
+HOTPLACE_CRYPTO_API binary_t kdf_parameter_string(const char* source);
+HOTPLACE_CRYPTO_API binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen);
+HOTPLACE_CRYPTO_API return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived);
+HOTPLACE_CRYPTO_API return_t compose_otherinfo(const char* algid, const char* apu, const char* apv, uint32 keybits, binary_t& otherinfo);
+HOTPLACE_CRYPTO_API return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen, binary_t& derived);
 
 }  // namespace crypto
 }  // namespace hotplace

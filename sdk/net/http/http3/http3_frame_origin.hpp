@@ -19,7 +19,7 @@ namespace net {
 /**
  * RFC 9412 The ORIGIN Extension in HTTP/3
  */
-class http3_frame_origin : public http3_frame {
+class HOTPLACE_NET_API http3_frame_origin : public http3_frame {
    public:
     http3_frame_origin();
 };

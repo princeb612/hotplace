@@ -28,15 +28,15 @@
 namespace hotplace {
 namespace lowlevel {
 
-return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
-return_t base16_encode(const binary_t& source, char* buf, size_t* buflen, uint32 flags = 0);
-return_t base16_encode(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
-return_t base16_encode(const std::string& source, char* buf, size_t* buflen, uint32 flags = 0);
+HOTPLACE_BASE_API return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
+HOTPLACE_BASE_API return_t base16_encode(const binary_t& source, char* buf, size_t* buflen, uint32 flags = 0);
+HOTPLACE_BASE_API return_t base16_encode(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
+HOTPLACE_BASE_API return_t base16_encode(const std::string& source, char* buf, size_t* buflen, uint32 flags = 0);
 
-return_t base16_decode(const char* source, size_t size, byte_t* buf, size_t* buflen);
-return_t base16_decode(const std::string& source, byte_t* buf, size_t* buflen);
-return_t base16_decode(const byte_t* source, size_t size, byte_t* buf, size_t* buflen);
-return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen);
+HOTPLACE_BASE_API return_t base16_decode(const char* source, size_t size, byte_t* buf, size_t* buflen);
+HOTPLACE_BASE_API return_t base16_decode(const std::string& source, byte_t* buf, size_t* buflen);
+HOTPLACE_BASE_API return_t base16_decode(const byte_t* source, size_t size, byte_t* buf, size_t* buflen);
+HOTPLACE_BASE_API return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen);
 
 }  // namespace lowlevel
 }  // namespace hotplace

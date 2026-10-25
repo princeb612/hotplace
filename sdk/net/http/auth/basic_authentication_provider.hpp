@@ -26,7 +26,7 @@ namespace net {
  *          Client
  *              Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
  */
-class basic_authentication_provider : public http_authentication_provider {
+class HOTPLACE_NET_API basic_authentication_provider : public http_authentication_provider {
    public:
     basic_authentication_provider(const std::string& realm);
     virtual ~basic_authentication_provider();

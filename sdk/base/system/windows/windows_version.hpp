@@ -292,7 +292,7 @@ enum WINDOWSVERSION_FORMAT {
     WINDOWSVERSION_FORMAT_EDITION_SP_BUILD_BITS = 3, /* Microsoft Windows 7 Professional KN Service Pack 1 (7601) 64-bit */
 };
 
-class windows_version {
+class HOTPLACE_BASE_API windows_version {
    public:
     static windows_version* get_instance();
     ~windows_version();

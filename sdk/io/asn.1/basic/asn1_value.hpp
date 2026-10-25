@@ -32,7 +32,7 @@ namespace io {
  *              (*instance).set("name", "john").set("age", 20)
  *          }
  */
-class asn1_value {
+class HOTPLACE_IO_API asn1_value {
    public:
     asn1_value(asn1_object* schema);
     asn1_value(const asn1_value& other);

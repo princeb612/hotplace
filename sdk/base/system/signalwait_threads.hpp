@@ -24,7 +24,7 @@ namespace hotplace {
 typedef return_t (*SIGNALWAITTHREADS_CALLBACK_ROUTINE)(void*);
 
 class signalwait_threads;
-class thread_info {
+class HOTPLACE_BASE_API thread_info {
    public:
     thread_info() {}
 
@@ -55,7 +55,7 @@ class thread_info {
  *  // stop all threads
  *  threads.signal_and_wait_all ();
  */
-class signalwait_threads {
+class HOTPLACE_BASE_API signalwait_threads {
    public:
     signalwait_threads();
     ~signalwait_threads();

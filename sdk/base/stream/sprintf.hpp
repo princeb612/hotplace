@@ -81,7 +81,7 @@ namespace hotplace {
  *              // value={-1}, value="hello world", value=3.141592
  *          }
  */
-return_t sprintf(stream_t* stream, const char* fmt, valist va);
+HOTPLACE_BASE_API return_t sprintf(stream_t* stream, const char* fmt, valist va);
 
 /* @brief   safe format printer (variadic template edition)
  * @remarks

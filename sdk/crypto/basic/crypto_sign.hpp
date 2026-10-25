@@ -47,7 +47,7 @@ namespace crypto {
  *          crypto_sign_rsa_pkcs1 rsa_pkcs1_sha512(sha2_512);
  *          rsa_pkcs1_sha512.verify(pkey, input, signature);
  */
-class crypto_sign_builder {
+class HOTPLACE_CRYPTO_API crypto_sign_builder {
    public:
     crypto_sign_builder();
 
@@ -87,7 +87,7 @@ class crypto_sign_builder {
     hash_algorithm_t _hashalg;
 };
 
-class crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign {
     friend class crypto_sign_builder;
 
    public:
@@ -118,7 +118,7 @@ class crypto_sign {
     int _saltlen;
 };
 
-class crypto_sign_digest : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_digest : public crypto_sign {
    public:
     crypto_sign_digest(hash_algorithm_t hashalg);
 
@@ -128,7 +128,7 @@ class crypto_sign_digest : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
-class crypto_sign_hmac : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_hmac : public crypto_sign {
    public:
     crypto_sign_hmac(hash_algorithm_t hashalg);
 
@@ -138,7 +138,7 @@ class crypto_sign_hmac : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
-class crypto_sign_rsa_pkcs1 : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_rsa_pkcs1 : public crypto_sign {
    public:
     crypto_sign_rsa_pkcs1(hash_algorithm_t hashalg);
 
@@ -148,7 +148,7 @@ class crypto_sign_rsa_pkcs1 : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
-class crypto_sign_ecdsa : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_ecdsa : public crypto_sign {
    public:
     crypto_sign_ecdsa(hash_algorithm_t hashalg);
 
@@ -158,7 +158,7 @@ class crypto_sign_ecdsa : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
-class crypto_sign_rsa_pss : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_rsa_pss : public crypto_sign {
    public:
     crypto_sign_rsa_pss(hash_algorithm_t hashalg);
 
@@ -168,7 +168,7 @@ class crypto_sign_rsa_pss : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
-class crypto_sign_digestsign : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_digestsign : public crypto_sign {
    public:
     crypto_sign_digestsign();
     virtual ~crypto_sign_digestsign();
@@ -182,13 +182,13 @@ class crypto_sign_digestsign : public crypto_sign {
     crypto_kty_t _kty;
 };
 
-class crypto_sign_eddsa : public crypto_sign_digestsign {
+class HOTPLACE_CRYPTO_API crypto_sign_eddsa : public crypto_sign_digestsign {
    public:
     crypto_sign_eddsa();
     virtual ~crypto_sign_eddsa();
 };
 
-class crypto_sign_dsa : public crypto_sign {
+class HOTPLACE_CRYPTO_API crypto_sign_dsa : public crypto_sign {
    public:
     crypto_sign_dsa(hash_algorithm_t hashalg = hash_algorithm_t{});
 
@@ -198,13 +198,13 @@ class crypto_sign_dsa : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
-class crypto_sign_mldsa : public crypto_sign_digestsign {
+class HOTPLACE_CRYPTO_API crypto_sign_mldsa : public crypto_sign_digestsign {
    public:
     crypto_sign_mldsa();
     virtual ~crypto_sign_mldsa();
 };
 
-class crypto_sign_slhdsa : public crypto_sign_digestsign {
+class HOTPLACE_CRYPTO_API crypto_sign_slhdsa : public crypto_sign_digestsign {
    public:
     crypto_sign_slhdsa();
     virtual ~crypto_sign_slhdsa();

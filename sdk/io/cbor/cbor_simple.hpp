@@ -22,7 +22,7 @@ namespace io {
 /**
  * @brief   cbor_simple
  */
-class cbor_simple : public cbor_object {
+class HOTPLACE_IO_API cbor_simple : public cbor_object {
    public:
     cbor_simple(uint8 value);
 

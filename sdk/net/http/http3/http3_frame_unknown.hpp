@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-class http3_frame_unknown : public http3_frame {
+class HOTPLACE_NET_API http3_frame_unknown : public http3_frame {
    public:
     http3_frame_unknown(uint64 type);
 };

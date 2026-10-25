@@ -21,7 +21,7 @@ namespace net {
  * @brief   basic socket
  * @sa      client_socket, server_socket
  */
-class basic_socket {
+class HOTPLACE_NET_API basic_socket {
    public:
     virtual ~basic_socket();
 

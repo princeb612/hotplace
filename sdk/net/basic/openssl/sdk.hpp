@@ -16,17 +16,17 @@
 namespace hotplace {
 namespace net {
 
-return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl);
+HOTPLACE_NET_API return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl);
 
 /**
  * @brief   BIO_ADDR*
  */
-return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen);
+HOTPLACE_NET_API return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen);
 /**
  * @brief   BIO_ADDR*
  * @remarks BIO_dgram_get_peer(ssl)
  */
-return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen);
+HOTPLACE_NET_API return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen);
 
 }  // namespace net
 }  // namespace hotplace

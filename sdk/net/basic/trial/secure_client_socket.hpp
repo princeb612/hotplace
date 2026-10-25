@@ -24,7 +24,7 @@ namespace net {
  * @brief   client
  * @sample
  */
-class secure_client_socket : public client_socket_prosumer {
+class HOTPLACE_NET_API secure_client_socket : public client_socket_prosumer {
    public:
     virtual ~secure_client_socket();
 

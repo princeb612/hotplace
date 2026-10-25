@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace crypto {
 
-class crypto_encrypt {
+class HOTPLACE_CRYPTO_API crypto_encrypt {
     friend class crypto_encrypt_builder;
 
    public:
@@ -38,23 +38,23 @@ class crypto_encrypt {
     crypt_enc_t _enc;
 };
 
-class crypto_encrypt_rsa15 : public crypto_encrypt {
+class HOTPLACE_CRYPTO_API crypto_encrypt_rsa15 : public crypto_encrypt {
    public:
     crypto_encrypt_rsa15() : crypto_encrypt(crypt_enc_t::rsa_1_5) {}
 };
-class crypto_encrypt_rsa_oaep : public crypto_encrypt {
+class HOTPLACE_CRYPTO_API crypto_encrypt_rsa_oaep : public crypto_encrypt {
    public:
     crypto_encrypt_rsa_oaep() : crypto_encrypt(crypt_enc_t::rsa_oaep) {}
 };
-class crypto_encrypt_rsa_oaep256 : public crypto_encrypt {
+class HOTPLACE_CRYPTO_API crypto_encrypt_rsa_oaep256 : public crypto_encrypt {
    public:
     crypto_encrypt_rsa_oaep256() : crypto_encrypt(crypt_enc_t::rsa_oaep256) {}
 };
-class crypto_encrypt_rsa_oaep384 : public crypto_encrypt {
+class HOTPLACE_CRYPTO_API crypto_encrypt_rsa_oaep384 : public crypto_encrypt {
    public:
     crypto_encrypt_rsa_oaep384() : crypto_encrypt(crypt_enc_t::rsa_oaep384) {}
 };
-class crypto_encrypt_rsa_oaep512 : public crypto_encrypt {
+class HOTPLACE_CRYPTO_API crypto_encrypt_rsa_oaep512 : public crypto_encrypt {
    public:
     crypto_encrypt_rsa_oaep512() : crypto_encrypt(crypt_enc_t::rsa_oaep512) {}
 };
@@ -69,7 +69,7 @@ class crypto_encrypt_rsa_oaep512 : public crypto_encrypt {
  *              crypto->release();
  *          }
  */
-class crypto_encrypt_builder {
+class HOTPLACE_CRYPTO_API crypto_encrypt_builder {
    public:
     crypto_encrypt_builder();
     crypto_encrypt* build();

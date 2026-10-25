@@ -29,7 +29,7 @@ namespace crypto {
  *          hash.digest((byte_t*)" ", 1, hash2);      // hash2 = sha2_256("hello ")
  *          hash.digest((byte_t*)"world", 5, hash3);  // hash3 = sha2_256("hello world")
  */
-class transcript_hash {
+class HOTPLACE_CRYPTO_API transcript_hash {
    public:
     transcript_hash(hash_algorithm_t alg);
     transcript_hash(const transcript_hash& other);
@@ -72,7 +72,7 @@ class transcript_hash {
  *              hash->release();
  *          }
  */
-class transcript_hash_builder {
+class HOTPLACE_CRYPTO_API transcript_hash_builder {
    public:
     transcript_hash_builder();
     transcript_hash* build();

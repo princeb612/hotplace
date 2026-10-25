@@ -35,7 +35,7 @@ Builders resolve a library/protocol identifier into an operation object and hide
 
 ## 3. Behavior Model
 
-### 3.1 Symmetric cipher lifecycle
+### Symmetric cipher lifecycle
 
 ```text
 algorithm + mode + key + IV
@@ -60,7 +60,7 @@ algorithm + mode + key + IV
 
 `cipher_encrypt` owns this open → operation → close sequence internally. With the low-level `openssl_crypt` interface, the caller controls the context lifecycle and must close it on all paths. The context is backend state, not the ciphertext or key material itself.
 
-### 3.2 AEAD path: scheme selection, authenticated inputs and result
+### AEAD path: scheme selection, authenticated inputs and result
 
 ```text
 crypto_aead_builder.set_scheme(scheme)
@@ -91,7 +91,7 @@ crypto_aead_builder.set_scheme(scheme)
 
 The scheme selects the operation family; the caller supplies per-message key/nonce and, for AEAD, AAD. During decryption the supplied tag is checked against the selected ciphertext and AAD. The authentication result is part of the operation contract: successful byte processing alone is not enough to treat unauthenticated plaintext as valid.
 
-### 3.3 Public-key encryption path
+### Public-key encryption path
 
 ```text
 crypt_enc_t
@@ -111,7 +111,7 @@ output bytes or operation failure
 
 This path is separate from symmetric encryption: the key is an `EVP_PKEY`, and the builder selects a public-key encryption scheme such as RSA PKCS#1 v1.5 or RSA-OAEP. A symmetric mode/IV configuration is not a substitute for the public-key scheme and its parameters.
 
-### 3.4 Operation result and per-message data
+### Operation result and per-message data
 
 Across the paths, the important data differs by operation: symmetric encryption transforms input bytes under a cipher context; AEAD additionally binds AAD and an authentication tag; public-key encryption dispatches using an `EVP_PKEY` and an encryption scheme. Callers must check the operation status before consuming output, and must supply the exact parameter layout expected by the chosen backend.
 
@@ -225,7 +225,7 @@ The builder chooses the operation implementation; the caller supplies the key, I
 
 For AEAD, the analogous testcase uses `crypto_aead_builder::set_scheme()` and carries AAD and the authentication tag as separate inputs/outputs. See [testcase_cipher_encrypt.cpp](../../../../test/testcase/crypto/crypt/testcase_cipher_encrypt.cpp) and [testcase_crypto_aead.cpp](../../../../test/testcase/crypto/crypt/testcase_crypto_aead.cpp).
 
-### 3.5 Concrete caller path: AEAD round trip
+### Concrete caller path: AEAD round trip
 
 The common AEAD testcase builds a scheme-specific object, supplies the per-message key, nonce/IV, plaintext and AAD, and carries the returned tag into decryption. The shortened form below follows `test/testcase/crypto/crypt/testcase_crypto_aead.cpp`:
 
