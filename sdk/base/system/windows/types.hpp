@@ -11,6 +11,17 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_TYPES__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_TYPES__
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <atomic>
+#include <memory>
+#ifdef _MSC_VER
+#include <ppl.h>
+#include <pplcancellation_token.h>
+#endif
+
 #include <minwindef.h>
 #include <winnt.h>
 
@@ -21,6 +32,14 @@
 #include <ws2tcpip.h>
 // winsock2.h before windows.h
 #include <windows.h>
+
+#ifdef _InterlockedIncrement
+#undef _InterlockedIncrement
+#endif
+
+#ifdef _InterlockedDecrement
+#undef _InterlockedDecrement
+#endif
 
 namespace hotplace {
 

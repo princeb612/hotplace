@@ -22,9 +22,9 @@
 typedef HRESULT(__stdcall* SHLOADINDIRECTSTRING)(LPCWSTR pszSource, LPWSTR pszOutBuf, UINT cchOutBuf, void** ppvReserved);
 
 #if _MSC_FULL_VER >= 140050727
-#include <PortableDevice.h>
-#include <PortableDeviceApi.h>
-#include <PortableDeviceTypes.h>
+// #include <PortableDevice.h>
+// #include <PortableDeviceApi.h>
+// #include <PortableDeviceTypes.h>
 #include <shlwapi.h>
 #else
 

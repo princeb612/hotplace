@@ -18,7 +18,7 @@ void test_process_noredirection() {
     param.arguments = {"-w", "1"};
 #elif defined _MSC_VER
     param.executable = "cmd.exe";
-    param.arguments = {"/c", "dir", "-b"};
+    param.arguments = {"/c", "dir", "-b", R"(c:\windows)"};
 #endif
 
     process p;
@@ -27,7 +27,7 @@ void test_process_noredirection() {
 
     if (spawned) {
         int exitcode = p.wait();
-        _test_case.assert(0 == exitcode, __FUNCTION__, "exit code");
+        _test_case.assert(0 == exitcode, __FUNCTION__, "exit code %i", exitcode);
     }
 }
 
@@ -40,7 +40,7 @@ void test_process_redirection() {
     param.arguments = {"-w", "1"};
 #elif defined _MSC_VER
     param.executable = "cmd.exe";
-    param.arguments = {"/c", "dir", "-b"};
+    param.arguments = {"/c", "dir", "-b", R"(c:\windows)"};
 #endif
     // enable I/O redirection
     param.io_redirection = true;
@@ -68,7 +68,7 @@ void test_process_redirection() {
         }
 
         int exitcode = p.wait();
-        _test_case.assert(0 == exitcode, __FUNCTION__, "exit code");
+        _test_case.assert(0 == exitcode, __FUNCTION__, "exit code %i", exitcode);
     }
 }
 

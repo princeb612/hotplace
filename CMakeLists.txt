@@ -11,26 +11,31 @@
 
 cmake_minimum_required (VERSION 3.16)
 
+# MSVC concurrency runtime error
+
+set(CMAKE_SYSTEM_VERSION "10.0.22621.0" CACHE INTERNAL "Windows SDK version")
+
 project (hotplace)
 
 set (VERSION_MAJOR 1)
-set (VERSION_MINOR 147)
-set (VERSION_BUILD 1112)
+set (VERSION_MINOR 148)
+set (VERSION_BUILD 1113)
 
 # set (CMAKE_BUILD_TYPE Release)
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
 set (SET_STDCPP c++11)
-set (SET_BUILDDIR build)
-set (SUPPORT_DEBUG 0)
-set (SUPPORT_ODBC 0)   # 
-set (SUPPORT_PCH 0)    # cmake 2.x
-set (SUPPORT_OQS 0)    # 
-set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
-set (SUPPORT_STATIC 1) # 1 if not set disable_static
-set (PROJECT_SDK_USE_STD_REGEX 1) # regex
+set (SET_BUILDDIR build CACHE STRING "builddir")
+set (PROJECT_SDK_USE_STD_REGEX 1 CACHE STRING "regex") # regex
+
+# override
+set (SUPPORT_DEBUG  0   CACHE STRING "debug build")
+set (SUPPORT_ODBC   0   CACHE STRING "odbc feature")
+set (SUPPORT_PCH    0   CACHE STRING "pch")             # cmake 2.x
+set (SUPPORT_OQS    0   CACHE STRING "oqs")             # PQC
+set (SUPPORT_STATIC 1   CACHE STRING "static build")    # 1 if not set disable_static
+set (SUPPORT_SHARED 0   CACHE STRING "share build")     # set 1 in mingw, ubuntu, custom build
 
 if (NOT "$ENV{CMAKE_VERBOSE_MAKEFILE}" STREQUAL "")
     set (CMAKE_VERBOSE_MAKEFILE "$ENV{CMAKE_VERBOSE_MAKEFILE}")
@@ -63,8 +68,6 @@ endif ()
 if (CMAKE_VERSION VERSION_GREATER 3.8)
     if (NOT "$ENV{SUPPORT_PCH}" STREQUAL "")
         set (SUPPORT_PCH $ENV{SUPPORT_PCH})
-    else (1)
-        set (SUPPORT_PCH 1)
     endif ()
 endif ()
 if (NOT "$ENV{SUPPORT_OQS}" STREQUAL "")
@@ -143,6 +146,7 @@ if (SUPPORT_STATIC)
 elseif (SUPPORT_SHARED)
     set (MODULE_LIB_TYPE "shared")
 endif ()
+message (STATUS "MODULE_LIB_TYPE ${MODULE_LIB_TYPE}")
 
 set (PROJECT_SDK_MODULE_DEPENDENCIES ${PROJECT_SDK_MODULE_BASE}-${MODULE_LIB_TYPE} ${PROJECT_SDK_MODULE_IO}-${MODULE_LIB_TYPE} ${PROJECT_SDK_MODULE_CRYPTO}-${MODULE_LIB_TYPE} ${PROJECT_SDK_MODULE_NET}-${MODULE_LIB_TYPE})
 if (SUPPORT_ODBC)
@@ -240,6 +244,18 @@ function (makelibdep module_name module_type group_source group_header module_de
                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${module_name}-${postfix}> ${CMAKE_INSTALL_RPATH})
 endfunction ()
 
+execute_process(
+    COMMAND cygpath -w "/mingw64/bin"
+    OUTPUT_VARIABLE MINGW64_BIN_WINDIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+    COMMAND cygpath -w "${PROJECT_SOURCE_DIR}/lib"
+    OUTPUT_VARIABLE PROJECT_SRC_WINDIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 # maketest name source dependency library
 function (maketest module_name group_source group_header module_dependency module_library ctest)
     message (STATUS "maketest ${module_name} ${group_source} ${group_header} ${module_dependency} ${module_library}")
@@ -255,6 +271,15 @@ function (maketest module_name group_source group_header module_dependency modul
     endif ()
     if (${ctest})
         add_test (NAME test-${module_name} COMMAND test-${module_name})
+        if (WIN32)
+            if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+                # file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/lib" CONVERTED_PATH)
+                # string(REPLACE "/" "\\" LIBPATH "${CONVERTED_PATH}")
+                message (STATUS "\\- PATH=${PROJECT_SRC_WINDIR};${MINGW64_BIN_WINDIR};$ENV{PATH}")
+                set_tests_properties(test-${module_name} PROPERTIES ENVIRONMENT "PATH=${PROJECT_SRC_WINDIR};${MINGW64_BIN_WINDIR};$ENV{PATH}")
+                target_link_options(test-${module_name} PRIVATE "-Wl,--dynamicbase" "-Wl,--nxcompat")
+            endif ()
+        endif ()
     endif ()
 endfunction ()
 
