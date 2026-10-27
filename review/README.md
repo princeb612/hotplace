@@ -56,7 +56,7 @@ The existing publication identity remains:
 ┌──────────────────────────────────────────────┐
 │ hotplace study                               │
 │ Edition 1 · Revision 10xx                    │
-│ Documented with GPT-6                 │
+│ Documented with GPT-6                        │
 │ — study, reconstruction & review             │
 └──────────────────────────────────────────────┘
 ```
@@ -71,7 +71,7 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
 │ Revision 1113                                │
-│ Documented with GPT-6                 │
+│ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```
@@ -672,7 +672,7 @@ The next review pass should therefore focus on **cross-referencing and correctio
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
 │ Revision 1113                                │
-│ Documented with GPT-6                 │
+│ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```

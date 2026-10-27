@@ -11,4 +11,7 @@ file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/*.hpp)
 file (GLOB DATA_FILES *.diag *.cbor *.yml *.json)
 file (COPY ${DATA_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/testcase/${module}/)
 
+if (WIN32)
+    set (SOURCE_FILES ${SOURCE_FILES} ${PROJECT_BINARY_DIR}/test/testcase/${module}/resource.rc)
+endif ()
 maketest (${module} SOURCE_FILES HEADER_FILES PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)

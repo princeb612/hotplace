@@ -129,7 +129,7 @@ The intended construction is:
                     ▼
                  loader
                     │
-              ┌─────┴─────┐
+              ┌─────┴──────┐
               │            │
         Module metadata   assignments
               │            │

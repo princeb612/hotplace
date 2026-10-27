@@ -1,3 +1,5 @@
+rem cmake, visual studio community
+
 @echo off
 
 rem run a third-party build manually if necessary.
