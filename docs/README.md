@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1114**
+**Edition 1 · Revision 1116**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -104,12 +104,11 @@ parser, CBOR, and ASN.1. `error` describes the common error/result model.
 `payload` describes the generic binary field-layout and reader/writer
 substrate used by higher-level protocol and security structures.
 
-Revision 1114 is the shared-build verification baseline. The implementation
-work spans Revisions 1112-1114: SDK API export/import declarations were added
-for shared libraries, and the MSVC concurrency compile error was fixed. Shared
-builds were then successfully tested on MinGW64, MSVC, Ubuntu, Rocky Linux, and
-CentOS 7. This verification result belongs to the build topic; it does not
-change the study map's layer relationships.
+Revision 1114 remains the shared-build verification baseline. Revision 1116
+also separates project version values into `version.txt`, included by the root
+`CMakeLists.txt`, and uses the values for consistent file-version metadata in
+MinGW64/MSVC-generated binaries. This build detail belongs to the build topic;
+it does not change the study map's layer relationships.
 
 ### Cryptographic and Security Semantics
 
@@ -440,7 +439,7 @@ this map does not imply that it was developed later.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1114            │
+│ Edition 1 · Revision 1116            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

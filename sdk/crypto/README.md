@@ -144,6 +144,16 @@ The following standards and background resources help interpret the source. Thei
 - [RFC 7366](https://www.rfc-editor.org/rfc/rfc7366) — Encrypt-then-MAC for TLS and DTLS.
 - [RFC 8446](https://www.rfc-editor.org/rfc/rfc8446) — The Transport Layer Security (TLS) Protocol Version 1.3.
 
+**openssl**
+- [docs](https://docs.openssl.org/3.5/)
+
+**draft**
+- [RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation](https://datatracker.ietf.org/doc/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-05)
+- [Authenticated Encryption with AES-CBC and HMAC-SHA](https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt)
+- [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
+- [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
+- [Use of ML-DSA in TLS 1.3](https://www.iana.org/go/draft-ietf-tls-mldsa-00)
+
 ### Online resources
 - [OpenSSL libcrypto introduction](https://docs.openssl.org/master/man7/ossl-guide-libcrypto-introduction/)
 - [IANA JOSE registry](https://www.iana.org/assignments/jose/jose.xhtml)
@@ -155,3 +165,4 @@ The following standards and background resources help interpret the source. Thei
 - [Authenticated Encryption with AES-CBC and HMAC-SHA](https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt)
 - [JSON parser performance comparison — nativejson-benchmark](https://github.com/miloyip/nativejson-benchmark)
 - [JSON parser performance comparison — Java](https://github.com/fabienrenaud/java-json-benchmark)
+- [Mac-then-Encrypt https://tls12.xargs.org](https://tls12.xargs.org)

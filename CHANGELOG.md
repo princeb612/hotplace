@@ -37,7 +37,9 @@
     * CBOR
 
 * details
+  * Revision 1117
   * Revision 1116
+    * [changed] unified file-version metadata for MinGW64/MSVC binaries; version values moved to `version.txt`
   * Revision 1114
     * [tested] shared build in MinGW64, MSVC, Ubuntu 20, Rocky Linux 8, and CentOS 7 (revisions 1112-1114)
     * [fixed] Linux shared-library RTTI symbol exports (sdk/version.script)

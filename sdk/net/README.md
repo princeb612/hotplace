@@ -192,6 +192,10 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [QUIC Illustrated](https://quic.xargs.org/)
 - [IANA TLS parameters](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml)
 - [IANA QUIC registry](https://www.iana.org/assignments/quic/quic.xhtml)
+- [IANA HTTP/3](https://www.iana.org/assignments/http3-parameters)
+- [IANA TLS Extensions](https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml)
+- [IANA TLS Parameters](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml)
+- [IANA AEAD Parameters](https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
 
 ## 6. Developer Notes

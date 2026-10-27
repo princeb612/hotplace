@@ -236,8 +236,6 @@ The goal is not to document everything, but to make the important things underst
       * ITU-T X.691 ISO/IEC 8825-2 ASN.1 encoding rules: Specification of Packed Encoding Rules (PER)
       * ITU-T X.692 ISO/IEC 8825-3 ASN.1 encoding rules: Specification of Encoding Control Notation (ECN)
       * ITU-T X.693 ISO/IEC 8825-4 ASN.1 encoding rules: XML Encoding Rules (XER)
-* Neural Networks / Machine Learning
-  * sketch repository (private, spin off, holding)
 * Format String Syntax
   * https://fmt.dev/dev/syntax/
 
@@ -304,3 +302,4 @@ The goal is not to document everything, but to make the important things underst
 
  * https://github.com/princeb612/hotplace
  * https://www.facebook.com/princeb612
+ * ![github](hotplace.png)

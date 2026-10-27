@@ -1,5 +1,8 @@
 # Developer Notes — Parser Design and Implementation Notes
 
+> **Study note:** This document was developed as a study using information provided by Google Gemini. The explanations and examples are study material, not a claim that every described algorithm or sample implementation has been independently verified.
+
+
 ## 1. Purpose
 
 The material progresses from basic parsing concepts to LL(1), LR(0), SLR(1), LALR(1), Recursive Descent, and Packrat/PEG parsing. It then applies these techniques to an ASN.1-like grammar and finishes with a dynamically generated LALR(1) parser in C++11.

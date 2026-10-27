@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1114                    │
-│ Source basis: Revision 1114                  │
+│ Edition 1 · Revision 1116                    │
+│ Source basis: Revision 1116                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -85,8 +85,11 @@ These RTTI-related patterns were added after shared-build issues on CentOS 7,
 Rocky Linux 8, and Ubuntu 20; MinGW64 and MSVC did not exhibit the same issue.
 
 The shared-build verification documented for Revision 1114 succeeded on
-MinGW64, MSVC, Ubuntu, Rocky Linux, and CentOS 7. See the [Build study](../../docs/build/README.md)
-for the integration path and scope.
+MinGW64, MSVC, Ubuntu 20, Rocky Linux 8, and CentOS 7. Revision 1116 also separates
+the project version values into `version.txt`; the root `CMakeLists.txt`
+uses them to generate consistent file-version metadata for MinGW64/MSVC
+binaries. See the [Build study](../../docs/build/README.md) for the integration
+path and scope.
 
 ### Concrete caller path: byte storage and log-level parsing
 

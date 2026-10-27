@@ -17,7 +17,7 @@ libraries / tests / applets
 The two principal hotplace entry points are:
 
 - `make.sh` — configures and builds hotplace itself.
-- top-level `CMakeLists.txt` — constructs the hotplace target graph.
+- top-level `CMakeLists.txt` — constructs the hotplace target graph and includes the project version values from `version.txt`.
 
 The third-party stage has its own entry point:
 
@@ -818,12 +818,47 @@ make && ctest
 ```
 
 This command sequence records the original MinGW64 test path from
-Revision 1112. The successful shared-build result through Revision 1114 now
-also includes MSVC, Ubuntu, Rocky Linux, and CentOS 7.
+Revision 1112. The successful shared-build result through Revision 1114 also includes MSVC,
+Ubuntu, Rocky Linux, and CentOS 7. Revision 1116 separately documents binary
+file-version metadata for MinGW64/MSVC.
+
+### Binary file-version metadata
+
+Revision 1116 keeps project version values in the root `version.txt`, which
+is included by `CMakeLists.txt`. The values `VERSION_MAJOR`,
+`VERSION_MINOR`, and `VERSION_BUILD` are combined into numeric and string
+forms used by the Windows resource template. This lets MinGW64 and MSVC
+generated binaries carry consistent file and product version metadata.
+
+```text
+version.txt
+    │
+    ├── VERSION_MAJOR
+    ├── VERSION_MINOR
+    └── VERSION_BUILD
+            │
+            ▼
+      CMakeLists.txt
+            │
+            ▼
+       VERSION / VERSION_STRING
+            │
+            ▼
+      resource.rc.in template
+            │
+            ▼
+     generated binary metadata
+       (MinGW64 / MSVC)
+```
+
+The version source is shared between the two Windows toolchain families; this
+does not mean Windows file-version resources are emitted for Linux binaries.
+The shared-build test baseline remains Revision 1114; this Revision 1116 note
+documents the version metadata change, not a new platform verification run.
 
 ## Status
 
-Build-system structure summarized from the Revision 1112 source baseline; shared-build verification status updated through Revision 1114:
+Build-system structure summarized from the Revision 1112 source baseline; version metadata updated through Revision 1116; shared-build verification status remains at Revision 1114:
 
 - `thirdparty/make.sh` is the external dependency build entry point.
 - `thirdparty/dependency` defines the active and retained dependency package selections.

@@ -133,7 +133,9 @@ This diagram shows the intended architectural direction, not a complete include 
   - Lists and vectors: Chapter 3, “Lists, Stacks, and Queues”
   - KMP: §12.3.3, “The Knuth-Morris-Pratt Algorithm”
   - Priority queues: Chapter 6, “Priority Queues (Heaps)”
+  - huffman-coding: 10.1.2 Huffman Codes
 - *Data Structures and Algorithms in C++*
+  - huffman-coding: 12.4.1 The Huffman-Coding Algorithm
 
 ### Standards and specifications
 
@@ -148,6 +150,9 @@ This diagram shows the intended architectural direction, not a complete include 
   - Failure links and output: https://daniel.lawrence.lu/blog/y2014m03d25/
 - Dijkstra: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 - Graph visualization: https://graphonline.ru/en/
+- graph-structured stack
+  - https://en.wikipedia.org/wiki/Graph-structured_stack
+  - https://www.geeksforgeeks.org/dsa/clone-directed-acyclic-graph/
 - Pattern-matching overview: https://www.geeksforgeeks.org/
 - Suffix tree:
   - https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/
@@ -172,6 +177,22 @@ This diagram shows the intended architectural direction, not a complete include 
   - https://www.h-schmidt.net/FloatConverter/IEEE754.html
   - https://baseconvert.com/ieee-754-floating-point
   - https://www.omnicalculator.com/other/floating-point
+- huffman-coding
+  - https://asecuritysite.com/calculators/huff
+- CRC
+  - https://en.wikipedia.org/wiki/Cyclic_redundancy_check
+- merge intervals
+  - https://www.geeksforgeeks.org/merging-intervals/
+- regular expression
+  - https://en.cppreference.com/w/cpp/regex
+- wildcard pattern matching
+  - https://www.geeksforgeeks.org/wildcard-pattern-matching/?ref=lbp
+- POSIX spawn
+  - https://man7.org/linux/man-pages/man3/posix_spawn.3.html
+- ANSI excape codes
+  - https://en.wikipedia.org/wiki/ANSI_escape_code
+- figlet generator
+  - https://doodlenerd.com/web-tool/figlet-generator
 
 ## 6. Developer Notes
 

@@ -143,12 +143,14 @@ This is an architectural orientation map, not a complete include graph or a clai
 - Component-level source references and implementation details are maintained in the corresponding directory documents. Test-specific coverage and run evidence belong in the relevant testcase documentation, which is currently being reviewed separately.
 
 ## 5. References
-### Standards and specifications
 
 - [RFC 8949 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949).
 - [RFC 7049 — Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc7049), the earlier CBOR specification relevant to historical compatibility.
-- ITU-T X.680 — ASN.1 notation.
+- [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)
+- [ASN.1 (Abstract Syntax Notation One) is the international standard for representing data types and structures.](https://obj-sys.com/asn1tutorial/asn1only.html)
 
+- [ASN.1 Communication between Heterogeneous Systems](https://webencrypt.org/resource/dubuisson-asn1-book.pdf)
+- [ASN.1 by simple words](https://www.strozhevsky.com/free_docs/asn1_in_simple_words.pdf)
 
 ## 6. Developer Notes
 - The directory map is intentionally a responsibility map, not a dependency graph. In particular, the ASN.1 and CBOR implementations should not be described as one mandatory pipeline.
