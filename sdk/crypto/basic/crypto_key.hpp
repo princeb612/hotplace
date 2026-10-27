@@ -672,7 +672,7 @@ class HOTPLACE_CRYPTO_API crypto_key {
 /**
  * @param crypto_key_object key [in]
  */
-crypto_kty_t ktyof_evp_pkey(crypto_key_object& key);
+HOTPLACE_CRYPTO_API crypto_kty_t ktyof_evp_pkey(crypto_key_object& key);
 
 /**
  * @brief   dump
@@ -690,21 +690,21 @@ crypto_kty_t ktyof_evp_pkey(crypto_key_object& key);
  *          bs.printf("informations");
  *          dump_key(pkey, &bs, 15, 4, dump_notrunc);
  */
-return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part = 15, uint8 indent = 4, uint8 flags = 0);
+HOTPLACE_CRYPTO_API return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part = 15, uint8 indent = 4, uint8 flags = 0);
 /**
  * @brief   pem
  * @param   const EVP_PKEY* pkey [in]
  * @param   stream_t* stream [out]
  */
-return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream);
+HOTPLACE_CRYPTO_API return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream);
 /**
  * @brief   pem
  * @param   const EVP_PKEY* pkey [in]
  * @param   BIO* bio [out]
  */
-return_t dump_pem(const EVP_PKEY* pkey, BIO* bio);
+HOTPLACE_CRYPTO_API return_t dump_pem(const EVP_PKEY* pkey, BIO* bio);
 
-void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent);
+HOTPLACE_CRYPTO_API void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent);
 
 }  // namespace crypto
 }  // namespace hotplace

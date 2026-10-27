@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1114                    │
+│ Source basis: Revision 1114                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -51,6 +51,8 @@ These modules do not share one lifecycle contract. Numeric representation and co
 Wire-width helpers are particularly relevant at protocol boundaries, but protocol-specific field definitions and interpretation belong in TLS, DTLS, HTTP/2, ASN.1, or QUIC documentation rather than being duplicated here.
 
 Platform-dependent facilities must be reviewed against their actual implementation branches and target environment. Process creation, standard-I/O redirection, synchronization, and time conversion can expose different native APIs and ownership constraints on Windows and POSIX systems.
+
+The Windows type header, `sdk/base/system/windows/types.hpp`, also centralizes MSVC concurrency headers used by the synchronization/future-related code. Revision 1113 fixed an MSVC compile failure involving `pplcancellation_token.h` and `Concurrency::details::_RefCounter`. The relationship to the future/promise work introduced around Revision 1104 is a plausible lead, not a confirmed root-cause statement; the changelog records the fix without claiming more than the evidence establishes.
 
 The numeric modules also have distinct purposes: `bignumber` supplies arbitrary-width integer operations, decimal/rational helpers build higher-level numeric representations, and IEEE-754 helpers concern binary floating-point formats. These should not be collapsed into a single generic “number” abstraction.
 

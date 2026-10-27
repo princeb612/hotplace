@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace crypto {
 
-class HOTPLACE_IO_API cose_data {
+class HOTPLACE_CRYPTO_API cose_data {
     friend class cose_protected;
     friend class cose_unprotected;
     friend class cose_binary;

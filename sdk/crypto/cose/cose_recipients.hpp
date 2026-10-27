@@ -22,7 +22,7 @@ namespace crypto {
 /**
  * @brief recipients, signatures
  */
-class HOTPLACE_IO_API cose_recipients {
+class HOTPLACE_CRYPTO_API cose_recipients {
     friend class cose_composer;
     friend class cose_data;
     friend class cose_recipient;

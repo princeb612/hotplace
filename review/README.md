@@ -6,7 +6,7 @@ The documents here are not replacements for the source-tree `README.md` files an
 
 ## Source Baseline
 
-- Source revision: 1106
+- Source revision: 1113
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
@@ -56,7 +56,7 @@ The existing publication identity remains:
 ┌──────────────────────────────────────────────┐
 │ hotplace study                               │
 │ Edition 1 · Revision 10xx                    │
-│ Documented with GPT-5.6 Luna                 │
+│ Documented with GPT-6                 │
 │ — study, reconstruction & review             │
 └──────────────────────────────────────────────┘
 ```
@@ -70,8 +70,8 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1106                                │
-│ Documented with GPT-5.6 Luna                 │
+│ Revision 1113                                │
+│ Documented with GPT-6                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```
@@ -112,6 +112,36 @@ The current documents cover several different cross-cutting relationships.
 ```
 
 ## 3. Review Documents
+
+### `module-linkage-and-shared-build.md`
+
+**Primary relationship**
+
+```text
+root CMake configuration
+          |
+          v
+static / shared module selection
+          |
+          v
+per-module build definitions
+          |
+          v
+HOTPLACE_*_API export / import boundary
+```
+
+**Source-tree connections**
+
+- `CMakeLists.txt` and `make.sh`
+- `sdk/base/types.hpp`
+- Per-module CMake files under `sdk/base`, `sdk/io`, `sdk/crypto`, and `sdk/net`
+- `sdk/version.script`
+
+**Architectural point**
+
+The shared-build path is a cross-module contract: each module must agree on whether its symbols are exported by the library being built or imported by a dependent module. Revision 1112 exercised a MinGW64 shared build; this is evidence for that tested configuration, not a claim that every platform/compiler/shared-build combination has been validated. Revision 1113 also adjusted root CMake defaults and Windows test-runtime setup while addressing an MSVC concurrency-header conflict.
+
+---
 
 ### `parser-evolution.md`
 
@@ -597,7 +627,7 @@ Each review document should identify the source revision it describes.
 For the current review package:
 
 ```text
-Source Baseline: Revision 1106
+Source Baseline: Revision 1113
 ```
 
 When the implementation changes materially:
@@ -618,7 +648,7 @@ In particular, parser production names, ASN.1 loader capabilities, protocol reso
 
 ## 8. Current Review Status
 
-The review package uses revision 1106 as its overall source baseline. Individual documents retain their own review baselines where a later source change does not materially alter that review axis.
+The review package uses revision 1113 as its overall source baseline. Revision 1112 added a tested MinGW64 shared-build checkpoint and per-module API visibility; revision 1113 addressed an MSVC concurrency compile error and adjusted root CMake configuration. These changes introduce a cross-cutting module-linkage review axis without changing the parser, ASN.1, binary-construction, or Authenticode conclusions already recorded. Individual documents retain their own review baselines where a later source change does not materially alter that review axis.
 
 ```text
 1. Parser evolution
@@ -629,9 +659,10 @@ The review package uses revision 1106 as its overall source baseline. Individual
 6. TLS / DTLS / QUIC development path
 7. crypto_advisor / tls_advisor / OpenSSL relationship
 8. Authenticode cross-cutting verification path
+9. Module linkage and shared-build boundary
 ```
 
-These review axes form the current architecture-review map. The earlier pass added a more explicit protocol-state → wire-unit boundary observation without creating another subsystem-specific review file. This pass updates ASN.1 module naming and prototype status, parsing-table revision 3, and Authenticode's restored CRL revocation-check path without expanding the review set unnecessarily.
+These review axes form the current architecture-review map. The current pass adds the module-linkage/shared-build boundary exposed by revisions 1112–1113. The ASN.1, parser, binary-construction, and Authenticode documents retain their earlier individual baselines because revisions 1112–1113 do not materially change those review topics.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
@@ -640,8 +671,8 @@ The next review pass should therefore focus on **cross-referencing and correctio
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1106                                │
-│ Documented with GPT-5.6 Luna                 │
+│ Revision 1113                                │
+│ Documented with GPT-6                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```

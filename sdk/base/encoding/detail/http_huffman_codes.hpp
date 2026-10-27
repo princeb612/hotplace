@@ -21,7 +21,7 @@ namespace hotplace {
  *          huffman_coding huff;
  *          huff.imports(_h2hcodes);
  */
-extern const huffman_coding::hc_code_t _h2hcodes[];
+extern HOTPLACE_BASE_API const huffman_coding::hc_code_t _h2hcodes[];
 
 }  // namespace hotplace
 

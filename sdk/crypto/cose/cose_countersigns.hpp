@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace crypto {
 
-class HOTPLACE_IO_API cose_countersigns : public cose_recipients {
+class HOTPLACE_CRYPTO_API cose_countersigns : public cose_recipients {
    public:
     cose_countersigns();
     virtual ~cose_countersigns();

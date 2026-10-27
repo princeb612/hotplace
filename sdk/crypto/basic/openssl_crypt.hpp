@@ -513,8 +513,8 @@ class HOTPLACE_CRYPTO_API openssl_crypt : public crypt_t {
  *              crypt.close (handle);
  *          }
  */
-return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce);
-return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size);
+HOTPLACE_CRYPTO_API return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce);
+HOTPLACE_CRYPTO_API return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size);
 
 }  // namespace crypto
 }  // namespace hotplace

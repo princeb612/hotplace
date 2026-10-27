@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace crypto {
 
-class HOTPLACE_IO_API cose_unsent {
+class HOTPLACE_CRYPTO_API cose_unsent {
     friend class cose_recipient;
 
    public:

@@ -111,7 +111,7 @@ class HOTPLACE_NET_API tls_session {
         alert(tls_alertlevel_t l, tls_alertdesc_t d) : level(l), desc(d) {}
     };
 
-    class session_info {
+    class HOTPLACE_NET_API session_info {
        public:
         session_info();
 

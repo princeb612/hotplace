@@ -388,7 +388,7 @@ The 1097 review confirms that the existing structure is sufficient to distinguis
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
 │ Revision 1097                                │
-│ Documented with GPT-5.6 Luna                 │
+│ Documented with GPT-6                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```

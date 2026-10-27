@@ -261,7 +261,7 @@ union vartype_union {
     datetime_t* dt;
 };
 
-struct variant_t {
+struct HOTPLACE_BASE_API variant_t {
     vartype_t type;
     vartype_union data;
     size_t size;

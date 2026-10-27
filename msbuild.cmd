@@ -14,7 +14,7 @@ if not exist %builddir% (
   mkdir %builddir%
 )
 
-cmake -G "%generator%" -B %builddir% -DCMAKE_BUILD_TYPE=%target% -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSUPPORT_PCH=1 -DSUPPORT_STATIC=1 -DSUPPORT_SHARED=0
+cmake -G "%generator%" -B %builddir% -DCMAKE_BUILD_TYPE=%target% -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSUPPORT_PCH=1 -DSUPPORT_STATIC=0 -DSUPPORT_SHARED=1
 
 set MAKEFLAGS='-j 8'
 

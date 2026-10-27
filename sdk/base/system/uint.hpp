@@ -83,8 +83,8 @@ struct t_uint_custom_t {
  *          b24_i32 - from 24bits byte stream to 32 bit integer
  *          i32_b24 - from 32 bit integer to 24bits byte stream
  */
-return_t b24_i32(const byte_t* p, size_t len, uint32& value);
-return_t i32_b24(byte_t* p, size_t len, uint32 value);
+HOTPLACE_BASE_API return_t b24_i32(const byte_t* p, size_t len, uint32& value);
+HOTPLACE_BASE_API return_t i32_b24(byte_t* p, size_t len, uint32 value);
 
 /* TLS handshake length */
 struct HOTPLACE_BASE_API uint24_t : t_uint_custom_t<uint32, 3> {

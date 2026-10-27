@@ -23,7 +23,7 @@ namespace crypto {
 /**
  * @brief unprotected
  */
-class HOTPLACE_IO_API cose_unprotected {
+class HOTPLACE_CRYPTO_API cose_unprotected {
     friend class cose_composer;
     friend class cose_data;
     friend class cose_recipient;

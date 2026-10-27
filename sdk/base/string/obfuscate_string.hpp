@@ -155,21 +155,21 @@ class HOTPLACE_BASE_API obfuscate_string {
      * @param   const obfuscate_string& rhs [in]
      * @return  std::string&
      */
-    friend std::string& operator<<(std::string& lhs, const obfuscate_string& rhs);
+    HOTPLACE_BASE_API friend std::string& operator<<(std::string& lhs, const obfuscate_string& rhs);
     /**
      * @brief   append
      * @param   std::string& lhs [out]
      * @param   const obfuscate_string& rhs [in]
      * @return  basic_stream&
      */
-    friend basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs);
+    HOTPLACE_BASE_API friend basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs);
     /**
      * @brief   append
      * @param   binary_t& lhs [out]
      * @param   const obfuscate_string& rhs [in]
      * @return  binary_t&
      */
-    friend binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs);
+    HOTPLACE_BASE_API friend binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs);
 
    protected:
     void startup();

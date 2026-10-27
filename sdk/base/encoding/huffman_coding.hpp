@@ -80,7 +80,7 @@ class HOTPLACE_BASE_API huffman_coding {
 
         hc_temp() : depth(0) {}
     };
-    struct hc_code {
+    struct HOTPLACE_BASE_API hc_code {
         uint8 sym;
         const char* code;
     };

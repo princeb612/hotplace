@@ -281,10 +281,10 @@ class HOTPLACE_BASE_API bignumber {
     /**
      * @brief   bignumber to bytestream (BE) and vice versa.
      */
-    friend binary_t& operator<<(binary_t& lhs, const bignumber& rhs);
-    friend std::string& operator<<(std::string& lhs, const bignumber& rhs);
-    friend binary_t& operator>>(const bignumber& lhs, binary_t& rhs);
-    friend std::string& operator>>(const bignumber& lhs, std::string& rhs);
+    HOTPLACE_BASE_API friend binary_t& operator<<(binary_t& lhs, const bignumber& rhs);
+    HOTPLACE_BASE_API friend std::string& operator<<(std::string& lhs, const bignumber& rhs);
+    HOTPLACE_BASE_API friend binary_t& operator>>(const bignumber& lhs, binary_t& rhs);
+    HOTPLACE_BASE_API friend std::string& operator>>(const bignumber& lhs, std::string& rhs);
 
     template <typename T, typename custom::is_pure_signed_integral<T>* = nullptr>
     bignumber& set(T value) {

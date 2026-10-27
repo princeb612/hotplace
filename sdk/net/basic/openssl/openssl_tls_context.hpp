@@ -42,7 +42,7 @@ enum tlscontext_flag_t : uint32 {
  *              openssl not support DTLS 1.3 yet
  *              only works DTLS 1.2
  */
-return_t tlscontext_open_simple(SSL_CTX** context, uint32 flag);
+HOTPLACE_NET_API return_t tlscontext_open_simple(SSL_CTX** context, uint32 flag);
 
 /**
  * @brief   SSL_CTX*
@@ -69,8 +69,8 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flag);
  *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
  *          works good, password parameter useless
  */
-return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr,
-                                  const char* chain_file = nullptr);
+HOTPLACE_NET_API return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr,
+                                                   const char* chain_file = nullptr);
 
 class HOTPLACE_NET_API openssl_tls_context {
    public:

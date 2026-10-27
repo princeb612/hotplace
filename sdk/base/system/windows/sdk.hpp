@@ -338,8 +338,8 @@ namespace hotplace {
  *  SE_IMPERSONATE_NAME                     TEXT("SeImpersonatePrivilege")
  *  SE_CREATE_GLOBAL_NAME                   TEXT("SeCreateGlobalPrivilege")
  */
-return_t adjust_privileges(HANDLE token_handle, LPCSTR privilege, DWORD attrib, DWORD* old_attrib);
-return_t adjust_privileges(HANDLE token_handle, LPCWSTR privilege, DWORD attrib, DWORD* old_attrib);
+HOTPLACE_BASE_API return_t adjust_privileges(HANDLE token_handle, LPCSTR privilege, DWORD attrib, DWORD* old_attrib);
+HOTPLACE_BASE_API return_t adjust_privileges(HANDLE token_handle, LPCWSTR privilege, DWORD attrib, DWORD* old_attrib);
 
 /**
  * @param   uint32 init [inopt]
@@ -350,8 +350,8 @@ return_t adjust_privileges(HANDLE token_handle, LPCWSTR privilege, DWORD attrib,
  *              COINIT_SPEED_OVER_MEMORY = 0x8
  *          } COINIT;
  */
-return_t com_runtime_startup(uint32 init = COINIT_MULTITHREADED);
-return_t com_runtime_cleanup();
+HOTPLACE_BASE_API return_t com_runtime_startup(uint32 init = COINIT_MULTITHREADED);
+HOTPLACE_BASE_API return_t com_runtime_cleanup();
 
 enum enum_modules_t {
     enum_psapi = 1,
@@ -382,7 +382,7 @@ enum enum_modules_t {
  *     return errorcode_t::success;
  * }
  */
-return_t enum_modules(HANDLE process_handle, TYPE_CALLBACK_HANDLEREXV callback_handler, LPVOID param);
+HOTPLACE_BASE_API return_t enum_modules(HANDLE process_handle, TYPE_CALLBACK_HANDLEREXV callback_handler, LPVOID param);
 
 enum loadlibrary_path_t {
     system_path = 1,
@@ -390,29 +390,33 @@ enum loadlibrary_path_t {
     custom_path,
 };
 
-return_t get_module_handle(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
-return_t get_module_handle(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path, const wchar_t* dll_path = nullptr);
+HOTPLACE_BASE_API return_t get_module_handle(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path,
+                                             const char* dll_path = nullptr);
+HOTPLACE_BASE_API return_t get_module_handle(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path,
+                                             const wchar_t* dll_path = nullptr);
 
-return_t get_module_path(HMODULE module_handle, std::string& modulepath);
-return_t get_module_path(HMODULE module_handle, std::wstring& modulepath);
+HOTPLACE_BASE_API return_t get_module_path(HMODULE module_handle, std::string& modulepath);
+HOTPLACE_BASE_API return_t get_module_path(HMODULE module_handle, std::wstring& modulepath);
 
-return_t get_system_wow64_directory(char* buffer, UINT size, UINT* nCopied = nullptr);
-return_t get_system_wow64_directory(wchar_t* buffer, UINT size, UINT* nCopied = nullptr);
+HOTPLACE_BASE_API return_t get_system_wow64_directory(char* buffer, UINT size, UINT* nCopied = nullptr);
+HOTPLACE_BASE_API return_t get_system_wow64_directory(wchar_t* buffer, UINT size, UINT* nCopied = nullptr);
 
-return_t is_windows64(BOOL* ret);
-return_t is_process_wow64(HANDLE process_handle, BOOL* pResult);
+HOTPLACE_BASE_API return_t is_windows64(BOOL* ret);
+HOTPLACE_BASE_API return_t is_process_wow64(HANDLE process_handle, BOOL* pResult);
 
-return_t load_library(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
-return_t load_library(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path, const wchar_t* dll_path = nullptr);
+HOTPLACE_BASE_API return_t load_library(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
+HOTPLACE_BASE_API return_t load_library(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path,
+                                        const wchar_t* dll_path = nullptr);
 
-return_t load_library_ex(HMODULE* module_handle, const char* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
-return_t load_library_ex(HMODULE* module_handle, const wchar_t* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
-                         const wchar_t* dll_path = nullptr);
+HOTPLACE_BASE_API return_t load_library_ex(HMODULE* module_handle, const char* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
+                                           const char* dll_path = nullptr);
+HOTPLACE_BASE_API return_t load_library_ex(HMODULE* module_handle, const wchar_t* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
+                                           const wchar_t* dll_path = nullptr);
 
-return_t open_process_token(PHANDLE process_token, HANDLE process_handle, DWORD access);
+HOTPLACE_BASE_API return_t open_process_token(PHANDLE process_token, HANDLE process_handle, DWORD access);
 
-return_t read_version(const char* version_string, WORD* ver, WORD level, INT* count = nullptr);
-return_t read_version(const wchar_t* version_string, WORD* ver, WORD level, INT* count = nullptr);
+HOTPLACE_BASE_API return_t read_version(const char* version_string, WORD* ver, WORD level, INT* count = nullptr);
+HOTPLACE_BASE_API return_t read_version(const wchar_t* version_string, WORD* ver, WORD level, INT* count = nullptr);
 
 }  // namespace hotplace
 

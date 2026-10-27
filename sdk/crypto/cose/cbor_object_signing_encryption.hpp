@@ -23,7 +23,7 @@ enum cose_mode_t {
     cose_mode_send = 1,  // encrypt, sign, createmac
 };
 
-class HOTPLACE_IO_API cbor_object_signing_encryption {
+class HOTPLACE_CRYPTO_API cbor_object_signing_encryption {
     friend class cbor_object_encryption;
     friend class cbor_object_signing;
 

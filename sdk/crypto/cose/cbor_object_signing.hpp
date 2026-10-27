@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace crypto {
 
-class HOTPLACE_IO_API cbor_object_signing {
+class HOTPLACE_CRYPTO_API cbor_object_signing {
    public:
     cbor_object_signing();
     ~cbor_object_signing() = default;

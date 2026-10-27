@@ -28,7 +28,7 @@ namespace crypto {
 /**
  * @brief composer
  */
-class HOTPLACE_IO_API cose_composer {
+class HOTPLACE_CRYPTO_API cose_composer {
     friend class cbor_object_signing_encryption;
 
    public:

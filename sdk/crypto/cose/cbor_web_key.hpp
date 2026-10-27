@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-class HOTPLACE_IO_API cbor_web_key : public crypto_keychain {
+class HOTPLACE_CRYPTO_API cbor_web_key : public crypto_keychain {
    public:
     cbor_web_key();
     virtual ~cbor_web_key();

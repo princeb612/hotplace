@@ -26,17 +26,18 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set (SET_STDCPP c++11)
-set (SET_BUILDDIR build CACHE STRING "builddir")
+set (SET_BUILDDIR build)
 set (PROJECT_SDK_USE_STD_REGEX 1 CACHE STRING "regex") # regex
 
-# override
-set (SUPPORT_DEBUG  0   CACHE STRING "debug build")
-set (SUPPORT_ODBC   0   CACHE STRING "odbc feature")
-set (SUPPORT_PCH    0   CACHE STRING "pch")             # cmake 2.x
-set (SUPPORT_OQS    0   CACHE STRING "oqs")             # PQC
-set (SUPPORT_STATIC 1   CACHE STRING "static build")    # 1 if not set disable_static
-set (SUPPORT_SHARED 0   CACHE STRING "share build")     # set 1 in mingw, ubuntu, custom build
+# override -DSUPPORT_DEBUG=1 -DSUPPORT_ODBC=1 -DSUPPORT_PCH=1 -DSUPPORT_STATIC=0 -DSUPPORT_SHARED=1
+set (SUPPORT_DEBUG  0 CACHE STRING "debug build")
+set (SUPPORT_ODBC   0 CACHE STRING "odbc feature")
+set (SUPPORT_PCH    0 CACHE STRING "pch")             # cmake 2.x
+set (SUPPORT_OQS    0 CACHE STRING "oqs")             # PQC
+set (SUPPORT_STATIC 1 CACHE STRING "static build")    # 1 if not set disable_static
+set (SUPPORT_SHARED 0 CACHE STRING "share build")     # set 1 in mingw, ubuntu, custom build
 
+# from environment
 if (NOT "$ENV{CMAKE_VERBOSE_MAKEFILE}" STREQUAL "")
     set (CMAKE_VERBOSE_MAKEFILE "$ENV{CMAKE_VERBOSE_MAKEFILE}")
 endif ()
@@ -97,7 +98,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/sdk/version.script")
     set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/gcc)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set (SET_STDCPP c++17) # C7525
+    set (SET_STDCPP c++14)
     set (SET_BUILDDIR build_msvc)
     # debug iterator
     # compiler | default  | desc
@@ -244,18 +245,6 @@ function (makelibdep module_name module_type group_source group_header module_de
                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${module_name}-${postfix}> ${CMAKE_INSTALL_RPATH})
 endfunction ()
 
-execute_process(
-    COMMAND cygpath -w "/mingw64/bin"
-    OUTPUT_VARIABLE MINGW64_BIN_WINDIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-    COMMAND cygpath -w "${PROJECT_SOURCE_DIR}/lib"
-    OUTPUT_VARIABLE PROJECT_SRC_WINDIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
 # maketest name source dependency library
 function (maketest module_name group_source group_header module_dependency module_library ctest)
     message (STATUS "maketest ${module_name} ${group_source} ${group_header} ${module_dependency} ${module_library}")
@@ -269,17 +258,11 @@ function (maketest module_name group_source group_header module_dependency modul
     if(SUPPORT_PCH)
         target_precompile_headers(test-${module_name} PRIVATE ${${group_header}})
     endif ()
+    if(SUPPORT_SHARED)
+        set_target_properties(test-${module_name} PROPERTIES COMPILE_DEFINITIONS "SUPPORT_SHARED=1")
+    endif ()
     if (${ctest})
         add_test (NAME test-${module_name} COMMAND test-${module_name})
-        if (WIN32)
-            if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-                # file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/lib" CONVERTED_PATH)
-                # string(REPLACE "/" "\\" LIBPATH "${CONVERTED_PATH}")
-                message (STATUS "\\- PATH=${PROJECT_SRC_WINDIR};${MINGW64_BIN_WINDIR};$ENV{PATH}")
-                set_tests_properties(test-${module_name} PROPERTIES ENVIRONMENT "PATH=${PROJECT_SRC_WINDIR};${MINGW64_BIN_WINDIR};$ENV{PATH}")
-                target_link_options(test-${module_name} PRIVATE "-Wl,--dynamicbase" "-Wl,--nxcompat")
-            endif ()
-        endif ()
     endif ()
 endfunction ()
 
@@ -294,6 +277,9 @@ function (maketool module_name group_source group_header module_dependency modul
     add_dependencies (${module_name} ${${module_dependency}})
     if(SUPPORT_PCH)
         target_precompile_headers(${module_name} PRIVATE ${${group_header}})
+    endif ()
+    if(SUPPORT_SHARED)
+        set_target_properties(${module_name} PROPERTIES COMPILE_DEFINITIONS "SUPPORT_SHARED=1")
     endif ()
     if (${ctest})
         add_test (NAME ${module_name} COMMAND ${module_name})

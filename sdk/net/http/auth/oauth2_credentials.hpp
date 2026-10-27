@@ -215,7 +215,7 @@ class t_expirable_tokens : t_expirable<OBJECT_T> {
 /**
  * @brief   access token
  */
-class access_token_t {
+class HOTPLACE_NET_API access_token_t {
    public:
     access_token_t(const std::string& client_id, const std::string& accesstoken, const std::string& refreshtoken, uint16 expire);
 
@@ -241,7 +241,7 @@ class access_token_t {
 /**
  * @brief   credentials
  */
-class oauth2_credentials {
+class HOTPLACE_NET_API oauth2_credentials {
    public:
     oauth2_credentials();
     ~oauth2_credentials();

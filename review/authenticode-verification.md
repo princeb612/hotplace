@@ -425,7 +425,7 @@ As of revision 1105:
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
 │ Revision 1105                                │
-│ Documented with GPT-5.6 Luna                 │
+│ Documented with GPT-6                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```

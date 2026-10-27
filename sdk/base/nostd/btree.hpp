@@ -44,7 +44,7 @@ class t_btree {
     typedef typename std::function<void(key_t& t)> visitor;
 
     t_btree(comparator_t comparator = comparator_t()) : _root(nullptr), _size(0), _comparator(comparator) {}
-    t_btree(const t_btree& other) : _root(nullptr), _size(other.size), _comparator(other._comparator) { _root = clone(other._root); }
+    t_btree(const t_btree& other) : _root(nullptr), _size(other._size), _comparator(other._comparator) { _root = clone(other._root); }
     t_btree(t_btree&& other) : _root(nullptr), _size(0) {
         std::swap(_root, other._root);
         std::swap(_size, other._size);
@@ -67,12 +67,14 @@ class t_btree {
         _root = clone(other._root);
         _size = other._size;
         _comparator = other._comparator;
+        return *this;
     }
     t_btree& operator=(t_btree&& other) {
         clear();
         std::swap(_root, other._root);
         std::swap(_size, other._size);
         std::swap(_comparator, other._comparator);
+        return *this;
     }
 
    private:

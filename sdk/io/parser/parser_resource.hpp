@@ -18,17 +18,17 @@
 namespace hotplace {
 namespace io {
 
-struct parser_token_resource {
+struct HOTPLACE_IO_API parser_token_resource {
     uint32 token;
     const char* name;
 };
 
-extern const parser_token_resource parser_symbol_tokens[];
-extern const size_t sizeof_parser_symbol_tokens;
-extern const parser_token_resource parser_basic_tokens[];
-extern const size_t sizeof_parser_basic_tokens;
-extern const parser_token_resource parser_asn1_tokens[];
-extern const size_t sizeof_parser_asn1_tokens;
+extern HOTPLACE_IO_API const parser_token_resource parser_symbol_tokens[];
+extern HOTPLACE_IO_API const size_t sizeof_parser_symbol_tokens;
+extern HOTPLACE_IO_API const parser_token_resource parser_basic_tokens[];
+extern HOTPLACE_IO_API const size_t sizeof_parser_basic_tokens;
+extern HOTPLACE_IO_API const parser_token_resource parser_asn1_tokens[];
+extern HOTPLACE_IO_API const size_t sizeof_parser_asn1_tokens;
 
 class HOTPLACE_IO_API parser_resource {
    public:

@@ -758,9 +758,72 @@ PCRE path
 
 shows that source-level portability and dependency-level portability are connected.
 
+### Shared build as an integration check
+
+Revision 1112 introduced the SDK API export/import declarations needed for
+shared-library builds. Revisions 1112-1114 form the implementation and
+verification interval; **Revision 1114 is the documented baseline for the
+completed shared-build check**.
+
+The shared build was successfully tested on:
+
+- MinGW64
+- MSVC
+- Ubuntu 20
+- Rocky Linux 8
+- CentOS 7
+
+On Linux, the shared-library version script also explicitly exports
+hotplace C++ RTTI-related symbols. The additional patterns cover the Itanium
+C++ ABI names for typeinfo objects (`_ZTI...`), typeinfo names (`_ZTS...`),
+and vtables (`_ZTV...`), while `local: *;` keeps other symbols local. This
+was needed after typeinfo-related link/load problems appeared on CentOS 7,
+Rocky Linux 8, and Ubuntu 20; MinGW64 and MSVC had not shown the same issue.
+
+This result is specific to the shared-build configuration on those environments.
+It does not imply that every compiler, operating-system version, optional
+feature, or testcase combination has been exhaustively verified.
+
+This is useful evidence because a shared build crosses more boundaries than
+choosing a different library target:
+
+```text
+SDK declarations
+    │
+    ├── exported API symbols
+    ├── Windows DLL version resource
+    └── shared-library target/dependencies
+              │
+              ▼
+        testcase executables
+              │
+              └── runtime DLL search path
+                       │
+                       ▼
+                      ctest
+```
+
+The build changes make those boundaries explicit: shared targets need exported
+SDK symbols, Windows builds generate the version resource, and MinGW64 testcase
+execution needs the project library directory and MinGW64 runtime directory on
+the test process's `PATH`. A successful compile alone would not establish that
+the test executables can load their shared dependencies.
+
+The recorded verification path was:
+
+```sh
+source etc/script/env.mingw && export_path
+cd build/test/testcase
+make && ctest
+```
+
+This command sequence records the original MinGW64 test path from
+Revision 1112. The successful shared-build result through Revision 1114 now
+also includes MSVC, Ubuntu, Rocky Linux, and CentOS 7.
+
 ## Status
 
-At Revision 1090:
+Build-system structure summarized from the Revision 1112 source baseline; shared-build verification status updated through Revision 1114:
 
 - `thirdparty/make.sh` is the external dependency build entry point.
 - `thirdparty/dependency` defines the active and retained dependency package selections.

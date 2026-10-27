@@ -219,7 +219,7 @@ class HOTPLACE_NET_API quic_packet {
  * @param   uint8& type [out] see quic_packet_t
  * @param   bool& is_longheader [out]
  */
-void quic_packet_get_type(uint32 version, uint8 hdr, uint8& type, bool& is_longheader);
+HOTPLACE_NET_API void quic_packet_get_type(uint32 version, uint8 hdr, uint8& type, bool& is_longheader);
 /**
  * @brief   QUIC packet MSB
  * @param   uint32 version
@@ -227,10 +227,10 @@ void quic_packet_get_type(uint32 version, uint8 hdr, uint8& type, bool& is_longh
  * @param   uint8& hdr
  * @param   bool& is_longheader
  */
-void quic_packet_set_type(uint32 version, uint8 type, uint8& hdr, bool& is_longheader);
+HOTPLACE_NET_API void quic_packet_set_type(uint32 version, uint8 type, uint8& hdr, bool& is_longheader);
 
-return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const binary_t& packet);
+HOTPLACE_NET_API return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+HOTPLACE_NET_API return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const binary_t& packet);
 
 /**
  *                              TYPE VERSION len(DCID) DCID len(SCID) SCID TOKEN PN
@@ -238,7 +238,7 @@ return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir
  *  quic_packet_type_handshake    O     O       O        O       O      O         O
  *  quic_packet_type_1_rtt        O                      O                        O
  */
-uint32 estimate_quic_packet_size(uint8 type, uint8 dcidlen, uint8 scidlen, uint8 tokenlen, uint8 pnl, uint16 payload, uint8 taglen);
+HOTPLACE_NET_API uint32 estimate_quic_packet_size(uint8 type, uint8 dcidlen, uint8 scidlen, uint8 tokenlen, uint8 pnl, uint16 payload, uint8 taglen);
 
 }  // namespace net
 }  // namespace hotplace

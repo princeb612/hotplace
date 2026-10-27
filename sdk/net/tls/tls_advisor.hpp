@@ -114,7 +114,7 @@ extern const size_t sizeof_tls_version_hint;
  *          tls_flag_secure | tls_flag_support  recommended
  *          tls_flag_support                    legacy or debugging purpose
  */
-struct tls_cipher_suite_t {
+struct HOTPLACE_NET_API tls_cipher_suite_t {
     uint16 code;                // 0xc023
     tls_version_t spec;         // tls_12 (specfication i.e. TLS 1.2, TLS 1.3)
     uint8 flags;                // tls_resource_flag_t
@@ -125,9 +125,9 @@ struct tls_cipher_suite_t {
     crypto_scheme_t scheme;     //
     hash_algorithm_t mac;       // sha2_256
 };
-extern const tls_cipher_suite_t tls_cipher_suites[];
-extern const size_t sizeof_tls_cipher_suites;
-hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
+extern HOTPLACE_NET_API const tls_cipher_suite_t tls_cipher_suites[];
+extern HOTPLACE_NET_API const size_t sizeof_tls_cipher_suites;
+HOTPLACE_NET_API hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 
 declare_tls_resource(quic_packet_type_code, uint8);
 

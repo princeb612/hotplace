@@ -37,6 +37,9 @@
     * CBOR
 
 * details
+  * Revision 1114
+    * [tested] shared build in MinGW64, MSVC, Ubuntu, Rocky Linux, and CentOS 7 (revisions 1112-1114)
+    * [fixed] Linux shared-library RTTI symbol exports (sdk/version.script)
   * Revision 1113
     * [fixed] [MSVC Concurrency compile error](sdk/base/system/windows/types.hpp)
   * Revision 1111

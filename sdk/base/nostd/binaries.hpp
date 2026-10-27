@@ -210,9 +210,9 @@ class t_binaries {
     return_t produce(T id, const byte_t* stream, size_t size, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         if (bin_trunc & flags) {
-            ret = assign(id, stream, size, flags);
+            assign(id, stream, size, flags);
         } else {
-            ret = append(id, stream, size, flags);
+            append(id, stream, size, flags);
         }
         return ret;
     }
@@ -225,9 +225,9 @@ class t_binaries {
     return_t produce(T id, const binary_t& bin, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         if (bin_trunc & flags) {
-            ret = assign(id, bin, flags);
+            assign(id, bin, flags);
         } else {
-            ret = append(id, bin, flags);
+            append(id, bin.data(), bin.size(), flags);
         }
         return ret;
     }

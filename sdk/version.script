@@ -3,6 +3,9 @@ global:
     extern "C++" {
         hotplace::*;
     };
+    _ZTIN8hotplace*; /* typeinfo for  hotplace::... */
+    _ZTSN8hotplace*; /* typeinfo name hotplace::... */
+    _ZTVN8hotplace*; /* vtable   for  hotplace::... */
 local:
     *;
 };
