@@ -162,22 +162,28 @@ class HOTPLACE_IO_API asn1_constraints {
     bool do_validate(asn1_constraint_t* cons, const asn1_object* object, const asn1_value* value) const {
         auto name = nameof(object);  // object->resolve_name()
 
-        uint16 flags = vt_flag_string;
-
         std::list<variant> values;
-        value->find(name, values, flags);
 
         if (is_kind_of(object, asn1_entity_enum)) {
+            uint16 flags = vt_flag_string | vt_flag_int;
+            value->find(name, values, flags);
             if (values.empty()) return false;
             for (const auto& vt : values) {
-                if (vt_flag_string & flags) {
-                    auto s = vt.to_str();
-                    auto test = evaluate(object, s);
+                if (vt_flag_string & vt.flag()) {
+                    auto v = vt.to_str();
+                    auto test = evaluate(object, v);
+                    dump(vt, test);
+                    if (false == test) return false;
+                } else if (vt_flag_int & vt.flag()) {
+                    int64 v = vt.as<int64>();
+                    auto test = evaluate(object, v);
                     dump(vt, test);
                     if (false == test) return false;
                 }
             }
         } else {
+            uint16 flags = vt_flag_string;
+            value->find(name, values, flags);
             asn1_constraint_evaluator<T> visitor;
             cons->accept(&visitor);
 

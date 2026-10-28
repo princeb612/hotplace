@@ -35,7 +35,7 @@ COMMENTS
 # declare -A oss_openssl31=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.1.8/openssl-3.1.8.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 # declare -A oss_openssl32=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.2.6/openssl-3.2.6.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 # declare -A oss_openssl33=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.3.7/openssl-3.3.7.tar.gz [dir]= [build]=build_openssl [buildscript]=)
-declare -A oss_openssl34=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.4.7/openssl-3.4.7.tar.gz [dir]= [build]=build_openssl [buildscript]=)
+# declare -A oss_openssl34=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.4.7/openssl-3.4.7.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 declare -A oss_openssl35=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 declare -A oss_openssl36=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.6.5/openssl-3.6.5.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 declare -A oss_openssl40=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-4.0.3/openssl-4.0.3.tar.gz [dir]= [build]=build_openssl [buildscript]=)

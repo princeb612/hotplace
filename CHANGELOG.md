@@ -37,7 +37,10 @@
     * CBOR
 
 * details
-  * Revision 1117
+  * Revision 1118
+    * strengthened `asn1_object::validate` built-in type value checks
+      * [added] `asn1_object::validate_type` for basic ASN.1 type validation
+      * [fixed] `asn1_constraints::do_validate` ENUMERATED validation
   * Revision 1116
     * [changed] unified file-version metadata for MinGW64/MSVC binaries; version values moved to `version.txt`
   * Revision 1114

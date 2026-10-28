@@ -181,5 +181,12 @@ bool evaluate(const asn1_object* obj, const std::string& value) {
     return en ? en->evaluate(value) : false;
 }
 
+bool evaluate(const asn1_object* obj, int64 value) {
+    if (nullptr == obj) return false;
+    if (asn1_entity_enum != obj->get_entity()) return false;
+    auto* en = (asn1_enum*)obj;
+    return en ? en->evaluate(value) : false;
+}
+
 }  // namespace io
 }  // namespace hotplace

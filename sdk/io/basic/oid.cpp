@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <cctype>
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
@@ -24,6 +25,15 @@ void str_to_oid(const char* value, size_t size, oid_t& oid) {
     oid.clear();
     size_t pos = 0;
     size_t brk = 0;
+    for (size_t i = 0; i < size; ++i) {
+        auto c = (unsigned char)value[i];
+        if (('.' == c) || std::isdigit(c)) {
+            continue;
+        } else {
+            oid.clear();
+            return;
+        }
+    }
     while (errorcode_t::success == scan(value, size, pos, &brk, ".")) {
         auto node = t_atoi_n<uint32>(value + pos, brk - pos);
         oid.insert(oid.end(), node);

@@ -53,6 +53,8 @@ bool asn1_enum::have_constraints() const { return true; }
 
 bool asn1_enum::evaluate(const std::string& name) const { return _enum.count(name) > 0; }
 
+bool asn1_enum::evaluate(int64 value) const { return _reverse.count(value) > 0; }
+
 asn1_enum& asn1_enum::operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) { return add(items); }
 
 asn1_enum& asn1_enum::add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) {

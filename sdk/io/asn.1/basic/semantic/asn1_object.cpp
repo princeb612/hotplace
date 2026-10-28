@@ -271,30 +271,6 @@ const asn1_constraints& asn1_object::get_constraints() const { return _constrain
 
 bool asn1_object::have_constraints() const { return false == get_constraints().empty(); }
 
-bool asn1_object::validate(const asn1_value* value) {
-    if (nullptr == value || nullptr == value) return false;
-
-    return validate_node(this, value);
-}
-
-bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value) const {
-    if (nullptr == value) return false;
-
-    while (node) {
-        if (node->have_constraints()) {
-            // (false == get_constraints.empty()) || (asn1_enum return true)
-            return node->get_constraints().validate(node, value);
-        }
-        if (is_kind_of_container(node)) {
-            auto container = dynamic_cast<const asn1_container*>(node);
-            auto test = container->for_each([&](asn1_object* item) -> bool { return item->validate_node(item, value); });
-            if (false == test) return false;
-        }
-        node = node->get_object();
-    }
-    return true;
-}
-
 void asn1_object::update_linkage(asn1_module* module) {}
 
 }  // namespace io

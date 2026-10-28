@@ -50,6 +50,7 @@ class HOTPLACE_IO_API asn1_enum : public asn1_type {
     virtual asn1_entity_t get_component_entity() const;
     virtual bool have_constraints() const;
     bool evaluate(const std::string& name) const;
+    bool evaluate(int64 value) const;
 
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;

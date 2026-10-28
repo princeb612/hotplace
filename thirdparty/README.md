@@ -34,6 +34,13 @@
       * [MUST] manual build
     * 3.5.5, 3.6.1
       * [# 3.6.1 fails to build with MSYS2 (MingW64) on Windows 11.](https://github.com/openssl/openssl/issues/29818)
+    * mininum version
+      |  |  |
+      |--|--|
+      | 3.0 | EVP_PKEY_CTX_new_from_name, EVP_PKEY_get0_type_name |
+      | 3.2 | BIO_err_is_non_fatal, OSSL_HPKE_seal, OSSL_set_max_threads |
+      | 3.3 | OPENSSL_LH_set_thunks |
+      | 3.4 | EVP_MD_CTX_get_size_ex |
 
 * old platforms
   * bash 3.x to 4 or later

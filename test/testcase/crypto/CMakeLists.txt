@@ -41,7 +41,7 @@ if(NOT ${CMAKE_VERSION} VERSION_LESS "3.8.0")
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SOURCE_FILES} ${DATA_FILES})
 endif ()
 
-file (COPY ${DATA_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/testcase/${module}/)
+file (COPY ${DATA_FILES} DESTINATION ${PROJECT_BINARY_DIR}/test/testcase/${module}/)
 
 if (WIN32)
     set (SOURCE_FILES ${SOURCE_FILES} ${PROJECT_BINARY_DIR}/test/testcase/${module}/resource.rc)

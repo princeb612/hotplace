@@ -193,6 +193,14 @@ class HOTPLACE_IO_API asn1_object {
      * @brief   validate constraints
      */
     bool validate_node(const asn1_object* node, const asn1_value* value) const;
+    /**
+     * @brief   validate type
+     * @remarks
+     *          for example ...
+     *          If BOOLEAN, only TRUE or FALSE are permitted;
+     *          if NumericString, numeric characters are allowed, but non-numeric characters are not.
+     */
+    bool validate_type(const asn1_value* value) const;
 
    private:
     uint8 _ident;

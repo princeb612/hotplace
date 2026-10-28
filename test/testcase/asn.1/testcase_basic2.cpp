@@ -11,6 +11,161 @@
 
 #include "sample.hpp"
 
+void test_validate() {
+    _test_case.begin("validate");
+    auto case1_type1 = new asn1_sequence({{"name", asn1_entity_visiblestring}, {"ok", asn1_entity_boolean}});
+    auto case1_type2 = case1_type1->clone();
+    auto case1_type3 = case1_type1->clone();
+    auto case2_type1 = asn1_referenced_type::define("Data", new asn1_builtin_type(asn1_entity_octstring));
+    auto case2_type2 = case2_type1->clone();
+    auto case3_type1 = asn1_referenced_type::define("Oid", new asn1_builtin_type(asn1_entity_oid));
+    auto case3_type2 = case3_type1->clone();
+    auto case4_type1 = asn1_referenced_type::define("Oid", new asn1_builtin_type(asn1_entity_numstring));
+    auto case4_type2 = case4_type1->clone();
+    auto case5_type1 = asn1_referenced_type::define("Bits", new asn1_builtin_type(asn1_entity_bitstring));
+    auto case5_type2 = case5_type1->clone();
+    auto case5_type3 = case5_type1->clone();
+    auto case6_type1 = asn1_referenced_type::define("Number", new asn1_integer);
+    auto case6_type2 = case6_type1->clone();
+    auto case7_type1 = asn1_referenced_type::define("Real", new asn1_real);
+    auto case7_type2 = case7_type1->clone();
+    auto case8_type1 = asn1_referenced_type::define("Color", new asn1_enum({{"red", 0}, {"green", 1}, {"blue", 2}}));
+    auto case8_type2 = case8_type1->clone();
+    auto case8_type3 = case8_type1->clone();
+    auto case9_type1 = asn1_referenced_type::define("Time", new asn1_builtin_type(asn1_entity_utctime));
+    auto case9_type2 = case9_type1->clone();
+    auto case10_type1 = asn1_referenced_type::define("Time", new asn1_builtin_type(asn1_entity_generalizedtime));
+    auto case10_type2 = case10_type1->clone();
+
+    enum testvector_flag_t {
+        flag_case1_int_bool,
+        flag_case1_string_int,
+        flag_case1_string_bool,
+        flag_case2_nonoct1,  // odd size
+        flag_case2_nonoct2,  // even size, not isxdigit
+        flag_case2_oct,      // even size, isxdigit
+        flag_case3_nonoid,
+        flag_case3_oid,
+        flag_case4_nonnumstr,
+        flag_case4_numstr,
+        flag_case5_bad,
+        flag_case5_odd,
+        flag_case5_even,
+        flag_case6_nonint,
+        flag_case6_int,
+        flag_case7_nonreal,
+        flag_case7_real,
+        flag_case8_bad,
+        flag_case8_named,
+        flag_case8_int,
+        flag_case9_bad,
+        flag_case9_good,
+        flag_case10_bad,
+        flag_case10_good,
+    };
+    struct testvector {
+        asn1_object* obj;
+        testvector_flag_t flag;
+        bool expect;
+    } table[] = {
+        {case1_type1, flag_case1_int_bool, false}, {case1_type2, flag_case1_string_int, false}, {case1_type3, flag_case1_string_bool, true},
+        {case2_type1, flag_case2_nonoct1, false},  {case2_type1, flag_case2_nonoct2, false},    {case2_type2, flag_case2_oct, true},
+        {case3_type1, flag_case3_nonoid, false},   {case3_type2, flag_case3_oid, true},         {case4_type1, flag_case4_nonnumstr, false},
+        {case4_type2, flag_case4_numstr, true},    {case5_type1, flag_case5_bad, false},        {case5_type2, flag_case5_odd, true},
+        {case5_type3, flag_case5_even, true},      {case6_type1, flag_case6_nonint, false},     {case6_type2, flag_case6_int, true},
+        {case7_type1, flag_case7_nonreal, false},  {case7_type2, flag_case7_real, true},        {case8_type1, flag_case8_bad, false},
+        {case8_type2, flag_case8_named, true},     {case8_type3, flag_case8_int, true},         {case9_type1, flag_case9_bad, false},
+        {case9_type2, flag_case9_good, true},      {case10_type1, flag_case10_bad, false},      {case10_type2, flag_case10_good, true},
+    };
+    for (const auto& item : table) {
+        auto value = item.obj->instantiate();
+        switch (item.flag) {
+            case flag_case1_int_bool: {
+                (*value).set("name", 1).set("ok", true);
+            } break;
+            case flag_case1_string_int: {
+                (*value).set("name", "Jones").set("ok", 1);
+            } break;
+            case flag_case1_string_bool: {
+                (*value).set("name", "Jones").set("ok", true);
+            } break;
+            case flag_case2_nonoct1: {
+                (*value).set("0123456789abcdefg");  // odd size
+            } break;
+            case flag_case2_nonoct2: {
+                (*value).set("0123456789abcdefgh");  // even size, not isxdigit
+            } break;
+            case flag_case2_oct: {
+                (*value).set("0123456789abcdef");  // evn size, isxdigit
+            } break;
+            case flag_case3_nonoid: {
+                (*value).set("1.2;.840.113549");  // ;
+            } break;
+            case flag_case3_oid: {
+                (*value).set("1.2.840.113549");  // OID
+            } break;
+            case flag_case4_nonnumstr: {
+                (*value).set("12a3b");
+            } break;
+            case flag_case4_numstr: {
+                (*value).set("123");
+            } break;
+            case flag_case5_bad: {
+                (*value).set("0120101");
+            } break;
+            case flag_case5_odd: {
+                (*value).set("0101010");
+            } break;
+            case flag_case5_even: {
+                (*value).set("01010101");
+            } break;
+            case flag_case6_nonint: {
+                (*value).set("123");
+            } break;
+            case flag_case6_int: {
+                (*value).set(123);
+            } break;
+            case flag_case7_nonreal: {
+                (*value).set("3.141592");
+            } break;
+            case flag_case7_real: {
+                (*value).set(3.141592);
+            } break;
+            case flag_case8_bad: {
+                (*value).set("yellow");
+            } break;
+            case flag_case8_named: {
+                (*value).set("blue");
+            } break;
+            case flag_case8_int: {
+                (*value).set(2);
+            } break;
+            case flag_case9_bad: {
+                (*value).set("20261028220000Z");
+            } break;
+            case flag_case9_good: {
+                (*value).set("261028220000Z");  // YYMMDDhhmmZ|+-0000, YYMMDDhhmmssZ|+-0000
+            } break;
+            case flag_case10_bad: {
+                (*value).set("2610282200.000Z");
+            } break;
+            case flag_case10_good: {
+                (*value).set("202610282200.000Z");  // YYYYMMDDhhmmss.sZ|+HHMM|-HHMM
+            } break;
+            default: {
+            } break;
+        }
+
+        basic_stream bs;
+        item.obj->publish(&bs);
+        _logger->writeln(bs);
+        auto test = item.obj->validate(value);
+        _test_case.assert(item.expect == test, __FUNCTION__, "validate %s", bs.c_str());
+
+        item.obj->release();
+    }
+}
+
 /**
  * Gemini Review - weakly typed
  *
@@ -608,4 +763,7 @@ void test_testvector_gpt_gemini() {
     }
 }
 
-void testcase_basic2() { test_testvector_gpt_gemini(); }
+void testcase_basic2() {
+    test_validate();
+    test_testvector_gpt_gemini();
+}

@@ -42,6 +42,7 @@ HOTPLACE_IO_API bool is_kind_of_container(asn1_entity_t entity);
 HOTPLACE_IO_API bool is_kind_of_container_of(asn1_entity_t entity);
 
 HOTPLACE_IO_API bool evaluate(const asn1_object* obj, const std::string& value);
+HOTPLACE_IO_API bool evaluate(const asn1_object* obj, int64 value);
 
 }  // namespace io
 }  // namespace hotplace
