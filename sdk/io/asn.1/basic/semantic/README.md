@@ -70,6 +70,24 @@ asn1_publisher handlers
 
 The semantic objects may also be assembled directly by client code or tests. In either case, the model's behavior depends on keeping schema identity, nested objects, tag behavior, optional/default state, and constraints attached to the correct semantic object.
 
+### Runtime value validation
+
+Validation is performed against an `asn1_value` using its associated semantic schema. The object-level path combines built-in type checks with the type's constraint validation; for constructed SEQUENCE/SET values, validation also descends through the named child values. This is distinct from parsing notation, reconstructing a semantic object, or encoding a value as DER.
+
+The validation path is conceptually:
+
+```text
+asn1_object::validate(value)
+        |
+        +--> validate built-in value representation
+        |
+        +--> validate attached constraints
+        |
+        `--> for constructed values, validate child components
+```
+
+The exact checks depend on the ASN.1 entity. A successful check of a value's basic representation does not imply that every constraint form or every referenced-type relationship is validated by that same branch; follow the relevant type and constraint implementation separately.
+
 ### Boundaries that should not be conflated
 
 - **Syntax recognition vs semantic construction:** a grammar production can recognize notation without the publisher constructing every corresponding semantic form.
