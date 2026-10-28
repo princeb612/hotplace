@@ -37,6 +37,7 @@
     * CBOR
 
 * details
+  * Revision 1119
   * Revision 1118
     * strengthened `asn1_object::validate` built-in type value checks
       * [added] `asn1_object::validate_type` for basic ASN.1 type validation

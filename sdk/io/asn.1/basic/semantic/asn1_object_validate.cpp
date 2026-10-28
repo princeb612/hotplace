@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/pattern/regex.hpp>
+#include <hotplace/sdk/io/basic/oid.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 
