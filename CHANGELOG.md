@@ -37,6 +37,13 @@
     * CBOR
 
 * details
+  * Revision 1120
+    * ASN.1 parameterized type specialization and instantiation
+      * specialize parameterized type templates with type and value parameters
+      * instantiate ASN.1 values from specialized types
+      * validate instantiated values against parameter-dependent constraints
+      * [tested] specialized payload types (INTEGER, BIT STRING, OBJECT IDENTIFIER) and BER encoding
+      * [tested] value-parameterized range validation with different maximum bounds
   * Revision 1119
   * Revision 1118
     * strengthened `asn1_object::validate` built-in type value checks
@@ -194,7 +201,6 @@
     * [tested] ubuntu 20, MSVC
   * Revision 1012
     * refactoring return_t, huffman_coding
-    * [tested] MINGW64
   * Revision 1010
     * gcc 4.8.5 error (noexcept = default;)
   * Revision 1006
@@ -335,7 +341,7 @@
   * Revision 671
     * [tested] https://dtls.xargs.org/
   * Revision 669
-    * [study] SSLKEYLOGFILE
+    * [tested] SSLKEYLOGFILE
   * Revision 667
     * [tested] https://tls12.xargs.org/
   * Revision 663
