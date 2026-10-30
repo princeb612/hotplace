@@ -37,7 +37,6 @@ class asn1_constraint_all_except : public asn1_constraint<T> {
             // throw exception(errorcode_t::invalid_parameter);
         }
         _cons = cons;
-        _cons->set_parent(this);
     }
     virtual ~asn1_constraint_all_except() = default;
 
@@ -73,17 +72,18 @@ class asn1_constraint_all_except : public asn1_constraint<T> {
     asn1_constraint_all_except(const asn1_constraint_all_except& other) : asn1_constraint_all_except() { *this = other; }
     asn1_constraint_all_except(asn1_constraint_all_except&& other) : asn1_constraint_all_except() { *this = std::move(other); }
     asn1_constraint_all_except& operator=(const asn1_constraint_all_except& other) {
+        asn1_constraint<T>::operator=(other);
         if (_cons) {
             _cons->release();
             _cons = nullptr;
         }
         if (other._cons) {
             _cons = other._cons->clone();
-            _cons->set_parent(this);
         }
         return *this;
     }
     asn1_constraint_all_except& operator=(asn1_constraint_all_except&& other) {
+        asn1_constraint<T>::operator=(other);
         std::swap(_cons, other._cons);
         return *this;
     }

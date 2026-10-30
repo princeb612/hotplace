@@ -16,6 +16,7 @@
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 
 namespace hotplace {
 namespace io {
@@ -189,6 +190,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
     asn1_constraint_range(const asn1_constraint_range& other) : asn1_constraint_range() { *this = other; }
     asn1_constraint_range(asn1_constraint_range&& other) : asn1_constraint_range() { *this = std::move(other); }
     asn1_constraint_range& operator=(const asn1_constraint_range& other) {
+        asn1_constraint<T>::operator=(other);
         _low = other._low;
         _high = other._high;
         _low_flag = other._low_flag;
@@ -196,6 +198,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
         return *this;
     }
     asn1_constraint_range& operator=(asn1_constraint_range&& other) {
+        asn1_constraint<T>::operator=(other);
         _low = std::move(other._low);
         _high = std::move(other._high);
         std::swap(_low_flag, other._low_flag);
@@ -253,6 +256,43 @@ class asn1_constraint_range : public asn1_constraint<T> {
                 case range_type_t::maxvalue:
                     s->printf("MAX");
                     break;
+            }
+        }
+    }
+
+    virtual void update(asn1_object* owner) {
+        if (owner) {
+            auto root = owner->get_root();
+            if (is_kind_of(root, asn1_entity_specialized_type)) {
+                auto spec = (asn1_specialized_type*)root;
+                auto lambda = [&](t_value<T>& v) -> void {
+                    const auto& name = v.get_name();
+                    if (false == name.empty()) {
+                        asn1_paramvalue pv;
+                        auto test = spec->lookup_value(name, pv);
+                        if (test) {
+                            switch (this->type()) {
+                                case type_category_t::integral: {
+                                    if ((asn1_paramvalue_t::value == pv.type) && (pv.value.is_int())) {
+                                        v.set_value(pv.value.as<T>());
+                                    }
+                                } break;
+                                case type_category_t::real: {
+                                    if ((asn1_paramvalue_t::value == pv.type) && (pv.value.is_float())) {
+                                        v.set_value(pv.value.as<T>());
+                                    }
+                                } break;
+                                case type_category_t::literal: {
+                                    if ((asn1_paramvalue_t::value == pv.type) && (pv.value.is_string())) {
+                                        v.set_value(pv.value.as<T>());
+                                    }
+                                } break;
+                            }
+                        }
+                    }
+                };
+                lambda(_low.value);
+                lambda(_high.value);
             }
         }
     }

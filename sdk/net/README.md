@@ -197,6 +197,7 @@ The relationship map above is conceptual. Individual include dependencies and ac
 - [IANA TLS Parameters](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml)
 - [IANA AEAD Parameters](https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml)
 - [Wireshark sample captures](https://wiki.wireshark.org/SampleCaptures)
+- [quic-test-vector](https://github.com/martinduke/quic-test-vector)
 
 ## 6. Developer Notes
 

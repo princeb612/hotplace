@@ -120,8 +120,11 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/infobjclass/asn1_infobjclass.hpp>
 
 /* asn.1/basic/semantic/parameterized */
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameter.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 
 /* asn.1/basic/structural */
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_constructed_node.hpp>

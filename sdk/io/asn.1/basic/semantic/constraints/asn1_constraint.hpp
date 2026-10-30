@@ -64,8 +64,6 @@ class asn1_constraint : public asn1_constraint_t {
         }
         return ret;
     }
-    asn1_constraint<T>* get_parent() const { return _parent; }
-    void set_parent(asn1_constraint<T>* parent) { _parent = parent; }
 
     virtual type_category_t type() const { return get_type_category<T>::value; }
 
@@ -73,29 +71,27 @@ class asn1_constraint : public asn1_constraint_t {
     virtual void release() { _shared.delref(); }
 
    protected:
-    asn1_constraint() : _entity(asn1_entity_syntax), _parent(nullptr) { _shared.make_share(this); }
+    asn1_constraint() : _entity(asn1_entity_syntax) { _shared.make_share(this); }
     asn1_constraint(asn1_entity_t entity) : asn1_constraint() { _entity = entity; }
 
     asn1_constraint(const asn1_constraint& other) : asn1_constraint() { *this = other; }
     asn1_constraint(asn1_constraint&& other) : asn1_constraint() { *this = std::move(other); }
     asn1_constraint& operator=(const asn1_constraint& other) {
         _entity = other._entity;
-        _parent = other._parent;
         return *this;
     }
     asn1_constraint& operator=(asn1_constraint&& other) {
         std::swap(_entity, other._entity);
-        std::swap(_parent, other._parent);
         return *this;
     }
 
     virtual void accept(asn1_constraint_visitor* v) { v->visit(this); }
     virtual void accept(asn1_constraint_evaluator<T>* v) { v->visit(this); }
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {}
+    virtual void update(asn1_object* owner) {}
 
    private:
     asn1_entity_t _entity;
-    asn1_constraint<T>* _parent;
 
     t_shared_reference<asn1_constraint> _shared;
 };

@@ -57,7 +57,7 @@ using asn1_constraint_single_value_s = asn1_constraint_single_value<std::string>
 using asn1_constraint_union_s = asn1_constraint_union<std::string>;
 using asn1_constraint_pattern_s = asn1_constraint_pattern<std::string>;
 
-class asn1_constraint_t {
+class HOTPLACE_IO_API asn1_constraint_t {
    public:
     virtual ~asn1_constraint_t() = default;
 
@@ -68,6 +68,7 @@ class asn1_constraint_t {
 
     virtual void accept(asn1_constraint_visitor* v) = 0;
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const = 0;
+    virtual void update(asn1_object* owner) {}
 
     virtual type_category_t type() const = 0;
 

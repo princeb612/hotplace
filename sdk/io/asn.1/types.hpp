@@ -166,6 +166,7 @@ enum asn1_entity_t : uint16 {
     asn1_entity_parameterized_type,
     asn1_entity_parameterized_value,
     asn1_entity_parameter,
+    asn1_entity_specialized_type,
 };
 
 enum asn1_taggingmode_t : uint8 {

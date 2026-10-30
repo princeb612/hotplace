@@ -163,6 +163,12 @@ For referenced types, `define(name, object/entity)` creates a definition and `re
 
 `asn1_object` describes a schema/type; `asn1_value` carries values associated with that schema. The value representation uses the schema pointer plus named variant values, so repeated or named components do not turn the schema object itself into the value store.
 
+### Runtime value validation
+
+The schema/value split also defines the validation entry point: `asn1_object` supplies the type model and `asn1_value` supplies named values associated with it. Object-level validation checks the value against the declared ASN.1 entity and its attached constraints. For constructed SEQUENCE/SET values, the validation path recursively visits child components rather than treating the container as an opaque scalar.
+
+Built-in checks and constraint checks have different jobs. Built-in validation checks the representation expected for an entity (for example, a BOOLEAN value or an ENUMERATED member); constraint evaluation checks restrictions attached to the type. A permissive fallback in one type-dispatch branch should not be read as proof that all semantic checks have happened unless another stage is known to perform them.
+
 ### Constraints and output operations
 
 Constraints remain attached to the semantic type model. Visitors then perform distinct operations over that model: notation representation, DER representation, AST traversal, or constraint evaluation. Constraint evaluation derives an allowed value domain; it is not the same operation as encoding the object.

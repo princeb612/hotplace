@@ -39,8 +39,6 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
         }
         _lhs = lhs;
         _rhs = rhs;
-        _lhs->set_parent(this);
-        _rhs->set_parent(this);
     }
 
     virtual ~asn1_constraint_intersection() = default;
@@ -81,6 +79,7 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
     asn1_constraint_intersection(const asn1_constraint_intersection& other) : asn1_constraint_intersection() { *this = other; }
     asn1_constraint_intersection(asn1_constraint_intersection&& other) : asn1_constraint_intersection() { *this = std::move(other); }
     asn1_constraint_intersection& operator=(const asn1_constraint_intersection& other) {
+        asn1_constraint<T>::operator=(other);
         if (_lhs) {
             _lhs->release();
             _lhs = nullptr;
@@ -91,15 +90,14 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
         }
         if (other._lhs) {
             _lhs = other._lhs->clone();
-            _lhs->set_parent(this);
         }
         if (other._rhs) {
             _rhs = other._rhs->clone();
-            _rhs->set_parent(this);
         }
         return *this;
     }
     asn1_constraint_intersection& operator=(asn1_constraint_intersection&& other) {
+        asn1_constraint<T>::operator=(other);
         std::swap(_lhs, other._lhs);
         std::swap(_rhs, other._rhs);
         return *this;

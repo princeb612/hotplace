@@ -1,6 +1,6 @@
 # ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1106
+> **Review baseline:** Revision 1119
 
 ## Review thesis
 
@@ -180,6 +180,31 @@ asn1.ptb         → broader loader grammar (binary parsing-table revision 3)
 
 That distinction prevents the existence of a parse table from being mistaken for complete language support.
 
+## Semantic construction → value validation
+
+The later semantic-validation work adds a distinct step after the schema/object model has been reconstructed. A value is no longer considered valid merely because it can be associated with a semantic object: the object model checks the value against its built-in type and then applies any declared constraints.
+
+```text
+semantic ASN.1 object
+        |
+        v
+asn1_object::validate(...)
+        |
+        v
+built-in type/value check
+(validate_type)
+        |
+        v
+declared constraint evaluation
+        |
+        v
+accepted / rejected value
+```
+
+Revisions 1118–1119 strengthen this boundary. Revision 1118 added `asn1_object::validate_type` for built-in type/value validation and corrected ENUMERATED validation in `asn1_constraints::do_validate`. Revision 1119 added the OID header dependency used by the type-validation implementation. The checks cover concrete type expectations—for example, boolean and integer value forms, string character/content constraints, and OID-shaped values—before the constraint layer decides whether a declared restriction accepts the value.
+
+This is an architectural extension of the syntax-to-runtime path, not evidence of complete ASN.1 conformance. Built-in type checking, constraint evaluation, successful parsing, and end-to-end encoding/decoding remain separate capabilities; support should be described according to the implemented and tested paths rather than inferred from the existence of `validate()`.
+
 ## Why this architecture matters
 
 The architectural value of the 1097 change is the creation of a continuous path:
@@ -224,7 +249,7 @@ The revisions through 1102 establish stronger connections between these layers; 
 
 ## Current state
 
-Revision 1102 is a meaningful incremental boundary for ASN.1: the production/rule vocabulary supports semantic reconstruction; the module model now exposes import/export metadata and reference-resolution operations; and the loader direction is becoming more concrete. This still does not imply complete ASN.1 language or loader support.
+Revision 1119 adds value validation to the existing syntax → semantic construction → module/runtime path. Revisions 1118–1119 strengthen built-in type/value checks through `asn1_object::validate_type` and correct ENUMERATED constraint validation. This creates a clearer separation between type compatibility and declared constraint evaluation, while leaving the existing limitations around grammar coverage, module loading, and end-to-end ASN.1 support intact. It does not imply complete ASN.1 language or loader support.
 
 ### Related source / documents
 
@@ -241,4 +266,4 @@ Revision 1102 is a meaningful incremental boundary for ASN.1: the production/rul
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state through **revision 1106**.
+Reviewed against the hotplace source/documentation state through **revision 1119**.

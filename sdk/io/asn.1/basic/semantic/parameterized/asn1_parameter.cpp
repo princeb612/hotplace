@@ -12,6 +12,7 @@
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameter.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 
@@ -24,6 +25,8 @@ asn1_parameter::asn1_parameter(asn1_parameterized_type* templ, const std::string
         throw exception(errorcode_t::not_specified);
     }
     templ->add_paramtype(param);
+    // templ->add(this);
+    _module = templ->get_module();
 }
 
 asn1_parameter::asn1_parameter(const asn1_parameter& other) : asn1_type(other) { *this = other; }
@@ -35,33 +38,34 @@ asn1_parameter& asn1_parameter::operator=(const asn1_parameter& other) {
     _templ = other._templ;
     _param = other._param;
     _vt = other._vt;
+    _module = other._module;
     return *this;
 }
 
-asn1_object* asn1_parameter::clone() { return new asn1_parameter(*this); }
-
-// asn1_object* asn1_parameter::bind(asn1_module* module) {
-//     asn1_object* obj = nullptr;
-//     const auto& types = get_parameterized_type()->get_types();
-//     const auto& values = get_parameterized_type()->get_values();
-//     auto advisor = asn1_advisor::get_instance();
-//     if (types.size() == values.size()) {
-//         size_t idx = 0;
-//         for (const auto& type : types) {
-//             if (type.name == _param) {
-//                 auto entity = advisor->get_entity(type.name);
-//                 if (asn1_entity_unknown != entity) {
-//                     obj = asn1_builder::build(get_name(), entity);
-//                 } else if (module) {
-//                     obj = module->get(type.name);
-//                 }
-//                 break;
-//             }
-//             ++idx;
-//         }
-//     }
-//     return obj;
-// }
+asn1_object* asn1_parameter::clone() {
+    auto root = get_root();
+    if (is_kind_of(root, asn1_entity_specialized_type)) {
+        auto spec = (asn1_specialized_type*)root;
+        auto advisor = asn1_advisor::get_instance();
+        asn1_object* obj = nullptr;
+        std::string specname;
+        auto test = spec->lookup_name(_param, specname);
+        if (test) {
+            auto entity = advisor->get_entity(specname);
+            if (asn1_entity_unknown != entity) {
+                obj = asn1_builder::build(get_name(), entity);
+            } else {
+                auto module = get_module();
+                if (module) {
+                    obj = module->get(specname);
+                }
+            }
+        }
+        return obj;
+    } else {
+        return new asn1_parameter(*this);
+    }
+}
 
 asn1_parameterized_type* asn1_parameter::get_parameterized_type() const { return _templ; }
 
@@ -71,6 +75,14 @@ bool asn1_parameter::represent(binary_t* b, const asn1_value* value, uint16 flag
     //
     return true;
 }
+
+void asn1_parameter::set(asn1_specialized_type* spec) { _spec = spec; }
+
+asn1_specialized_type* asn1_parameter::get_specialized_type() const { return _spec; }
+
+void asn1_parameter::set_module(asn1_module* module) { _module = module; }
+
+asn1_module* asn1_parameter::get_module() const { return _module; }
 
 }  // namespace io
 }  // namespace hotplace

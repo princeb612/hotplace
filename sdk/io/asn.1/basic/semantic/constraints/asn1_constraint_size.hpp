@@ -39,7 +39,6 @@ class asn1_constraint_size : public asn1_constraint<T> {
             throw exception(errorcode_t::not_specified);
         }
         _cons = cons;
-        _cons->set_parent(this);
     }
     virtual ~asn1_constraint_size() = default;
 
@@ -74,17 +73,18 @@ class asn1_constraint_size : public asn1_constraint<T> {
     asn1_constraint_size(const asn1_constraint_size& other) : asn1_constraint_size() { *this = other; }
     asn1_constraint_size(asn1_constraint_size&& other) : asn1_constraint_size() { *this = std::move(other); }
     asn1_constraint_size& operator=(const asn1_constraint_size& other) {
+        asn1_constraint<T>::operator=(other);
         if (_cons) {
             _cons->release();
             _cons = nullptr;
         }
         if (other._cons) {
             _cons = other._cons->clone();
-            _cons->set_parent(this);
         }
         return *this;
     }
     asn1_constraint_size& operator=(asn1_constraint_size&& other) {
+        asn1_constraint<T>::operator=(other);
         std::swap(_cons, other._cons);
         return *this;
     }

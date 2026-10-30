@@ -20,7 +20,7 @@ namespace io {
 
 class HOTPLACE_IO_API asn1_constraint_visitor {
    public:
-    ~asn1_constraint_visitor() = default;
+    virtual ~asn1_constraint_visitor() = default;
 
     virtual void visit(const asn1_constraint_t* cons) = 0;
 };

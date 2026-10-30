@@ -39,8 +39,6 @@ class asn1_constraint_except : public asn1_constraint<T> {
         }
         _lhs = lhs;
         _rhs = rhs;
-        _lhs->set_parent(this);
-        _rhs->set_parent(this);
     }
     virtual ~asn1_constraint_except() = default;
 
@@ -80,6 +78,7 @@ class asn1_constraint_except : public asn1_constraint<T> {
     asn1_constraint_except(const asn1_constraint_except& other) : asn1_constraint_except() { *this = other; }
     asn1_constraint_except(asn1_constraint_except&& other) : asn1_constraint_except() { *this = std::move(other); }
     asn1_constraint_except& operator=(const asn1_constraint_except& other) {
+        asn1_constraint<T>::operator=(other);
         if (_lhs) {
             _lhs->release();
             _lhs = nullptr;
@@ -90,19 +89,16 @@ class asn1_constraint_except : public asn1_constraint<T> {
         }
         if (other._lhs) {
             _lhs = other._lhs->clone();
-            _lhs->set_parent(this);
         }
         if (other._rhs) {
             _rhs = other._rhs->clone();
-            _rhs->set_parent(this);
         }
         return *this;
     }
     asn1_constraint_except& operator=(asn1_constraint_except&& other) {
+        asn1_constraint<T>::operator=(other);
         std::swap(_lhs, other._lhs);
         std::swap(_rhs, other._rhs);
-        if (_lhs) _lhs->set_parent(this);
-        if (_rhs) _rhs->set_parent(this);
         return *this;
     }
 

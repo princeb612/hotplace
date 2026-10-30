@@ -11,6 +11,7 @@
  */
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 
 namespace hotplace {
@@ -19,21 +20,13 @@ namespace io {
 asn1_parameterized_type::asn1_parameterized_type(const asn1_paramtypes& types, const std::string& name, asn1_object* object)
     : asn1_type(asn1_entity_parameterized_type, name, object), _types(types) {}
 
-asn1_parameterized_type::asn1_parameterized_type(const asn1_parameterized_type& other) : asn1_type(other) {
-    _types = other._types;
-    _values = other._values;
-}
+asn1_parameterized_type::asn1_parameterized_type(const asn1_parameterized_type& other) : asn1_type(other) { _types = other._types; }
 
-asn1_parameterized_type::~asn1_parameterized_type() {
-    if (_templ) _templ->release();
-}
+asn1_parameterized_type::~asn1_parameterized_type() {}
 
 asn1_parameterized_type& asn1_parameterized_type::operator=(const asn1_parameterized_type& other) {
     asn1_type::operator=(other);
-    _templ = other._templ;
     _types = other._types;
-    _values = other._values;
-    if (_templ) _templ->addref();
     return *this;
 }
 
@@ -53,7 +46,7 @@ asn1_parameterized_type* asn1_parameterized_type::define(const std::string& name
     return templ;
 }
 
-asn1_parameterized_type* asn1_parameterized_type::specialize(const std::string& name, asn1_parameterized_type* type, const asn1_paramvalues& values) {
+asn1_specialized_type* asn1_parameterized_type::specialize(const std::string& name, asn1_parameterized_type* type, const asn1_paramvalues& values) {
     if (type) {
         return type->specialize(name, values);
     } else {
@@ -61,12 +54,12 @@ asn1_parameterized_type* asn1_parameterized_type::specialize(const std::string& 
     }
 }
 
-asn1_parameterized_type* asn1_parameterized_type::specialize(const std::string& name, const asn1_paramvalues& values) {
-    auto p = new asn1_parameterized_type(_types, name, get_object()->clone());
-    p->_templ = this;
-    p->_values = values;
-    addref();  // _templ refcount++
-    return p;
+asn1_specialized_type* asn1_parameterized_type::specialize(const std::string& name, const asn1_paramvalues& values) {
+    auto obj = new asn1_specialized_type(this, values, name, get_object()->clone());
+    auto lambda = [this](asn1_object* item) -> void { item->get_constraints().update(); };
+    asn1_visitor visitor(_module, lambda);
+    visitor.visit(obj);
+    return obj;
 }
 
 void asn1_parameterized_type::set_module(asn1_module* module) { _module = module; }
@@ -74,8 +67,6 @@ void asn1_parameterized_type::set_module(asn1_module* module) { _module = module
 asn1_module* asn1_parameterized_type::get_module() const { return _module; }
 
 asn1_paramtypes& asn1_parameterized_type::get_types() { return _types; }
-
-asn1_paramvalues& asn1_parameterized_type::get_values() { return _values; }
 
 asn1_parameterized_type& asn1_parameterized_type::add_paramtype(const std::string& paramtype, const std::string& paramname) {
     auto lambda = [](asn1_parameterized_type* p, const asn1_paramtype& item) -> return_t {
@@ -99,41 +90,24 @@ asn1_parameterized_type& asn1_parameterized_type::add_paramtype(const std::strin
 
 void asn1_parameterized_type::clear() {
     _types.clear();
-    _values.clear();
+    // _deferred.clear();
 }
 
 void asn1_parameterized_type::represent(stream_t* s, const asn1_value*) const {
-    if (nullptr == _templ) {
-        s->printf("%s", get_name().c_str());
-        s->printf(" {");
-        size_t idx = 0;
-        for (const auto& type : _types) {
-            if (idx) s->printf(", ");
-            type.represent(s, nullptr);
-            ++idx;
-        }
-        s->printf("}");
-        s->printf(" ::= ");
-        get_object()->represent(s, nullptr);
-    } else {
-        s->printf("%s", get_name().c_str());
-        s->printf(" ::= ");
-        s->printf("%s", _templ->get_name().c_str());
-        s->printf(" {");
-        size_t idx = 0;
-        for (const auto& v : _values) {
-            if (idx) s->printf(", ");
-            v.represent(s, nullptr);
-            ++idx;
-        }
-        s->printf("}");
+    s->printf("%s", get_name().c_str());
+    s->printf(" {");
+    size_t idx = 0;
+    for (const auto& type : _types) {
+        if (idx) s->printf(", ");
+        type.represent(s, nullptr);
+        ++idx;
     }
+    s->printf("}");
+    s->printf(" ::= ");
+    get_object()->represent(s, nullptr);
 }
 
-bool asn1_parameterized_type::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
-    //
-    return true;
-}
+bool asn1_parameterized_type::represent(binary_t* b, const asn1_value* value, uint16 flags) const { return true; }
 
 }  // namespace io
 }  // namespace hotplace

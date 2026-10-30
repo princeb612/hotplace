@@ -16,6 +16,8 @@
 namespace hotplace {
 namespace io {
 
+asn1_paramvalue::asn1_paramvalue() : type(asn1_paramvalue_t::entity), entity(asn1_entity_t::asn1_entity_unknown) {}
+
 asn1_paramvalue::asn1_paramvalue(asn1_entity_t e) : type(asn1_paramvalue_t::entity), entity(e) {}
 
 asn1_paramvalue::asn1_paramvalue(const char* s) : type(asn1_paramvalue_t::literal) {

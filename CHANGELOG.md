@@ -37,7 +37,10 @@
     * CBOR
 
 * details
-  * Revision 1119
+  * Revision 1120
+    * ASN.1 parameterized type specialization and instantiation
+      * specialize parameterized type templates with type and value parameters
+      * validate instantiated values against parameter-dependent constraints
   * Revision 1118
     * strengthened `asn1_object::validate` built-in type value checks
       * [added] `asn1_object::validate_type` for basic ASN.1 type validation

@@ -53,6 +53,7 @@ void asn1_visitor::visit(asn1_object* object) {
                 return true;
             });
         } break;
+        case asn1_entity_specialized_type:
         case asn1_entity_sequence_of:
         case asn1_entity_set_of: {
             auto obj = object->get_object();

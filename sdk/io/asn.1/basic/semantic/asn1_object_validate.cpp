@@ -12,9 +12,9 @@
  */
 
 #include <hotplace/sdk/base/pattern/regex.hpp>
-#include <hotplace/sdk/io/basic/oid.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
+#include <hotplace/sdk/io/basic/oid.hpp>
 
 namespace hotplace {
 namespace io {
@@ -32,7 +32,6 @@ bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value
             return false;
         }
         if (node->have_constraints()) {
-            // (false == get_constraints.empty()) || (asn1_enum return true)
             return node->get_constraints().validate(node, value);
         }
         if (is_kind_of_container(node)) {

@@ -38,9 +38,6 @@ class asn1_constraint_union : public asn1_constraint<T> {
             // throw exception(errorcode_t::invalid_parameter);
         }
 
-        lhs->set_parent(this);
-        rhs->set_parent(this);
-
         _items.push_back(lhs);
         _items.push_back(rhs);
     }
@@ -50,7 +47,6 @@ class asn1_constraint_union : public asn1_constraint<T> {
         }
 
         for (const auto& item : items) {
-            item->set_parent(this);
             _items.push_back(item);
         }
     }
@@ -61,7 +57,6 @@ class asn1_constraint_union : public asn1_constraint<T> {
 
         for (const auto& item : items) {
             auto obj = new asn1_constraint_single_value<T>(item);
-            obj->set_parent(this);
             _items.push_back(obj);
         }
     }
@@ -72,7 +67,6 @@ class asn1_constraint_union : public asn1_constraint<T> {
 
         for (const auto& item : items) {
             auto obj = new asn1_constraint_single_value<T>(item);
-            obj->set_parent(this);
             _items.push_back(obj);
         }
     }
@@ -130,18 +124,19 @@ class asn1_constraint_union : public asn1_constraint<T> {
     asn1_constraint_union(const asn1_constraint_union& other) : asn1_constraint_union() { *this = other; }
     asn1_constraint_union(asn1_constraint_union&& other) : asn1_constraint_union() { *this = std::move(other); }
     asn1_constraint_union& operator=(const asn1_constraint_union& other) {
+        asn1_constraint<T>::operator=(other);
         for (const auto& item : _items) {
             item->release();
         }
         _items.clear();
         for (const auto& item : other._items) {
             auto obj = item->clone();
-            obj->set_parent(this);
             _items.push_back(obj);
         }
         return *this;
     }
     asn1_constraint_union& operator=(asn1_constraint_union&& other) {
+        asn1_constraint<T>::operator=(other);
         std::swap(_items, _items);
         return *this;
     }

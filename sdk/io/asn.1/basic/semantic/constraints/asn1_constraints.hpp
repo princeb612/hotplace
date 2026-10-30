@@ -47,6 +47,10 @@ class HOTPLACE_IO_API asn1_constraints {
 
     bool validate(const asn1_object* node, const asn1_value* value) const;
 
+    void set_owner(asn1_object* owner);
+    asn1_object* get_owner() const;
+    void update();
+
     void addref();
     void release();
 
@@ -210,6 +214,7 @@ class HOTPLACE_IO_API asn1_constraints {
 
    private:
     std::list<asn1_constraint_t*> _constraints;
+    asn1_object* _owner{nullptr};
 };
 
 }  // namespace io

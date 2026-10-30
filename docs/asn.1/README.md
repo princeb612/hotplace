@@ -1,6 +1,6 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1105**
+**Edition 1 · Revision 1119**
 
 ## Context
 
@@ -68,10 +68,12 @@ The CHANGELOG gives the following development path:
 - **Revision 1102** — `asn1_runtime` renamed to `asn1_module` (and `asn1_runtime_context` to `asn1_module_context`); parameterized assignment/type/value grammar expanded
 - **Revision 1103** — `asn1_publisher` `TypeAssignment` fix
 - **Revision 1104** — prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`; module registry renamed to `asn1_modules`; binary parsing-table format advanced to revision 3
+- **Revision 1118** — `asn1_object::validate_type` adds built-in ASN.1 value/type checks, and `asn1_constraints::do_validate` fixes ENUMERATED validation
+- **Revision 1119** — OID parsing is connected to the built-in value-validation path
 
 The history shows the transition from an ASN.1 runtime model, through parser infrastructure, toward semantic reconstruction of that model from notation.
 
-By Revision 1105, the loader/parser/publisher path reaches `asn1_module` construction and module-level import/export and reference-resolution behavior. `asn1_module::add_schema()` selects GLR through `asn1_parser`; LALR(1) remains an available parser path. The module registry is `asn1_modules` (the earlier `asn1_module_context` name is historical). Revision 1104 adds prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, but these are not evidence of complete parameter binding, substitution, or semantic instantiation. The binary parsing-table format also advances to revision 3.
+By Revision 1105, the loader/parser/publisher path reaches `asn1_module` construction and module-level import/export and reference-resolution behavior. `asn1_module::add_schema()` selects GLR through `asn1_parser`; LALR(1) remains an available parser path. The module registry is `asn1_modules` (the earlier `asn1_module_context` name is historical). Revision 1104 adds prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, but these are not evidence of complete parameter binding, substitution, or semantic instantiation. The binary parsing-table format also advances to revision 3. Revisions 1118–1119 add a separate runtime value-validation step; this strengthens checks on values supplied to runtime objects without implying that parameterized semantic instantiation is complete.
 
 ## Conceptual
 
@@ -259,6 +261,38 @@ At Revision 1083, `string_set::erase_range` and `intersect` are part of this con
 
 The important conceptual point is that constraints are not retained merely as source text. They become semantic objects that belong to the runtime ASN.1 model.
 
+### Runtime value validation
+
+Semantic construction and value validation are separate responsibilities. The
+constructed `asn1_object` model can now validate a supplied `asn1_value` against
+its built-in ASN.1 type before applying any attached constraints:
+
+```text
+asn1_object::validate(value)
+        │
+        ▼
+asn1_object::validate_type(value)
+        │
+        ├── built-in value representation / syntax checks
+        │
+        ▼
+attached constraints, when present
+        │
+        ▼
+valid / invalid
+```
+
+The built-in checks cover type-specific representations such as BOOLEAN,
+INTEGER, REAL, OCTET STRING, BIT STRING, NULL, OID/RELATIVE-OID, and selected
+character-string types. OID validation uses the project's OID parser rather
+than treating every string as a valid identifier. The constraint path also
+handles ENUMERATED values when no explicit constraint list is attached; the
+Revision 1118 fix addresses that validation case.
+
+This is a runtime value check, not a claim of complete ASN.1 conformance or
+complete BER/DER encoding and decoding. It should be read alongside the
+existing type/constraint model and its tests.
+
 ### Builder boundary
 
 The public path is:
@@ -396,7 +430,7 @@ The loop verifies structural reconstruction rather than only parser acceptance.
 
 ## Status
 
-At Revision 1105:
+At Revision 1119:
 
 - ASN.1 notation parsing has CFG/LALR infrastructure and a parse-tree representation, with GLR selected for the integrated module/schema path.
 - Parse-tree visitation exposes the shift/reduce sequence used for reconstruction.
@@ -404,7 +438,8 @@ At Revision 1105:
 - Constructed types, referenced types, tagging, ENUMERATED/named lists, CHOICE, DEFAULT, and OPTIONAL are covered by the publisher path.
 - Constraints have been integrated into the same semantic-construction path, including range/string-range handling and compound constraint operations.
 - The resulting runtime representation is an existing `asn1_object*` model rather than a separate notation-only representation.
+- Revisions 1118–1119 add `asn1_object::validate_type` for built-in value/type checks, including OID syntax validation, and fix ENUMERATED validation in `asn1_constraints::do_validate`. Built-in checks and ASN.1 constraint evaluation are distinct stages; this does not imply full BER/DER coverage.
 - Revision 1083 marks the current constraint-supporting `string_set` operations as part of this completed reconstruction stage.
 - Revisions 1086–1104 extend parser and module processing: broader CFG coverage, parser switching, external parser-table import, GSS-based GLR parsing, loader integration, IMPORTS/EXPORTS, reference resolution, and shared providers under `asn1_advisor`. Revision 1102 renames `asn1_runtime` to `asn1_module` and `asn1_runtime_context` to `asn1_module_context`; Revision 1103 fixes `TypeAssignment` semantic publication. Revision 1104 renames the module registry to `asn1_modules`, advances the binary parsing-table format to revision 3, and prototypes parameterized type/value semantic support. Full parameter binding, substitution, and semantic instantiation remain incomplete.
 
-The next question is how to complete parameterized semantic construction and strengthen the module workflow without conflating grammar recognition with semantic instantiation.
+The remaining work still includes completing parameterized semantic construction and strengthening the module workflow without conflating grammar recognition with semantic instantiation. Runtime value validation is a separate incremental improvement, not a substitute for those tasks.

@@ -12,23 +12,6 @@
 
 #include <hotplace/test/testcase/asn.1/sample.hpp>
 
-// parameterization step
-// [x] semantic construction (prototyping)
-// [ ] instantiation
-// [ ] reconstruction from notation
-
-static const char* example_parameterized = R"(
-    -- Parameterized Type (Template)
-    FRAME{TypeParam, INTEGER:maxSize} ::= SEQUENCE {
-        header  INTEGER,
-        payload TypeParam,
-        length  INTEGER (0..maxSize)
-    }
-
-    -- Parameterized Type (Instantiation)
-    MyPacket ::= FRAME{ OCTET STRING, 1024 }
-)";
-
 void test_parameterized1() {
     _test_case.begin("parameterization");
 
@@ -351,8 +334,158 @@ void test_parameterized1() {
     }
 }
 
+void test_specialization1() {
+    _test_case.begin("specialization");
+
+    // Envelope {TypeParameter} ::= SEQUENCE {
+    //     version     INTEGER,
+    //     messageId   OCTET STRING (SIZE(16)),
+    //     payload     TypeParameter
+    // }
+    asn1_parameterized_type* example6_type1 = asn1_parameterized_type::define("Envelope", [](asn1_parameterized_type* templ) -> asn1_object* {
+        auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
+            auto seq = static_cast<asn1_sequence*>(builtin);
+            (*seq) << new asn1_integer("version")  //
+                   << asn1_builder::build(
+                          "messageId", asn1_entity_octstring,
+                          [templ](asn1_object* builtin2) -> void { builtin2->get_constraints().add(new asn1_constraint_size_i(new asn1_constraint_single_value_i(16))); })
+                   << new asn1_parameter(templ, "payload", "TypeParameter");
+        });
+        return obj;
+    });
+
+    // ActualMessage ::= Envelope { INTEGER }
+    asn1_specialized_type* example6_inst1 = example6_type1->specialize("ActualMessage", {{"INTEGER"}});
+    asn1_specialized_type* example6_inst2 = example6_type1->specialize("ActualMessage2", {{"BIT STRING"}});
+    asn1_specialized_type* example6_inst3 = example6_type1->specialize("ActualMessage3", {{"OBJECT IDENTIFIER"}});
+
+    asn1_value* type1_value1 = example6_inst1->instantiate();
+    (*type1_value1).set("version", 1).set("messageId", "000102030405060708090a0b0c0d0e0f").set("payload", 128);
+    asn1_value* value2 = example6_inst2->instantiate();
+    (*value2).set("version", 1).set("messageId", "000102030405060708090a0b0c0d0e0f").set("payload", "01010101");
+    asn1_value* value3 = example6_inst3->instantiate();
+    (*value3).set("version", 1).set("messageId", "000102030405060708090a0b0c0d0e0f").set("payload", "1.2.840.10045.4.3");
+
+    basic_stream tbs;
+    basic_stream ibs1;
+    basic_stream ibs2;
+    basic_stream ibs3;
+    binary_t bin1;
+    binary_t bin2;
+    binary_t bin3;
+
+    example6_type1->publish(&tbs);
+    example6_inst1->publish(&ibs1);
+    example6_inst2->publish(&ibs2);
+    example6_inst3->publish(&ibs3);
+
+    type1_value1->publish(&bin1);
+    value2->publish(&bin2);
+    value3->publish(&bin3);
+
+    // Envelope {TypeParameter} ::= SEQUENCE {version INTEGER, messageId OCTET STRING (SIZE(16)), payload TypeParameter}
+    // ActualMessage ::= Envelope {INTEGER} 30190201010410000102030405060708090a0b0c0d0e0f02020080
+    // ActualMessage2 ::= Envelope {BIT STRING} 30190201010410000102030405060708090a0b0c0d0e0f03020055
+    // ActualMessage3 ::= Envelope {OBJECT IDENTIFIER} 301e0201010410000102030405060708090a0b0c0d0e0f06072a8648ce3d0403
+
+    _logger->write([&](basic_stream& bs) -> void {
+        valist va;
+        va << tbs << ibs1 << bin1 << ibs2 << bin2 << ibs3 << bin3;
+        bs.vaprintln("{1}", va);
+        bs.vaprintln("{2} {3:x}", va);
+        bs.vaprintln("{4} {5:x}", va);
+        bs.vaprintln("{6} {7:x}", va);
+    });
+
+    _test_case.assert(bin1 == base16_decode("30190201010410000102030405060708090a0b0c0d0e0f02020080"), __FUNCTION__, "ActualMessage");
+    _test_case.assert(bin2 == base16_decode("30190201010410000102030405060708090a0b0c0d0e0f03020055"), __FUNCTION__, "ActualMessage2");
+    _test_case.assert(bin3 == base16_decode("301e0201010410000102030405060708090a0b0c0d0e0f06072a8648ce3d0403"), __FUNCTION__, "ActualMessage3");
+
+    type1_value1->release();
+    value2->release();
+    value3->release();
+    example6_inst1->release();
+    example6_inst2->release();
+    example6_inst3->release();
+    example6_type1->release();
+}
+
+void test_specialization2() {
+    _test_case.begin("specialization");
+    auto example7_type1 = asn1_parameterized_type::define(
+        "FRAME",  //
+        [](asn1_parameterized_type* templ) -> asn1_object* {
+            (*templ).add_paramtype("TypeParam").add_paramtype("INTEGER", "maxSize");
+            auto obj = asn1_builder::build(asn1_entity_sequence, [templ](asn1_object* builtin) -> void {
+                auto seq = static_cast<asn1_sequence*>(builtin);
+                (*seq) << new asn1_integer("header") << new asn1_parameter(templ, "payload", "TypeParam")
+                       << asn1_builder::build("length", asn1_entity_integer, [&](asn1_object* builtin2) -> void {
+                              builtin2->get_constraints().add(new asn1_constraint_range_i(int64(0), asn1_parameter::value<int64>(templ, "INTEGER", "maxSize")));
+                          });
+            });
+            return obj;
+        });
+    auto example7_inst1 = example7_type1->specialize("MyPacket", {{"OCTET STRING"}, {16}});
+    auto example7_inst2 = example7_type1->specialize("MyPacket", {{"OCTET STRING"}, {32}});
+
+    asn1_value* type1_value1 = example7_inst1->instantiate();
+    (*type1_value1).set("header", 1).set("payload", "000102030405060708090a0b0c0d0e0f").set("length", 16);  // 0..16
+    asn1_value* type1_value1_bad = example7_inst1->instantiate();
+    (*type1_value1_bad).set("header", 1).set("payload", "000102030405060708090a0b0c0d0e0f").set("length", 20);
+    asn1_value* type2_value1 = example7_inst2->instantiate();
+    (*type2_value1).set("header", 1).set("payload", "000102030405060708090a0b0c0d0e0f").set("length", 20);  // 0..32
+    asn1_value* type2_value2 = example7_inst2->instantiate();
+    (*type2_value2).set("header", 1).set("payload", "000102030405060708090a0b0c0d0e0f").set("length", 32);  // 0..32
+    asn1_value* type2_value3 = example7_inst2->instantiate();
+    (*type2_value3).set("header", 1).set("payload", "000102030405060708090a0b0c0d0e0f").set("length", 33);
+
+    bool test_type1_value1 = example7_inst1->validate(type1_value1);
+    bool test_type1_value1_bad = example7_inst1->validate(type1_value1_bad);
+    bool test_type2_value1 = example7_inst2->validate(type2_value1);
+    bool test_type2_value2 = example7_inst2->validate(type2_value2);
+    bool test_type2_value3 = example7_inst2->validate(type2_value3);
+
+    _test_case.assert(test_type1_value1, __FUNCTION__, "valid");
+    _test_case.nassert(test_type1_value1_bad, __FUNCTION__, "not valid");
+    _test_case.assert(test_type2_value1, __FUNCTION__, "valid");
+    _test_case.assert(test_type2_value2, __FUNCTION__, "valid");
+    _test_case.nassert(test_type2_value3, __FUNCTION__, "not valid");
+
+    basic_stream tbs;
+    basic_stream ibs1;
+    basic_stream ibs2;
+    binary_t bin1;
+    binary_t bin2;
+
+    example7_type1->publish(&tbs);
+    example7_inst1->publish(&ibs1);
+    example7_inst2->publish(&ibs2);
+
+    type1_value1->publish(&bin1);
+    type2_value1->publish(&bin2);
+
+    _logger->write([&](basic_stream& bs) -> void {
+        valist va;
+        va << tbs << ibs1 << bin1 << ibs2 << bin2;
+        bs.vaprintln("{1}", va);
+        bs.vaprintln("{2} {3:x}", va);
+        bs.vaprintln("{4} {5:x}", va);
+    });
+
+    type1_value1->release();
+    type1_value1_bad->release();
+    type2_value1->release();
+    type2_value2->release();
+    type2_value3->release();
+    example7_inst1->release();
+    example7_inst2->release();
+    example7_type1->release();
+}
+
 void test_parameterized2() {
-    _test_case.begin("parameterized type");
+    _test_case.begin("parameterization");
+
+    // sketch
 
     return_t ret = errorcode_t::success;
 
@@ -360,6 +493,18 @@ void test_parameterized2() {
     asn1_loader loader;
 
     // intentionally split into several stages for testing and verification.
+
+    static const char* example_parameterized = R"(
+        -- Parameterized Type (Template)
+        FRAME{TypeParam, INTEGER:maxSize} ::= SEQUENCE {
+            header  INTEGER,
+            payload TypeParam,
+            length  INTEGER (0..maxSize)
+        }
+
+        -- Parameterized Type (Instantiation)
+        MyPacket ::= FRAME{ OCTET STRING, 1024 }
+    )";
 
     // step.1
     ret = loader.load(example_parameterized, strlen(example_parameterized), &pt);
@@ -382,6 +527,8 @@ void test_parameterized3() {
 
 void testcase_parameterized() {
     test_parameterized1();
+    test_specialization1();
+    test_specialization2();
     // test_parameterized2();
     // test_parameterized3();
 }

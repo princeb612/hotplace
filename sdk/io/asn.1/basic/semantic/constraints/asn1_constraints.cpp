@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_constraints::asn1_constraints() {}
+asn1_constraints::asn1_constraints() : _owner(nullptr) {}
 
 asn1_constraints::asn1_constraints(const asn1_constraints& other) : asn1_constraints() { *this = other; }
 
@@ -97,6 +97,16 @@ bool asn1_constraints::validate(const asn1_object* node, const asn1_value* value
         return do_validate<std::string>(nullptr, node, value);
     }
     return true;
+}
+
+void asn1_constraints::set_owner(asn1_object* owner) { _owner = owner; }
+
+asn1_object* asn1_constraints::get_owner() const { return _owner; }
+
+void asn1_constraints::update() {
+    for (auto& item : _constraints) {
+        item->update(_owner);
+    }
 }
 
 void asn1_constraints::addref() {

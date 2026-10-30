@@ -32,6 +32,8 @@ accept / reject a value
 
 The constraint layer therefore sits between ASN.1 notation and runtime value validation.
 
+At runtime, constraint evaluation is one part of validation, not a replacement for built-in type checks. The object-level validation path first needs to interpret a value according to its ASN.1 entity, while the constraint machinery checks restrictions represented by the attached constraint tree. ENUMERATED membership is also a value-domain check and must reject values that are not declared members; successful notation reconstruction alone does not establish that property.
+
 ## 2. Data Model
 ### Constraint model
 

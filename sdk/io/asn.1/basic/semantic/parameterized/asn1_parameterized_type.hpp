@@ -10,79 +10,15 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1PARAMETERIZEDTYPE__
-#define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1PARAMETERIZEDTYPE__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_PARAMETERIZED_ASN1PARAMETERIZEDTYPE__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_PARAMETERIZED_ASN1PARAMETERIZEDTYPE__
 
-#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 
 namespace hotplace {
 namespace io {
-
-/**
- * @brief   parameterization
- * @remarks
- *          FRAME{TypeParam, INTEGER:maxSize} ::= SEQUENCE {
- *              header  INTEGER,
- *              payload TypeParam,
- *              length  INTEGER (0..maxSize)
- *          }
- *          MyPacket ::= FRAME{ OCTET STRING, 1024 }
- *
- */
-
-enum class asn1_paramtype_t {
-    type,
-    value,
-};
-enum class asn1_paramvalue_t {
-    entity,
-    literal,
-    object,
-    value,
-};
-
-struct HOTPLACE_IO_API asn1_paramtype {
-    std::string type;
-    std::string name;
-
-    asn1_paramtype(const std::string& t);
-    asn1_paramtype(const std::string& t, const std::string& n);
-
-    asn1_paramtype(const asn1_paramtype& other);
-    asn1_paramtype(asn1_paramtype&& other);
-    asn1_paramtype& operator=(const asn1_paramtype& other);
-    asn1_paramtype& operator=(asn1_paramtype&& other);
-    bool operator==(const asn1_paramtype& other) const;
-    bool operator<(const asn1_paramtype& other) const;
-
-    void represent(stream_t* s, const asn1_value* value) const;
-};
-
-struct HOTPLACE_IO_API asn1_paramvalue {
-    asn1_paramvalue_t type{asn1_paramvalue_t::entity};
-    asn1_entity_t entity{asn1_entity_t::asn1_entity_unknown};
-    std::string name;
-    asn1_object* object{nullptr};
-    variant value;
-
-    asn1_paramvalue(asn1_entity_t e);
-    asn1_paramvalue(const char* s);
-    asn1_paramvalue(asn1_object* o);
-    asn1_paramvalue(const variant& v);
-    asn1_paramvalue(variant&& v);
-
-    asn1_paramvalue(const asn1_paramvalue& other);
-    asn1_paramvalue(asn1_paramvalue&& other);
-    asn1_paramvalue& operator=(const asn1_paramvalue& other);
-    asn1_paramvalue& operator=(asn1_paramvalue&& other);
-
-    void represent(stream_t* s, const asn1_value* value) const;
-};
-
-typedef std::vector<asn1_paramtype> asn1_paramtypes;
-typedef std::vector<asn1_paramvalue> asn1_paramvalues;
 
 /**
  * @brief   parameterization
@@ -109,14 +45,13 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
     /**
      *
      */
-    static asn1_parameterized_type* specialize(const std::string& name, asn1_parameterized_type* type, const asn1_paramvalues& values);
-    asn1_parameterized_type* specialize(const std::string& name, const asn1_paramvalues& values);
+    static asn1_specialized_type* specialize(const std::string& name, asn1_parameterized_type* type, const asn1_paramvalues& values);
+    asn1_specialized_type* specialize(const std::string& name, const asn1_paramvalues& values);
 
     void set_module(asn1_module* module);
     asn1_module* get_module() const;
 
     asn1_paramtypes& get_types();
-    asn1_paramvalues& get_values();
 
     /**
      * {TypeParameter}
@@ -130,9 +65,11 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
     void for_each(std::function<void(asn1_paramtype*)> func) {
         for (auto& type : _types) func(&type);
     }
-    void for_each(std::function<void(asn1_paramvalue*)> func) {
-        for (auto& value : _values) func(&value);
-    }
+
+    // void add(asn1_object* object);
+    // template <typename F>
+    // void for_each_deferred(F&& func) { for (auto member : _deferred) std::forward<F>(func)(member); }
+    // void for_each_deferred(std::function<void(asn1_object*)> func) { for_each_deferred(func); }
 
    protected:
     asn1_parameterized_type(const asn1_paramtypes& types, const std::string& name, asn1_object* object);
@@ -144,37 +81,7 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
     asn1_parameterized_type* _templ{nullptr};
     asn1_module* _module{nullptr};
     asn1_paramtypes _types;
-    asn1_paramvalues _values;
-};
-
-class HOTPLACE_IO_API asn1_parameter : public asn1_type {
-   public:
-    asn1_parameter(asn1_parameterized_type* templ, const std::string& name, const std::string& paramtype);
-    asn1_parameter(const asn1_parameter& other);
-    virtual ~asn1_parameter();
-
-    asn1_parameter& operator=(const asn1_parameter& other);
-
-    virtual asn1_object* clone();
-
-    template <typename U>
-    static t_value<U> value(asn1_parameterized_type* templ, const std::string& param, const std::string& name) {
-        templ->add_paramtype(param, name);
-        t_value<U> v(U{}, name, true);
-        return v;
-    }
-
-    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
-    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
-
-   protected:
-    asn1_parameterized_type* get_parameterized_type() const;
-
-   private:
-    asn1_parameterized_type* _templ{nullptr};
-    std::string _param;
-    variant _vt;
-    asn1_object* _instance{nullptr};
+    // std::list<asn1_object*> _deferred;
 };
 
 }  // namespace io

@@ -67,6 +67,9 @@ The runtime's current module representation is `asn1_module`, with the named-mod
 5. Call `type->validate(value)`.
 6. Use the row's `expect` flag to select `_test_case.assert(test, ...)` for valid inputs or `_test_case.nassert(test, ...)` for invalid inputs.
 7. The selected cases cover single values/unions, integer and real ranges, intersections and EXCEPT/ALL EXCEPT, SIZE, permitted alphabets, string and collection sizes, ENUMERATED members, nested fields, patterns, and an exclusive boundary. They do not exhaustively enumerate the full value domain.
+8. Object-level validation also checks built-in value representations for the corresponding ASN.1 entity. The reviewed cases include BOOLEAN, NULL, INTEGER, REAL, OBJECT IDENTIFIER, RELATIVE-OID, OCTET STRING, BIT STRING and supported string types; ENUMERATED validation rejects values that are not declared members.
+9. Constructed SEQUENCE/SET values are traversed recursively so named child values are checked against their own types and constraints.
+10. These checks are layered: basic type validation and constraint evaluation are distinct responsibilities. Do not infer complete validation of all referenced types or all ASN.1 productions from a successful fallback branch.
 
 ### 2.5 YAML DER vectors
 

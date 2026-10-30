@@ -471,7 +471,7 @@ This is a conceptual boundary diagram, not a claim that all paths use the same c
 EC and OKP share a convenience dispatch path, but their point/key representations remain different:
 
 ```text
-EC coordinates (x,y) ---------> add_ec()
+EC coordinates (x,y) ----------> add_ec()
 EC compressed (x, ysign) ------> add_ec_compressed()
 EC uncompressed point bytes ---> add_ec_uncompressed()
 OKP raw public/private bytes --> add_okp()

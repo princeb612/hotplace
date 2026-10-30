@@ -25,6 +25,7 @@ asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_obj
     _shared.make_share(this);
     set_object(object);
     set_tag(tag);
+    _constraints.set_owner(this);
 }
 
 asn1_object::asn1_object(const asn1_object& other) : asn1_object(asn1_entity_syntax, "", nullptr, nullptr) { *this = other; }
@@ -44,6 +45,7 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
     set_tag(other._tag ? other._tag->clone() : nullptr);
     if (other._default) set_default_value(other._default->value);
     _constraints = other._constraints;
+    _constraints.set_owner(this);
     return *this;
 }
 
@@ -272,6 +274,17 @@ const asn1_constraints& asn1_object::get_constraints() const { return _constrain
 bool asn1_object::have_constraints() const { return false == get_constraints().empty(); }
 
 void asn1_object::update_linkage(asn1_module* module) {}
+
+asn1_object* asn1_object::get_root() {
+    auto root = this;
+    while (root) {
+        if (root->get_parent())
+            root = root->get_parent();
+        else
+            break;
+    }
+    return root;
+}
 
 }  // namespace io
 }  // namespace hotplace
