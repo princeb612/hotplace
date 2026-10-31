@@ -72,7 +72,7 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
                 s->printf(" ");
                 auto defvalue = get_default();
                 if (defvalue) {
-                    if (defvalue->value.deferred()) {
+                    if (defvalue->value.is_named()) {
                         s->printf("%s", defvalue->value.get_name().c_str());
                     } else {
                         vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);

@@ -14,6 +14,7 @@
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameter.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 
 namespace hotplace {

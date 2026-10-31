@@ -12,6 +12,7 @@
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 
 namespace hotplace {

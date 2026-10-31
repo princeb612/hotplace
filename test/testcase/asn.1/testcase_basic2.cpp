@@ -18,6 +18,7 @@ void test_validate() {
     auto case1_type3 = case1_type1->clone();
     auto case2_type1 = asn1_referenced_type::define("Data", new asn1_builtin_type(asn1_entity_octstring));
     auto case2_type2 = case2_type1->clone();
+    auto case2_type3 = case2_type1->clone();
     auto case3_type1 = asn1_referenced_type::define("Oid", new asn1_builtin_type(asn1_entity_oid));
     auto case3_type2 = case3_type1->clone();
     auto case4_type1 = asn1_referenced_type::define("Oid", new asn1_builtin_type(asn1_entity_numstring));
@@ -69,7 +70,7 @@ void test_validate() {
         bool expect;
     } table[] = {
         {case1_type1, flag_case1_int_bool, false}, {case1_type2, flag_case1_string_int, false}, {case1_type3, flag_case1_string_bool, true},
-        {case2_type1, flag_case2_nonoct1, false},  {case2_type1, flag_case2_nonoct2, false},    {case2_type2, flag_case2_oct, true},
+        {case2_type1, flag_case2_nonoct1, false},  {case2_type2, flag_case2_nonoct2, false},    {case2_type3, flag_case2_oct, true},
         {case3_type1, flag_case3_nonoid, false},   {case3_type2, flag_case3_oid, true},         {case4_type1, flag_case4_nonnumstr, false},
         {case4_type2, flag_case4_numstr, true},    {case5_type1, flag_case5_bad, false},        {case5_type2, flag_case5_odd, true},
         {case5_type3, flag_case5_even, true},      {case6_type1, flag_case6_nonint, false},     {case6_type2, flag_case6_int, true},
@@ -162,6 +163,7 @@ void test_validate() {
         auto test = item.obj->validate(value);
         _test_case.assert(item.expect == test, __FUNCTION__, "validate %s", bs.c_str());
 
+        value->release();
         item.obj->release();
     }
 }

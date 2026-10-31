@@ -37,6 +37,9 @@
     * CBOR
 
 * details
+  * Revision 1122
+    * [tested] sanitizer, valgrind(memcheck, hellgrind, drd), application verifier
+    * removed future-promise from t_value
   * Revision 1120
     * ASN.1 parameterized type specialization and instantiation
       * specialize parameterized type templates with type and value parameters

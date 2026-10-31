@@ -410,6 +410,7 @@ void test_specialization1() {
     example6_type1->release();
 }
 
+// Revision 1119
 void test_specialization2() {
     _test_case.begin("specialization");
     auto example7_type1 = asn1_parameterized_type::define(
@@ -482,6 +483,7 @@ void test_specialization2() {
     example7_type1->release();
 }
 
+// Revision 1119
 void test_parameterized2() {
     _test_case.begin("parameterization");
 

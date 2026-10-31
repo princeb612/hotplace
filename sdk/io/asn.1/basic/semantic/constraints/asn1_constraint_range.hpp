@@ -16,6 +16,7 @@
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 
 namespace hotplace {
@@ -226,7 +227,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
                 s->printf("MIN");
                 break;
             case range_type_t::value: {
-                if (_low.value.deferred()) {
+                if (_low.value.is_named()) {
                     s->printf("%s", _low.value.get_name().c_str());
                 } else {
                     variant vt(_low.value);
@@ -238,7 +239,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
                 break;
         }
         if (range_flag_t::open == _low_flag) s->printf("<");
-        if ((_low != _high) || _high.value.deferred()) {
+        if ((_low != _high) || _high.value.is_named()) {
             s->printf("..");
             if (range_flag_t::open == _high_flag) s->printf("<");
             switch (_high.type) {
@@ -246,7 +247,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
                     s->printf("MIN");
                     break;
                 case range_type_t::value: {
-                    if (_high.value.deferred()) {
+                    if (_high.value.is_named()) {
                         s->printf("%s", _high.value.get_name().c_str());
                     } else {
                         variant vt(_high.value);
@@ -287,6 +288,8 @@ class asn1_constraint_range : public asn1_constraint<T> {
                                         v.set_value(pv.value.as<T>());
                                     }
                                 } break;
+                                default:
+                                    break;
                             }
                         }
                     }
