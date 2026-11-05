@@ -29,6 +29,16 @@
 namespace hotplace {
 namespace io {
 
+struct make_value {
+    template <typename T>
+    static t_value<T> build(const asn1_semantic_node& n) {
+        t_value<T> value;
+        value.set_value(n.vt.value<T>());
+        if (false == n.vt_name.empty()) value.set_name(n.vt_name);
+        return value;
+    }
+};
+
 void asn1_publisher::prepare_constraints() {
     add_handler(
         "Constraints", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
@@ -270,12 +280,12 @@ void asn1_publisher::prepare_constraints() {
             if ("ValueElement" == rhs_first.symbol) {
                 if (1 == size) {
                     asn1_constraint_t* cons = nullptr;
-                    if (rhs_first.v.is_int()) {
-                        cons = new asn1_constraint_single_value_i(rhs_first.v.value<int64>());
-                    } else if (rhs_first.v.is_float()) {
-                        cons = new asn1_constraint_single_value_f(rhs_first.v.value<double>());
-                    } else if (rhs_first.v.is_string()) {
-                        cons = new asn1_constraint_single_value_s(rhs_first.v.value<const char*>());
+                    if (rhs_first.vt.is_int()) {
+                        cons = new asn1_constraint_single_value_i(make_value::build<int64>(rhs_first));
+                    } else if (rhs_first.vt.is_float()) {
+                        cons = new asn1_constraint_single_value_f(make_value::build<double>(rhs_first));
+                    } else if (rhs_first.vt.is_string()) {
+                        cons = new asn1_constraint_single_value_s(rhs_first.vt.value<const char*>());
                     }
                     asn.cons.u = cons;
                 } else {
@@ -293,27 +303,27 @@ void asn1_publisher::prepare_constraints() {
                     auto& rhs_second = rhs[next];
 
                     asn1_constraint_t* cons = nullptr;
-                    if (rhs_first.v.is_int() && rhs_second.v.is_int()) {
-                        cons = new asn1_constraint_range_i(rhs_first.v.value<int64>(), rhs_second.v.value<int64>(), lhs_flag, rhs_flag);
-                    } else if (rhs_first.v.is_float() && rhs_second.v.is_float()) {
-                        cons = new asn1_constraint_range_f(rhs_first.v.value<double>(), rhs_second.v.value<double>(), lhs_flag, rhs_flag);
-                    } else if (rhs_first.v.is_string() && rhs_second.v.is_string()) {
-                        std::string qs_lhs = rhs_first.v.value<const char*>();
-                        std::string qs_rhs = rhs_second.v.value<const char*>();
+                    if (rhs_first.vt.is_int() && rhs_second.vt.is_int()) {
+                        cons = new asn1_constraint_range_i(make_value::build<int64>(rhs_first), make_value::build<int64>(rhs_second), lhs_flag, rhs_flag);
+                    } else if (rhs_first.vt.is_float() && rhs_second.vt.is_float()) {
+                        cons = new asn1_constraint_range_f(make_value::build<double>(rhs_first), make_value::build<double>(rhs_second), lhs_flag, rhs_flag);
+                    } else if (rhs_first.vt.is_string() && rhs_second.vt.is_string()) {
+                        std::string qs_lhs = rhs_first.vt.value<const char*>();
+                        std::string qs_rhs = rhs_second.vt.value<const char*>();
                         cons = new asn1_constraint_range_s(qs_lhs, qs_rhs, lhs_flag, rhs_flag);
-                    } else if (rhs_first.v.is_minvalue()) {
-                        if (rhs_second.v.is_int()) {
-                            cons = new asn1_constraint_range_i(range_type_t::minvalue, rhs_second.v.value<int64>(), lhs_flag, rhs_flag);
-                        } else if (rhs_second.v.is_float()) {
-                            cons = new asn1_constraint_range_f(range_type_t::minvalue, rhs_second.v.value<double>(), lhs_flag, rhs_flag);
-                        } else if (rhs_second.v.is_maxvalue()) {
+                    } else if (rhs_first.vt.is_minvalue()) {
+                        if (rhs_second.vt.is_int()) {
+                            cons = new asn1_constraint_range_i(range_type_t::minvalue, make_value::build<int64>(rhs_second), lhs_flag, rhs_flag);
+                        } else if (rhs_second.vt.is_float()) {
+                            cons = new asn1_constraint_range_f(range_type_t::minvalue, make_value::build<double>(rhs_second), lhs_flag, rhs_flag);
+                        } else if (rhs_second.vt.is_maxvalue()) {
                             cons = new asn1_constraint_range_f(range_type_t::minvalue, range_type_t::maxvalue, lhs_flag, rhs_flag);
                         }
-                    } else if (rhs_second.v.is_maxvalue()) {
-                        if (rhs_first.v.is_int()) {
-                            cons = new asn1_constraint_range_i(rhs_first.v.value<int64>(), range_type_t::maxvalue, lhs_flag, rhs_flag);
-                        } else if (rhs_first.v.is_float()) {
-                            cons = new asn1_constraint_range_f(rhs_first.v.value<double>(), range_type_t::maxvalue, lhs_flag, rhs_flag);
+                    } else if (rhs_second.vt.is_maxvalue()) {
+                        if (rhs_first.vt.is_int()) {
+                            cons = new asn1_constraint_range_i(make_value::build<int64>(rhs_first), range_type_t::maxvalue, lhs_flag, rhs_flag);
+                        } else if (rhs_first.vt.is_float()) {
+                            cons = new asn1_constraint_range_f(make_value::build<double>(rhs_first), range_type_t::maxvalue, lhs_flag, rhs_flag);
                         }
                     }
                     asn.cons.u = cons;

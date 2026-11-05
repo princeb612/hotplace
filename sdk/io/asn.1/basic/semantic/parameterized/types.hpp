@@ -82,8 +82,13 @@ struct HOTPLACE_IO_API asn1_paramvalue {
     void represent(stream_t* s, const asn1_value* value) const;
 };
 
-typedef std::vector<asn1_paramtype> asn1_paramtypes;
-typedef std::vector<asn1_paramvalue> asn1_paramvalues;
+typedef std::list<asn1_paramtype> asn1_paramtypes;
+typedef std::list<asn1_paramvalue> asn1_paramvalues;
+
+bool lookup(const asn1_paramtypes& types, const std::string& name);
+bool lookup(const asn1_paramtypes& types, const std::string& name, asn1_paramtype& type);
+bool lookup(const asn1_paramtypes& types, const asn1_paramvalues& values, const std::string& name, std::string& value);
+bool lookup(const asn1_paramtypes& types, const asn1_paramvalues& values, const std::string& name, asn1_paramvalue& value);
 
 }  // namespace io
 }  // namespace hotplace

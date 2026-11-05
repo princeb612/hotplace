@@ -49,13 +49,11 @@ class t_avltree {
     typedef typename std::function<void(key_t& t)> visitor;
 
     t_avltree() : _root(nullptr), _size(0) {}
-    t_avltree(const t_avltree& other) : _root(nullptr), _size(0) { _root = clone(other._root); }
-    t_avltree(t_avltree&& other) : _root(nullptr), _size(0) {
-        _root = other._root;
+    t_avltree(const t_avltree& other) : _root(nullptr), _size(0) {
+        _root = clone(other._root);
         _size = other._size;
-        other._root = nullptr;
-        other._size = 0;
     }
+    t_avltree(t_avltree&& other) : _root(nullptr), _size(0) { *this = std::move(other); }
     ~t_avltree() { clear(); }
 
     bool contains(const key_t& x) const { return contains(x, _root); }
@@ -71,13 +69,12 @@ class t_avltree {
     t_avltree& operator=(const t_avltree& other) {
         clear();
         _root = clone(other._root);
+        return *this;
     }
     t_avltree& operator=(t_avltree&& other) {
-        clear();
-        _root = other._root;
-        _size = other._size;
-        other._root = nullptr;
-        other._size = 0;
+        std::swap(_root, other._root);
+        std::swap(_size, other._size);
+        return *this;
     }
 
    private:

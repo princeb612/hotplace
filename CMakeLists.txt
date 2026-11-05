@@ -32,6 +32,7 @@ set (SUPPORT_DEBUG  0 CACHE STRING "debug build")
 set (SUPPORT_ODBC   0 CACHE STRING "odbc feature")
 set (SUPPORT_PCH    0 CACHE STRING "pch")             # cmake 2.x
 set (SUPPORT_OQS    0 CACHE STRING "oqs")             # PQC
+set (SUPPORT_TEST   1 CACHE STRING "test")
 set (SUPPORT_STATIC 1 CACHE STRING "static build")    # 1 if not set disable_static
 set (SUPPORT_SHARED 0 CACHE STRING "share build")     # set 1 in mingw, ubuntu, custom build
 
@@ -296,9 +297,12 @@ link_directories (${SET_THIRDPARTY_DIR}/lib)
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 # copy header files
 copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include/hotplace/sdk)
+copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/include/hotplace/test)
 
 # build
 add_subdirectory (sdk)
+
+if (SUPPORT_TEST GREATER 0)
 # test
 enable_testing ()
 # testcase, applet
@@ -306,3 +310,4 @@ add_subdirectory (test)
 
 # copy certificates
 add_subdirectory (etc)
+endif ()

@@ -37,6 +37,7 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
      * generate a template using the pre-configured add_paramtype and object.
      */
     static asn1_parameterized_type* define(const asn1_paramtypes& types, const std::string& name, asn1_object* object);
+    static asn1_parameterized_type* define(asn1_paramtypes&& types, const std::string& name, asn1_object* object);
     /**
      * automatically configures by calling add_paramtype internally.
      * can also configure it so that it is not added automatically by setting it up beforehand using `add_paramtype`.
@@ -58,6 +59,8 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
      * add_paramtype("TypeParameter")
      */
     asn1_parameterized_type& add_paramtype(const std::string& paramtype, const std::string& paramname = "");
+    asn1_parameterized_type& set(const asn1_paramtypes& types);
+    asn1_parameterized_type& set(asn1_paramtypes&& types);
 
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
@@ -73,15 +76,14 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
 
    protected:
     asn1_parameterized_type(const asn1_paramtypes& types, const std::string& name, asn1_object* object);
+    asn1_parameterized_type(asn1_paramtypes&& types, const std::string& name, asn1_object* object);
     asn1_parameterized_type(const asn1_parameterized_type& other);
     asn1_parameterized_type& operator=(const asn1_parameterized_type& other);
     void clear();
 
    private:
-    asn1_parameterized_type* _templ{nullptr};
     asn1_module* _module{nullptr};
     asn1_paramtypes _types;
-    // std::list<asn1_object*> _deferred;
 };
 
 }  // namespace io

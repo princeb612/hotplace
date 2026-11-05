@@ -24,7 +24,15 @@ namespace io {
 
 class HOTPLACE_IO_API asn1_parameter : public asn1_type {
    public:
+    /**
+     * constructor
+     */
     asn1_parameter(asn1_parameterized_type* templ, const std::string& name, const std::string& paramtype);
+    /**
+     * @brief   constructor (reconstruction)
+     * @remarks make a parameter and then attach asn1_parameterized_type* while reconstruction
+     */
+    asn1_parameter(const std::string& name, const std::string& paramtype);
     asn1_parameter(const asn1_parameter& other);
     virtual ~asn1_parameter();
 
@@ -38,9 +46,19 @@ class HOTPLACE_IO_API asn1_parameter : public asn1_type {
         t_value<U> v(U{}, name);
         return v;
     }
+    template <typename U>
+    static t_value<U> value(const std::string& param, const std::string& name) {
+        t_value<U> v(U{}, name);
+        return v;
+    }
 
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
+
+    /**
+     * reconstruction
+     */
+    void attach(asn1_parameterized_type* templ);
 
     void set(asn1_specialized_type* spec);
     asn1_specialized_type* get_specialized_type() const;
@@ -57,6 +75,7 @@ class HOTPLACE_IO_API asn1_parameter : public asn1_type {
     variant _vt;
     asn1_object* _instance{nullptr};
     asn1_module* _module{nullptr};
+    asn1_paramtypes _temptypes;
 };
 
 }  // namespace io

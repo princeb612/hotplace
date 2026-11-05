@@ -1,5 +1,5 @@
 # working git tag
 set (VERSION_MAJOR 1)
-set (VERSION_MINOR 149)
+set (VERSION_MINOR 150)
 # working svn revision
-set (VERSION_BUILD 1122)
+set (VERSION_BUILD 1123)

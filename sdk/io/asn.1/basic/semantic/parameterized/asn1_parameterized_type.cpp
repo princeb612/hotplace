@@ -21,6 +21,9 @@ namespace io {
 asn1_parameterized_type::asn1_parameterized_type(const asn1_paramtypes& types, const std::string& name, asn1_object* object)
     : asn1_type(asn1_entity_parameterized_type, name, object), _types(types) {}
 
+asn1_parameterized_type::asn1_parameterized_type(asn1_paramtypes&& types, const std::string& name, asn1_object* object)
+    : asn1_type(asn1_entity_parameterized_type, name, object), _types(std::move(types)) {}
+
 asn1_parameterized_type::asn1_parameterized_type(const asn1_parameterized_type& other) : asn1_type(other) { _types = other._types; }
 
 asn1_parameterized_type::~asn1_parameterized_type() {}
@@ -35,6 +38,11 @@ asn1_parameterized_type* asn1_parameterized_type::clone() { return new asn1_para
 
 asn1_parameterized_type* asn1_parameterized_type::define(const asn1_paramtypes& types, const std::string& name, asn1_object* object) {
     auto obj = new asn1_parameterized_type(types, name, object);
+    return obj;
+}
+
+asn1_parameterized_type* asn1_parameterized_type::define(asn1_paramtypes&& types, const std::string& name, asn1_object* object) {
+    auto obj = new asn1_parameterized_type(std::move(types), name, object);
     return obj;
 }
 
@@ -86,6 +94,16 @@ asn1_parameterized_type& asn1_parameterized_type::add_paramtype(const std::strin
     if (errorcode_t::success == test) {
         _types.push_back(std::move(item));
     }
+    return *this;
+}
+
+asn1_parameterized_type& asn1_parameterized_type::set(const asn1_paramtypes& types) {
+    _types = types;
+    return *this;
+}
+
+asn1_parameterized_type& asn1_parameterized_type::set(asn1_paramtypes&& types) {
+    _types = std::move(types);
     return *this;
 }
 

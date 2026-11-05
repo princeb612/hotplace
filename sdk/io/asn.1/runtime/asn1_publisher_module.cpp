@@ -7,9 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * comments
- *   Considerations for `asn1_modules` in a multi-threaded environment:
- *   - Whenever possible, use `add` and `get` operations that do not modify the current pointer.
  */
 
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>

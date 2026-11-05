@@ -52,5 +52,34 @@ void asn1_paramtype::represent(stream_t* s, const asn1_value*) const {
     }
 }
 
+bool lookup(const asn1_paramtypes& types, const std::string& name) {
+    bool matched = false;
+    if (false == types.empty()) {
+        for (auto iter = types.begin(); iter != types.end(); ++iter) {
+            const auto& item = *iter;
+            const auto& pname = item.name.empty() ? item.type : item.name;
+            if (pname == name) {
+                matched = true;
+            }
+        }
+    }
+    return matched;
+}
+
+bool lookup(const asn1_paramtypes& types, const std::string& name, asn1_paramtype& type) {
+    bool matched = false;
+    if (false == types.empty()) {
+        for (auto iter = types.begin(); iter != types.end(); ++iter) {
+            const auto& item = *iter;
+            const auto& pname = item.name.empty() ? item.type : item.name;
+            if (pname == name) {
+                type = item;
+                matched = true;
+            }
+        }
+    }
+    return matched;
+}
+
 }  // namespace io
 }  // namespace hotplace

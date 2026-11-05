@@ -62,46 +62,9 @@ asn1_parameterized_type* asn1_specialized_type::get_parameterized_type() const {
 
 asn1_paramvalues& asn1_specialized_type::get_values() { return _values; }
 
-bool asn1_specialized_type::lookup_name(const std::string& name, std::string& value) const {
-    bool matched = false;
-    const auto& types = _templ->get_types();
-    size_t idx = 0;
-    if (_values.size() == types.size()) {
-        for (const auto& type : types) {
-            if (type.name.empty() && (type.type == name)) {
-                matched = true;
-            }
-            if (matched) {
-                const auto& paramvalue = _values[idx];
-                value = paramvalue.name;
-                break;
-            }
-            ++idx;
-        }
-    }
-    return matched;
-}
+bool asn1_specialized_type::lookup_name(const std::string& name, std::string& value) const { return lookup(_templ->get_types(), _values, name, value); }
 
-bool asn1_specialized_type::lookup_value(const std::string& name, asn1_paramvalue& value) const {
-    bool matched = false;
-    const auto& types = _templ->get_types();
-    size_t idx = 0;
-    if (_values.size() == types.size()) {
-        for (const auto& type : types) {
-            if (type.name.empty() && (type.type == name)) {
-                matched = true;
-            } else if (type.name == name) {
-                matched = true;
-            }
-            if (matched) {
-                value = _values[idx];
-                break;
-            }
-            ++idx;
-        }
-    }
-    return matched;
-}
+bool asn1_specialized_type::lookup_value(const std::string& name, asn1_paramvalue& value) const { return lookup(_templ->get_types(), _values, name, value); }
 
 }  // namespace io
 }  // namespace hotplace

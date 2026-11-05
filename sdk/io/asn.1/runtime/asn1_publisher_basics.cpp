@@ -7,9 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * comments
- *   Considerations for `asn1_modules` in a multi-threaded environment:
- *   - Whenever possible, use `add` and `get` operations that do not modify the current pointer.
  */
 
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
@@ -27,6 +24,8 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_unknown_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameter.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
@@ -61,7 +60,6 @@ void asn1_publisher::prepare_basics() {
                 asn.object = rhs_statement.object;
                 rhs_statement.release();  // asn own object
             }
-
             context.push(std::move(asn));
 
             return errorcode_t::success;
@@ -147,24 +145,23 @@ void asn1_publisher::prepare_basics() {
         "ReferencedTypeSpec", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
             // production("ReferencedTypeSpec", {"TypeIdentifier"})
 
-            auto size = node->sizeof_rhs();
-            if (1 == size) {
-                auto& top = context.top();
-                top.symbol = node->symbol;
-                top.object = asn1_referenced_type::refer(top.value);
-            } else {
-                std::vector<asn1_semantic_node> rhs(size);
-                std::unordered_map<std::string, size_t> index;
-                for (size_t i = 0; i < size; ++i) {
-                    size_t idx = size - 1 - i;
-                    rhs[idx] = context.pop();
-                    auto& it = rhs[idx];
-                    index.emplace(it.symbol, idx);
+            auto& top = context.top();
+            auto oldsymbol = top.symbol;
+            top.symbol = node->symbol;
+            if (false == top.value.empty()) {
+                if (("Parameter" == oldsymbol) || ("ValueElement" == oldsymbol)) {
+                    top.object = asn1_referenced_type::refer(top.value);
+                    // do nothing
+                } else {
+                    auto test = lookup(context.get_paramtypes(), top.value);
+                    if (test) {
+                        auto obj = new asn1_parameter("", top.value);
+                        context.get_parameters().push_back(obj);
+                        top.object = obj;
+                    } else {
+                        top.object = asn1_referenced_type::refer(top.value);
+                    }
                 }
-
-                auto& top = rhs[0];
-                top.symbol = node->symbol;
-                top.object = asn1_referenced_type::refer(top.value);
             }
 
             return errorcode_t::success;
@@ -544,7 +541,7 @@ void asn1_publisher::prepare_basics() {
                 //     v = rhs_valueelem.value;
                 // }
                 auto defvalue = new asn1_default_t;
-                defvalue->value = std::move(rhs_valueelem.v);
+                defvalue->value = std::move(rhs_valueelem.vt);
                 asn.option.defvalue = defvalue;
             }
 
@@ -789,24 +786,43 @@ void asn1_publisher::prepare_basics() {
             auto symfp = pr->nameof(token_floatingpoint);
 
             asn1_semantic_node asn;
+            auto oldsymbol = rhs_valueelem.symbol;
             asn.symbol = node->symbol;
             if (symqs == rhs_valueelem.symbol) {
                 std::string& qs = rhs_valueelem.value;
                 if (false == qs.empty()) qs.erase(qs.begin());
                 if (false == qs.empty()) qs.pop_back();
-                asn.v.set_string(qs);
+                asn.vt.set_string(qs);
             } else if (symnum == rhs_valueelem.symbol) {
-                asn.v.set(t_atoi<asn1_native_int_t>(rhs_valueelem.value));
+                asn.vt.set(t_atoi<asn1_native_int_t>(rhs_valueelem.value));
             } else if (symfp == rhs_valueelem.symbol) {
-                asn.v.set(atof(rhs_valueelem.value.c_str()));
+                asn.vt.set(atof(rhs_valueelem.value.c_str()));
             } else if ("MIN" == rhs_valueelem.symbol) {
-                asn.v = variant::minvalue();
+                asn.vt = variant::minvalue();
             } else if ("MAX" == rhs_valueelem.symbol) {
-                asn.v = variant::maxvalue();
+                asn.vt = variant::maxvalue();
+            }
+
+            if ("ActualParameter" == oldsymbol) {
+                // do nothing
+            } else {
+                asn1_paramtype type("");
+                auto test = lookup(context.get_paramtypes(), rhs_valueelem.value, type);
+                if (test) {
+                    // auto advisor = asn1_advisor::get_instance();
+                    // auto entity = advisor->get_entity(type.type);
+                    if ("INTEGER" == type.type) {
+                        asn.vt.set(uint64(0));
+                    } else if ("REAL" == type.type) {
+                        asn.vt.set(0.0);
+                    } else {
+                        asn.vt.set("");
+                    }
+                    asn.vt_name = type.name;
+                }
             }
 
             context.push(std::move(asn));
-
             return errorcode_t::success;
         });
 }

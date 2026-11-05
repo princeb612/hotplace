@@ -37,6 +37,8 @@
     * CBOR
 
 * details
+  * Revision 1123
+    * ASN.1 parameterized type reconstruction (definition only, instantiation not implemented yet)
   * Revision 1122
     * [tested] sanitizer, valgrind(memcheck, hellgrind, drd), application verifier
     * removed future-promise from t_value

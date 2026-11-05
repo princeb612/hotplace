@@ -334,6 +334,7 @@ void test_parameterized1() {
     }
 }
 
+// Revision 1119
 void test_specialization1() {
     _test_case.begin("specialization");
 
@@ -483,18 +484,15 @@ void test_specialization2() {
     example7_type1->release();
 }
 
-// Revision 1119
+// Revision 1123
+// ASN.1 parameterized type reconstruction (definition only, instantiation not implemented yet)
 void test_parameterized2() {
-    _test_case.begin("parameterization");
-
-    // sketch
+    _test_case.begin("parameterized type reconstruction");
 
     return_t ret = errorcode_t::success;
 
     parse_tree pt;
     asn1_loader loader;
-
-    // intentionally split into several stages for testing and verification.
 
     static const char* example_parameterized = R"(
         -- Parameterized Type (Template)
@@ -505,7 +503,7 @@ void test_parameterized2() {
         }
 
         -- Parameterized Type (Instantiation)
-        MyPacket ::= FRAME{ OCTET STRING, 1024 }
+        -- MyPacket ::= FRAME{ OCTET STRING, 1024 }
     )";
 
     // step.1
@@ -518,7 +516,16 @@ void test_parameterized2() {
     asn1_build_resultset result;
     auto publisher = asn1_advisor::get_instance()->get_publisher();
     ret = publisher->build(&pt, result);
-    _test_case.test(ret, __FUNCTION__, "publish");
+
+    _test_case.assert(result.object, __FUNCTION__, "build");
+
+    basic_stream bs;
+    if (result.object) {
+        result.object->publish(&bs);
+        _logger->writeln(bs);
+    }
+
+    _test_case.test(ret, __FUNCTION__, "publish %s", bs.c_str());
 }
 
 void test_parameterized3() {
@@ -531,6 +538,6 @@ void testcase_parameterized() {
     test_parameterized1();
     test_specialization1();
     test_specialization2();
-    // test_parameterized2();
+    test_parameterized2();
     // test_parameterized3();
 }

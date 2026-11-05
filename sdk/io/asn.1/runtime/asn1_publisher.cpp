@@ -53,11 +53,12 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                if (parser_action_t::shift == action)
-                    dbs << "shift";
-                else if (parser_action_t::reduce == action)
-                    dbs << "reduce";
-                dbs.println(" symbol %s RHS[%zi]", node->symbol.c_str(), node->sizeof_rhs());
+                if (parser_action_t::shift == action) {
+                    dbs << ANSI_ESCAPE "1;34mshift " ANSI_ESCAPE "0m";
+                } else if (parser_action_t::reduce == action) {
+                    dbs << ANSI_ESCAPE "1;36mreduce" ANSI_ESCAPE "0m";
+                }
+                dbs.println(R"( ("%s", "%s") RHS[%zi] STACK[%zi])", node->symbol.c_str(), node->value.c_str(), node->sizeof_rhs(), context.size());
             });
         }
 #endif
@@ -68,7 +69,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
             context.push(std::move(asn));
         } else if (parser_action_t::reduce == action) {
             auto size = context.size();
-            auto rhs = node->sizeof_rhs();
+            auto size_rhs = node->sizeof_rhs();
             auto iter = _handler_map.find(node->symbol);
             if (_handler_map.end() != iter) {
                 test = iter->second(node, context, result);
@@ -81,7 +82,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
                     test = default_handler(node, context, result);
                 }
             }
-            if (context.size() != (size - rhs + 1)) {
+            if (context.size() != (size - size_rhs + 1)) {
                 throw exception(errorcode_t::not_implemented);  // CHECK... handler needs to be modified
             }
         }

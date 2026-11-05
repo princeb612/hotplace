@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/types.hpp>
@@ -57,9 +58,8 @@ struct HOTPLACE_IO_API asn1_semantic_node {
     asn1_option option;
 
     // constraints
-    variant v;
-    variant v_to;
-    type_category_t cons_type{type_category_t::unknown};
+    variant vt;
+    std::string vt_name;
     union {
         asn1_constraint_t* u;
         asn1_constraint<asn1_native_int_t>* i;
@@ -81,9 +81,8 @@ struct HOTPLACE_IO_API asn1_semantic_node {
         if (other.object) other.object->addref();  // shallow copy
         object = other.object;
         option = other.option;
-        v = other.v;
-        v_to = other.v_to;
-        cons_type = other.cons_type;
+        vt = other.vt;
+        vt_name = other.vt_name;
         if (other.cons.u) other.cons.u->addref();
         cons.u = other.cons.u;
         return *this;
@@ -95,9 +94,8 @@ struct HOTPLACE_IO_API asn1_semantic_node {
         module = std::move(other.module);
         std::swap(object, other.object);
         option = std::move(other.option);
-        v = std::move(other.v);
-        v_to = std::move(other.v_to);
-        std::swap(cons_type, other.cons_type);
+        vt = std::move(other.vt);
+        vt_name = std::move(other.vt_name);
         std::swap(cons, other.cons);
         return *this;
     }
@@ -144,11 +142,17 @@ class HOTPLACE_IO_API asn1_publisher_context {
 
     asn1_module& get_runtime() { return _module; };
     std::vector<std::string>& get_symbols() { return _symbols; }
+    asn1_paramtypes& get_paramtypes() { return _paramtypes; }
+    asn1_paramvalues& get_paramvalues() { return _paramvalues; }
+    std::list<asn1_parameter*>& get_parameters() { return _params; }
 
    private:
     std::stack<asn1_semantic_node> _stack;
-    asn1_module _module;                // ModuleDefinition, TypeAssignment
-    std::vector<std::string> _symbols;  // SymbolList
+    asn1_module _module;                 // ModuleDefinition, TypeAssignment
+    std::vector<std::string> _symbols;   // SymbolList
+    asn1_paramtypes _paramtypes;         // parameterized types
+    asn1_paramvalues _paramvalues;       // parameterized types
+    std::list<asn1_parameter*> _params;  // to be attached later
 };
 
 /**

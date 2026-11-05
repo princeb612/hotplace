@@ -30,6 +30,10 @@ asn1_parameter::asn1_parameter(asn1_parameterized_type* templ, const std::string
     _module = templ->get_module();
 }
 
+asn1_parameter::asn1_parameter(const std::string& name, const std::string& param) : asn1_type(asn1_entity_parameter, name), _templ(nullptr), _param(param) {
+    _temptypes.emplace_back(asn1_paramtype{param, ""});
+}
+
 asn1_parameter::asn1_parameter(const asn1_parameter& other) : asn1_type(other) { *this = other; }
 
 asn1_parameter::~asn1_parameter() {}
@@ -75,6 +79,13 @@ void asn1_parameter::represent(stream_t* s, const asn1_value* value) const { s->
 bool asn1_parameter::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     //
     return true;
+}
+
+void asn1_parameter::attach(asn1_parameterized_type* templ) {
+    if (templ) {
+        templ->set(std::move(_temptypes));
+        _module = templ->get_module();
+    }
 }
 
 void asn1_parameter::set(asn1_specialized_type* spec) { _spec = spec; }
