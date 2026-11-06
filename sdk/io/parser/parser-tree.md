@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1124                    │
+│ Source basis: Revision 1124                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -97,20 +97,26 @@ The tree is assembled incrementally from parser actions; it does not need to res
 ### Visitor traversal
 
 ```text
-accept(visitor)
+accept(visitor, initial_state)
     │
-    ├─ terminal node ─► shift callback
+    ▼
+visit(node, inherited_state)
+    │
+    ▼
+on_visit(node, mutable local state)
+    │
+    ├─ terminal node ─► shift(node, local state)
     │
     └─ non-terminal node
            │
            ▼
-       visit children in order
+       visit children in order, inheriting local state
            │
            ▼
-       reduce callback after children
+       reduce(node, local state) after children
 ```
 
-The traversal is post-order for reductions. If a visitor returns an error, traversal stops and propagates that error.
+The traversal is pre-order for the state hook and post-order for reductions. Each child inherits the current node's resulting state, while sibling traversal starts from the parent's state copy. If a visitor returns an error, traversal stops and propagates that error.
 
 ### Semantic boundary
 
@@ -118,7 +124,7 @@ The syntax tree is the hand-off point between generic parser execution and domai
 
 ### Source-level evidence
 
-test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In parse_tree.cpp, SHIFT calls on_shift(typestring, current_token.value) and REDUCE calls on_reduce(rule_id, rule.lhs, rule.rhs.size()). The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
+test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In `parse_tree.cpp`, `accept()` delegates to `visit(root, visitor, initial_state)`. Each visit copies the inherited state, invokes `on_visit(node, state)`, passes the resulting state to `on_shift` or `on_reduce`, and passes it to child visits. The generic parser does not interpret the bits; consumers define their own state flags. The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
 
 ## 4. Relationships
 ### Related areas
