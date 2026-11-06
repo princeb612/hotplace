@@ -3,58 +3,63 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1123                    │
+│ Source basis: Revision 1123                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
 ```
 
-# `t_value<T>` — Deferred Value
+# `t_value<T>` — Named Value Holder
 
 ## 1. Role
 
 ### Introduction
 
-`sdk/base/nostd/value.hpp` provides `t_value<T>`, a C++11 utility for holding a typed value that may be populated later. It combines a cached value with `std::promise<T>` / `std::future<T>` state and is used by the ASN.1 parameterized semantic prototype to represent values associated with formal parameters.
+`sdk/base/nostd/value.hpp` provides `t_value<T>`, a small C++11 wrapper that stores a value together with an optional name. It offers value access, assignment, naming, and value-based comparisons. It is not a deferred-evaluation, future, promise, or cache abstraction.
 
 ## 2. Data Model
 
-### State representation
+### Stored state
 
-The object tracks whether it is deferred, whether the local value is cached, and an optional name. It combines a cached `T` value with `std::promise<T>` / `std::future<T>` state. Copying intentionally does not copy the promise/future: the copy captures the source's current value state instead.
+The object contains two members:
+
+- `_value` — the stored `T` value, default-initialized when no value is supplied.
+- `_name` — an optional `std::string` name.
+
+Copy and move operations transfer or copy these two members. There is no deferred flag, cached-result flag, promise, or future state.
 
 ## 3. Behavior Model
 
-### State transitions
+### Value and name operations
+
+- Constructors accept a default value, a `const T&`, or an rvalue; value constructors may also receive a name.
+- `value()` returns the stored value, and the conversion operator exposes the same value conversion.
+- `set_value()` and assignment replace the stored value.
+- `set_name()`, `get_name()`, and `is_named()` manage and inspect the optional name.
+- Relational operators compare the stored values, not the names.
+
+The behavior is direct:
 
 ```text
 t_value<T>
-  ├─ immediate value ─► set_value(value) ─► cached value
-  └─ deferred value
-       ├─ defer(name) ─► reset promise/future; mark uncached
-       ├─ get_future() ─► obtain future view
-       ├─ set_value(value) ─► fulfill promise and cache value
-       └─ value() ─► retrieve/cache future result when available
+  ├─ construct / assign ─► store T
+  ├─ set_value(value) ───► replace T
+  ├─ value() ────────────► return T
+  └─ set_name(name) ─────► store optional name
 ```
-
-`value()` returns the cached/current value; if a deferred future is valid, it attempts to obtain the result and cache it.
-
-### Exception behavior
-
-The implementation is intentionally described as **not exception-sensitive**. `value()` catches exceptions while retrieving the future result, and `set_value()` catches failures while fulfilling the promise. Those failures are not propagated to callers through these methods; callers should not treat `t_value<T>` as an exception-reporting future abstraction.
 
 ### Use in parameterized ASN.1
 
-`asn1_parameter::value<T>(templ, param, name)` registers a parameter descriptor on the template and returns a deferred `t_value<T>` named for the parameter. A semantic object can use that deferred value in a constraint or default expression before the actual parameter value is bound by the prototype's specialization flow.
+The helper `asn1_parameter::value<T>(templ, param, name)` adds the formal parameter descriptor to the parameterized type and returns a `t_value<T>` initialized with a default value and the supplied name. The returned wrapper does not represent an unresolved future and does not perform deferred binding by itself.
 
-This is a low-level utility contract, not a claim that ASN.1 notation parsing and parameter substitution are fully integrated.
+This helper and the loader's reconstruction of formal parameter definitions are separate from applying actual arguments to instantiate a parameterized type.
 
 ## 4. Relationships
 
-- `sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp` — creates deferred parameter values that can be referenced before a specialization binds the actual value.
-- `std::promise` / `std::future` — the deferred value mechanism used internally; this class deliberately catches retrieval/fulfillment exceptions rather than exposing a full future error contract.
-- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` — source-level usage in the parameterized ASN.1 prototype.
+- `sdk/io/asn.1/basic/semantic/parameterized/asn1_parameter.hpp` — creates named `t_value<T>` wrappers while registering formal parameter metadata.
+- `sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp` — owns the parameterized type and its formal parameter types.
+- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` — source-level tests for parameterized ASN.1 behavior.
 
 ## 5. References
 

@@ -78,13 +78,15 @@ parse_treenode* parse_tree::get_root() const {
     return nullptr;
 }
 
-return_t parse_tree::accept(parse_tree_visitor* visitor) const {
+return_t parse_tree::accept(parse_tree_visitor* visitor) const { return accept(visitor, 0); }
+
+return_t parse_tree::accept(parse_tree_visitor* visitor, uint32 initial_state) const {
     if (nullptr == visitor) return errorcode_t::invalid_parameter;
 
     auto root = get_root();
     if (nullptr == root) return errorcode_t::no_data;
 
-    return visit(root, visitor);
+    return visit(root, visitor, initial_state);
 }
 
 void parse_tree::set_parser(parser_t* parser) {
@@ -102,20 +104,23 @@ void parse_tree::set_parser(parser_t* parser) {
 
 parser_t* parse_tree::get_parser() const { return _parser; }
 
-return_t parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor) const {
+return_t parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor, uint32 state) const {
     return_t ret = errorcode_t::success;
     // if the visitor callback routine returns false, the visit is aborted.
     if (node && visitor) {
+        uint32 current_state = state;
+        visitor->on_visit(node, current_state);  // hook state
+
         if (node->is_terminal()) {
-            ret = visitor->on_shift(node);
+            ret = visitor->on_shift(node, current_state);
             if (errorcode_t::success != ret) return ret;
         } else {
             for (parse_treenode* child : node->children) {
-                ret = visit(child, visitor);
+                ret = visit(child, visitor, current_state);
                 if (errorcode_t::success != ret) return ret;
             }
 
-            ret = visitor->on_reduce(node);
+            ret = visitor->on_reduce(node, current_state);
             if (errorcode_t::success != ret) return ret;
         }
     }
@@ -130,7 +135,7 @@ void parse_tree::print(int mode, basic_stream& bs) const {
         }
     } else {
         uint32 idx = 0;
-        auto lambda = [&idx, &bs](parser_action_t type, parse_treenode* node) -> return_t {
+        auto lambda = [&idx, &bs](parser_action_t type, parse_treenode* node, uint32 state) -> return_t {
             valist va;
             va << idx++ << node->symbol << node->value << node->children.size();
             bs.vaprintf("[{1:03i}] ", va);
@@ -159,11 +164,31 @@ void parse_tree::print(int mode, basic_stream& bs) const {
     }
 }
 
-parse_tree_visitor::parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*)> func) : _func(func) {}
+parse_tree_visitor::parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*, uint32)> func) : _func(func), _hook(nullptr) {}
 
-return_t parse_tree_visitor::on_shift(parse_treenode* node) { return _func(parser_action_t::shift, node); }
+parse_tree_visitor::parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*, uint32)> func, std::function<return_t(parse_treenode*, uint32&)> hook)
+    : _func(func), _hook(hook) {}
 
-return_t parse_tree_visitor::on_reduce(parse_treenode* node) { return _func(parser_action_t::reduce, node); }
+return_t parse_tree_visitor::on_visit(parse_treenode* node, uint32& state) {
+    if (_hook)
+        return _hook(node, state);
+    else
+        return errorcode_t::success;
+}
+
+return_t parse_tree_visitor::on_shift(parse_treenode* node, uint32 state) {
+    if (_func)
+        return _func(parser_action_t::shift, node, state);
+    else
+        return errorcode_t::not_specified;
+}
+
+return_t parse_tree_visitor::on_reduce(parse_treenode* node, uint32 state) {
+    if (_func)
+        return _func(parser_action_t::reduce, node, state);
+    else
+        return errorcode_t::not_specified;
+}
 
 }  // namespace io
 }  // namespace hotplace

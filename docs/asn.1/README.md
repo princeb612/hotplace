@@ -1,6 +1,6 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1119**
+**Edition 1 · Revision 1123**
 
 ## Context
 
@@ -70,10 +70,13 @@ The CHANGELOG gives the following development path:
 - **Revision 1104** — prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`; module registry renamed to `asn1_modules`; binary parsing-table format advanced to revision 3
 - **Revision 1118** — `asn1_object::validate_type` adds built-in ASN.1 value/type checks, and `asn1_constraints::do_validate` fixes ENUMERATED validation
 - **Revision 1119** — OID parsing is connected to the built-in value-validation path
+- **Revision 1120** — parameterized type specialization/instantiation and parameter-dependent validation
+- **Revision 1122** — parameterized type specialization/instantiation applied; Sanitizer, Valgrind, and Application Verifier checks; future/promise behavior removed from `t_value`
+- **Revision 1123** — loader/publisher reconstructs parameterized type definitions and formal parameter lists into semantic objects
 
 The history shows the transition from an ASN.1 runtime model, through parser infrastructure, toward semantic reconstruction of that model from notation.
 
-By Revision 1105, the loader/parser/publisher path reaches `asn1_module` construction and module-level import/export and reference-resolution behavior. `asn1_module::add_schema()` selects GLR through `asn1_parser`; LALR(1) remains an available parser path. The module registry is `asn1_modules` (the earlier `asn1_module_context` name is historical). Revision 1104 adds prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, but these are not evidence of complete parameter binding, substitution, or semantic instantiation. The binary parsing-table format also advances to revision 3. Revisions 1118–1119 add a separate runtime value-validation step; this strengthens checks on values supplied to runtime objects without implying that parameterized semantic instantiation is complete.
+By Revision 1105, the loader/parser/publisher path reaches `asn1_module` construction and module-level import/export and reference-resolution behavior. `asn1_module::add_schema()` selects GLR through `asn1_parser`; LALR(1) remains an available parser path. The module registry is `asn1_modules` (the earlier `asn1_module_context` name is historical). Revision 1104 adds prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, but these are not evidence of complete parameter binding, substitution, or semantic instantiation. The binary parsing-table format also advances to revision 3. Revisions 1118–1119 add a separate runtime value-validation step; this strengthens checks on values supplied to runtime objects without implying that parameterized semantic instantiation is complete. Revision 1123 extends the loader/publisher path to reconstruct parameterized type definitions and their formal parameter lists as semantic objects. This advances definition reconstruction, but does not by itself establish end-to-end actual-argument application or loader-driven instantiation.
 
 ## Conceptual
 

@@ -4,8 +4,8 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1105
-Source basis: Revision 1105
+Edition 2 · Revision 1123
+Source basis: Revision 1123
 Documented with GPT-6
 — test areas, build integration & verification environments
 ```
@@ -71,7 +71,7 @@ odbc
 linux / windows
 ```
 
-The corresponding `CMakeLists.txt` builds these groups and conditionally includes ODBC and platform-specific tests.
+The corresponding `CMakeLists.txt` builds these groups and conditionally includes ODBC and platform-specific tests. The root `SUPPORT_TEST` CMake option (default: `1`) controls whether the test area is added to the build; when disabled, test targets are not configured.
 
 Each group normally produces a `test-<module>` executable. The copied `testcase/test.sh` can execute one group or the complete automated set.
 
@@ -91,17 +91,21 @@ Some applets require external interaction or runtime data such as HTML/CSS or pa
 root CMakeLists.txt
        │
        ▼
-      test/
-   ┌──────┼──────┐
-   ▼      ▼      ▼
-testcase applet tool
-   │             │
-   │             └─ parsing table generation
-   │
-   └─ test executables
+ SUPPORT_TEST
+       │
+       ├── 0 ──► test/ and etc/ build integration omitted
+       │
+       └── 1 ──► test/
+                   ┌──────┼──────┐
+                   ▼      ▼      ▼
+                testcase applet tool
+                   │             │
+                   │             └─ parsing table generation
+                   │
+                   └─ test executables
 ```
 
-The normal project build therefore owns test target creation, while `testcase/test.sh` provides the runtime execution/diagnostic layer.
+The normal project build therefore owns test target creation, while `testcase/test.sh` provides the runtime execution/diagnostic layer. The option controls build integration; it does not change the distinction between automated testcases, runnable applets, and resource-generation tools.
 
 ## Related documentation
 

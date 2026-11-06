@@ -297,7 +297,7 @@ link_directories (${SET_THIRDPARTY_DIR}/lib)
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 # copy header files
 copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include/hotplace/sdk)
-copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/include/hotplace/test)
+# copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/include/hotplace/test)
 
 # build
 add_subdirectory (sdk)

@@ -28,28 +28,6 @@ class asn1_publisher;
 class asn1_module;
 class asn1_modules;
 
-enum class asn1_build_t {
-    unknown,
-    module_definition,  // module definition (.asn1)
-    assignments,        // no module definition and assignment
-    non_assignment,     // non-assignment (SimpleType, Tag, etc.)
-};
-
-struct HOTPLACE_IO_API asn1_build_resultset {
-    asn1_build_t type{asn1_build_t::unknown};
-    std::vector<std::string> module_names;
-    asn1_object* object{nullptr};
-
-    asn1_build_resultset() = default;
-    asn1_build_resultset(const asn1_build_resultset&) = delete;
-    asn1_build_resultset& operator=(const asn1_build_resultset&) = delete;
-    ~asn1_build_resultset() { clear(); }
-    // remove all asn1_module from asn1_modules
-    void clear();
-    // do not remove asn1_module
-    void release_name(const std::string& name);
-};
-
 HOTPLACE_IO_API return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 HOTPLACE_IO_API return_t print_ast(const asn1_module* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 

@@ -37,6 +37,10 @@
     * CBOR
 
 * details
+  * Revision 1124
+    * ASN.1 parameterized type reconstruction
+      * include state in parse_tree and parse_tree_visitor to paropagate state to child nodes
+      * while definitions can be handled using "Parameter" symbols, instantiations are managed via state—rather than by constructing separate context information—to form the actual parameter list (values) within `SimpleTypeSpec` and `ValueElement`.
   * Revision 1123
     * ASN.1 parameterized type reconstruction (definition only, instantiation not implemented yet)
   * Revision 1122

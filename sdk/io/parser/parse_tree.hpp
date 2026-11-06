@@ -65,6 +65,7 @@ class HOTPLACE_IO_API parse_tree {
     parse_treenode* get_root() const;
 
     return_t accept(parse_tree_visitor* visitor) const;
+    return_t accept(parse_tree_visitor* visitor, uint32 initial_state) const;
 
     /*
      * @brief   attach parser object
@@ -93,7 +94,7 @@ class HOTPLACE_IO_API parse_tree {
     void print(int mode, basic_stream& bs) const;
 
    protected:
-    return_t visit(parse_treenode* node, parse_tree_visitor* visitor) const;
+    return_t visit(parse_treenode* node, parse_tree_visitor* visitor, uint32 state) const;
 
    private:
     std::list<parse_treenode*> _node_stack;
@@ -136,14 +137,17 @@ class HOTPLACE_IO_API parse_tree {
  */
 class HOTPLACE_IO_API parse_tree_visitor {
    public:
-    parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*)>);
+    parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*, uint32)>);
+    parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*, uint32)>, std::function<return_t(parse_treenode*, uint32&)>);
     ~parse_tree_visitor() = default;
 
-    return_t on_shift(parse_treenode* node);
-    return_t on_reduce(parse_treenode* node);
+    return_t on_visit(parse_treenode* node, uint32& state);
+    return_t on_shift(parse_treenode* node, uint32 state);
+    return_t on_reduce(parse_treenode* node, uint32 state);
 
    private:
-    std::function<return_t(parser_action_t, parse_treenode*)> _func;
+    std::function<return_t(parser_action_t, parse_treenode*, uint32)> _func;
+    std::function<return_t(parse_treenode*, uint32&)> _hook;
 };
 
 }  // namespace io

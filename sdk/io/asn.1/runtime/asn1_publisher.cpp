@@ -48,7 +48,12 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
 
     asn1_publisher_context context;
 
-    auto lambda = [&](parser_action_t action, parse_treenode* node) -> return_t {
+    auto lambda_hook = [&](parse_treenode* node, uint32& state) -> return_t {
+        // propagate to child nodes
+        if ("ParameterizedType" == node->symbol) state |= asn1_publish_state::state_paramtype_instantiation;
+        return errorcode_t::success;
+    };
+    auto lambda_publish = [&](parser_action_t action, parse_treenode* node, uint32 state) -> return_t {
         return_t test = errorcode_t::success;
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
@@ -58,10 +63,11 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
                 } else if (parser_action_t::reduce == action) {
                     dbs << ANSI_ESCAPE "1;36mreduce" ANSI_ESCAPE "0m";
                 }
-                dbs.println(R"( ("%s", "%s") RHS[%zi] STACK[%zi])", node->symbol.c_str(), node->value.c_str(), node->sizeof_rhs(), context.size());
+                dbs.println(R"( ("%s", "%s") RHS[%zi] STACK[%zi] state[%08x])", node->symbol.c_str(), node->value.c_str(), node->sizeof_rhs(), context.size(), state);
             });
         }
 #endif
+        context.set_state(state);
         if (parser_action_t::shift == action) {
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
@@ -88,7 +94,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
         }
         return test;
     };
-    parse_tree_visitor visitor(lambda);
+    parse_tree_visitor visitor(lambda_publish, lambda_hook);
     ret = pt->accept(&visitor);
     if (errorcode_t::success != ret) {
         return ret;
@@ -101,6 +107,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
     auto top = context.pop();
     if (asn1_build_t::unknown == result.type) result.type = asn1_build_t::non_assignment;
     result.object = top.object;
+    result.module = std::move(context.get_module());
     top.release();
 
     return ret;

@@ -73,10 +73,10 @@ void asn1_publisher::prepare_module() {
             result.type = asn1_build_t::module_definition;
             result.module_names.push_back(module_id);
 
-            context.get_runtime().as_module();  // as module
+            context.get_module().as_module();  // as module
 
             auto rtmodule = modules->add(module_id);
-            *rtmodule = std::move(context.get_runtime());
+            *rtmodule = std::move(context.get_module());
 
             auto iter = index.find("TagDefault");
             if (index.end() != iter) {
@@ -186,7 +186,7 @@ void asn1_publisher::prepare_module() {
                 exports.type = asn1_exports_t::list;
                 exports.symbols = std::move(context.get_symbols());
             }
-            context.get_runtime().export_symbol(std::move(exports));
+            context.get_module().export_symbol(std::move(exports));
 
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
@@ -236,7 +236,7 @@ void asn1_publisher::prepare_module() {
                 symbol_module.outer_module = rhs_moduleid.value;
             }
             symbol_module.symbols = std::move(context.get_symbols());
-            context.get_runtime().import_symbol(std::move(symbol_module));
+            context.get_module().import_symbol(std::move(symbol_module));
 
             asn1_semantic_node asn;
             asn.symbol = node->symbol;

@@ -1,6 +1,6 @@
 # ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1119
+> **Review baseline:** Revision 1123
 
 ## Review thesis
 
@@ -169,7 +169,7 @@ semantic reconstruction
 runtime schema/type objects
 ```
 
-Revisions 1097–1102 established the beginning of this integration, not a completed module loader. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`. These are incremental semantic-construction steps, not evidence of a complete parameterized-type instantiation engine. The loader has moved beyond a purely isolated skeleton, but grammar coverage, semantic implementation, module linkage, and complete loading behavior remain separate levels of support.
+Revisions 1097–1102 established the beginning of this integration, not a completed module loader. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`. Revision 1123 advances this path: the publisher/loader reconstructs a parameterized type definition and its formal parameter list into the semantic model. The implementation therefore moves beyond grammar recognition and API prototypes to definition-level semantic reconstruction. It still does not establish that the loader applies actual arguments and completes instantiation end to end. Grammar coverage, semantic implementation, module linkage, and complete loading behavior remain separate levels of support.
 
 The parsing resources also have different roles:
 
@@ -245,11 +245,11 @@ semantic implementation
 complete loader support
 ```
 
-The revisions through 1102 establish stronger connections between these layers; they do not claim that every ASN.1 language feature has crossed all of them.
+Revisions through 1123 establish stronger connections between these layers, including formal parameter definition reconstruction. They do not claim that every ASN.1 language feature has crossed all of them, or that parameterized definitions can already be instantiated end to end.
 
 ## Current state
 
-Revision 1119 adds value validation to the existing syntax → semantic construction → module/runtime path. Revisions 1118–1119 strengthen built-in type/value checks through `asn1_object::validate_type` and correct ENUMERATED constraint validation. This creates a clearer separation between type compatibility and declared constraint evaluation, while leaving the existing limitations around grammar coverage, module loading, and end-to-end ASN.1 support intact. It does not imply complete ASN.1 language or loader support.
+Revision 1123 extends the syntax → semantic construction → module/runtime path with reconstruction of parameterized type definitions and their formal parameter lists. Revisions 1118–1119 continue to define the separate built-in type/value validation boundary, while Revision 1120/1122 records the specialization/instantiation work in the runtime model. The loader's formal-definition reconstruction must not be conflated with applying actual arguments through the loader: end-to-end parameterized notation support and complete ASN.1 language/loader support remain incomplete.
 
 ### Related source / documents
 
@@ -266,4 +266,4 @@ Revision 1119 adds value validation to the existing syntax → semantic construc
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state through **revision 1119**.
+Reviewed against the hotplace source/documentation state through **revision 1123**.

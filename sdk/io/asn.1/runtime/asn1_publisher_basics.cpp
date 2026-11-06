@@ -25,6 +25,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameter.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
@@ -116,18 +117,23 @@ void asn1_publisher::prepare_basics() {
             auto& rhs_deftype = rhs[0];
             auto& rhs_typespec = rhs[2];  // "Type"
 
-            asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
+            if (is_kind_of(rhs_typespec.object, asn1_entity_specialized_type)) {
+                rhs_typespec.object->set_name(rhs_deftype.value);
+                asn.object = rhs_typespec.object;
+            } else {
+                asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
 
-            if (size > 3) {
-                auto& rhs_cons = rhs[3];
-                auto cons = rhs_cons.cons.u;
-                rhs_typespec.object->get_constraints().add(cons);
-                if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
+                if (size > 3) {
+                    auto& rhs_cons = rhs[3];
+                    auto cons = rhs_cons.cons.u;
+                    rhs_typespec.object->get_constraints().add(cons);
+                    if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
+                }
             }
 
             {
                 result.type = asn1_build_t::assignments;
-                context.get_runtime().add(asn.object);
+                context.get_module().add(asn.object);
                 asn.object->addref();
             }
 
@@ -733,22 +739,28 @@ void asn1_publisher::prepare_basics() {
             for (size_t i = 0; i < size; ++i) {
                 rhs[size - 1 - i] = context.pop();
             }
+            auto state = context.get_state();
 
             auto& rhs_simpletype = rhs[0];
-            auto entity = advisor->get_entity(rhs_simpletype.symbol);  // BOOLEAN, ..., ANY
+            asn1_object* obj = nullptr;
 
-            auto obj = asn1_builder::build(entity);
-            if (4 == size) {
-                // production("SimpleTypeSpec", {"INTEGER", "{", "Enumerations", "}"})
-                // production("SimpleTypeSpec", {"BIT STRING", "{", "Enumerations", "}"})
-                auto& rhs_enumlist = rhs[2];
-                auto container = static_cast<asn1_namedlist*>(rhs_enumlist.object);
-                if ("INTEGER" == rhs_simpletype.symbol) ((asn1_integer*)obj)->add(*container);
-                if ("BIT STRING" == rhs_simpletype.symbol) ((asn1_bitstring*)obj)->add(*container);
+            if (asn1_publish_state::state_paramtype_instantiation & state) {
+                context.get_paramvalues().push_back({rhs_simpletype.symbol.c_str()});
+            } else {
+                auto entity = advisor->get_entity(rhs_simpletype.symbol);  // BOOLEAN, ..., ANY
+                obj = asn1_builder::build(entity);
+                if (4 == size) {
+                    // production("SimpleTypeSpec", {"INTEGER", "{", "Enumerations", "}"})
+                    // production("SimpleTypeSpec", {"BIT STRING", "{", "Enumerations", "}"})
+                    auto& rhs_enumlist = rhs[2];
+                    auto container = static_cast<asn1_namedlist*>(rhs_enumlist.object);
+                    if ("INTEGER" == rhs_simpletype.symbol) ((asn1_integer*)obj)->add(*container);
+                    if ("BIT STRING" == rhs_simpletype.symbol) ((asn1_bitstring*)obj)->add(*container);
+                }
             }
 
             asn1_semantic_node asn(std::move(rhs_simpletype));
-            asn.object = obj;
+            if (obj) asn.object = obj;
             asn.symbol = node->symbol;
 
             context.push(std::move(asn));
@@ -785,40 +797,50 @@ void asn1_publisher::prepare_basics() {
             auto symnum = pr->nameof(token_number);
             auto symfp = pr->nameof(token_floatingpoint);
 
+            auto state = context.get_state();
+
             asn1_semantic_node asn;
             auto oldsymbol = rhs_valueelem.symbol;
             asn.symbol = node->symbol;
+
+            variant vt;
             if (symqs == rhs_valueelem.symbol) {
                 std::string& qs = rhs_valueelem.value;
                 if (false == qs.empty()) qs.erase(qs.begin());
                 if (false == qs.empty()) qs.pop_back();
-                asn.vt.set_string(qs);
+                vt.set_string(qs);
             } else if (symnum == rhs_valueelem.symbol) {
-                asn.vt.set(t_atoi<asn1_native_int_t>(rhs_valueelem.value));
+                vt.set(t_atoi<asn1_native_int_t>(rhs_valueelem.value));
             } else if (symfp == rhs_valueelem.symbol) {
-                asn.vt.set(atof(rhs_valueelem.value.c_str()));
+                vt.set(atof(rhs_valueelem.value.c_str()));
             } else if ("MIN" == rhs_valueelem.symbol) {
-                asn.vt = variant::minvalue();
+                vt = variant::minvalue();
             } else if ("MAX" == rhs_valueelem.symbol) {
-                asn.vt = variant::maxvalue();
+                vt = variant::maxvalue();
             }
 
-            if ("ActualParameter" == oldsymbol) {
-                // do nothing
+            if (asn1_publish_state::state_paramtype_instantiation & state) {
+                context.get_paramvalues().push_back({std::move(vt)});
             } else {
-                asn1_paramtype type("");
-                auto test = lookup(context.get_paramtypes(), rhs_valueelem.value, type);
-                if (test) {
-                    // auto advisor = asn1_advisor::get_instance();
-                    // auto entity = advisor->get_entity(type.type);
-                    if ("INTEGER" == type.type) {
-                        asn.vt.set(uint64(0));
-                    } else if ("REAL" == type.type) {
-                        asn.vt.set(0.0);
-                    } else {
-                        asn.vt.set("");
+                asn.vt = std::move(vt);
+
+                if ("ActualParameter" == oldsymbol) {
+                    // do nothing
+                } else {
+                    asn1_paramtype type("");
+                    auto test = lookup(context.get_paramtypes(), rhs_valueelem.value, type);
+                    if (test) {
+                        // auto advisor = asn1_advisor::get_instance();
+                        // auto entity = advisor->get_entity(type.type);
+                        if ("INTEGER" == type.type) {
+                            asn.vt.set(uint64(0));
+                        } else if ("REAL" == type.type) {
+                            asn.vt.set(0.0);
+                        } else {
+                            asn.vt.set("");
+                        }
+                        asn.vt_name = type.name;
                     }
-                    asn.vt_name = type.name;
                 }
             }
 

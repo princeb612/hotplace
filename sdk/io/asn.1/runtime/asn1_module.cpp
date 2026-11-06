@@ -95,7 +95,7 @@ return_t asn1_module::add_schema(const std::string& schema) {
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             uint32 idx = 0;
-            auto lambda = [&idx, &dbs](parser_action_t type, parse_treenode* node) -> return_t {
+            auto lambda = [&idx, &dbs](parser_action_t type, parse_treenode* node, uint32 state) -> return_t {
                 valist va;
                 va << idx++ << node->symbol << node->value << node->children.size();
                 dbs.vaprintf("[{1:03i}] ", va);

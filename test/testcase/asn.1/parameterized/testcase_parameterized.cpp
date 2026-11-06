@@ -503,7 +503,7 @@ void test_parameterized2() {
         }
 
         -- Parameterized Type (Instantiation)
-        -- MyPacket ::= FRAME{ OCTET STRING, 1024 }
+        MyPacket ::= FRAME{ OCTET STRING, 1024 }
     )";
 
     // step.1
@@ -517,13 +517,14 @@ void test_parameterized2() {
     auto publisher = asn1_advisor::get_instance()->get_publisher();
     ret = publisher->build(&pt, result);
 
-    _test_case.assert(result.object, __FUNCTION__, "build");
-
     basic_stream bs;
-    if (result.object) {
-        result.object->publish(&bs);
-        _logger->writeln(bs);
-    }
+    result.module.represent(&bs);
+    _logger->write(bs);
+
+    const char* expect =  //
+        "FRAME {TypeParam, INTEGER:maxSize} ::= SEQUENCE {header INTEGER, payload TypeParam, length INTEGER (0..maxSize)}\n"
+        "MyPacket ::= FRAME {OCTET STRING, 1024}\n";
+    _test_case.assert(bs == expect, __FUNCTION__, "reconstruct");
 
     _test_case.test(ret, __FUNCTION__, "publish %s", bs.c_str());
 }

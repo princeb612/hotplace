@@ -28,6 +28,11 @@
 namespace hotplace {
 namespace io {
 
+enum asn1_publish_state : uint32 {
+    state_paramtype_definition = 1 << 0,     // parameterized type definition, symbol "Parameter"
+    state_paramtype_instantiation = 1 << 1,  // parameterized type instantiation, symbol "ParameterizedType"
+};
+
 struct HOTPLACE_IO_API asn1_semantic_node {
     // parse_tree
     std::string symbol;
@@ -140,11 +145,13 @@ class HOTPLACE_IO_API asn1_publisher_context {
     size_t size() const { return _stack.size(); }
     bool empty() const { return _stack.empty(); }
 
-    asn1_module& get_runtime() { return _module; };
+    asn1_module& get_module() { return _module; };
     std::vector<std::string>& get_symbols() { return _symbols; }
     asn1_paramtypes& get_paramtypes() { return _paramtypes; }
     asn1_paramvalues& get_paramvalues() { return _paramvalues; }
     std::list<asn1_parameter*>& get_parameters() { return _params; }
+    void set_state(uint32 state) { _state = state; }
+    uint32 get_state() const { return _state; }
 
    private:
     std::stack<asn1_semantic_node> _stack;
@@ -153,6 +160,30 @@ class HOTPLACE_IO_API asn1_publisher_context {
     asn1_paramtypes _paramtypes;         // parameterized types
     asn1_paramvalues _paramvalues;       // parameterized types
     std::list<asn1_parameter*> _params;  // to be attached later
+    uint32 _state{0};                    // see asn1_publish_state
+};
+
+enum class asn1_build_t {
+    unknown,
+    module_definition,  // module definition (.asn1)
+    assignments,        // no module definition and assignment
+    non_assignment,     // non-assignment (SimpleType, Tag, etc.)
+};
+
+struct HOTPLACE_IO_API asn1_build_resultset {
+    asn1_build_t type{asn1_build_t::unknown};
+    std::vector<std::string> module_names;
+    asn1_object* object{nullptr};
+    asn1_module module;  // not public
+
+    asn1_build_resultset() = default;
+    asn1_build_resultset(const asn1_build_resultset&) = delete;
+    asn1_build_resultset& operator=(const asn1_build_resultset&) = delete;
+    ~asn1_build_resultset() { clear(); }
+    // remove all asn1_module from asn1_modules
+    void clear();
+    // do not remove asn1_module
+    void release_name(const std::string& name);
 };
 
 /**

@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1105                    │
+│ Edition 1 · Revision 1123                    │
 │ Source basis: Revision 1105                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
@@ -23,13 +23,13 @@
 | Family | Main facilities | Implementation role |
 |---|---|---|
 | Containers | sequence, tree, set and priority-queue structures | General-purpose storage and access patterns |
-| Binary and value | byte sequences, integer/floating-point serialization helpers, deferred values | Represent or transform values without tying them to one protocol |
+| Binary and value | byte sequences, integer/floating-point serialization helpers, named value wrapper | Represent or transform values without tying them to one protocol |
 | Ranges and sets | intervals, normalized range sets, string sets, runtime set facade | Represent membership and range constraints; used by higher-level constraint evaluators |
 | Type and utility support | traits, key/value, exceptions, conversion and casting helpers | Shared compile-time and runtime support for templates and callers |
 
 ## 3. Behavior Model
 
-The directory does not define one common ownership or execution model. Container invalidation rules, deferred-value completion, range normalization, and conversion behavior must be read from the individual implementation and focused note before relying on them.
+The directory does not define one common ownership or execution model. Container invalidation rules, value-wrapper semantics, range normalization, and conversion behavior must be read from the individual implementation and focused note before relying on them.
 
 ### Representative operation flows
 
@@ -50,13 +50,13 @@ raw pointer from external API
        └─ unique_ptr owns release responsibility
             └─ deleter runs at destruction unless ownership is released
 
-deferred value
-  └─ defer(name) ─► promise/future state
-       └─ set_value(value) ─► fulfillment + cached value
-            └─ value() ─► return cached/result value
+named value
+  └─ construct(value, name) ──► store value + optional name
+       ├─ set_value(value) ───► replace stored value
+       └─ value() ────────────► return stored value
 ```
 
-These flows cross several utility families, but do not imply a shared base class or shared lifetime rule. In particular, `reserve()`/`commit()` is a destination-adapter protocol, range membership is interpreted by the consumer, and deferred values intentionally suppress some promise/future exceptions as described in their focused page.
+These flows cross several utility families, but do not imply a shared base class or shared lifetime rule. In particular, `reserve()`/`commit()` is a destination-adapter protocol, range membership is interpreted by the consumer, and `t_value<T>` is only a value/name holder; it does not provide deferred evaluation.
 
 The range/set facilities are more than general-purpose containers: ASN.1 constraint evaluation consumes them to represent and evaluate permitted numeric or string values. The exact constraint semantics remain the responsibility of the ASN.1 layer.
 
@@ -76,7 +76,7 @@ The range/set facilities are more than general-purpose containers: ASN.1 constra
 - [Exceptions](exception.md) — project exception abstraction
 - [Traits](traits.md) — type traits and encoding/formatting adapters
 - [Utility helpers](utility.md) — conversion, casting and miscellaneous helpers
-- [Deferred value](value.md) — value/future/promise-backed deferred values
+- [Named value](value.md) — value storage with optional name and value-based comparison
 
 - `sdk/io/asn.1/` — consumes range/set facilities in ASN.1 constraint evaluation.
 - `sdk/base/stream/` — provides stream abstractions that may be used alongside byte-oriented helpers, but is a distinct component family.

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   types.cpp
+ * @file   asn1_build_resultset.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -14,7 +14,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_modules.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 
 namespace hotplace {
 namespace io {

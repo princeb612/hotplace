@@ -55,7 +55,7 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
     cfg_grammar grammar;
     grammar
         // rule revision (.ptb file revision)
-        .set_revision(3)
+        .set_revision(4)
         // 1. Entry Points
         .add_production("S'", {"Start"})
         .add_production("Start", {"ModuleStatementList"})
@@ -122,15 +122,11 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("ParameterizedAssignment", {"ParameterizedValueAssignment"})
 
         // Parameterized Type & Value Assignment (ITU-T X.683)
-        .add_production("ParameterizedTypeAssignment", {symid, "{", "ParameterList", "}", symassign, "Type"})
-        .add_production("ParameterizedTypeAssignment", {symid, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
-        .add_production("ParameterizedTypeAssignment", {symuser, "{", "ParameterList", "}", symassign, "Type"})
-        .add_production("ParameterizedTypeAssignment", {symuser, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
+        .add_production("ParameterizedTypeAssignment", {"TypeIdentifier", "{", "ParameterList", "}", symassign, "Type"})
+        .add_production("ParameterizedTypeAssignment", {"TypeIdentifier", "{", "ParameterList", "}", symassign, "Type", "Constraint"})
 
-        .add_production("ParameterizedValueAssignment", {symid, "{", "ParameterList", "}", "Type", symassign, "ValueElement"})
-        .add_production("ParameterizedValueAssignment", {symid, "{", "ParameterList", "}", "Type", symassign, "{", "ValueElementList", "}"})
-        .add_production("ParameterizedValueAssignment", {symuser, "{", "ParameterList", "}", "Type", symassign, "ValueElement"})
-        .add_production("ParameterizedValueAssignment", {symuser, "{", "ParameterList", "}", "Type", symassign, "{", "ValueElementList", "}"})
+        .add_production("ParameterizedValueAssignment", {"TypeIdentifier", "{", "ParameterList", "}", "Type", symassign, "ValueElement"})
+        .add_production("ParameterizedValueAssignment", {"TypeIdentifier", "{", "ParameterList", "}", "Type", symassign, "{", "ValueElementList", "}"})
 
         .add_production("TypeAssignment", {"DefinedType", symassign, "Type"})
         .add_production("TypeAssignment", {"DefinedType", symassign, "Type", "Constraint"})
@@ -173,7 +169,6 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
 
         .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
 
-        .add_production("ParameterizedType", {symid, "{", "ActualParameterList", "}"})
         .add_production("ParameterizedType", {"TypeIdentifier", "{", "ActualParameterList", "}"})
 
         .add_production("NamedType", {symid, "Type"})
@@ -295,7 +290,6 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("ClassFieldReference", {".", "&", symid})
 
         .add_production("InformationObjectAssignment", {symid, "TypeIdentifier", symassign, "{", "SettingList", "}"})
-        .add_production("InformationObjectAssignment", {symid, symid, symassign, "{", "SettingList", "}"})
         .add_production("SettingList", {"SettingList", "SettingItem"})
         .add_production("SettingList", {"SettingItem"})
 
@@ -303,7 +297,6 @@ return_t asn1_advisor::prepare_glr_parser(parser_t& parser) {
         .add_production("SettingItem", {"TypeIdentifier", "Type"})
 
         // Parameterized Value / Reference
-        .add_production("ParameterizedValue", {symid, "{", "ActualParameterList", "}"})
         .add_production("ParameterizedValue", {"TypeIdentifier", "{", "ActualParameterList", "}"})
 
         .add_production("ValueElement", {"TypeIdentifier"})

@@ -11,6 +11,7 @@
 
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_parameterized_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/asn1_specialized_type.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
@@ -21,7 +22,6 @@ namespace io {
 void asn1_publisher::prepare_parameterized() {
     add_handler(
         "ParameterizedType", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
-            // production("ParameterizedType", {symid, "{", "ActualParameterList", "}"})
             // production("ParameterizedType", {"TypeIdentifier", "{", "ActualParameterList", "}"})
 
             auto size = node->sizeof_rhs();
@@ -36,6 +36,16 @@ void asn1_publisher::prepare_parameterized() {
 
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
+
+            {
+                auto obj = context.get_module().get(rhs[0].value);
+                if (obj && is_kind_of(obj, asn1_entity_parameterized_type)) {
+                    auto paramtype = (asn1_parameterized_type*)obj;
+                    auto& paramvalues = context.get_paramvalues();
+                    asn.object = paramtype->specialize("temp", std::move(paramvalues));  // The exact name is currently unknown ...
+                }
+            }
+
             context.push(std::move(asn));
 
             return errorcode_t::success;
@@ -43,10 +53,8 @@ void asn1_publisher::prepare_parameterized() {
     // ParameterizedAssignment
     add_handler(
         "ParameterizedTypeAssignment", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
-            // production("ParameterizedTypeAssignment", {symid, "{", "ParameterList", "}", symassign, "Type"})
-            // production("ParameterizedTypeAssignment", {symid, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
-            // production("ParameterizedTypeAssignment", {symuser, "{", "ParameterList", "}", symassign, "Type"})
-            // production("ParameterizedTypeAssignment", {symuser, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
+            // production("ParameterizedTypeAssignment", {"TypeIdentifier", "{", "ParameterList", "}", symassign, "Type"})
+            // production("ParameterizedTypeAssignment", {"TypeIdentifier", "{", "ParameterList", "}", symassign, "Type", "Constraint"})
 
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);
@@ -70,6 +78,13 @@ void asn1_publisher::prepare_parameterized() {
                 asn.object = asn1_parameterized_type::define(std::move(pt), name, obj);
                 rhs[5].release();
             }
+
+            {
+                result.type = asn1_build_t::assignments;
+                context.get_module().add(asn.object);
+                asn.object->addref();
+            }
+
             context.push(std::move(asn));
 
             return errorcode_t::success;
@@ -148,9 +163,6 @@ void asn1_publisher::prepare_parameterized() {
             asn1_semantic_node asn;
             std::string oldsymbol = rhs[0].symbol;
             asn.symbol = node->symbol;
-            if ("ActualParameter" == oldsymbol) {
-                int debug = 1;
-            }
             context.push(std::move(asn));
 
             return errorcode_t::success;
