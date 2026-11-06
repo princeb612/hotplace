@@ -46,7 +46,7 @@ t_value<T>
   ├─ construct / assign ─► store T
   ├─ set_value(value) ───► replace T
   ├─ value() ────────────► return T
-  └─ set_name(name) ─────► store optional name
+  └─ set_name(name) ────► store optional name
 ```
 
 ### Use in parameterized ASN.1
