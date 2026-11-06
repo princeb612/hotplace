@@ -3,8 +3,8 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 1 · Revision 1107                     │
-│ Source basis: Revision 1107                   │
+│ Edition 1 · Revision 1124                     │
+│ Source basis: Revision 1124                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -76,9 +76,9 @@ The stages are independently callable. The loader can expose tokens or a parse t
 
 ### Evidence boundaries
 
-Test sources cover distinct but related behaviors: parser handling of assignments and constraints; publisher reconstruction from parse trees; file loading; imported/exported symbol relationships; and focused semantic-object linkage. A grammar test does not prove the corresponding notation becomes a fully linked runtime type. Direct semantic-object tests do not prove end-to-end parsing and parameter substitution.
+Test sources cover distinct but related behaviors: parser handling of assignments and constraints; publisher reconstruction from parse trees; file loading; imported/exported symbol relationships; and focused semantic-object linkage. A grammar test does not prove the corresponding notation becomes a fully linked runtime type. The parameterized testcase now provides an integrated parser-to-publisher specialization check for one concrete form, but it does not establish exhaustive parameterized-notation coverage.
 
-Parameterized ASN.1 is a particular boundary: grammar productions and direct semantic prototypes exist, but they should not be described as a complete parser-to-runtime template-instantiation pipeline without enabled end-to-end tests and implementation evidence.
+Parameterized ASN.1 has progressed beyond grammar productions and direct semantic prototypes. Revision 1124 adds state-guided actual-argument collection in the publisher and a testcase that verifies a concrete type/value instantiation through module representation. This is evidence for the tested path, not a claim that every parameter form or edge case is complete.
 
 ### Practical use: load and publish a module in separate stages
 
