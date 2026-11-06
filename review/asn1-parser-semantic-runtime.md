@@ -175,7 +175,7 @@ The parsing resources also have different roles:
 
 ```text
 asn1notation.ptb → notation parsing / semantic construction (binary parsing-table revision 3)
-asn1.ptb         → broader loader grammar (binary parsing-table revision 3)
+asn1.ptb         → broader loader grammar (binary parsing-table revision 4)
 ```
 
 That distinction prevents the existence of a parse table from being mistaken for complete language support.
@@ -258,8 +258,8 @@ Revision 1124 extends the syntax → semantic construction → module/runtime pa
 - `test/testcase/asn.1/testcase_basic3.cpp`
 - `test/testcase/asn.1/testcase_construct.cpp`
 - `test/testcase/asn.1/testcase_constraints.cpp`
-- `asn1notation.ptb`
-- `asn1.ptb`
+- `asn1notation.ptb` — binary parsing-table revision 3 (unchanged in Revision 1124)
+- `asn1.ptb` — binary parsing-table revision 4 (advanced in Revision 1124)
 - ASN.1 loader/compiler/runtime documentation
 
 ---
