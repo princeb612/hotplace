@@ -51,7 +51,7 @@ raw pointer from external API
             └─ deleter runs at destruction unless ownership is released
 
 named value
-  └─ construct(value, name) ──► store value + optional name
+  └─ construct(value, name) ─► store value + optional name
        ├─ set_value(value) ───► replace stored value
        └─ value() ────────────► return stored value
 ```
