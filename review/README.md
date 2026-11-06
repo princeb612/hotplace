@@ -6,7 +6,7 @@ The documents here are not replacements for the source-tree `README.md` files an
 
 ## Source Baseline
 
-- Source revision: 1123
+- Source revision: 1124
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
@@ -70,7 +70,7 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1123                                │
+│ Revision 1124                                │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
@@ -213,7 +213,7 @@ semantically implemented
 fully supported feature
 ```
 
-This distinction is especially important for the loader/module integration that began around revision 1097, gained import/export and reference-resolution operations through revisions 1099–1102, continued with the `asn1_modules` registry and parameterized-type/value prototypes in revisions 1103–1104, and reached formal parameterized-definition reconstruction in Revision 1123. This does not yet mean the loader applies actual arguments and instantiates every parameterized assignment end to end.
+This distinction is especially important for the loader/module integration that began around revision 1097, gained import/export and reference-resolution operations through revisions 1099–1102, continued with the `asn1_modules` registry and parameterized-type/value prototypes in revisions 1103–1104, reached formal parameterized-definition reconstruction in Revision 1123, and added a state-guided actual-argument specialization path in Revision 1124. The latest testcase verifies a concrete `FRAME` instantiation through module representation; this does not imply exhaustive support for every parameterized assignment.
 
 ---
 
@@ -627,7 +627,7 @@ Each review document should identify the source revision it describes.
 For the current review package:
 
 ```text
-Source Baseline: Revision 1123
+Source Baseline: Revision 1124
 ```
 
 When the implementation changes materially:
@@ -648,7 +648,7 @@ In particular, parser production names, ASN.1 loader capabilities, protocol reso
 
 ## 8. Current Review Status
 
-The review package uses Revision 1123 as its overall source baseline. Revisions 1112–1113 added a tested MinGW64 shared-build checkpoint, per-module API visibility, and related build/Windows portability adjustments. Revisions 1118–1119 materially extend the ASN.1 semantic validation path. Revisions 1120/1122 add parameterized type specialization/instantiation work, while Revision 1123 adds loader/publisher reconstruction of parameterized type definitions and formal parameter lists. The ASN.1 parser/runtime review records this distinction between definition reconstruction and actual-argument instantiation; unrelated review topics retain their earlier individual baselines where these source changes do not materially affect them.
+The review package uses Revision 1124 as its overall source baseline. Revisions 1112–1113 added a tested MinGW64 shared-build checkpoint, per-module API visibility, and related build/Windows portability adjustments. Revisions 1118–1119 materially extend ASN.1 value validation; Revisions 1120/1122 add parameterized type specialization/instantiation work; Revision 1123 reconstructs parameterized definitions and formal parameters; and Revision 1124 adds state-guided actual-argument collection and a tested publisher specialization/representation path. The ASN.1 parser/runtime review records this progression while keeping the demonstrated testcase boundary explicit. Unrelated review topics retain their earlier individual baselines where these source changes do not materially affect them.
 
 ```text
 1. Parser evolution
@@ -662,7 +662,7 @@ The review package uses Revision 1123 as its overall source baseline. Revisions 
 9. Module linkage and shared-build boundary
 ```
 
-These review axes form the current architecture-review map. The module-linkage/shared-build boundary remains grounded in revisions 1112–1113. The ASN.1 parser/runtime document is updated through Revision 1123 for value validation and parameterized-definition reconstruction; the parser-engine, binary-construction, network/session, crypto-advisor, and Authenticode documents retain their earlier individual baselines because the recent changes do not materially alter those review topics.
+These review axes form the current architecture-review map. The module-linkage/shared-build boundary remains grounded in revisions 1112–1113. The ASN.1 parser/runtime document is updated through Revision 1124 for state-guided parameterized instantiation; the parser-engine, binary-construction, network/session, crypto-advisor, and Authenticode documents retain their earlier individual baselines because the recent changes do not materially alter those review topics.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
