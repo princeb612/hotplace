@@ -42,7 +42,9 @@ The tree builder maintains nodes needed to assemble reductions and exposes the c
 
 ### Visitor interface
 
-parse_tree_visitor receives terminal SHIFT events and non-terminal REDUCE events. This permits printing, traversal or transformation without embedding grammar-specific semantic rules into the parser engine.
+`parse_tree_visitor` receives terminal SHIFT events and non-terminal REDUCE events. It can also receive a pre-visit hook (`on_visit`) that takes the current state by reference. The hook runs before the node is processed; changes to that node's local state are visible to its SHIFT/REDUCE callback and are inherited by its descendants.
+
+`parse_tree::accept(visitor, initial_state)` starts traversal with an explicit state value. Each node receives a copy of its parent's state, so a state change made at one node is scoped to that node's subtree and does not leak into sibling subtrees. The original `accept(visitor)` overload starts with state `0`. This provides generic traversal context without embedding domain-specific meaning in the parser engine.
 
 The tree is a syntax representation. ASN.1 types, tags, references, defaults and constraints are interpreted by the ASN.1 semantic layer, not encoded as intrinsic node types here.
 
@@ -116,7 +118,7 @@ on_visit(node, mutable local state)
        reduce(node, local state) after children
 ```
 
-The traversal is pre-order for the state hook and post-order for reductions. Each child inherits the current node's resulting state, while sibling traversal starts from the parent's state copy. If a visitor returns an error, traversal stops and propagates that error.
+The traversal is pre-order for the state hook and post-order for reductions. Each child inherits the current node's resulting state, while sibling traversal starts from the parent's state copy. SHIFT/REDUCE callback errors stop traversal and are propagated. In the current implementation, the return value from `on_visit` is not used to abort traversal; the hook is used to mutate state.
 
 ### Semantic boundary
 
