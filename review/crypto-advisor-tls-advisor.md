@@ -383,7 +383,7 @@ This distinction is important when interpreting legacy RSA, static DH, and stati
 The relevant implementation gates reinforce this separation:
 
 - `tls_protection_context::select_from()` filters peer-offered cipher suites by `tls_flag_support` before adding them to the supported candidate set.
-- The server-side ServerHello cipher-suite setter rejects entries without `tls_flag_support` by default; the explicit `session_debug_deprecated_ciphersuite` option is a diagnostic exception.
+- The server-side ServerHello cipher-suite setter rejects entries without `tls_flag_support` by default. The explicit `session_debug_deprecated_ciphersuite` option is intended for validating older test vectors that contain deprecated cipher suites, rather than for real-world TLS negotiation or as a way to enable those suites for ordinary use. It is a test/diagnostic compatibility switch, not an operational security-policy recommendation.
 - The supported-versions extension only adds versions whose resource hint has `support` enabled.
 - The version resource table marks TLS 1.0/1.1 and DTLS 1.0/1.1 unsupported, while TLS 1.2/1.3 and DTLS 1.2/1.3 are marked supported.
 
