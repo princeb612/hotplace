@@ -6,7 +6,7 @@
 
 ## Review scope
 
-This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1097.
+This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1124.
 
 The important distinction is that these are **two related vocabulary/metadata layers**, not a single generic dictionary:
 
@@ -14,9 +14,9 @@ The important distinction is that these are **two related vocabulary/metadata la
 - `tls_advisor` describes protocol identifiers used by TLS, DTLS, and QUIC.
 - OpenSSL is a backend representation used by the crypto implementation and by the advisor mapping layer; it is not the conceptual owner of either vocabulary.
 
-## 1097 review pass
+## Historical review context
 
-This document was rechecked as part of the revision-1097 architecture review. No material revision-1097 architectural change was identified in this axis; the document therefore preserves the established 1096 relationship model rather than inventing a new revision-specific change.
+The initial architecture review established the relationship model at revision 1097. That earlier pass is retained here as review history; the current document-wide assessment is based on revision 1124.
 
 ## 1. Two advisor domains
 
@@ -368,7 +368,7 @@ while `crypto_advisor` independently also connects to JOSE, COSE, curve/key/dige
 This makes the advisors a **translation and consistency layer** rather than a cryptographic implementation layer.
 
 
-## 13. TLS resource identity and runtime support policy (Revision 1124)
+## 13. TLS resource identity and runtime support policy
 
 The TLS cipher-suite resource table must not be read as a list of cipher suites that the implementation will negotiate.
 
@@ -438,7 +438,7 @@ References:
 
 ## Review status
 
-The initial Revision 1097 review established the distinction between the two advisor domains. The Revision 1124 addendum extends that review to the TLS resource-policy boundary: identifier recognition, support eligibility, security recommendation, and diagnostic override are separate concepts. The RFC cross-check found no immediate cipher-suite table change required; the ClientHello advertisement-mask distinction remains a follow-up policy question. Future revisions may add or reorganize resource tables, but the separation between protocol identity and cryptographic identity remains the central architectural point.
+This document reviews the advisor architecture as of revision 1124. It retains the earlier revision-1097 observations as historical context and includes the TLS resource-policy assessment in the same revision-1124 review baseline. The review distinguishes identifier recognition, support eligibility, security recommendation, and diagnostic override. The RFC cross-check found no immediate cipher-suite table change required; the ClientHello advertisement-mask distinction remains a follow-up policy question. Future revisions may add or reorganize resource tables, but the separation between protocol identity and cryptographic identity remains the central architectural point.
 
 ## Publication
 
