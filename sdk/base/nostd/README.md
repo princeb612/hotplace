@@ -34,29 +34,28 @@ The directory does not define one common ownership or execution model. Container
 ### Representative operation flows
 
 ```text
-encoded destination (std::string / binary_t / stream_t*)
+Base16 / Base64 destination
   └─ encoder_stream_traits<T>
        ├─ trunc() when replacement is requested
-       ├─ reserve() output capacity
-       ├─ low-level encoder writes bytes
-       └─ commit() reconciles reserved and written length
+       ├─ reserve() grows logical output size
+       ├─ low-level encoder writes into the reserved tail
+       └─ commit() trims an unused tail after success
+
+Huffman destination
+  └─ encoder_stream_traits<T>
+       ├─ preempt() provides a capacity hint (or no-op)
+       └─ push() appends each emitted output unit
 
 range or string constraints
   └─ range / range_set / string_set representation
        └─ ASN.1 constraint evaluator interprets membership and bounds
 
-raw pointer from external API
+component-specific pointer handling
   └─ custom::make_unique_with_deleter() / make_promise_on_destruction()
-       └─ unique_ptr owns release responsibility
-            └─ deleter runs at destruction unless ownership is released
-
-named value
-  └─ construct(value, name) ─► store value + optional name
-       ├─ set_value(value) ───► replace stored value
-       └─ value() ────────────► return stored value
+       └─ caller-selected deleter manages the adopted resource
 ```
 
-These flows cross several utility families, but do not imply a shared base class or shared lifetime rule. In particular, `reserve()`/`commit()` is a destination-adapter protocol, range membership is interpreted by the consumer, and `t_value<T>` is only a value/name holder; it does not provide deferred evaluation.
+These flows cross several utility families, but do not imply a shared base class or shared lifetime rule. In particular, Base16/Base64 reserve/commit and Huffman preempt/push are distinct output protocols. Pointer helpers are caller-selected facilities, not a directory-wide ownership policy. The `t_value<T>` type is only a value/name holder; it does not provide deferred evaluation.
 
 The range/set facilities are more than general-purpose containers: ASN.1 constraint evaluation consumes them to represent and evaluate permitted numeric or string values. The exact constraint semantics remain the responsibility of the ASN.1 layer.
 
@@ -66,7 +65,7 @@ The range/set facilities are more than general-purpose containers: ASN.1 constra
 
 - [Containers](containers.md) — sequence, tree, set and priority-queue structures
 - [Binary utilities](binary.md) — byte sequences and integer/floating-point serialization helpers
-- [Memory ownership](memory.md) — C++11-compatible unique ownership, custom deleters and raw-pointer adoption
+- [Memory ownership](memory.md) — C++11-compatible ownership helpers and a localized experimental low-memory transfer investigation
 - [Ranges](range.md) — intervals, range operations and range-oriented helpers
 - [Bit set](bit_set.md) — bounded integer membership represented as bits
 - [Runtime set facade](set.md) — runtime selection between numeric range and string set backends
@@ -74,7 +73,7 @@ The range/set facilities are more than general-purpose containers: ASN.1 constra
 - [String set](string_set.md) — literal strings, string ranges, FROM and regex operations
 - [Key/value](keyvalue.md) — lightweight key/value representation
 - [Exceptions](exception.md) — project exception abstraction
-- [Traits](traits.md) — type traits and encoding/formatting adapters
+- [Traits](traits.md) — type traits, Base16/Base64 reserve/commit, Huffman preempt/push, and formatting adapters
 - [Utility helpers](utility.md) — conversion, casting and miscellaneous helpers
 - [Named value](value.md) — value storage with optional name and value-based comparison
 
