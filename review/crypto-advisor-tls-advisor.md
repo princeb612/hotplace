@@ -438,14 +438,14 @@ References:
 
 ## Review status
 
-The 1097 review confirms that the existing structure is sufficient to distinguish the two advisor domains clearly. Future revisions may add or reorganize resource tables, but the architectural distinction should remain useful as long as protocol identifiers and cryptographic identities remain separate concerns.
+The initial Revision 1097 review established the distinction between the two advisor domains. The Revision 1124 addendum extends that review to the TLS resource-policy boundary: identifier recognition, support eligibility, security recommendation, and diagnostic override are separate concepts. The RFC cross-check found no immediate cipher-suite table change required; the ClientHello advertisement-mask distinction remains a follow-up policy question. Future revisions may add or reorganize resource tables, but the separation between protocol identity and cryptographic identity remains the central architectural point.
 
 ## Publication
 
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1097                                │
+│ Revision 1124                                │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
