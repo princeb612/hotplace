@@ -384,6 +384,8 @@ crypto_advisor   tls_advisor
 
 They intersect at the point where protocol identifiers refer to cryptographic mechanisms.
 
+The Revision 1124 addendum also records the distinction between TLS resource-table recognition, `tls_flag_support` eligibility, `tls_flag_secure` recommendation, and explicit diagnostic overrides. It cross-checks that policy against RFC 8996, RFC 9852, and RFC 10015; the retained legacy cipher-suite identifiers are not treated as proof of ordinary negotiability.
+
 ---
 
 ### `authenticode-verification.md`
