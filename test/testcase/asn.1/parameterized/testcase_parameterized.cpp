@@ -484,8 +484,8 @@ void test_specialization2() {
     example7_type1->release();
 }
 
-// Revision 1123
-// ASN.1 parameterized type reconstruction (definition only, instantiation not implemented yet)
+// Revision 1124
+// ASN.1 parameterized type reconstruction
 void test_parameterized2() {
     _test_case.begin("parameterized type reconstruction");
 
@@ -530,6 +530,69 @@ void test_parameterized2() {
 }
 
 void test_parameterized3() {
+    _test_case.begin("parameterized type /w module");
+
+    struct testvector {
+        const char* filename;
+        std::vector<std::string> module_names;
+        const char* expect;
+    } table[] = {
+        {
+            "example6.asn1",
+            {{"GenericContainerModule"}},
+            "GenericContainerModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN\n"
+            "EXPORTS ALL\n"
+            "Envelope {TypeParameter} ::= SEQUENCE {version INTEGER, messageId OCTET STRING (SIZE(16)), payload TypeParameter}\n"
+            "ActualMessage ::= Envelope {INTEGER}\n"
+            "END\n",
+        },
+        // {
+        //     "example7.asn1",
+        //     {{"TemplateModule"}},
+        //     "",
+        //     // in progress
+        //     // - DEFAULT defaultPriority
+        //     // - UserReadRequest
+        //     // - OBJECT IDENTIFIER (algorithmOid)
+        //     // - ALGORITHM-CONTAINER {{OID}, OCTET STRING}
+        //     // - BOOLEAN DEFAULT isEncrypted
+        //     // - SECURE-MESSAGE{ TRUE, OCTET STRING }
+        //     // - SECURE-MESSAGE{ FALSE, VisibleString }
+        //     // - DEFAULT ver
+        //     // - HEADER-ENVELOPE{ v2, PrintableString }
+        //     // - OCTET STRING (SIZE(4)) (signature)
+        //     // - PACKET-HEADER{ '404B5431'H, IA5String }
+        // },
+    };
+
+    return_t ret = errorcode_t::success;
+
+    for (const auto& entry : table) {
+        parse_tree pt;
+        asn1_loader loader;
+
+        ret = loader.load_file(entry.filename, &pt);
+        _test_case.test(ret, __FUNCTION__, "load");
+
+        asn1_build_resultset result;
+        auto publisher = asn1_advisor::get_instance()->get_publisher();
+        ret = publisher->build(&pt, result);
+
+        _test_case.assert(result.type == asn1_build_t::module_definition, __FUNCTION__, "result type");
+        _test_case.assert(result.module_names == entry.module_names, __FUNCTION__, "result module");
+
+        basic_stream bs;
+        auto modules = asn1_modules::get_instance();
+        for (const auto& module : result.module_names) {
+            modules->get(module)->represent(&bs);
+            _logger->write(bs);
+        }
+
+        _test_case.assert(bs == entry.expect, __FUNCTION__, "publish");
+    }
+}
+
+void test_parameterized4() {
     // parameterized value
     // example6_type1.asn1
     // example7.asn1
@@ -540,5 +603,5 @@ void testcase_parameterized() {
     test_specialization1();
     test_specialization2();
     test_parameterized2();
-    // test_parameterized3();
+    test_parameterized3();
 }

@@ -28,6 +28,17 @@ asn1_specialized_type::asn1_specialized_type(asn1_parameterized_type* templ, con
     }
 }
 
+asn1_specialized_type::asn1_specialized_type(asn1_parameterized_type* templ, asn1_paramvalues&& values, const std::string& name, asn1_object* object)
+    : asn1_type(asn1_entity_specialized_type, name, object), _templ(templ), _values(std::move(values)) {
+    if (nullptr == templ) throw exception(errorcode_t::not_specified);
+    templ->addref();
+
+    if (object) {
+        auto temp = object->clone();  // resolve asn1_parameter
+        set_object(temp);
+    }
+}
+
 asn1_specialized_type::asn1_specialized_type(const asn1_specialized_type& other) : asn1_type(other) { *this = other; }
 
 asn1_specialized_type::~asn1_specialized_type() { _templ->release(); }

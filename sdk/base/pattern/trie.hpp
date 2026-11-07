@@ -228,6 +228,38 @@ class t_trie {
         }
         return index;
     }
+    /*
+     * @brief   all visited nodes are in the eow state, and retrieve all tags attached to the nodes
+     * @examples
+     *          reconstruct ASN.1 text notation from trie
+     *          {joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) hashalgs(2) SHA-512(3)}
+     */
+    int trace(const std::vector<T>& input, std::function<void(BT, TP*)> func) const { return trace(input.data(), input.size(), func); }
+    int trace(const T* input, size_t size, std::function<void(BT, TP*)> func) const {
+        int index = -1;
+        if (input) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(input, i);
+                auto item = current->children.find(t);
+                if (current->children.end() == item) {
+                    return -1;  // not found
+                }
+
+                current = item->second;
+
+                TP* tag = nullptr;
+                bool test = gettag(current, &tag);
+                if (false == test) return -1;
+
+                if (func) func(current->value, tag);
+            }
+            if (current->eow) {
+                index = current->index;
+            }
+        }
+        return index;
+    }
     /**
      * @brief   scan longest match occurrence (greedy match)
      * @sample

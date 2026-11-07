@@ -23,6 +23,7 @@ namespace io {
 class HOTPLACE_IO_API asn1_specialized_type : public asn1_type {
    public:
     asn1_specialized_type(asn1_parameterized_type* templ, const asn1_paramvalues& values, const std::string& name, asn1_object* object);
+    asn1_specialized_type(asn1_parameterized_type* templ, asn1_paramvalues&& values, const std::string& name, asn1_object* object);
     asn1_specialized_type(const asn1_specialized_type& other);
     virtual ~asn1_specialized_type();
 

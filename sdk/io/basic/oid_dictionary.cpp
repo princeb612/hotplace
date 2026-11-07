@@ -28,14 +28,14 @@ void oid_dictionary::insert(const std::string& oidstr, const std::string& name, 
     str_to_oid(oidstr, oid);
     if (false == oid.empty()) {
         oid_metadata* meta = new oid_metadata{name, description};
-        trie.add(oid, meta);
+        _trie.add(oid, meta);
     }
 }
 
 void oid_dictionary::insert(const oid_t& oid, const std::string& name, const std::string& description) {
     if (false == oid.empty()) {
         oid_metadata* meta = new oid_metadata{name, description};
-        trie.add(oid, meta);
+        _trie.add(oid, meta);
     }
 }
 
@@ -45,7 +45,7 @@ bool oid_dictionary::lookup(const std::string& oidstr, oid_metadata& metadata) c
     if (oid.empty()) return false;
 
     oid_metadata* meta = nullptr;
-    if (trie.search(oid, &meta) && meta != nullptr) {
+    if (_trie.search(oid, &meta) && meta != nullptr) {
         metadata = *meta;
         return true;
     }
@@ -56,11 +56,35 @@ bool oid_dictionary::lookup(const oid_t& oid, oid_metadata& metadata) const {
     if (oid.empty()) return false;
 
     oid_metadata* meta = nullptr;
-    if (trie.search(oid, &meta) && meta != nullptr) {
+    if (_trie.search(oid, &meta) && meta != nullptr) {
         metadata = *meta;
         return true;
     }
     return false;
+}
+
+bool oid_dictionary::oid2asn1(const oid_t& oid, basic_stream& notation) const {
+    notation.clear();
+
+    std::list<oid_elem> asn1text;
+
+    auto lambda = [&asn1text](uint32 arc, oid_metadata* metadata) -> void {
+        asn1text.push_back({arc, metadata ? metadata->name : ""});
+    };
+
+    int test = _trie.trace(oid, lambda);
+    if ((-1 == test) || asn1text.empty()) return false;
+
+    notation << "{";
+    for (auto iter = asn1text.begin(); iter != asn1text.end(); ++iter) {
+        if (asn1text.begin() != iter) notation << " ";
+        if (iter->name.empty())
+            notation << iter->arc;
+        else
+            notation << iter->name << "(" << iter->arc << ")";
+    }
+    notation << "}";
+    return true;
 }
 
 }  // namespace io

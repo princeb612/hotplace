@@ -35,13 +35,14 @@ class HOTPLACE_IO_API oid_dictionary {
     void insert(const oid_t& oid, const std::string& name, const std::string& description);
     bool lookup(const std::string& oidstr, oid_metadata& metadata) const;
     bool lookup(const oid_t& oid, oid_metadata& metadata) const;
+    bool oid2asn1(const oid_t& oid, basic_stream& notation) const;
 
    protected:
     oid_dictionary();
     void load();  // certificate, hash, curves
 
    private:
-    t_trie<uint32, uint32, oid_metadata> trie;
+    t_trie<uint32, uint32, oid_metadata> _trie;
     mutable critical_section _lock;
     int _load{0};
 };

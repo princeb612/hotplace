@@ -13,11 +13,11 @@
 
 ## 1. Role
 
-`sdk/io/basic/oid.*` converts object-identifier notation between dotted decimal text and a vector of integer nodes. It also provides `asn1str_to_oid()` for extracting numeric nodes from the brace-and-label form used in ASN.1 descriptions. The adjacent `oid_dictionary` uses this representation for lookup.
+`sdk/io/basic/oid.*` converts object-identifier notation between dotted decimal text and a vector of integer nodes. It also provides `asn1text_to_oid()` for extracting numeric nodes from the brace-and-label form used in ASN.1 descriptions. The adjacent `oid_dictionary` uses this representation for lookup.
 
 ```text
 "2.16.840.1.101.3.4.2.1" ──str_to_oid──> [2,16,840,1,101,3,4,2,1]
-ASN.1 braced notation ─────asn1str_to_oid─> node vector ──> oid_dictionary lookup
+ASN.1 braced notation ─────asn1text_to_oid─> node vector ──> oid_dictionary lookup
 node vector ────────────────oid_to_str─────> dotted decimal text
 ```
 
@@ -131,14 +131,14 @@ const char* text =
     "gov(101) csor(3) nistAlgorithm(4) hashalgs(2) 3}";
 
 oid_t oid;
-asn1str_to_oid(text, strlen(text), oid);
+asn1text_to_oid(text, strlen(text), oid);
 
 oid_metadata meta;
 auto dict = oid_dictionary::get_instance();
 bool found = dict->lookup(oid, meta);
 ```
 
-The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name and description. The testcase asserts that lookup succeeds, but it does not establish that `asn1str_to_oid()` validates all ASN.1 OID notation rules.
+The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name and description. The testcase asserts that lookup succeeds, but it does not establish that `asn1text_to_oid()` validates all ASN.1 OID notation rules.
 
 Source: `test/testcase/io/basic/testcase_oid.cpp`.
 

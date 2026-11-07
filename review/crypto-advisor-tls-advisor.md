@@ -6,7 +6,7 @@
 
 ## Review scope
 
-This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1097.
+This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1124.
 
 The important distinction is that these are **two related vocabulary/metadata layers**, not a single generic dictionary:
 
@@ -14,9 +14,9 @@ The important distinction is that these are **two related vocabulary/metadata la
 - `tls_advisor` describes protocol identifiers used by TLS, DTLS, and QUIC.
 - OpenSSL is a backend representation used by the crypto implementation and by the advisor mapping layer; it is not the conceptual owner of either vocabulary.
 
-## 1097 review pass
+## Historical review context
 
-This document was rechecked as part of the revision-1097 architecture review. No material revision-1097 architectural change was identified in this axis; the document therefore preserves the established 1096 relationship model rather than inventing a new revision-specific change.
+The initial architecture review established the relationship model at revision 1097. That earlier pass is retained here as review history; the current document-wide assessment is based on revision 1124.
 
 ## 1. Two advisor domains
 
@@ -367,6 +367,64 @@ while `crypto_advisor` independently also connects to JOSE, COSE, curve/key/dige
 
 This makes the advisors a **translation and consistency layer** rather than a cryptographic implementation layer.
 
+
+## 13. TLS resource identity and runtime support policy
+
+The TLS cipher-suite resource table must not be read as a list of cipher suites that the implementation will negotiate.
+
+`sdk/net/tls/advisor/resource_ciphersuite.cpp` is also used as an identifier and diagnostic catalogue. The flags distinguish catalogue presence from operational eligibility:
+
+- `tls_flag_secure | tls_flag_support`: recommended and supported.
+- `tls_flag_support` without `tls_flag_secure`: retained for legacy or debugging purposes, but still marked as supported by the implementation's resource policy.
+- No `tls_flag_support`: recognized metadata may remain available for inspection, but the entry is not eligible for ordinary negotiation.
+
+This distinction is important when interpreting legacy RSA, static DH, and static ECDH entries. Their presence in the resource table alone is not evidence that the handshake can select them. In the reviewed resource definitions, the static DH and static ECDH families are not marked with `tls_flag_support`; ECDHE remains a separate supported key-exchange family.
+
+The relevant implementation gates reinforce this separation:
+
+- `tls_protection_context::select_from()` filters peer-offered cipher suites by `tls_flag_support` before adding them to the supported candidate set.
+- The server-side ServerHello cipher-suite setter rejects entries without `tls_flag_support` by default. The explicit `session_debug_deprecated_ciphersuite` option is intended for validating older test vectors that contain deprecated cipher suites, rather than for real-world TLS negotiation or as a way to enable those suites for ordinary use. It is a test/diagnostic compatibility switch, not an operational security-policy recommendation.
+- The supported-versions extension only adds versions whose resource hint has `support` enabled.
+- The version resource table marks TLS 1.0/1.1 and DTLS 1.0/1.1 unsupported, while TLS 1.2/1.3 and DTLS 1.2/1.3 are marked supported.
+
+### RFC policy cross-check
+
+The first-pass review of RFC 8996, RFC 9852, and RFC 10015 therefore does not identify a required change to the resource table merely because historical cipher-suite identifiers are retained.
+
+- **RFC 8996** deprecates TLS 1.0, TLS 1.1, and DTLS 1.0. The current version-support flags already exclude these from ordinary supported-version advertisement/selection.
+- **RFC 9852** updates the TLS security baseline for new protocols using TLS and requires TLS 1.3 for such new protocol designs. This does not mean that an existing general-purpose TLS implementation must remove TLS 1.2 compatibility. DTLS has a distinct deployment and transition context.
+- **RFC 10015** updates the TLS 1.2/DTLS 1.2 security guidance, including deprecation of static RSA and finite-field DH key exchange and discouragement of static ECDH. The reviewed resource flags do not make the static DH/ECDH entries ordinarily negotiable.
+
+Accordingly, the retained legacy entries should be understood as protocol-identity/debugging data, not as a recommendation to negotiate those suites. No immediate cipher-suite resource-table change is indicated by this pass.
+
+### Follow-up observation: ClientHello advertisement mask
+
+One implementation detail remains worth checking separately. The ClientHello construction path uses a mask containing both `tls_flag_secure` and `tls_flag_support`, while the server-side candidate selection explicitly requires `tls_flag_support`.
+
+That distinction may be intentional—for example, to advertise a broader diagnostic or compatibility set—but it should be reconciled with the intended meaning of the flags. The current review records this as a policy-consistency question, not as a confirmed vulnerability or an RFC violation.
+
+### Review conclusion
+
+For this revision, the important security property is the separation between:
+
+1. **Identifier recognition** — a cipher-suite code can be named and inspected.
+2. **Resource support** — `tls_flag_support` controls whether it enters the ordinary supported set.
+3. **Security recommendation** — `tls_flag_secure` distinguishes the recommended subset.
+4. **Diagnostic override** — explicitly enabled debug behavior may relax normal restrictions.
+
+This separation is a useful part of the advisor architecture and should remain explicit in future resource-table reviews.
+
+References:
+
+- [RFC 8996 — Deprecating TLS 1.0 and TLS 1.1](https://www.rfc-editor.org/rfc/rfc8996)
+- [RFC 9852 — Updated TLS recommendations](https://www.rfc-editor.org/rfc/rfc9852)
+- [RFC 10015 — TLS 1.2 and DTLS 1.2 security updates](https://www.rfc-editor.org/rfc/rfc10015)
+- `sdk/net/tls/tls_advisor.hpp`
+- `sdk/net/tls/advisor/resource_ciphersuite.cpp`
+- `sdk/net/tls/advisor/resource.cpp`
+- `sdk/net/tls/protection/tls_protection_context.cpp`
+- `sdk/net/tls/tls/extension/tls_extension_supported_versions.cpp`
+
 ## Related source documentation
 
 - `sdk/crypto/advisor/README.md`
@@ -380,14 +438,14 @@ This makes the advisors a **translation and consistency layer** rather than a cr
 
 ## Review status
 
-The 1097 review confirms that the existing structure is sufficient to distinguish the two advisor domains clearly. Future revisions may add or reorganize resource tables, but the architectural distinction should remain useful as long as protocol identifiers and cryptographic identities remain separate concerns.
+This document reviews the advisor architecture as of revision 1124. It retains the earlier revision-1097 observations as historical context and includes the TLS resource-policy assessment in the same revision-1124 review baseline. The review distinguishes identifier recognition, support eligibility, security recommendation, and diagnostic override. The RFC cross-check found no immediate cipher-suite table change required; the ClientHello advertisement-mask distinction remains a follow-up policy question. Future revisions may add or reorganize resource tables, but the separation between protocol identity and cryptographic identity remains the central architectural point.
 
 ## Publication
 
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1097                                │
+│ Revision 1124                                │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

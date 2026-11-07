@@ -9,6 +9,7 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_advisor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_module.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_modules.hpp>
@@ -97,9 +98,77 @@ void asn1_publisher::prepare_module() {
 
             return errorcode_t::success;
         });
-    // ModuleIdentifier
-    // DefinitiveOidComponentList
-    // DefinitiveObjIdComponent
+    add_handler(
+        "ModuleIdentifier", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
+            // production("ModuleIdentifier", {symid})
+            // production("ModuleIdentifier", {symid, "{", "DefinitiveOidComponentList", "}"})
+
+            auto size = node->sizeof_rhs();
+            std::vector<asn1_semantic_node> rhs(size);
+            std::unordered_map<std::string, size_t> index;
+            for (size_t i = 0; i < size; ++i) {
+                size_t idx = size - 1 - i;
+                rhs[idx] = context.pop();
+                auto& it = rhs[idx];
+                index.emplace(it.symbol, idx);
+            }
+
+            asn1_semantic_node asn;
+            asn.symbol = node->symbol;
+            asn.value = rhs[0].value;
+            context.push(std::move(asn));
+
+            return errorcode_t::success;
+        });
+    add_handler(
+        "DefinitiveOidComponentList", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
+            // production("DefinitiveOidComponentList", {"DefinitiveOidComponentList", "DefinitiveObjIdComponent"})
+            // production("DefinitiveOidComponentList", {"DefinitiveObjIdComponent"})
+
+            auto size = node->sizeof_rhs();
+            std::vector<asn1_semantic_node> rhs(size);
+            std::unordered_map<std::string, size_t> index;
+            for (size_t i = 0; i < size; ++i) {
+                size_t idx = size - 1 - i;
+                rhs[idx] = context.pop();
+                auto& it = rhs[idx];
+                index.emplace(it.symbol, idx);
+            }
+
+            asn1_semantic_node asn;
+            asn.symbol = node->symbol;
+            context.push(std::move(asn));
+
+            return errorcode_t::success;
+        });
+    add_handler(
+        "DefinitiveObjIdComponent", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
+            // production("DefinitiveObjIdComponent", {symid, "(", symnum, ")"})
+            // production("DefinitiveObjIdComponent", {symnum})
+
+            auto size = node->sizeof_rhs();
+            std::vector<asn1_semantic_node> rhs(size);
+            std::unordered_map<std::string, size_t> index;
+            for (size_t i = 0; i < size; ++i) {
+                size_t idx = size - 1 - i;
+                rhs[idx] = context.pop();
+                auto& it = rhs[idx];
+                index.emplace(it.symbol, idx);
+            }
+
+            asn1_semantic_node asn;
+            asn.symbol = node->symbol;
+            if (1 == size) {
+                auto arc = t_atoi<uint32>(rhs[0].value.c_str());
+                context.get_oid().push_back({arc, ""});
+            } else if (4 == size) {
+                auto arc = t_atoi<uint32>(rhs[2].value.c_str());
+                context.get_oid().push_back({arc, rhs[0].value});
+            }
+            context.push(std::move(asn));
+
+            return errorcode_t::success;
+        });
     add_handler(
         "TagDefault", +[](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
             // production("TagDefault", {"EXPLICIT", "TAGS"})

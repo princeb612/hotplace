@@ -15,6 +15,7 @@
 
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/io/basic/oid.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/parameterized/types.hpp>
@@ -29,7 +30,6 @@ namespace hotplace {
 namespace io {
 
 enum asn1_publish_state : uint32 {
-    state_paramtype_definition = 1 << 0,     // parameterized type definition, symbol "Parameter"
     state_paramtype_instantiation = 1 << 1,  // parameterized type instantiation, symbol "ParameterizedType"
 };
 
@@ -152,6 +152,7 @@ class HOTPLACE_IO_API asn1_publisher_context {
     std::list<asn1_parameter*>& get_parameters() { return _params; }
     void set_state(uint32 state) { _state = state; }
     uint32 get_state() const { return _state; }
+    asn1oid_t& get_oid() { return _oid; }
 
    private:
     std::stack<asn1_semantic_node> _stack;
@@ -161,6 +162,7 @@ class HOTPLACE_IO_API asn1_publisher_context {
     asn1_paramvalues _paramvalues;       // parameterized types
     std::list<asn1_parameter*> _params;  // to be attached later
     uint32 _state{0};                    // see asn1_publish_state
+    asn1oid_t _oid;                      // oid
 };
 
 enum class asn1_build_t {
@@ -179,7 +181,7 @@ struct HOTPLACE_IO_API asn1_build_resultset {
     asn1_build_resultset() = default;
     asn1_build_resultset(const asn1_build_resultset&) = delete;
     asn1_build_resultset& operator=(const asn1_build_resultset&) = delete;
-    ~asn1_build_resultset() { clear(); }
+    ~asn1_build_resultset();
     // remove all asn1_module from asn1_modules
     void clear();
     // do not remove asn1_module

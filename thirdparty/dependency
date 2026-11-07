@@ -4,19 +4,21 @@
 
   * openssl
     * https://openssl-library.org/policies/releasestrat/index.html
+      * Version 4.1 will be supported until 2027-11-23
+      * Version 4.0 will be supported until 2027-05-14
       * Version 3.6 will be supported until 2026-11-01
       * Version 3.5 will be supported until 2030-04-08 (LTS)
       * Version 3.4 will be supported until 2026-10-22
       * Version 3.3 will be supported until 2026-04-09
       * Version 3.2 will be supported until 2025-11-23
       * Version 3.1 will be supported until 2025-03-14
-      * Version 3.0 will be supported until 2026-09-07 (LTS).
+      * Version 3.0 will be supported until 2026-09-07 (LTS)
       * Versions 1.1.1 and 1.0.2 are no longer supported. Extended support for 1.1.1 and 1.0.2 to gain access to security fixes for those versions is available.
       * Versions 1.1.0, 1.0.1, 1.0.0 and 0.9.8 are no longer supported.
     * https://openssl-library.org/source/
       * 5.0 end-of-life 2028-11
       * 4.2 end-of-life 2032-04    LTS
-      * 4.1 end-of-life 2027-11
+      * 4.1 end-of-life 2027-11-23
       * 4.0 end-of-life 2027-03-14
       * 3.6 end-of-life 2026-11-01
       * 3.5 end-of-life 2030-04-08 LTS

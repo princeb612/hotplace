@@ -53,7 +53,7 @@ t_value<T>
 
 The helper `asn1_parameter::value<T>(templ, param, name)` adds the formal parameter descriptor to the parameterized type and returns a `t_value<T>` initialized with a default value and the supplied name. The returned wrapper does not represent an unresolved future and does not perform deferred binding by itself.
 
-This helper and the loader's reconstruction of formal parameter definitions are separate from applying actual arguments to instantiate a parameterized type.
+This helper registers formal parameter metadata; it does not itself bind actual arguments. Revision 1124 adds the complementary publisher path: while visiting a `ParameterizedType` subtree, the publisher collects actual type/value arguments from `SimpleTypeSpec` and `ValueElement`, then specializes the referenced parameterized type. The `t_value<T>` wrapper remains only the named value holder used by formal parameter descriptors; it is not the mechanism that performs instantiation.
 
 ## 4. Relationships
 

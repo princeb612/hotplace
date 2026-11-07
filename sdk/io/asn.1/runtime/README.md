@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 2 · Revision 1124                    │
+│ Source basis: Revision 1124                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -99,7 +99,7 @@ For each fixture, `testcase_loader.cpp` checks the status of tokenization, parsi
 
 - The shared publisher/handler set is prepared through `asn1_advisor`; each build uses its own context and temporary module state.
 - Constraint handlers construct constraint model objects; reusable range/set evaluation machinery lives separately, including under `sdk/base/nostd`.
-- Parameterized notation has grammar productions and direct semantic prototypes, but the disabled end-to-end probe means parameter binding/substitution should not be represented as complete.
+- Revision 1124 adds state-guided actual-argument collection and publisher-side specialization for parameterized notation. The parameterized testcase verifies one concrete type/value instantiation through module representation; broader parameter-form and edge-case coverage remains to be established.
 - Parser, publisher, imported-symbol resolution, and notation representation are exercised in distinct test stages. This documentation update did not execute those tests.
 
 ## 4. Relationships

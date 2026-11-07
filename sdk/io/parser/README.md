@@ -3,8 +3,8 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 1 · Revision 1107                     │
-│ Source basis: Revision 1107                   │
+│ Edition 1 · Revision 1124                     │
+│ Source basis: Revision 1124                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -35,6 +35,7 @@ The directory contains two related but distinct paths:
 | binary_parsing_table | Table representation plus serialization/import operations | File layout and grammar revision are compatibility concerns. |
 | Parser execution state | One state stack for LALR; active GSS heads for GLR | Same table concepts, different stack representation and conflict behavior. |
 | parse_tree / parse_treenode | Grammar symbols, terminal values and ordered children | Syntax representation, not domain semantics. |
+| parse_tree_visitor state | A `uint32` value inherited by child visits and mutable in a pre-visit hook | Lets a consumer scope traversal context to a subtree without changing parser grammar semantics. |
 
 ### Supporting paths
 
@@ -99,7 +100,7 @@ Read these linked documents in order to follow the parser from grammar definitio
 | Parse tree | [Parse tree](parser-tree.md) | How SHIFT/REDUCE events assemble terminals and non-terminals into a grammar-shaped tree. |
 | Semantic reconstruction | [ASN.1 parser](../asn.1/runtime/asn1_parser.md) → [ASN.1 publisher](../asn.1/runtime/asn1_publisher.md) → [ASN.1 runtime](../asn.1/runtime/README.md) | How notation becomes parser tokens, how the syntax tree is published into semantic objects, and how those objects enter module/runtime structures. |
 
-**Keep the boundaries visible:** `cfg_grammar` builds a parser table; `binary_parsing_table` persists that table; the parser executes it to produce a `parse_tree`; ASN.1 publication then reconstructs domain-specific objects. Importing a table does not produce a tree, and building a tree does not by itself complete semantic reconstruction.
+**Keep the boundaries visible:** `cfg_grammar` builds a parser table; `binary_parsing_table` persists that table; the parser executes it to produce a `parse_tree`; `parse_tree_visitor` traverses the tree with optional subtree-scoped state; ASN.1 publication then reconstructs domain-specific objects. Importing a table does not produce a tree, and building a tree does not by itself complete semantic reconstruction.
 
 
 ### End-to-end execution paths

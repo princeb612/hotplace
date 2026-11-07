@@ -25,13 +25,13 @@ The logical table contains symbols, terminal registrations, productions, ACTION 
 
 ### File layout
 
-> ASN.1 grammar/table revision: 3 (source snapshot: Revision 1104)
+> ASN.1 grammar/table (source snapshot: Revision 1104)
 
 ```
 +-------------------------------------------------------+
 | File Header (20 bytes)                                |
 | - magic      :char[4] "HPT\0"                         |
-| - version    :uint16  grammar revision (ASN.1: 3)     |
+| - version    :uint16  CFG grammar revision            |
 | - endian     :uint16  0x1234                          |
 | - crc32      :uint32                                  |
 |  - crc32(BLOCK1 + BLOCK2 + .. + BLOCK5)               |

@@ -63,7 +63,8 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
                 } else if (parser_action_t::reduce == action) {
                     dbs << ANSI_ESCAPE "1;36mreduce" ANSI_ESCAPE "0m";
                 }
-                dbs.println(R"( ("%s", "%s") RHS[%zi] STACK[%zi] state[%08x])", node->symbol.c_str(), node->value.c_str(), node->sizeof_rhs(), context.size(), state);
+                dbs.printf(" state " ANSI_ESCAPE "%s[%08x]" ANSI_ESCAPE "0m", state ? "1;32m" : "37m", state);
+                dbs.println(R"( ("%s", "%s") RHS[%zi] STACK[%zi])", node->symbol.c_str(), node->value.c_str(), node->sizeof_rhs(), context.size());
             });
         }
 #endif

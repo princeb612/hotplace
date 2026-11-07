@@ -69,6 +69,7 @@ class t_avltree {
     t_avltree& operator=(const t_avltree& other) {
         clear();
         _root = clone(other._root);
+        _size = other._size;
         return *this;
     }
     t_avltree& operator=(t_avltree&& other) {

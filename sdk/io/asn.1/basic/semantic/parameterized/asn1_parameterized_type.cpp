@@ -63,8 +63,24 @@ asn1_specialized_type* asn1_parameterized_type::specialize(const std::string& na
     }
 }
 
+asn1_specialized_type* asn1_parameterized_type::specialize(const std::string& name, asn1_parameterized_type* type, asn1_paramvalues&& values) {
+    if (type) {
+        return type->specialize(name, std::move(values));
+    } else {
+        return nullptr;
+    }
+}
+
 asn1_specialized_type* asn1_parameterized_type::specialize(const std::string& name, const asn1_paramvalues& values) {
     auto obj = new asn1_specialized_type(this, values, name, get_object()->clone());
+    auto lambda = [this](asn1_object* item) -> void { item->get_constraints().update(); };
+    asn1_visitor visitor(_module, lambda);
+    visitor.visit(obj);
+    return obj;
+}
+
+asn1_specialized_type* asn1_parameterized_type::specialize(const std::string& name, asn1_paramvalues&& values) {
+    auto obj = new asn1_specialized_type(this, std::move(values), name, get_object()->clone());
     auto lambda = [this](asn1_object* item) -> void { item->get_constraints().update(); };
     asn1_visitor visitor(_module, lambda);
     visitor.visit(obj);

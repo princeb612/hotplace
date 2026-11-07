@@ -278,7 +278,7 @@ The goal is not to document everything, but to make the important things underst
     * ubuntu 20.04 and newer
     * mingw x64
 
-## custom toolchain
+## thirdparty
 
 ### openssl
 

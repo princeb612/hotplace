@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1124                    │
+│ Source basis: Revision 1124                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -42,7 +42,9 @@ The tree builder maintains nodes needed to assemble reductions and exposes the c
 
 ### Visitor interface
 
-parse_tree_visitor receives terminal SHIFT events and non-terminal REDUCE events. This permits printing, traversal or transformation without embedding grammar-specific semantic rules into the parser engine.
+`parse_tree_visitor` receives terminal SHIFT events and non-terminal REDUCE events. It can also receive a pre-visit hook (`on_visit`) that takes the current state by reference. The hook runs before the node is processed; changes to that node's local state are visible to its SHIFT/REDUCE callback and are inherited by its descendants.
+
+`parse_tree::accept(visitor, initial_state)` starts traversal with an explicit state value. Each node receives a copy of its parent's state, so a state change made at one node is scoped to that node's subtree and does not leak into sibling subtrees. The original `accept(visitor)` overload starts with state `0`. This provides generic traversal context without embedding domain-specific meaning in the parser engine.
 
 The tree is a syntax representation. ASN.1 types, tags, references, defaults and constraints are interpreted by the ASN.1 semantic layer, not encoded as intrinsic node types here.
 
@@ -97,20 +99,26 @@ The tree is assembled incrementally from parser actions; it does not need to res
 ### Visitor traversal
 
 ```text
-accept(visitor)
+accept(visitor, initial_state)
     │
-    ├─ terminal node ─► shift callback
+    ▼
+visit(node, inherited_state)
+    │
+    ▼
+on_visit(node, mutable local state)
+    │
+    ├─ terminal node ─► shift(node, local state)
     │
     └─ non-terminal node
            │
            ▼
-       visit children in order
+       visit children in order, inheriting local state
            │
            ▼
-       reduce callback after children
+       reduce(node, local state) after children
 ```
 
-The traversal is post-order for reductions. If a visitor returns an error, traversal stops and propagates that error.
+The traversal is pre-order for the state hook and post-order for reductions. Each child inherits the current node's resulting state, while sibling traversal starts from the parent's state copy. SHIFT/REDUCE callback errors stop traversal and are propagated. In the current implementation, the return value from `on_visit` is not used to abort traversal; the hook is used to mutate state.
 
 ### Semantic boundary
 
@@ -118,7 +126,7 @@ The syntax tree is the hand-off point between generic parser execution and domai
 
 ### Source-level evidence
 
-test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In parse_tree.cpp, SHIFT calls on_shift(typestring, current_token.value) and REDUCE calls on_reduce(rule_id, rule.lhs, rule.rhs.size()). The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
+test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In `parse_tree.cpp`, `accept()` delegates to `visit(root, visitor, initial_state)`. Each visit copies the inherited state, invokes `on_visit(node, state)`, passes the resulting state to `on_shift` or `on_reduce`, and passes it to child visits. The generic parser does not interpret the bits; consumers define their own state flags. The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
 
 ## 4. Relationships
 ### Related areas

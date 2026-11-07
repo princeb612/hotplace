@@ -19,6 +19,8 @@
 namespace hotplace {
 namespace io {
 
+asn1_build_resultset::~asn1_build_resultset() { clear(); }
+
 void asn1_build_resultset::clear() {
     type = asn1_build_t::unknown;
     auto modules = asn1_modules::get_instance();

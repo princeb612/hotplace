@@ -47,7 +47,9 @@ class HOTPLACE_IO_API asn1_parameterized_type : public asn1_type {
      *
      */
     static asn1_specialized_type* specialize(const std::string& name, asn1_parameterized_type* type, const asn1_paramvalues& values);
+    static asn1_specialized_type* specialize(const std::string& name, asn1_parameterized_type* type, asn1_paramvalues&& values);
     asn1_specialized_type* specialize(const std::string& name, const asn1_paramvalues& values);
+    asn1_specialized_type* specialize(const std::string& name, asn1_paramvalues&& values);
 
     void set_module(asn1_module* module);
     asn1_module* get_module() const;

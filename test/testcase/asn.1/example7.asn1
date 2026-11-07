@@ -26,6 +26,14 @@ TemplateModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
         timestamp GeneralizedTime,
         data      TypeParam
     }
+
+    -- Definition of UserReadRequest payload type (Added to resolve undefined type error)
+    UserReadRequest ::= SEQUENCE {
+        userId      INTEGER,
+        readOffset  INTEGER,
+        readLength  INTEGER
+    }
+
     ReadUserCmd ::= COMMAND-ENVELOPE{ UserReadRequest, 101 }
 
     -- A template that receives an OID as a value parameter (algorithmOid)
