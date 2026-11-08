@@ -3,7 +3,7 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 1 · Revision 1124                     │
+│ Edition 1 · Revision 1125                     │
 │ Source basis: Revision 1124                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
@@ -76,7 +76,7 @@ The stages are independently callable. The loader can expose tokens or a parse t
 
 ### Evidence boundaries
 
-Test sources cover distinct but related behaviors: parser handling of assignments and constraints; publisher reconstruction from parse trees; file loading; imported/exported symbol relationships; and focused semantic-object linkage. A grammar test does not prove the corresponding notation becomes a fully linked runtime type. The parameterized testcase now provides an integrated parser-to-publisher specialization check for one concrete form, but it does not establish exhaustive parameterized-notation coverage.
+Test sources cover distinct but related behaviors: parser handling of assignments and constraints; publisher reconstruction from parse trees; file loading; imported/exported symbol relationships; and focused semantic-object linkage. A grammar test does not prove the corresponding notation becomes a fully linked runtime type. The parameterized testcase provides an integrated parser-to-publisher specialization check for one concrete form, but it does not establish exhaustive parameterized-notation coverage. Revision 1125 adds move-aware specialization overloads for the collected actual-argument values.
 
 Parameterized ASN.1 has progressed beyond grammar productions and direct semantic prototypes. Revision 1124 adds state-guided actual-argument collection in the publisher and a testcase that verifies a concrete type/value instantiation through module representation. This is evidence for the tested path, not a claim that every parameter form or edge case is complete.
 
