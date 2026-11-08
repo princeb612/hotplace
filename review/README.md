@@ -650,15 +650,16 @@ In particular, parser production names, ASN.1 loader capabilities, protocol reso
 
 ## 8. Current Review Status
 
-The review package uses Revision 1124 as its overall source baseline. The revision-specific evidence is grouped by review area:
+The review package uses Revision 1124 as its overall source baseline. The revision-specific evidence is listed individually:
 
-- **Shared-build and module boundary**
-  - Revisions 1112–1113 add a tested MinGW64 shared-build checkpoint, per-module API visibility, and related build/Windows portability adjustments.
-- **ASN.1 validation and parameterized semantics**
-  - Revisions 1118–1119 materially extend ASN.1 value validation.
-  - Revisions 1120/1122 add parameterized type specialization/instantiation work.
-  - Revision 1123 reconstructs parameterized definitions and formal parameters.
-  - Revision 1124 adds state-guided actual-argument collection and a tested publisher specialization/representation path.
+- **Revision 1112** — Introduces the SDK API export/import declarations and records the initial MinGW64 shared-build checkpoint.
+- **Revision 1113** — Adds per-module API visibility and related build/Windows portability adjustments.
+- **Revision 1118** — Extends ASN.1 built-in value/type validation and corrects ENUMERATED constraint validation.
+- **Revision 1119** — Completes the related OID validation-path adjustment.
+- **Revision 1120** — Adds runtime parameterized type specialization/instantiation work.
+- **Revision 1122** — Advances the specialization/instantiation implementation and records the associated validation work.
+- **Revision 1123** — Reconstructs parameterized definitions and formal parameter lists in the loader/publisher path.
+- **Revision 1124** — Adds state-guided actual-argument collection and a tested publisher specialization/representation path.
 
 The ASN.1 parser/runtime review records this progression while keeping the demonstrated testcase boundary explicit. Unrelated review topics retain their earlier individual baselines where these source changes do not materially affect them.
 
