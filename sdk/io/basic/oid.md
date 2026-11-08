@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1125                    │
+│ Source basis: Revision 1125                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -27,19 +27,19 @@ node vector ────────────────oid_to_str───�
 
 `oid_t` is an alias for `std::vector<uint32>`. Each element is one numeric arc/node in the dotted representation. It is not a BER/DER byte sequence and does not retain the original text spelling, labels, or formatting.
 
-The conversion API uses three data forms:
+The conversion API uses four data forms:
 
 | Form | Role |
 |---|---|
 | Dotted decimal text, e.g. `2.16.840.1.101.3.4.2.1` | External textual input |
-| `oid_t` node vector | Intermediate representation used by the dictionary and ASN.1 layer |
-| `basic_stream` | Output target for dotted decimal text from `oid_to_str()` |
+| `oid_t` node vector | Numeric intermediate representation used by the dictionary and ASN.1 layer |
+| `asn1oid_t` (`std::vector<oid_elem>`) | Arc sequence that can retain a name alongside each numeric arc when parsing ASN.1-braced notation |\n| `basic_stream` | Output target for dotted decimal text or reconstructed ASN.1-braced notation |
 
 ### Token and cursor data
 
 The dotted parser passes a character buffer, its size, a current scan position, and a delimiter boundary to the string-scanning helper. Each delimited decimal token is converted to `uint32` and inserted into the output vector.
 
-The ASN.1-style parser uses a list of `range_t` token spans returned by `regex_token()`. Each span identifies a decimal run in the original input; conversion then reads the corresponding character range into one node. The spans are temporary parsing data, not part of the resulting OID.
+The numeric ASN.1-style overload uses `regex_token()` to extract decimal runs into `oid_t`. The named overload uses `regex_tokens()` with a name/optional-number pattern and creates `oid_elem{arc, name}` entries in `asn1oid_t`. The named overload appends to the supplied vector rather than clearing it; callers that want replacement semantics must clear it first. These helpers extract notation components but do not constitute complete ASN.1 OID syntax or arc-constraint validation.
 
 The adjacent dictionary stores metadata separately from the node sequence: `oid_metadata` contains a `name` and `description`, while `oid_dictionary` indexes node sequences in a trie. This allows the same OID value to be used independently of its human-readable label.
 
@@ -104,7 +104,7 @@ oid_to_str(nodes, basic_stream)
 
 The destination stream is cleared before output, so the function replaces previous stream contents rather than appending a second OID to them.
 
-### Dictionary lookup is a separate step
+### Reverse conversion to ASN.1-braced notation\n\n`oid_dictionary::oid2asn1()` uses `t_trie::trace()` to walk the numeric arcs and collect the metadata name attached to each registered prefix. It emits `{name(number) ...}` for named arcs and a bare decimal arc when a traversed prefix has no metadata name. The current implementation requires every traversed prefix to be a registered terminal trie entry; a missing prefix or non-terminal prefix makes the conversion fail. This is a dictionary-backed reconstruction, not a lossless round trip of arbitrary original spelling.\n\n### Dictionary lookup is a separate step
 
 ```text
 dotted text ──► str_to_oid() ──► oid_t ──┐
@@ -135,7 +135,7 @@ asn1text_to_oid(text, strlen(text), oid);
 
 oid_metadata meta;
 auto dict = oid_dictionary::get_instance();
-bool found = dict->lookup(oid, meta);
+bool found = dict->lookup(oid, meta);\n\nbasic_stream notation;\nbool reconstructed = dict->oid2asn1(oid, notation);
 ```
 
 The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name and description. The testcase asserts that lookup succeeds, but it does not establish that `asn1text_to_oid()` validates all ASN.1 OID notation rules.
