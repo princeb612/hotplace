@@ -832,11 +832,10 @@ The verification evidence should be read with its revision boundaries:
 
 ### Binary file-version metadata
 
-Revision 1116 keeps project version values in the root `version.txt`, which
-is included by `CMakeLists.txt`. The values `VERSION_MAJOR`,
-`VERSION_MINOR`, and `VERSION_BUILD` are combined into numeric and string
-forms used by the Windows resource template. This lets MinGW64 and MSVC
-generated binaries carry consistent file and product version metadata.
+- **Revision 1116**
+  - Keeps project version values in the root `version.txt`, which is included by `CMakeLists.txt`.
+  - Combines `VERSION_MAJOR`, `VERSION_MINOR`, and `VERSION_BUILD` into numeric and string forms used by the Windows resource template.
+  - Lets MinGW64 and MSVC generated binaries carry consistent file and product version metadata.
 
 ```text
 version.txt
