@@ -14,7 +14,9 @@ The scope is deliberately narrow: this is a review of the implementation path us
 
 ## Revision 1105 review pass
 
-Revision 1105 restored the CRL revocation-check path after the addition of the project's `process` abstraction. This changes the current behavior description in the trust/CRL section, but does not change the core architecture: PE-specific digest rules remain in the PE plugin, while signer and certificate verification use OpenSSL.
+- **Revision 1105**
+  - Restores the CRL revocation-check path after the addition of the project's `process` abstraction.
+  - Changes the current behavior described in the trust/CRL section, but not the core architecture: PE-specific digest rules remain in the PE plugin, while signer and certificate verification use OpenSSL.
 
 ## 1. Verification as a composition of distinct responsibilities
 
@@ -227,7 +229,11 @@ sdk/io/string::split_url()
 local CRL/cache representation
 ```
 
-Revision 1105 restored the `get_crl()` path. It reads CRL distribution-point URIs from certificates, reuses context/cache or local files where available, and can invoke `wget` through the project's `process` abstraction when retrieval is enabled. The verifier configures `X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL` and adds successfully decoded CRLs to the OpenSSL store before `PKCS7_verify()`.
+- **Revision 1105 — CRL handling**
+  - Restores the `get_crl()` path.
+  - Reads CRL distribution-point URIs from certificates and reuses context/cache or local files where available.
+  - Can invoke `wget` through the project's `process` abstraction when retrieval is enabled.
+  - Configures `X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL` and adds successfully decoded CRLs to the OpenSSL store before `PKCS7_verify()`.
 
 The sample applet enables CRL retrieval by setting `authenticode_ctrl_t::set_crl = 1`; the source notes that it may be disabled for an air-gapped environment. This is a restored revocation-check path, not proof of a complete revocation policy: retrieval, decoding, freshness, issuer validation, and successful chain revocation checking remain distinct concerns. In particular, the callback does not turn a missing-CRL error into success.
 
