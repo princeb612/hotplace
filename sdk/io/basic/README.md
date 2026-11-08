@@ -3,8 +3,8 @@
 ```text
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
-│ Edition 1 · Revision 1107                     │
-│ Source basis: Revision 1107                   │
+│ Edition 1 · Revision 1125                     │
+│ Source basis: Revision 1125                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -24,7 +24,7 @@ The directory does not attempt to provide one universal serialization model. `pa
 | Component | Main responsibility | Implementation notes |
 |---|---|---|
 | `payload` | Ordered field description used for writing and reading binary messages | Supports named values, groups, references, and specialized `payload_encoded` fields; see [payload.md](payload.md) |
-| `oid` | Dotted decimal or ASN.1-braced OID text to integer-node vector, and node vector to dotted text | Separate from ASN.1 BER/DER encoding; see [oid.md](oid.md) |
+| `oid` | Dotted decimal / ASN.1-braced text conversion, named-arc extraction, dotted output, and dictionary-backed ASN.1 notation reconstruction | Separate from ASN.1 BER/DER encoding; see [oid.md](oid.md) |
 | `zlib` | Deflate/inflate wrapper over zlib | Selects zlib-wrapped, raw DEFLATE, or gzip framing; see [zlib.md](zlib.md) |
 | `json` | Parse JSON text or a file into a Jansson `json_t*` | Caller owns the resulting Jansson reference; see [json.md](json.md) |
 | `types.hpp` | Shared declarations/types for this I/O area | Supporting header rather than a separate feature |
@@ -37,7 +37,7 @@ The components do not share one universal I/O object. Their main intermediate re
 |---|---|---|
 | Ordered `payload_member` sequence | Field layout plus current field values, group membership, and optional length references | `payload` |
 | `oid_t` (`std::vector<uint32>`) | Numeric OID arcs, not BER/DER bytes | OID conversion and dictionary lookup |
-| `oid_metadata` | Dictionary result containing a name and description | `oid_dictionary` |
+| `oid_metadata` | Dictionary result containing a name and description | `oid_dictionary` |\n| `asn1oid_t` / `oid_elem` | ASN.1 arc sequence retaining each numeric arc and its optional label | Named ASN.1 text extraction |
 | Jansson `json_t*` | Parsed JSON value tree with Jansson reference-counted ownership | `json_open_stream()`, `json_open_file()` |
 | Byte buffer / `stream_t` | Compressed or decompressed content bytes | `zlib_deflate()`, `zlib_inflate()` |
 | `zlib_windowbits_t` | Framing choice used to initialize zlib's DEFLATE state | zlib wrappers |
@@ -70,7 +70,7 @@ input bytes + framing mode ──► zlib state ──► 1 KiB output chunks �
 ### Flow boundaries
 
 - **Payload:** member order defines the binary field order. Group state and length references affect which bytes are consumed or emitted; specialized `payload_encoded` fields delegate their internal format to the implementing type.
-- **OID:** conversion produces numeric nodes. Dictionary lookup is a subsequent operation, and ASN.1 BER/DER encoding belongs to `sdk/io/asn.1`.
+- **OID:** conversion can produce numeric nodes or named `asn1oid_t` arcs. Dictionary lookup is a subsequent operation; `oid_dictionary::oid2asn1()` reconstructs labels by tracing registered numeric prefixes. ASN.1 BER/DER encoding belongs to `sdk/io/asn.1`.
 - **JSON:** the wrapper validates its output/input pointers, delegates parsing to Jansson, returns a hotplace status, and leaves successful JSON-reference ownership with the caller.
 - **Compression:** the caller chooses zlib-wrapped, raw DEFLATE, or gzip framing. The wrapper resets its destination and accumulates generated output; it does not choose a format from HTTP or JOSE metadata itself.
 
