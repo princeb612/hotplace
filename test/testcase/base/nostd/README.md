@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1106
+Edition 2 · Revision 1125
+Source basis: Revision 1125
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -45,7 +45,7 @@ The directory is not one uniform conformance suite. Some tests compare exact val
 
 ### 2.4 AVL tree and binary tree: duplicate insertion and ordering policies
 
-1. [`testcase_avltree.cpp`](testcase_avltree.cpp) inserts each integer from `0` through `19` twice. It asserts that the tree size is 20, then removes each integer and asserts size zero and `empty() == true`. Traversal is printed but not compared with an expected ordered sequence. The test therefore checks duplicate insertion's effect on size and removal for this insertion sequence, not balancing invariants directly.
+1. [`testcase_avltree.cpp`](testcase_avltree.cpp) inserts each integer from `0` through `19` twice. It asserts that the tree size is 20, then removes each integer and asserts size zero and `empty() == true`. Traversal is printed but not compared with an expected ordered sequence. The test therefore checks duplicate insertion's effect on size and removal for this insertion sequence, not balancing invariants directly. It does not yet cover copy/move construction or assignment, assignment return values, independence after copying, or preservation of AVL node heights when cloning.
 
 2. [`testcase_btree.cpp`](testcase_btree.cpp) tests more value/comparator combinations:
 
