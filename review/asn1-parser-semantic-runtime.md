@@ -94,7 +94,9 @@ This distinction matters because parsing does not directly create an undifferent
 
 ## From runtime registry to ASN.1 module model
 
-The revision 1102 name `asn1_module` better expresses the current responsibility than the former `asn1_runtime` name. The module still stores definitions, schema text, and values, but it also carries module-level metadata and cross-module symbol relationships.
+- **Revision 1102**
+  - Renames `asn1_runtime` to `asn1_module`, better expressing the module's responsibility.
+  - Retains definitions, schema text, and values while adding module-level metadata and cross-module symbol relationships.
 
 ```text
 asn1_module
@@ -112,7 +114,12 @@ asn1_module
 
 These are module-model capabilities, not proof that arbitrary ASN.1 module sets can already be loaded and resolved end to end. The parser, semantic publisher, module context, import/export rules, and loader must still agree on the supported language subset.
 
-Revision 1102 also changes the parameterized grammar vocabulary (`ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`) and the lexical handling around it. The dedicated `handle_asn1parameterized` lexer path was removed because parameterized-value handling remains limited; single-quoted and hexadecimal-string handling now have explicit lexer handlers. These changes should be read as grammar/lexer evolution, not as a claim of complete parameterized ASN.1 support.
+- **Revision 1102**
+  - Changes the parameterized grammar vocabulary (`ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`) and the surrounding lexical handling.
+  - Removes the dedicated `handle_asn1parameterized` lexer path because parameterized-value handling remains limited.
+  - Adds explicit lexer handlers for single-quoted and hexadecimal strings.
+
+These changes should be read as grammar/lexer evolution, not as a claim of complete parameterized ASN.1 support.
 
 ## LALR(1) and GLR are different parts of the architecture
 
