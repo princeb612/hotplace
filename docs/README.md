@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1124**
+**Edition 1 · Revision 1125**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -116,9 +116,14 @@ substrate used by higher-level protocol and security structures.
   of parameterized definitions and formal parameter lists.
 - Revision 1124 adds state propagation to parse-tree traversal and uses that state to collect actual
   type/value parameters for publisher-side specialization. The parameterized
-  test now checks the reconstructed module representation for a concrete
-  instantiation; this is a verified integration step, not a claim of complete
-  coverage of every parameterized ASN.1 form.
+  test checks the reconstructed module representation for a concrete
+  instantiation; this is a verified integration step, not complete coverage of
+  every parameterized ASN.1 form.
+- Revision 1125 adds move-aware parameterized specialization overloads and
+  extends the OID utility path with named ASN.1 arc extraction and
+  dictionary-backed reconstruction of ASN.1-braced notation. The same revision
+  adds `t_trie::trace()` for sequences whose every prefix is a registered
+  terminal key, and corrects AVL copy-assignment size propagation.
 
 These are topic-level implementation changes; they do not alter the study map's layer relationships.
 
