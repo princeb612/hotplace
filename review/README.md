@@ -139,7 +139,14 @@ HOTPLACE_*_API export / import boundary
 
 **Architectural point**
 
-The shared-build path is a cross-module contract: each module must agree on whether its symbols are exported by the library being built or imported by a dependent module. Revision 1112 exercised a MinGW64 shared build; this is evidence for that tested configuration, not a claim that every platform/compiler/shared-build combination has been validated. Revision 1113 also adjusted root CMake defaults and Windows test-runtime setup while addressing an MSVC concurrency-header conflict.
+The shared-build path is a cross-module contract: each module must agree on whether its symbols are exported by the library being built or imported by a dependent module.
+
+- **Revision 1112**
+  - Exercises a MinGW64 shared build.
+  - Records evidence for that tested configuration, not a claim that every platform/compiler/shared-build combination has been validated.
+- **Revision 1113**
+  - Adjusts root CMake defaults and Windows test-runtime setup.
+  - Addresses an MSVC concurrency-header conflict.
 
 ---
 
@@ -213,7 +220,20 @@ semantically implemented
 fully supported feature
 ```
 
-This distinction is especially important for the loader/module integration that began around revision 1097, gained import/export and reference-resolution operations through revisions 1099–1102, continued with the `asn1_modules` registry and parameterized-type/value prototypes in revisions 1103–1104, reached formal parameterized-definition reconstruction in Revision 1123, and added a state-guided actual-argument specialization path in Revision 1124. The latest testcase verifies a concrete `FRAME` instantiation through module representation; this does not imply exhaustive support for every parameterized assignment.
+This distinction is especially important for the loader/module integration:
+
+- **Revision 1097**
+  - Begins the loader/module integration path.
+- **Revisions 1099–1102**
+  - Add import/export and reference-resolution operations.
+- **Revisions 1103–1104**
+  - Introduce the `asn1_modules` registry and parameterized-type/value prototypes.
+- **Revision 1123**
+  - Reconstructs formal parameterized definitions.
+- **Revision 1124**
+  - Adds a state-guided actual-argument specialization path.
+
+The latest testcase verifies a concrete `FRAME` instantiation through module representation. This does not imply exhaustive support for every parameterized assignment.
 
 ---
 
@@ -384,7 +404,10 @@ crypto_advisor   tls_advisor
 
 They intersect at the point where protocol identifiers refer to cryptographic mechanisms.
 
-The Revision 1124 addendum also records the distinction between TLS resource-table recognition, `tls_flag_support` eligibility, `tls_flag_secure` recommendation, and explicit diagnostic overrides. It cross-checks that policy against RFC 8996, RFC 9852, and RFC 10015; the retained legacy cipher-suite identifiers are not treated as proof of ordinary negotiability.
+- **Revision 1124 addendum**
+  - Distinguishes TLS resource-table recognition, `tls_flag_support` eligibility, `tls_flag_secure` recommendation, and explicit diagnostic overrides.
+  - Cross-checks that policy against RFC 8996, RFC 9852, and RFC 10015.
+  - Does not treat retained legacy cipher-suite identifiers as proof of ordinary negotiability.
 
 ---
 
