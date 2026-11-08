@@ -269,7 +269,14 @@ Revisions through 1124 establish stronger connections between syntax, semantic r
 
 ## Current state
 
-Revision 1124 extends the syntax → semantic construction → module/runtime path beyond formal parameter reconstruction. State propagation in `parse_tree`/`parse_tree_visitor` lets the publisher distinguish a `ParameterizedType` instantiation subtree without creating a separate reconstruction context. The publisher gathers type/value actual arguments and calls `specialize()`; the parameterized testcase verifies the resulting module representation. Revisions 1118–1119 remain the separate built-in type/value validation boundary, and Revisions 1120/1122 record runtime specialization and validation work. The new test establishes one integrated instantiation case, not complete support for all parameterized ASN.1 notation.
+The current implementation state is described by the following revision-specific steps:
+
+- **Revision 1118** — Adds built-in ASN.1 type/value validation through `asn1_object::validate_type` and corrects ENUMERATED validation in `asn1_constraints::do_validate`.
+- **Revision 1119** — Adds the OID-related adjustment to the built-in validation path.
+- **Revision 1120** — Records runtime parameterized type specialization/instantiation and parameter-dependent validation work.
+- **Revision 1122** — Advances parameterized specialization/instantiation and its verification, including the removal of the future/promise behavior from `t_value`.
+- **Revision 1123** — Reconstructs parameterized type definitions and formal parameter lists in the loader/publisher semantic model.
+- **Revision 1124** — Extends the syntax → semantic construction → module/runtime path beyond formal parameter reconstruction. State propagation in `parse_tree`/`parse_tree_visitor` lets the publisher distinguish a `ParameterizedType` instantiation subtree without creating a separate reconstruction context. The publisher gathers type/value actual arguments and calls `specialize()`; the parameterized testcase verifies the resulting module representation. This establishes one integrated instantiation case, not complete support for all parameterized ASN.1 notation.
 
 ### Related source / documents
 
