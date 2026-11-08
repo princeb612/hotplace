@@ -37,7 +37,8 @@ The components do not share one universal I/O object. Their main intermediate re
 |---|---|---|
 | Ordered `payload_member` sequence | Field layout plus current field values, group membership, and optional length references | `payload` |
 | `oid_t` (`std::vector<uint32>`) | Numeric OID arcs, not BER/DER bytes | OID conversion and dictionary lookup |
-| `oid_metadata` | Dictionary result containing a name and description | `oid_dictionary` |\n| `asn1oid_t` / `oid_elem` | ASN.1 arc sequence retaining each numeric arc and its optional label | Named ASN.1 text extraction |
+| `oid_metadata` | Dictionary result containing a name and description | `oid_dictionary` |
+| `asn1oid_t` / `oid_elem` | ASN.1 arc sequence retaining each numeric arc and its optional label | Named ASN.1 text extraction |
 | Jansson `json_t*` | Parsed JSON value tree with Jansson reference-counted ownership | `json_open_stream()`, `json_open_file()` |
 | Byte buffer / `stream_t` | Compressed or decompressed content bytes | `zlib_deflate()`, `zlib_inflate()` |
 | `zlib_windowbits_t` | Framing choice used to initialize zlib's DEFLATE state | zlib wrappers |
