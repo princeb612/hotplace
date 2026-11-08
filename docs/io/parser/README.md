@@ -39,7 +39,16 @@ The CHANGELOG gives the following parser-oriented sequence:
   - **Revision 1103** — `asn1_publisher` fixes `TypeAssignment` semantic publication.
   - **Revision 1104** — parameterized type/value semantic prototypes; module registry renamed to `asn1_modules`; binary parsing-table format revision 3.
 
-The important direction is parser selection at a stable semantic boundary, not a simple LALR-to-GLR replacement story. The GSS and parse-tree fixes from 1096 support the GLR path; by 1099–1104, the module path exercises GLR parsing through semantic publication and module resolution. Revision 1104's parameterized type/value work remains prototyping, and parsing-table format revision 3 is a generated-table format change rather than proof that semantic instantiation is complete. The two parser mechanisms and their provider/configuration paths should remain explicit in the explanation.
+The important direction is parser selection at a stable semantic boundary, not a simple LALR-to-GLR replacement story:
+
+- **GLR infrastructure**
+  - The GSS and parse-tree fixes from Revision 1096 support the GLR path.
+- **Module integration**
+  - By Revisions 1099–1104, the module path exercises GLR parsing through semantic publication and module resolution.
+- **Parameterized semantic boundary**
+  - Revision 1104's parameterized type/value work remains prototyping, and parsing-table format revision 3 is a generated-table format change rather than proof that semantic instantiation is complete.
+
+The two parser mechanisms and their provider/configuration paths should remain explicit in the explanation.
 
 ## Why the parser has become a separate study topic
 
