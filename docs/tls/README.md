@@ -67,18 +67,21 @@ DTLS records, or QUIC CRYPTO frames.
 
 The CHANGELOG places TLS development across several distinct study stages.
 
-- Revisions 650–672: direct TLS/DTLS understanding, including `tls13.xargs.org`, `tls12.xargs.org`, and `dtls.xargs.org`.
-- Revisions 673–680: RFC 8448 TLS 1.3 handshake examples, including HelloRetryRequest, resumed 0-RTT, client authentication, and compatibility mode.
-- Revisions 682–776: TLS/DTLS client-side development and network integration.
-- Revisions 777–804: server integration with TLS, HTTP/1.1, and HTTP/2.
-- Revisions 740–789: TLS 1.2 protection, certificates, CBC/GCM/CCM, Extended Master Secret, and key-share related work.
-- Revisions 762–781: DTLS reconstruction, fragmentation, and cipher testing.
-- Revisions 788–902: broader TLS 1.2/TLS 1.3 cipher and key-exchange coverage.
-- Revisions 889–902: PQC/KEM work and TLS 1.3 ML-KEM hybrid groups.
-- Revision 905: DTLS built-in reorder support.
-- Revisions 953 and 999: TLS 1.3 ML-DSA certificate study and subsequent SLH-DSA study.
-- Revision 994: TLS/HTTP/2/QUIC rollback checkpoint.
-- Revision 1015 onward: renewed DTLS/TLS verification and cross-platform testing.
+- **Protocol study and initial integration**
+  - Revisions 650–672: direct TLS/DTLS understanding, including `tls13.xargs.org`, `tls12.xargs.org`, and `dtls.xargs.org`.
+  - Revisions 673–680: RFC 8448 TLS 1.3 handshake examples, including HelloRetryRequest, resumed 0-RTT, client authentication, and compatibility mode.
+  - Revisions 682–776: TLS/DTLS client-side development and network integration.
+  - Revisions 777–804: server integration with TLS, HTTP/1.1, and HTTP/2.
+- **TLS/DTLS protection and cipher coverage**
+  - Revisions 740–789: TLS 1.2 protection, certificates, CBC/GCM/CCM, Extended Master Secret, and key-share related work.
+  - Revisions 762–781: DTLS reconstruction, fragmentation, and cipher testing.
+  - Revisions 788–902: broader TLS 1.2/TLS 1.3 cipher and key-exchange coverage.
+  - Revision 905: DTLS built-in reorder support.
+- **Post-quantum and renewed verification**
+  - Revisions 889–902: PQC/KEM work and TLS 1.3 ML-KEM hybrid groups.
+  - Revisions 953 and 999: TLS 1.3 ML-DSA certificate study and subsequent SLH-DSA study.
+  - Revision 994: TLS/HTTP/2/QUIC rollback checkpoint.
+  - Revision 1015 onward: renewed DTLS/TLS verification and cross-platform testing.
 
 The chronology shows TLS evolving from protocol understanding into a reusable protocol/cryptographic implementation, then becoming a dependency for QUIC. The current source retains all of those layers.
 
