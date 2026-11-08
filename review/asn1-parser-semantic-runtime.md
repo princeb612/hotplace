@@ -169,7 +169,19 @@ semantic reconstruction
 runtime schema/type objects
 ```
 
-Revisions 1097–1102 established the beginning of this integration, not a completed module loader. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`. Revision 1123 advances this path by reconstructing a parameterized type definition and its formal parameter list into the semantic model. Revision 1124 adds the instantiation counterpart: `parse_tree` carries a state value through traversal, and `parse_tree_visitor` exposes a pre-visit hook that can set state for a node's descendants. The ASN.1 publisher marks `ParameterizedType` as an instantiation context, collects actual type parameters from `SimpleTypeSpec` and value parameters from `ValueElement`, and specializes the referenced parameterized type. The `test_parameterized2` path now checks the module representation of a concrete `FRAME` instantiation. This is a material end-to-end step for the tested form; grammar coverage, other parameter forms, module linkage, and complete ASN.1 language support remain distinct levels of support.
+The integration progressed through several distinct semantic-construction steps:
+
+- **Loader and module path**
+  - Revisions 1097–1102 established the beginning of this integration, not a completed module loader.
+  - Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`.
+  - Revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`.
+- **Parameterized definition reconstruction**
+  - Revision 1123 reconstructs a parameterized type definition and its formal parameter list into the semantic model.
+- **Parameterized instantiation path**
+  - Revision 1124 adds the instantiation counterpart: `parse_tree` carries a state value through traversal, and `parse_tree_visitor` exposes a pre-visit hook that can set state for a node's descendants.
+  - The ASN.1 publisher marks `ParameterizedType` as an instantiation context, collects actual type parameters from `SimpleTypeSpec` and value parameters from `ValueElement`, and specializes the referenced parameterized type.
+  - The `test_parameterized2` path now checks the module representation of a concrete `FRAME` instantiation.
+  - This is a material end-to-end step for the tested form; grammar coverage, other parameter forms, module linkage, and complete ASN.1 language support remain distinct levels of support.
 
 The parsing resources also have different roles:
 
