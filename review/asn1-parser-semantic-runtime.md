@@ -213,7 +213,15 @@ declared constraint evaluation
 accepted / rejected value
 ```
 
-Revisions 1118–1119 strengthen this boundary. Revision 1118 added `asn1_object::validate_type` for built-in type/value validation and corrected ENUMERATED validation in `asn1_constraints::do_validate`. Revision 1119 added the OID header dependency used by the type-validation implementation. The checks cover concrete type expectations—for example, boolean and integer value forms, string character/content constraints, and OID-shaped values—before the constraint layer decides whether a declared restriction accepts the value.
+Revisions 1118–1119 strengthen this boundary through two related changes:
+
+- **Revision 1118**
+  - Adds `asn1_object::validate_type` for built-in type/value validation.
+  - Corrects ENUMERATED validation in `asn1_constraints::do_validate`.
+- **Revision 1119**
+  - Adds the OID header dependency used by the type-validation implementation.
+
+The checks cover concrete type expectations—for example, boolean and integer value forms, string character/content constraints, and OID-shaped values—before the constraint layer decides whether a declared restriction accepts the value.
 
 This is an architectural extension of the syntax-to-runtime path, not evidence of complete ASN.1 conformance. Built-in type checking, constraint evaluation, successful parsing, and end-to-end encoding/decoding remain separate capabilities; support should be described according to the implemented and tested paths rather than inferred from the existence of `validate()`.
 
