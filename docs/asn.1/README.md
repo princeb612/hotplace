@@ -1,6 +1,6 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1124**
+**Edition 1 · Revision 1125**
 
 ## Context
 
@@ -78,6 +78,7 @@ The CHANGELOG gives the following development path:
   - **Revision 1122** — parameterized type specialization/instantiation applied; Sanitizer, Valgrind, and Application Verifier checks; future/promise behavior removed from `t_value`
   - **Revision 1123** — loader/publisher reconstructs parameterized type definitions and formal parameter lists into semantic objects
   - **Revision 1124** — parse-tree visitor propagates node-scoped state; publisher collects actual type/value parameters and specializes a parameterized type during instantiation; `asn1.ptb` advances to binary table revision 4 while `asn1notation.ptb` remains at revision 3
+  - **Revision 1125** — adds move-aware specialization and specialized-type construction overloads for collected actual parameter values
 
 The history shows the transition from an ASN.1 runtime model, through parser infrastructure, toward semantic reconstruction of that model from notation.
 
@@ -92,7 +93,7 @@ The implementation boundary can be read as a progression from module constructio
   - Revisions 1118–1119 add a separate runtime value-validation step. This strengthens checks on values supplied to runtime objects without implying that parameterized semantic instantiation is complete.
 - **Parameterized definition and instantiation**
   - Revision 1123 extends the loader/publisher path to reconstruct parameterized type definitions and their formal parameter lists as semantic objects.
-  - Revision 1124 adds the complementary instantiation path: `parse_tree_visitor` can modify a state value at a node and propagate it to descendants; the publisher marks `ParameterizedType` nodes as instantiation contexts, collects type arguments from `SimpleTypeSpec` and value arguments from `ValueElement`, then calls `specialize()` on the referenced parameterized type.
+  - Revision 1124 adds the complementary instantiation path: `parse_tree_visitor` can modify a state value at a node and propagate it to descendants; the publisher marks `ParameterizedType` nodes as instantiation contexts, collects type arguments from `SimpleTypeSpec` and value arguments from `ValueElement`, then calls `specialize()` on the referenced parameterized type. Revision 1125 adds rvalue overloads so the collected `asn1_paramvalues` can be moved into the specialized type instead of requiring the const-reference construction path.
   - The parameterized testcase now parses `FRAME{ OCTET STRING, 1024 }` and checks the resulting module representation. This establishes a concrete parser-to-publisher instantiation path for the tested form, not exhaustive support for every ASN.1 parameterized construct.
   - Separately, Revision 1124 changes only the `asn1.ptb` binary parsing-table revision from 3 to 4; `asn1notation.ptb` retains revision 3.
 
