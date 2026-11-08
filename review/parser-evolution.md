@@ -101,11 +101,23 @@ These names matter architecturally because they are the vocabulary used to conne
 
 ## Parameterized grammar and lexer changes through revision 1102
 
-The parameterized ASN.1 path is still an area of active grammar work. Revision 1102 changes the CFG productions for `ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`. It also adds dedicated lexical handlers for single-quoted strings and hexadecimal strings, while removing `handle_asn1parameterized` because the current parameterized-value handling has known limits.
+The parameterized ASN.1 path is still an area of active grammar work.
+
+- **Revision 1102**
+  - Changes the CFG productions for `ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`.
+  - Adds dedicated lexical handlers for single-quoted strings and hexadecimal strings.
+  - Removes `handle_asn1parameterized` because the current parameterized-value handling has known limits.
 
 The practical distinction is important: a grammar production or lexer handler records how input is recognized, but does not by itself establish full semantic construction or complete support for parameterized ASN.1. The same review discipline applies at each layer: grammar coverage, parse-tree shape, semantic reconstruction, module linkage, and loader behavior need separate evidence.
 
-The binary parsing-table format advanced from revision 1 to revision 2 in revision 1102, then to revision 3 in revision 1104. The generated `.ptb` files and the table reader/writer therefore need to be treated as a versioned resource pair; an updated grammar source alone is not the whole parser update.
+The binary parsing-table format evolved through the following revisions:
+
+- **Revision 1102**
+  - Advances the format from revision 1 to revision 2.
+- **Revision 1104**
+  - Advances the format from revision 2 to revision 3.
+
+The generated `.ptb` files and the table reader/writer therefore need to be treated as a versioned resource pair; an updated grammar source alone is not the whole parser update.
 
 ## Resource roles
 
