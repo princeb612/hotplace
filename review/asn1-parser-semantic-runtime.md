@@ -1,6 +1,6 @@
 # ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1124
+> **Review baseline:** Revision 1125
 
 ## Review thesis
 
