@@ -760,10 +760,14 @@ shows that source-level portability and dependency-level portability are connect
 
 ### Shared build as an integration check
 
-Revision 1112 introduced the SDK API export/import declarations needed for
-shared-library builds. Revisions 1112-1114 form the implementation and
-verification interval; **Revision 1114 is the documented baseline for the
-completed shared-build check**.
+The shared-build work has two distinct revision checkpoints:
+
+- **Revision 1112**
+  - Introduces the SDK API export/import declarations needed for shared-library builds.
+  - Records the original MinGW64 verification path described below.
+- **Revisions 1112–1114**
+  - Form the implementation and verification interval.
+  - **Revision 1114 is the documented baseline for the completed shared-build check.**
 
 The shared build was successfully tested on:
 
