@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1125                    │
+│ Source basis: Revision 1125                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -66,11 +66,17 @@ Returns the length of the longest stored key matching from the beginning of the 
 
 Starts at `pos` and continues while transitions exist. Each terminal node updates the best match, so a later, longer key wins over an earlier shorter key. On success, the method returns that key's index and advances `pos` to the end of the longest match. On failure, it sets `pos` to `size` to signal termination.
 
-### Reverse lookup and maintenance
+### Reverse lookup and path tracing
 
 **`lookup(index, pattern)`**
 
 Uses the reverse index to walk parent links from the terminal node to the root and reconstruct the stored key.
+
+**`trace(input, callback)`**
+
+Walks the supplied sequence from the root and invokes the callback for every traversed node, passing that node's stored element value and its optional tag. Unlike `search()` or `find()`, `trace()` requires every visited node to be a terminal node (`eow == true`); it returns `-1` as soon as a missing transition or non-terminal prefix is encountered. On success it returns the index of the final node. This makes it suitable for walking a sequence whose every prefix has its own registered meaning, such as an OID dictionary that stores metadata for each named arc prefix.
+
+The callback may already have been invoked for earlier nodes if a later prefix fails. Callers that need all-or-nothing output should stage callback results and publish them only after `trace()` succeeds, as `oid_dictionary::oid2asn1()` does.
 
 **`suggest()` / `dump()`**
 
@@ -123,7 +129,7 @@ This is a direct use of longest-prefix matching: the trie is not building the Hu
 
 - `pattern.hpp` — default/custom element extraction for values, objects and pointers.
 - `aho_corasick.md` — shares trie-shaped prefix storage, but adds failure links to find multiple patterns throughout a source.
-- `test/testcase/base/pattern/testcase_trie.cpp` — tests exact search, prefix checks, erase, suggestions, longest-prefix lookup, reverse lookup by index and Huffman-code scanning.
+- `test/testcase/base/pattern/testcase_trie.cpp` — tests exact search, prefix checks, erase, suggestions, longest-prefix lookup, reverse lookup by index and Huffman-code scanning. The revision-1125 `trace()` path is exercised indirectly by OID dictionary notation reconstruction; it is not listed as a dedicated trie testcase.
 
 ## 5. References
 
