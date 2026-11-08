@@ -33,7 +33,8 @@ The conversion API uses four data forms:
 |---|---|
 | Dotted decimal text, e.g. `2.16.840.1.101.3.4.2.1` | External textual input |
 | `oid_t` node vector | Numeric intermediate representation used by the dictionary and ASN.1 layer |
-| `asn1oid_t` (`std::vector<oid_elem>`) | Arc sequence that can retain a name alongside each numeric arc when parsing ASN.1-braced notation |\n| `basic_stream` | Output target for dotted decimal text or reconstructed ASN.1-braced notation |
+| `asn1oid_t` (`std::vector<oid_elem>`) | Arc sequence that can retain a name alongside each numeric arc when parsing ASN.1-braced notation |
+| `basic_stream` | Output target for dotted decimal text or reconstructed ASN.1-braced notation |
 
 ### Token and cursor data
 
@@ -104,7 +105,11 @@ oid_to_str(nodes, basic_stream)
 
 The destination stream is cleared before output, so the function replaces previous stream contents rather than appending a second OID to them.
 
-### Reverse conversion to ASN.1-braced notation\n\n`oid_dictionary::oid2asn1()` uses `t_trie::trace()` to walk the numeric arcs and collect the metadata name attached to each registered prefix. It emits `{name(number) ...}` for named arcs and a bare decimal arc when a traversed prefix has no metadata name. The current implementation requires every traversed prefix to be a registered terminal trie entry; a missing prefix or non-terminal prefix makes the conversion fail. This is a dictionary-backed reconstruction, not a lossless round trip of arbitrary original spelling.\n\n### Dictionary lookup is a separate step
+### Reverse conversion to ASN.1-braced notation
+
+`oid_dictionary::oid2asn1()` uses `t_trie::trace()` to walk the numeric arcs and collect the metadata name attached to each registered prefix. It emits `{name(number) ...}` for named arcs and a bare decimal arc when a traversed prefix has no metadata name. The current implementation requires every traversed prefix to be a registered terminal trie entry; a missing prefix or non-terminal prefix makes the conversion fail. This is a dictionary-backed reconstruction, not a lossless round trip of arbitrary original spelling.
+
+### Dictionary lookup is a separate step
 
 ```text
 dotted text ──► str_to_oid() ──► oid_t ──┐
@@ -135,7 +140,10 @@ asn1text_to_oid(text, strlen(text), oid);
 
 oid_metadata meta;
 auto dict = oid_dictionary::get_instance();
-bool found = dict->lookup(oid, meta);\n\nbasic_stream notation;\nbool reconstructed = dict->oid2asn1(oid, notation);
+bool found = dict->lookup(oid, meta);
+
+basic_stream notation;
+bool reconstructed = dict->oid2asn1(oid, notation);
 ```
 
 The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name and description. The testcase asserts that lookup succeeds, but it does not establish that `asn1text_to_oid()` validates all ASN.1 OID notation rules.
