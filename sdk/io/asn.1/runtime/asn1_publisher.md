@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1124                    │
+│ Edition 1 · Revision 1125                    │
 │ Source basis: Revision 1124                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
@@ -75,7 +75,7 @@ Constraint handlers construct constraint model objects. Reusable value-domain/se
 
 Parameterized definitions and instantiations use different reconstruction cues. Definition-side formal parameters are recognized through the `Parameter` grammar symbol and are assembled into the parameterized type definition. For instantiation, the publisher marks each `ParameterizedType` parse-tree node with `state_paramtype_instantiation` through the visitor's pre-visit hook. The state is inherited by descendants and lets the `SimpleTypeSpec` handler collect type arguments while the `ValueElement` handler collects value arguments into `asn1_paramvalues`.
 
-When the `ParameterizedType` reduction is reached, the handler looks up the referenced parameterized type in the current module and calls `specialize()` with the collected actual arguments. This avoids constructing a separate reconstruction context solely to distinguish definition and instantiation subtrees. The current specialization call uses the temporary name `temp`; naming policy should not be inferred to be finalized from this test.
+When the `ParameterizedType` reduction is reached, the handler looks up the referenced parameterized type in the current module and calls `specialize()` with the collected actual arguments. Revision 1125 adds rvalue overloads to the specialization and specialized-type construction APIs so a collected parameter-value list can be transferred into the resulting object. This avoids constructing a separate reconstruction context solely to distinguish definition and instantiation subtrees. The current specialization call uses the temporary name `temp`; naming policy should not be inferred to be finalized from this test.
 
 ## 3. Behavior Model
 
