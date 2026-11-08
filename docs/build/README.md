@@ -821,10 +821,14 @@ cd build/test/testcase
 make && ctest
 ```
 
-This command sequence records the original MinGW64 test path from
-Revision 1112. The successful shared-build result through Revision 1114 also includes MSVC,
-Ubuntu, Rocky Linux, and CentOS 7. Revision 1116 separately documents binary
-file-version metadata for MinGW64/MSVC.
+The verification evidence should be read with its revision boundaries:
+
+- **Revision 1112**
+  - The command sequence above records the original MinGW64 test path.
+- **Revision 1114**
+  - The successful shared-build result also includes MSVC, Ubuntu, Rocky Linux, and CentOS 7.
+- **Revision 1116**
+  - Separately documents binary file-version metadata for MinGW64/MSVC.
 
 ### Binary file-version metadata
 
