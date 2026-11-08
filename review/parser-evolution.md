@@ -153,7 +153,18 @@ The resulting system has more moving parts than a parser whose tables are genera
 
 ## Current state
 
-Revision 1102 changed the ASN.1 parameterized-assignment/type/value grammar and lexer handling, and advanced the binary parsing-table format to revision 2. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 added prototypes for parameterized-type definition/value handling and advanced the table format to revision 3. The parameterized support remains prototypical: grammar recognition, semantic construction, and full instantiation are distinct capabilities. LALR(1)/GLR still serve different grammar scopes, and external `.ptb` resources remain part of parser generation and build integration.
+The current state is best understood as three related revision steps:
+
+- **Revision 1102**
+  - Changes the ASN.1 parameterized-assignment/type/value grammar and lexer handling.
+  - Advances the binary parsing-table format to revision 2.
+- **Revision 1103**
+  - Fixes `TypeAssignment` handling in `asn1_publisher`.
+- **Revision 1104**
+  - Adds prototypes for parameterized-type definition/value handling.
+  - Advances the binary parsing-table format to revision 3.
+
+The parameterized support remains prototypical: grammar recognition, semantic construction, and full instantiation are distinct capabilities. LALR(1)/GLR still serve different grammar scopes, and external `.ptb` resources remain part of parser generation and build integration.
 
 ### Related source / documents
 
