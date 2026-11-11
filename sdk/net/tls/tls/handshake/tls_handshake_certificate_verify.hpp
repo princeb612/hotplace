@@ -31,7 +31,7 @@ class HOTPLACE_NET_API tls_handshake_certificate_verify : public tls_handshake {
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);
-    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
+    virtual return_t do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 

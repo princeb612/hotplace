@@ -1,29 +1,14 @@
-### Release 1.112
-
-- ML-DSA for JOSE and COSE
-  - [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/)
-
-### Release 1.90
-
-- TLS
-  - Use of ML-DSA in TLS 1.3
-    - [draft-ietf-tls-mldsa-00](https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00)
-
-### Release 1.71
-
-- TLS
-  - ML-KEM Post-Quantum Key Agreement for TLS 1.3
-    - [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
-    - [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
-
-### Release 1.60
-
 - TLS
   - [The Illustrated TLS 1.2 Connection](https://tls12.xargs.org/)
   - [The Illustrated TLS 1.3 Connection](https://tls13.xargs.org/)
   - [RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2](https://datatracker.ietf.org/doc/html/rfc5246)
   - [RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3](https://datatracker.ietf.org/doc/html/rfc8446)
   - [RFC 8448 Example Handshake Traces for TLS 1.3](https://datatracker.ietf.org/doc/html/rfc8448)
+  - ML-KEM Post-Quantum Key Agreement for TLS 1.3
+    - [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
+    - [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
+  - Use of ML-DSA in TLS 1.3
+    - [draft-ietf-tls-mldsa-00](https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00)
 - DTLS
   - [The Illustrated DTLS Connection](https://dtls.xargs.org/)
   * [RFC 6347 Datagram Transport Layer Security Version 1.2](https://datatracker.ietf.org/doc/html/rfc6347)
@@ -56,3 +41,5 @@
   - [RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms](https://datatracker.ietf.org/doc/html/rfc9053)
   - [RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures](https://datatracker.ietf.org/doc/html/rfc9338)
   - [cose-wg/Examples](https://github.com/cose-wg/Examples)
+- ML-DSA for JOSE and COSE
+  - [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/)

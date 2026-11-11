@@ -254,6 +254,8 @@ int main(int argc, char** argv) {
         testcase_dtls_record_arrange();
         testcase_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
         testcase_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
+
+        testcase_rfc();
     } else {
         dump_clienthello();
     }

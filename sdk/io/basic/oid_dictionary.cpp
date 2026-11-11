@@ -68,9 +68,7 @@ bool oid_dictionary::oid2asn1(const oid_t& oid, basic_stream& notation) const {
 
     std::list<oid_elem> asn1text;
 
-    auto lambda = [&asn1text](uint32 arc, oid_metadata* metadata) -> void {
-        asn1text.push_back({arc, metadata ? metadata->name : ""});
-    };
+    auto lambda = [&asn1text](uint32 arc, oid_metadata* metadata) -> void { asn1text.push_back({arc, metadata ? metadata->name : ""}); };
 
     int test = _trie.trace(oid, lambda);
     if ((-1 == test) || asn1text.empty()) return false;

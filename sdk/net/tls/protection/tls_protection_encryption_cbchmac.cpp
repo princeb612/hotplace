@@ -236,17 +236,11 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
         crypto_cbc_hmac cbchmac;
         cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);
         ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, ciphersize, plaintext);
-        switch ((errorcode_t)ret) {
-            case errorcode_t::success:
-                break;
-            case errorcode_t::cipher_failure:
-                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
-                break;
-            case errorcode_t::verification_failure:
-                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::bad_record_mac);
-                break;
-            default:
-                break;
+        if (errorcode_t::success != ret) {
+            // RFC 8446 5.2.  Record Payload Protection
+            // case errorcode_t::cipher_failure:
+            // case errorcode_t::verification_failure:
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::bad_record_mac);
         }
 
 #if defined DEBUG

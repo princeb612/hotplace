@@ -11,6 +11,7 @@
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -31,6 +32,7 @@ define_tls_variable(session_status_code) = {
     {session_status_client_hello, "client_hello"},
     {session_status_server_hello, "server_hello"},
     {session_status_hello_verify_request, "hello_verify_request"},
+    {session_status_encrypted_extensions, "encrypted_extensions"},
     {session_status_server_cert, "server_certificate"},
     {session_status_server_key_exchange, "server_key_exchange"},
     {session_status_server_hello_done, "server_hello_done"},
@@ -38,6 +40,7 @@ define_tls_variable(session_status_code) = {
     {session_status_client_key_exchange, "client_key_exchange"},
     {session_status_server_finished, "server_finished"},
     {session_status_client_finished, "client_finished"},
+    {session_status_hello_retry_request, "hello_retry_request"},
     {session_status_client_close_notified, "client_close_notify"},
     {session_status_server_close_notified, "server_close_notify"},
 };

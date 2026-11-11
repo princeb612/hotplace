@@ -164,7 +164,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             if ((errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
                 __leave2_trace(ret);
             }
-            ret = do_postprocess(dir, stream, size);
+            ret = do_postprocess(dir, tls_io_operation_t::read, stream, size);
             if (errorcode_t::success != ret) {
                 __leave2_trace(ret);
             }
@@ -202,13 +202,16 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         binary_t body;
         ret = do_write_body(dir, body);
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
 
         do_write_header(dir, bin, body);
 
         const byte_t* stream = bin.data();
         size_t size = bin.size();
 
-        ret = do_postprocess(dir, stream, size);
+        ret = do_postprocess(dir, tls_io_operation_t::write, stream, size);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
@@ -245,7 +248,7 @@ return_t tls_handshake::prepare_fragment(const byte_t* stream, uint32 size, uint
 
 return_t tls_handshake::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
 
-return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
+return_t tls_handshake::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) { return errorcode_t::success; }
 
 return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

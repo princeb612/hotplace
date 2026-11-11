@@ -48,7 +48,7 @@ return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) 
     return ret;
 }
 
-return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
+return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();

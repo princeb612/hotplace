@@ -102,6 +102,9 @@ return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t s
 
         size_t tpos = pos;  // responding to unhandled extentions
         ret = do_read_body(dir, stream, size, tpos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
         pos += get_body_size();  // responding to unhandled extentions
 
         ret = do_postprocess(dir);
@@ -128,6 +131,9 @@ return_t tls_extension::write(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
         ret = do_write_header(dir, bin, body);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {

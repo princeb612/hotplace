@@ -74,7 +74,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 }
             } else if ((session_status_server_finished | session_status_client_finished) & session_status) {
                 // 0-RTT, renegotiation
-            } else if (~(session_status_client_hello | session_status_server_hello) & session_status) {
+            } else if (~(session_status_client_hello | session_status_server_hello | session_status_hello_retry_request) & session_status) {
                 // not HRR
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                 session->reset_session_status();
@@ -156,7 +156,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
+return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -236,6 +236,25 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         }
 
         session->update_session_status(session_status_client_hello);
+
+        if (tls_io_operation_t::read == opdir) {
+            // RFC 8446 4.2.11
+            // The "pre_shared_key" extension MUST be the last extension in the
+            // ClientHello (this facilitates implementation as described below).
+            // Servers MUST check that it is the last extension and otherwise fail
+            // the handshake with an "illegal_parameter" alert.
+            size_t size = 0;
+            std::vector<size_t> indexes;
+            auto test = get_extensions().find(tls_extension_type_t::pre_shared_key, indexes, size);
+            if (test) {
+                if (1 + indexes.back() != size) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+            }
+        }
     }
     __finally2 {}
     return ret;

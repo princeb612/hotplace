@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1124**
+**Edition 1 · Revision 1125**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -104,21 +104,28 @@ parser, CBOR, and ASN.1. `error` describes the common error/result model.
 `payload` describes the generic binary field-layout and reader/writer
 substrate used by higher-level protocol and security structures.
 
-Revision 1114 remains the shared-build verification baseline for the tested
-MinGW64, MSVC, Ubuntu 20, Rocky Linux 8, and CentOS 7 configurations. Revision
-1116 separates project version values into `version.txt`, included by the root
-`CMakeLists.txt`, and uses them for consistent file-version metadata in
-MinGW64/MSVC-generated binaries. Revisions 1118–1119 strengthen ASN.1 runtime
-value validation, including built-in type checks and ENUMERATED constraint
-handling. Revisions 1120/1122 add parameterized type specialization and
-instantiation work, and Revision 1123 advances loader/publisher reconstruction
-of parameterized definitions and formal parameter lists. Revision 1124 adds
-state propagation to parse-tree traversal and uses that state to collect actual
-type/value parameters for publisher-side specialization. The parameterized
-test now checks the reconstructed module representation for a concrete
-instantiation; this is a verified integration step, not a claim of complete
-coverage of every parameterized ASN.1 form. These are topic-level implementation changes; they
-do not alter the study map's layer relationships.
+- Revision 1114 remains the shared-build verification baseline for the tested
+  MinGW64, MSVC, Ubuntu 20, Rocky Linux 8, and CentOS 7 configurations.
+- Revision 1116 separates project version values into `version.txt`, included by the root
+  `CMakeLists.txt`, and uses them for consistent file-version metadata in
+  MinGW64/MSVC-generated binaries.
+- Revisions 1118–1119 strengthen ASN.1 runtime value validation, including built-in type checks and ENUMERATED constraint
+  handling.
+- Revisions 1120/1122 add parameterized type specialization and
+  instantiation work, and Revision 1123 advances loader/publisher reconstruction
+  of parameterized definitions and formal parameter lists.
+- Revision 1124 adds state propagation to parse-tree traversal and uses that state to collect actual
+  type/value parameters for publisher-side specialization. The parameterized
+  test checks the reconstructed module representation for a concrete
+  instantiation; this is a verified integration step, not complete coverage of
+  every parameterized ASN.1 form.
+- Revision 1125 adds move-aware parameterized specialization overloads and
+  extends the OID utility path with named ASN.1 arc extraction and
+  dictionary-backed reconstruction of ASN.1-braced notation. The same revision
+  adds `t_trie::trace()` for sequences whose every prefix is a registered
+  terminal key, and corrects AVL copy-assignment size propagation.
+
+These are topic-level implementation changes; they do not alter the study map's layer relationships.
 
 ### Cryptographic and Security Semantics
 
@@ -194,7 +201,12 @@ dimensions rather than as one strict stack. The following map is a reading aid:
 
 The diagram is intentionally conceptual:
 
-- **ASN.1** now has a broader ASN.1 grammar and semantic-reconstruction path: LALR(1)/GLR parser selection, GSS-based GLR parsing, module IMPORTS/EXPORTS and reference resolution, and a working loader-to-module flow. Revisions 1102–1103 add parameterized-assignment grammar work and a TypeAssignment publisher fix; Revision 1104 prototypes `asn1_parameterized_type::define` and `asn1_parameter::value`, and renames the module registry to `asn1_modules` while advancing the binary parsing-table format to revision 3. Revisions 1120/1122 add runtime specialization/instantiation work. Revision 1123 reconstructs parameterized type definitions and formal parameter lists. Revision 1124 carries instantiation state through parse-tree visitation, gathers actual type/value parameters from `SimpleTypeSpec` and `ValueElement`, and specializes the referenced parameterized type in the publisher. It also advances the `asn1.ptb` binary parsing-table revision to 4; `asn1notation.ptb` remains at revision 3. The parameterized testcase verifies the resulting module representation for `MyPacket ::= FRAME{ OCTET STRING, 1024 }`; broader notation coverage remains a separate question.
+- **ASN.1** now has a broader ASN.1 grammar and semantic-reconstruction path: LALR(1)/GLR parser selection, GSS-based GLR parsing, module IMPORTS/EXPORTS and reference resolution, and a working loader-to-module flow.
+  - Revisions 1102–1103 add parameterized-assignment grammar work and a TypeAssignment publisher fix.
+  - Revision 1104 prototypes `asn1_parameterized_type::define` and `asn1_parameter::value`, and renames the module registry to `asn1_modules` while advancing the binary parsing-table format to revision 3.
+  - Revisions 1120/1122 add runtime specialization/instantiation work.
+  - Revision 1123 reconstructs parameterized type definitions and formal parameter lists.
+  - Revision 1124 carries instantiation state through parse-tree visitation, gathers actual type/value parameters from `SimpleTypeSpec` and `ValueElement`, and specializes the referenced parameterized type in the publisher. It also advances the `asn1.ptb` binary parsing-table revision to 4; `asn1notation.ptb` remains at revision 3. The parameterized testcase verifies the resulting module representation for `MyPacket ::= FRAME{ OCTET STRING, 1024 }`; broader notation coverage remains a separate question.
 - **ASN.1** describes a language-to-semantic-object path. It is not simply
   another network layer.
 - **Payload** is a reusable binary representation mechanism. It supports

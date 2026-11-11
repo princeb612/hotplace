@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1123                    │
-│ Source basis: Revision 1105                  │
+│ Edition 1 · Revision 1125                    │
+│ Source basis: Revision 1125                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘

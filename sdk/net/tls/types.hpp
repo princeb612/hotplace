@@ -530,6 +530,11 @@ enum tls_direction_t {
     server_initiated_bidi = 4,           // RFC 9000 2.1. server-initiated, bi-directional 0x03
 };
 
+enum class tls_io_operation_t {
+    read = 0,
+    write = 1,
+};
+
 bool is_anydirection(tls_direction_t dir);
 bool is_unidirection(tls_direction_t dir);
 bool is_bidirection(tls_direction_t dir);
@@ -575,6 +580,7 @@ enum session_status_t : uint32 {
     session_status_client_cert_verified = (1 << 10),  // 00000400
     session_status_server_finished = (1 << 11),       // 00000800 tls_handshake_finished
     session_status_client_finished = (1 << 12),       // 00001000 tls_handshake_finished
+    session_status_hello_retry_request = (1 << 13),   // 00002000
     session_status_client_close_notified = 0x40000000,
     session_status_server_close_notified = 0x80000000,
 };

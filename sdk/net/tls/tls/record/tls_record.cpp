@@ -73,6 +73,9 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 
         size_t tpos = pos;
         ret = do_read_body(dir, stream, size, tpos);
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
         pos += get_body_size();
 
         do_postprocess(dir);

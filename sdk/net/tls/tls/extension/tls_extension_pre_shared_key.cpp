@@ -174,11 +174,20 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 }
                 ret = protection.calc_context_hash(session, hash_algorithm_t::sha2_256, stream + content_header_size, offset_psk_binders_len - 1,
                                                    context_resumption_binder_hash);
-                // if (errorcode_t::success != ret) do something
+                if (errorcode_t::success != ret) {
+                    ret = errorcode_t::handshake_failure;
+                    __leave2;
+                }
             }
 
             // verify psk binder
             ret = protection.calc_psk(session, context_resumption_binder_hash, psk_binder);
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decrypt_error);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2;
+            }
         }
 
 #if defined DEBUG

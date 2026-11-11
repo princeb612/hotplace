@@ -45,13 +45,13 @@ class HOTPLACE_NET_API tls_extensions {
     tls_extension* get(tls_extension_type_t type, bool upref = false);
     tls_extension* getat(size_t index, bool upref = false);
     tls_extension* operator[](size_t index);
+    bool find(tls_extension_type_t type, std::vector<size_t>& indexes, size_t& size);
     bool empty() const;
     size_t size() const;
     void clear();
 
    protected:
    private:
-    critical_section _lock;
     t_tls_distinct_container<tls_extension*, tls_extension_type_t> _extensions;
 };
 

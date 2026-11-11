@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1106
-Source basis: Revision 1105
+Edition 2 · Revision 1125
+Source basis: Revision 1125
 Documented with GPT-6
 — source structure, testcase procedure & evidence
 ```
@@ -22,7 +22,7 @@ The basic I/O testcase sources cover OID dictionary lookup, ASN.1 textual OID co
 
 2. **dotted-decimal OID lookup.** `test_oid()` looks up `2.16.840.1.101.3.4.2.1` into an `oid_metadata`. It logs name and description if lookup succeeds and asserts that the lookup result is true. The asserted property is successful lookup, not the exact metadata strings.
 
-3. **ASN.1 notation conversion then lookup.** `test_oid2()` converts `{joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) hashalgs(2) 3}` using `asn1text_to_oid()`, then looks up the resulting `oid_t` and asserts success. The test does not compare the converted OID object against a separately specified dotted-decimal string; its end-to-end check is that the converted value is known to the dictionary.
+3. **ASN.1 notation conversion, lookup, and reverse reconstruction.** `test_oid2()` converts `{joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) hashalgs(2) 3}` into numeric `oid_t` arcs, then looks up the resulting value. It calls `oid_dictionary::oid2asn1()` to reconstruct the notation from registered prefix names and asserts the exact output `{joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4) hashalgs(2) sha512(3)}`. It also parses the input into `asn1oid_t` and checks all nine numeric/name pairs, including the final unnamed arc. These assertions cover one dictionary-backed path, not arbitrary OID syntax or malformed-input handling.
 
 ### 2.2 Payload field serialization with optional group
 

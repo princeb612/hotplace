@@ -157,12 +157,16 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
+        std::set<tls_version_t> clispecs;
         std::set<tls_version_t> specs;
         std::set<crypto_kty_t> certkty_set;
         std::set<uint32> certnid_set;
         std::map<uint16, std::list<uint16>> cs_map;
 
         // TLS specification
+        for (auto t : other._supported_versions) {
+            clispecs.insert((tls_version_t)t);
+        }
         for (uint16 t = tls_10; t <= tls_13; t++) {
             if ((minspec <= t) && (t <= maxspec)) {
                 specs.insert((tls_version_t)t);
@@ -243,14 +247,22 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 
         tls_version_t spec = unknown;
         {
-            auto lambda_select_cs = [this, &tlsadvisor, &cs_map, &spec](tls_version_t ver) -> bool {
+            auto lambda_select_cs = [this, &tlsadvisor, &cs_map, &clispecs, &spec](tls_version_t ver) -> bool {
                 bool ret_value = false;
                 for (const auto& cs : cs_map[ver]) {
                     spec = ver;
-                    add_supported_version(ver);
+                    for (const auto& t : clispecs) {
+                        // based on the spec, rather than the version. for example is_kindof(tls_13, dtls_13) return true
+                        if (tlsadvisor->is_kindof(t, ver)) {
+                            // RFC 8446 4.2.1.  Supported Versions
+                            add_supported_version(ver);
+                            ret_value = true;
+                            break;
+                        }
+                    }
+                    if (false == ret_value) continue;
                     add_cipher_suite(cs);
                     set_cipher_suite(cs);
-                    ret_value = true;
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net)) {
                         auto hint = tlsadvisor->hintof_cipher_suite(cs);
@@ -268,13 +280,13 @@ return_t protection_context::select_from(const protection_context& other, tls_se
             bool test = false;
             test = lambda_select_cs(tls_13);
             if ((session_type_t::tls == session_type) || (session_type_t::dtls == session_type)) {  // not QUIC, QUIC2
-                if (false == test) {
+                if ((false == test) && (tls_12 >= minspec)) {
                     test = lambda_select_cs(tls_12);
                 }
-                if (false == test) {
+                if ((false == test) && (tls_11 >= minspec)) {
                     test = lambda_select_cs(tls_11);
                 }
-                if (false == test) {
+                if ((false == test) && (tls_10 >= minspec)) {
                     test = lambda_select_cs(tls_10);
                 }
             }

@@ -469,7 +469,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
              *             |
              *             +-----> Derive-Secret(., "res master",
              *                                   ClientHello...client Finished)
-             *                                   = secret_resumption_master
+             *                                   = resumption_master_secret
              */
 
             binary_t secret_resumption_master;

@@ -605,7 +605,8 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         }
 
         if (errorcode_t::success != ret) {
-            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
+            // RFC 8446 5.2.  Record Payload Protection
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::bad_record_mac);
         }
 
 #if defined DEBUG

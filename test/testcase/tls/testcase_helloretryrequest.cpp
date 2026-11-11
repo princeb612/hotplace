@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* group, binary_t& bin, const char* message) {
+static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* group, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -122,15 +122,11 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                        })
                   .write(dir, bin);
     }
-    __finally2 {
-        std::string dirstr;
-        direction_string(dir, 0, dirstr);
-        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
-    }
+    __finally2 {}
     return ret;
 }
 
-static return_t do_test_construct_server_hello(tls_session* session, tls_session* client_session, tls_direction_t dir, binary_t& bin, const char* message) {
+static return_t do_test_construct_server_hello(tls_session* session, tls_session* client_session, tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -195,18 +191,14 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
                        })
                   .write(dir, bin);
     }
-    __finally2 {
-        std::string dirstr;
-        direction_string(dir, 0, dirstr);
-        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
-    }
+    __finally2 {}
     return ret;
 }
 
-static return_t do_test_send_record(tls_session* session, tls_direction_t dir, const binary_t& bin, const char* message) {
+static return_t do_test_send_record(tls_session* session, tls_direction_t dir, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session || nullptr == message) {
+        if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -214,17 +206,15 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         tls_records records;
         ret = records.read(session, dir, bin);
     }
-    __finally2 {
-        std::string dirstr;
-        direction_string(dir, 1, dirstr);
-        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
-    }
+    __finally2 {}
     return ret;
 }
 
-void testcase_helloretryrequest() {
+void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_group_t svrgroup, tls_group_t reinforcegroup, tls_flow_t flow_expect,
+                            const std::set<tls_alertdesc_t>& alerts) {
     _test_case.begin("HelloRetryRequest");
 
+    return_t ret = errorcode_t::success;
     auto tlsadvisor = tls_advisor::get_instance();
     tls_session session_client;
     tls_session session_server;
@@ -232,9 +222,6 @@ void testcase_helloretryrequest() {
     tls_flow_t flow;
     std::string flow_status;
     basic_stream step;
-
-    // enforce server key share group 0x001d "x25519"
-    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(tls_group_t::x25519));
 
     {
         flow = session_server.get_tls_protection().get_flow();
@@ -247,8 +234,15 @@ void testcase_helloretryrequest() {
         binary_t bin;
         step.clear();
         step << flow_status << " client hello";
-        do_test_construct_client_hello(&session_client, from_client, "secp256r1", bin, step.c_str());
-        do_test_send_record(&session_server, from_client, bin, step.c_str());
+
+        tls_direction_t dir = from_client;
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+
+        ret = do_test_construct_client_hello(&session_client, dir, cligroup, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+        ret = do_test_send_record(&session_server, dir, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
     }
 
     {
@@ -257,14 +251,23 @@ void testcase_helloretryrequest() {
         _test_case.assert(session_status_client_hello == session_status, __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
     }
 
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(svrgroup));
+
     {
         // server hello
         // MUST be HelloRetryRequest
         binary_t bin;
         step.clear();
         step << flow_status << " server hello";
-        do_test_construct_server_hello(&session_server, &session_client, from_server, bin, step.c_str());
-        do_test_send_record(&session_client, from_server, bin, step.c_str());
+
+        tls_direction_t dir = from_server;
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+
+        ret = do_test_construct_server_hello(&session_server, &session_client, from_server, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+        ret = do_test_send_record(&session_client, from_server, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
     }
 
     {
@@ -281,18 +284,27 @@ void testcase_helloretryrequest() {
 
     {
         // client hello
-        // "x25519"
+        // retrygroup
         binary_t bin;
         step.clear();
         step << flow_status << " client hello";
-        do_test_construct_client_hello(&session_client, from_client, "x25519", bin, step.c_str());
-        do_test_send_record(&session_server, from_client, bin, step.c_str());
+
+        tls_direction_t dir = from_client;
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+
+        ret = do_test_construct_client_hello(&session_client, dir, retrygroup, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+        ret = do_test_send_record(&session_server, dir, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
     }
+
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(reinforcegroup));
 
     {
         // test
         session_status = session_server.get_session_status();
-        _test_case.assert((session_status_client_hello == session_status), __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
+        _test_case.assert((session_status_hello_retry_request & session_status), __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
     }
 
     {
@@ -300,19 +312,54 @@ void testcase_helloretryrequest() {
         binary_t bin;
         step.clear();
         step << flow_status << " server hello";
-        do_test_construct_server_hello(&session_server, &session_client, from_server, bin, step.c_str());
-        do_test_send_record(&session_client, from_server, bin, step.c_str());
-    }
+        tls_direction_t dir = from_server;
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
 
-    {
-        // test
-        session_status = session_server.get_session_status();
-        _test_case.assert((session_status_server_hello & session_status), __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
+        ret = do_test_construct_server_hello(&session_server, &session_client, dir, bin);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+
+        ret = do_test_send_record(&session_client, dir, bin);
+
+        if (alerts.empty()) {
+            _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+
+            // test
+            session_status = session_server.get_session_status();
+            _test_case.assert((session_status_server_hello & session_status), __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
+        } else {
+            _test_case.ntest(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+        }
+
+        std::set<tls_alertdesc_t> fatal_alerts;
+        // unexpected message
+        auto lambda = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+            if (tls_alertlevel_t::fatal == level) {
+                fatal_alerts.insert(desc);
+            }
+            _logger->writeln("level %i desc %i", level, desc);
+        };
+        session_client.get_alert(dir, lambda);
+        _test_case.assert(fatal_alerts == alerts, __FUNCTION__, "alert");
     }
 
     {
         flow = session_server.get_tls_protection().get_flow();
         flow_status = tlsadvisor->nameof_tls_flow(flow);
-        _test_case.assert(tls_flow_t::one_rtt == flow, __FUNCTION__, "%s", flow_status.c_str());
+        _test_case.assert(flow_expect == flow, __FUNCTION__, "%s", flow_status.c_str());
     }
+}
+
+void testcase_helloretryrequest() {
+    // RFC 4.2.8.  Key Share
+
+    // C->S CH secp256r1
+    // enforce server key share group 0x001d "x25519"
+    // S->C SH HRR x25519 success
+    test_helloretryrequest("secp256r1", "x25519", tls_group_t::x25519, tls_group_t::x25519, tls_flow_t::one_rtt, {});
+    // C->S CH x25519
+    // enforce server key share group 0x0018 "secp384r1"
+    // S->C SH HRR secp384r1
+    // C->S alert (reject 2nd HRR) unexpected_message
+    test_helloretryrequest("secp256r1", "x25519", tls_group_t::x25519, tls_group_t::secp384r1, tls_flow_t::hello_retry_request, {tls_alertdesc_t::unexpected_message});
 }

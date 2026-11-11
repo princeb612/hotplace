@@ -4,8 +4,8 @@
 
 ```text
 hotplace source-tree documentation
-Edition 2 · Revision 1124
-Source basis: Revision 1124
+Edition 2 · Revision 1125
+Source basis: Revision 1125
 Documented with GPT-6
 — test areas, build integration & verification environments
 ```

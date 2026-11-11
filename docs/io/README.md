@@ -56,7 +56,19 @@ The current IO layer reflects several major development lines that accumulated o
 
 The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
 
-Revisions 1091–1096 extend ASN.1 grammar coverage and parser infrastructure, including information object classes, extension markers, external parsing-table import, GSS-based GLR parsing, and parse-tree fixes. Revision 1097 connects loader input to parsing; 1099 adds exercised IMPORTS/EXPORTS and reference resolution; 1100 consolidates shared parser/publisher providers under `asn1_advisor`; 1102 renames `asn1_runtime`/`asn1_runtime_context` to `asn1_module`/`asn1_module_context` and extends parameterized-assignment grammar; 1103 fixes `TypeAssignment` semantic publication. Revision 1104 renames the module registry to `asn1_modules`, advances binary parsing tables to revision 3, and prototypes parameterized type/value semantic support. The current `asn1_module::add_schema()` path selects GLR, while LALR remains available for the notation-oriented path and parameterized semantic instantiation remains incomplete.
+The ASN.1 history is easier to follow as a sequence of related steps:
+
+- **Grammar and parser infrastructure**
+  - Revisions 1091–1096 extend grammar coverage and parser infrastructure, including information object classes, extension markers, external parsing-table import, GSS-based GLR parsing, and parse-tree fixes.
+- **Loader and module integration**
+  - Revision 1097 connects loader input to parsing.
+  - Revision 1099 adds exercised IMPORTS/EXPORTS and reference resolution.
+  - Revision 1100 consolidates shared parser/publisher providers under `asn1_advisor`.
+  - Revision 1102 renames `asn1_runtime`/`asn1_runtime_context` to `asn1_module`/`asn1_module_context` and extends parameterized-assignment grammar.
+  - Revision 1103 fixes `TypeAssignment` semantic publication.
+  - Revision 1104 renames the module registry to `asn1_modules`, advances binary parsing tables to revision 3, and prototypes parameterized type/value semantic support.
+
+The current `asn1_module::add_schema()` path selects GLR, while LALR remains available for the notation-oriented path and parameterized semantic instantiation remains incomplete.
 
 Therefore the IO history should be read as several converging processing paths rather than as one subsystem designed at once.
 

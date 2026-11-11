@@ -285,8 +285,12 @@ function (maketool module_name group_source group_header module_dependency modul
     makebin ("tool" "" ${module_name} ${group_source} ${group_header} ${module_dependency} ${module_library} ${ctest})
 endfunction ()
 
+# copy header files
+copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include/hotplace/sdk)
+copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/include/hotplace/test)
+
 # -Ixxx
-include_directories (..)
+include_directories (include)
 include_directories (${SET_THIRDPARTY_DIR}/include)
 # -Lxxx
 link_directories (${CMAKE_INSTALL_RPATH})
@@ -295,9 +299,6 @@ link_directories (${SET_THIRDPARTY_DIR}/lib)
 
 # mkdir xxx
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-# copy header files
-copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include/hotplace/sdk)
-# copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/test ${PROJECT_SOURCE_DIR}/include/hotplace/test)
 
 # build
 add_subdirectory (sdk)

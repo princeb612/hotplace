@@ -69,7 +69,8 @@ void test_oid2() {
         asn1oid_t nodes;
         asn1text_to_oid(oidstr, strlen(oidstr), nodes);
         _test_case.assert(9 == nodes.size(), __FUNCTION__, "convert");
-        asn1oid_t expect = {{2, "joint-iso-itu-t"}, {16, "country"}, {840, "us"}, {1, "organization"}, {101, "gov"}, {3, "csor"}, {4, "nistAlgorithm"}, {2, "hashalgs"}, {3, ""}};
+        asn1oid_t expect = {{2, "joint-iso-itu-t"}, {16, "country"}, {840, "us"}, {1, "organization"}, {101, "gov"}, {3, "csor"},
+                            {4, "nistAlgorithm"},   {2, "hashalgs"}, {3, ""}};
         _test_case.assert(nodes == expect, __FUNCTION__, "expect");
     }
 }

@@ -1,6 +1,6 @@
 # ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1124
+> **Review baseline:** Revision 1125
 
 ## Review thesis
 
@@ -94,7 +94,9 @@ This distinction matters because parsing does not directly create an undifferent
 
 ## From runtime registry to ASN.1 module model
 
-The revision 1102 name `asn1_module` better expresses the current responsibility than the former `asn1_runtime` name. The module still stores definitions, schema text, and values, but it also carries module-level metadata and cross-module symbol relationships.
+- **Revision 1102**
+  - Renames `asn1_runtime` to `asn1_module`, better expressing the module's responsibility.
+  - Retains definitions, schema text, and values while adding module-level metadata and cross-module symbol relationships.
 
 ```text
 asn1_module
@@ -112,7 +114,12 @@ asn1_module
 
 These are module-model capabilities, not proof that arbitrary ASN.1 module sets can already be loaded and resolved end to end. The parser, semantic publisher, module context, import/export rules, and loader must still agree on the supported language subset.
 
-Revision 1102 also changes the parameterized grammar vocabulary (`ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`) and the lexical handling around it. The dedicated `handle_asn1parameterized` lexer path was removed because parameterized-value handling remains limited; single-quoted and hexadecimal-string handling now have explicit lexer handlers. These changes should be read as grammar/lexer evolution, not as a claim of complete parameterized ASN.1 support.
+- **Revision 1102**
+  - Changes the parameterized grammar vocabulary (`ParameterizedAssignment`, `ParameterizedType`, and `ParameterizedValue`) and the surrounding lexical handling.
+  - Removes the dedicated `handle_asn1parameterized` lexer path because parameterized-value handling remains limited.
+  - Adds explicit lexer handlers for single-quoted and hexadecimal strings.
+
+These changes should be read as grammar/lexer evolution, not as a claim of complete parameterized ASN.1 support.
 
 ## LALR(1) and GLR are different parts of the architecture
 
@@ -169,7 +176,19 @@ semantic reconstruction
 runtime schema/type objects
 ```
 
-Revisions 1097–1102 established the beginning of this integration, not a completed module loader. Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`; revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`. Revision 1123 advances this path by reconstructing a parameterized type definition and its formal parameter list into the semantic model. Revision 1124 adds the instantiation counterpart: `parse_tree` carries a state value through traversal, and `parse_tree_visitor` exposes a pre-visit hook that can set state for a node's descendants. The ASN.1 publisher marks `ParameterizedType` as an instantiation context, collects actual type parameters from `SimpleTypeSpec` and value parameters from `ValueElement`, and specializes the referenced parameterized type. The `test_parameterized2` path now checks the module representation of a concrete `FRAME` instantiation. This is a material end-to-end step for the tested form; grammar coverage, other parameter forms, module linkage, and complete ASN.1 language support remain distinct levels of support.
+The integration progressed through several distinct semantic-construction steps:
+
+- **Loader and module path**
+  - Revisions 1097–1102 established the beginning of this integration, not a completed module loader.
+  - Revision 1103 fixed `TypeAssignment` handling in `asn1_publisher`.
+  - Revision 1104 introduced prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, and renamed the module registry to `asn1_modules`.
+- **Parameterized definition reconstruction**
+  - Revision 1123 reconstructs a parameterized type definition and its formal parameter list into the semantic model.
+- **Parameterized instantiation path**
+  - Revision 1124 adds the instantiation counterpart: `parse_tree` carries a state value through traversal, and `parse_tree_visitor` exposes a pre-visit hook that can set state for a node's descendants.
+  - The ASN.1 publisher marks `ParameterizedType` as an instantiation context, collects actual type parameters from `SimpleTypeSpec` and value parameters from `ValueElement`, and specializes the referenced parameterized type.
+  - The `test_parameterized2` path now checks the module representation of a concrete `FRAME` instantiation.
+  - This is a material end-to-end step for the tested form; grammar coverage, other parameter forms, module linkage, and complete ASN.1 language support remain distinct levels of support.
 
 The parsing resources also have different roles:
 
@@ -201,7 +220,15 @@ declared constraint evaluation
 accepted / rejected value
 ```
 
-Revisions 1118–1119 strengthen this boundary. Revision 1118 added `asn1_object::validate_type` for built-in type/value validation and corrected ENUMERATED validation in `asn1_constraints::do_validate`. Revision 1119 added the OID header dependency used by the type-validation implementation. The checks cover concrete type expectations—for example, boolean and integer value forms, string character/content constraints, and OID-shaped values—before the constraint layer decides whether a declared restriction accepts the value.
+Revisions 1118–1119 strengthen this boundary through two related changes:
+
+- **Revision 1118**
+  - Adds `asn1_object::validate_type` for built-in type/value validation.
+  - Corrects ENUMERATED validation in `asn1_constraints::do_validate`.
+- **Revision 1119**
+  - Adds the OID header dependency used by the type-validation implementation.
+
+The checks cover concrete type expectations—for example, boolean and integer value forms, string character/content constraints, and OID-shaped values—before the constraint layer decides whether a declared restriction accepts the value.
 
 This is an architectural extension of the syntax-to-runtime path, not evidence of complete ASN.1 conformance. Built-in type checking, constraint evaluation, successful parsing, and end-to-end encoding/decoding remain separate capabilities; support should be described according to the implemented and tested paths rather than inferred from the existence of `validate()`.
 
@@ -249,7 +276,14 @@ Revisions through 1124 establish stronger connections between syntax, semantic r
 
 ## Current state
 
-Revision 1124 extends the syntax → semantic construction → module/runtime path beyond formal parameter reconstruction. State propagation in `parse_tree`/`parse_tree_visitor` lets the publisher distinguish a `ParameterizedType` instantiation subtree without creating a separate reconstruction context. The publisher gathers type/value actual arguments and calls `specialize()`; the parameterized testcase verifies the resulting module representation. Revisions 1118–1119 remain the separate built-in type/value validation boundary, and Revisions 1120/1122 record runtime specialization and validation work. The new test establishes one integrated instantiation case, not complete support for all parameterized ASN.1 notation.
+The current implementation state is described by the following revision-specific steps:
+
+- **Revision 1118** — Adds built-in ASN.1 type/value validation through `asn1_object::validate_type` and corrects ENUMERATED validation in `asn1_constraints::do_validate`.
+- **Revision 1119** — Adds the OID-related adjustment to the built-in validation path.
+- **Revision 1120** — Records runtime parameterized type specialization/instantiation and parameter-dependent validation work.
+- **Revision 1122** — Advances parameterized specialization/instantiation and its verification, including the removal of the future/promise behavior from `t_value`.
+- **Revision 1123** — Reconstructs parameterized type definitions and formal parameter lists in the loader/publisher semantic model.
+- **Revision 1124** — Extends the syntax → semantic construction → module/runtime path beyond formal parameter reconstruction. State propagation in `parse_tree`/`parse_tree_visitor` lets the publisher distinguish a `ParameterizedType` instantiation subtree without creating a separate reconstruction context. The publisher gathers type/value actual arguments and calls `specialize()`; the parameterized testcase verifies the resulting module representation. This establishes one integrated instantiation case, not complete support for all parameterized ASN.1 notation.
 
 ### Related source / documents
 

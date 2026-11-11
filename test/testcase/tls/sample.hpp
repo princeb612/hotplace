@@ -71,4 +71,6 @@ void testcase_alert();
 
 void dump_clienthello();
 
+void testcase_rfc();
+
 #endif

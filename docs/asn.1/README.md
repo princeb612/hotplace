@@ -1,6 +1,6 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1124**
+**Edition 1 · Revision 1125**
 
 ## Context
 
@@ -40,44 +40,62 @@ Reading the document in that direction explains why `parse_tree`, `asn1_publishe
 
 The CHANGELOG gives the following development path:
 
-- **Revision 1031** — ASN.1 runtime, builtin type, referenced type
-- **Revision 1044** — ASN.1 constraints
-- **Revision 1056–1058** — strongly-typed decoding
-- **Revision 1064** — CFG grammar and LALR parser
-- **Revision 1069** — parse tree
-- **Revision 1070** — parse tree visitor
-- **Revision 1072** — ASN.1 parser usertype applied
-- **Revision 1074** — `asn1_publisher` first step
-- **Revision 1077** — Named Number List, Named Bit List, ENUMERATED
-- **Revision 1078** — CHOICE, DEFAULT, OPTIONAL
-- **Revision 1081–1082** — constraints in `asn1_publisher`, including exclusive boundaries and string ranges
-- **Revision 1083** — `string_set` `erase_range`, `intersect`
-- **Revision 1086** — ASN.1 loader/compiler sketch
-- **Revision 1087** — LALR parser import
-- **Revision 1088** — CFG for ASN.1 module
-- **Revision 1089** — context-aware parser switching pattern
-- **Revision 1090** — GLR parser and broader CFG experiments
-- **Revision 1091** — CFG for ASN.1 information object class
-- **Revision 1093** — CFG for ASN.1 extension marker versions 1 and 2
-- **Revision 1094** — parser-table binary layout and external table import
-- **Revision 1095** — build infrastructure changes supporting the parser-table workflow
-- **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes
-- **Revision 1097** — loader begins file/memory input parsing to `parse_tree`
-- **Revision 1099** — `IMPORTS`/`EXPORTS`, module linkage, and resolvability checks
-- **Revision 1100** — shared ASN.1 providers consolidated as `asn1_advisor`
-- **Revision 1102** — `asn1_runtime` renamed to `asn1_module` (and `asn1_runtime_context` to `asn1_module_context`); parameterized assignment/type/value grammar expanded
-- **Revision 1103** — `asn1_publisher` `TypeAssignment` fix
-- **Revision 1104** — prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`; module registry renamed to `asn1_modules`; binary parsing-table format advanced to revision 3
-- **Revision 1118** — `asn1_object::validate_type` adds built-in ASN.1 value/type checks, and `asn1_constraints::do_validate` fixes ENUMERATED validation
-- **Revision 1119** — OID parsing is connected to the built-in value-validation path
-- **Revision 1120** — parameterized type specialization/instantiation and parameter-dependent validation
-- **Revision 1122** — parameterized type specialization/instantiation applied; Sanitizer, Valgrind, and Application Verifier checks; future/promise behavior removed from `t_value`
-- **Revision 1123** — loader/publisher reconstructs parameterized type definitions and formal parameter lists into semantic objects
-- **Revision 1124** — parse-tree visitor propagates node-scoped state; publisher collects actual type/value parameters and specializes a parameterized type during instantiation; `asn1.ptb` advances to binary table revision 4 while `asn1notation.ptb` remains at revision 3
+- **Runtime and value model**
+  - **Revision 1031** — ASN.1 runtime, builtin type, referenced type
+  - **Revision 1044** — ASN.1 constraints
+  - **Revision 1056–1058** — strongly-typed decoding
+- **Notation parsing and semantic construction**
+  - **Revision 1064** — CFG grammar and LALR parser
+  - **Revision 1069** — parse tree
+  - **Revision 1070** — parse tree visitor
+  - **Revision 1072** — ASN.1 parser usertype applied
+  - **Revision 1074** — `asn1_publisher` first step
+  - **Revision 1077** — Named Number List, Named Bit List, ENUMERATED
+  - **Revision 1078** — CHOICE, DEFAULT, OPTIONAL
+  - **Revision 1081–1082** — constraints in `asn1_publisher`, including exclusive boundaries and string ranges
+  - **Revision 1083** — `string_set` `erase_range`, `intersect`
+- **Loader, grammar, and module integration**
+  - **Revision 1086** — ASN.1 loader/compiler sketch
+  - **Revision 1087** — LALR parser import
+  - **Revision 1088** — CFG for ASN.1 module
+  - **Revision 1089** — context-aware parser switching pattern
+  - **Revision 1090** — GLR parser and broader CFG experiments
+  - **Revision 1091** — CFG for ASN.1 information object class
+  - **Revision 1093** — CFG for ASN.1 extension marker versions 1 and 2
+  - **Revision 1094** — parser-table binary layout and external table import
+  - **Revision 1095** — build infrastructure changes supporting the parser-table workflow
+  - **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes
+  - **Revision 1097** — loader begins file/memory input parsing to `parse_tree`
+  - **Revision 1099** — `IMPORTS`/`EXPORTS`, module linkage, and resolvability checks
+  - **Revision 1100** — shared ASN.1 providers consolidated as `asn1_advisor`
+  - **Revision 1102** — `asn1_runtime` renamed to `asn1_module` (and `asn1_runtime_context` to `asn1_module_context`); parameterized assignment/type/value grammar expanded
+  - **Revision 1103** — `asn1_publisher` `TypeAssignment` fix
+  - **Revision 1104** — prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`; module registry renamed to `asn1_modules`; binary parsing-table format advanced to revision 3
+- **Runtime validation and parameterized types**
+  - **Revision 1118** — `asn1_object::validate_type` adds built-in ASN.1 value/type checks, and `asn1_constraints::do_validate` fixes ENUMERATED validation
+  - **Revision 1119** — OID parsing is connected to the built-in value-validation path
+  - **Revision 1120** — parameterized type specialization/instantiation and parameter-dependent validation
+  - **Revision 1122** — parameterized type specialization/instantiation applied; Sanitizer, Valgrind, and Application Verifier checks; future/promise behavior removed from `t_value`
+  - **Revision 1123** — loader/publisher reconstructs parameterized type definitions and formal parameter lists into semantic objects
+  - **Revision 1124** — parse-tree visitor propagates node-scoped state; publisher collects actual type/value parameters and specializes a parameterized type during instantiation; `asn1.ptb` advances to binary table revision 4 while `asn1notation.ptb` remains at revision 3
+  - **Revision 1125** — adds move-aware specialization and specialized-type construction overloads for collected actual parameter values
 
 The history shows the transition from an ASN.1 runtime model, through parser infrastructure, toward semantic reconstruction of that model from notation.
 
-By Revision 1105, the loader/parser/publisher path reaches `asn1_module` construction and module-level import/export and reference-resolution behavior. `asn1_module::add_schema()` selects GLR through `asn1_parser`; LALR(1) remains an available parser path. The module registry is `asn1_modules` (the earlier `asn1_module_context` name is historical). Revision 1104 adds prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, but these are not evidence of complete parameter binding, substitution, or semantic instantiation. The binary parsing-table format also advances to revision 3. Revisions 1118–1119 add a separate runtime value-validation step; this strengthens checks on values supplied to runtime objects without implying that parameterized semantic instantiation is complete. Revision 1123 extends the loader/publisher path to reconstruct parameterized type definitions and their formal parameter lists as semantic objects. Revision 1124 adds the complementary instantiation path: `parse_tree_visitor` can modify a state value at a node and propagate it to descendants; the publisher marks `ParameterizedType` nodes as instantiation contexts, collects type arguments from `SimpleTypeSpec` and value arguments from `ValueElement`, then calls `specialize()` on the referenced parameterized type. The parameterized testcase now parses `FRAME{ OCTET STRING, 1024 }` and checks the resulting module representation. This establishes a concrete parser-to-publisher instantiation path for the tested form, not exhaustive support for every ASN.1 parameterized construct. Separately, Revision 1124 changes only the `asn1.ptb` binary parsing-table revision from 3 to 4; `asn1notation.ptb` retains revision 3.
+The implementation boundary can be read as a progression from module construction to runtime validation and parameterized instantiation:
+
+- **Module construction through Revision 1105**
+  - By Revision 1105, the loader/parser/publisher path reaches `asn1_module` construction and module-level import/export and reference-resolution behavior.
+  - `asn1_module::add_schema()` selects GLR through `asn1_parser`; LALR(1) remains an available parser path.
+  - The module registry is `asn1_modules` (the earlier `asn1_module_context` name is historical).
+  - Revision 1104 adds prototypes for `asn1_parameterized_type::define` and `asn1_parameter::value`, but these are not evidence of complete parameter binding, substitution, or semantic instantiation. The binary parsing-table format also advances to revision 3.
+- **Runtime value validation**
+  - Revisions 1118–1119 add a separate runtime value-validation step. This strengthens checks on values supplied to runtime objects without implying that parameterized semantic instantiation is complete.
+- **Parameterized definition and instantiation**
+  - Revision 1123 extends the loader/publisher path to reconstruct parameterized type definitions and their formal parameter lists as semantic objects.
+  - Revision 1124 adds the complementary instantiation path: `parse_tree_visitor` can modify a state value at a node and propagate it to descendants; the publisher marks `ParameterizedType` nodes as instantiation contexts, collects type arguments from `SimpleTypeSpec` and value arguments from `ValueElement`, then calls `specialize()` on the referenced parameterized type. Revision 1125 adds rvalue overloads so the collected `asn1_paramvalues` can be moved into the specialized type instead of requiring the const-reference construction path.
+  - The parameterized testcase now parses `FRAME{ OCTET STRING, 1024 }` and checks the resulting module representation. This establishes a concrete parser-to-publisher instantiation path for the tested form, not exhaustive support for every ASN.1 parameterized construct.
+  - Separately, Revision 1124 changes only the `asn1.ptb` binary parsing-table revision from 3 to 4; `asn1notation.ptb` retains revision 3.
 
 ## Conceptual
 

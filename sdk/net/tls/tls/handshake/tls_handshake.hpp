@@ -65,7 +65,7 @@ class HOTPLACE_NET_API tls_handshake {
     /**
      * update transcript hash, key calcuration, ...
      */
-    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
+    virtual return_t do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size);
     /**
      * read header
      */

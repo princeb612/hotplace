@@ -760,10 +760,14 @@ shows that source-level portability and dependency-level portability are connect
 
 ### Shared build as an integration check
 
-Revision 1112 introduced the SDK API export/import declarations needed for
-shared-library builds. Revisions 1112-1114 form the implementation and
-verification interval; **Revision 1114 is the documented baseline for the
-completed shared-build check**.
+The shared-build work has two distinct revision checkpoints:
+
+- **Revision 1112**
+  - Introduces the SDK API export/import declarations needed for shared-library builds.
+  - Records the original MinGW64 verification path described below.
+- **Revisions 1112–1114**
+  - Form the implementation and verification interval.
+  - **Revision 1114 is the documented baseline for the completed shared-build check.**
 
 The shared build was successfully tested on:
 
@@ -817,18 +821,21 @@ cd build/test/testcase
 make && ctest
 ```
 
-This command sequence records the original MinGW64 test path from
-Revision 1112. The successful shared-build result through Revision 1114 also includes MSVC,
-Ubuntu, Rocky Linux, and CentOS 7. Revision 1116 separately documents binary
-file-version metadata for MinGW64/MSVC.
+The verification evidence should be read with its revision boundaries:
+
+- **Revision 1112**
+  - The command sequence above records the original MinGW64 test path.
+- **Revision 1114**
+  - The successful shared-build result also includes MSVC, Ubuntu, Rocky Linux, and CentOS 7.
+- **Revision 1116**
+  - Separately documents binary file-version metadata for MinGW64/MSVC.
 
 ### Binary file-version metadata
 
-Revision 1116 keeps project version values in the root `version.txt`, which
-is included by `CMakeLists.txt`. The values `VERSION_MAJOR`,
-`VERSION_MINOR`, and `VERSION_BUILD` are combined into numeric and string
-forms used by the Windows resource template. This lets MinGW64 and MSVC
-generated binaries carry consistent file and product version metadata.
+- **Revision 1116**
+  - Keeps project version values in the root `version.txt`, which is included by `CMakeLists.txt`.
+  - Combines `VERSION_MAJOR`, `VERSION_MINOR`, and `VERSION_BUILD` into numeric and string forms used by the Windows resource template.
+  - Lets MinGW64 and MSVC generated binaries carry consistent file and product version metadata.
 
 ```text
 version.txt

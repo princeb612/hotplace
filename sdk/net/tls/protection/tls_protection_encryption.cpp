@@ -138,9 +138,6 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
         } else {
             ret = decrypt_aead(session, dir, stream, size, pos, plaintext, space);
         }
-        if (errorcode_t::success != ret) {
-            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
-        }
     }
     __finally2 {}
     return ret;
@@ -172,9 +169,6 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
                     binary_append(tag, stream + size - tagsize, tagsize);
                     ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, space);
                 }
-                if (errorcode_t::success != ret) {
-                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
-                }
             } break;
             case session_type_t::quic:
             case session_type_t::quic2: {
@@ -202,9 +196,6 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
             ret = errorcode_t::not_supported;
         } else {
             ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad, tag, space);
-            if (errorcode_t::success != ret) {
-                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
-            }
         }
     }
     __finally2 {}

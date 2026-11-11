@@ -142,6 +142,36 @@ class t_tls_container {
         _members.clear();
         _dictionary.clear();
     }
+    /**
+     * @return  if exists return true, else false
+     */
+    bool find(ENTITY_TYPE type, std::vector<size_t>& indexes, size_t& size) {
+        indexes.clear();
+        critical_section_guard guard(_lock);
+        size_t i = 0;
+        for (auto& item : _members) {
+            if (type == item->get_type()) indexes.push_back(i);
+            ++i;
+        }
+        size = _members.size();
+        return false == indexes.empty();
+    }
+    /**
+     * move tls_extension_type_t::pre_shared_key to back
+     */
+    template <typename F>
+    bool move_to_back(ENTITY_TYPE type, F&& func) {
+        bool ret = false;
+        critical_section_guard guard(_lock);
+        auto it = std::find_if(_members.begin(), _members.end(), [&type, &func](const TYPE_PTR item) -> bool { return type == std::forward<F>(func)(item); });
+        if (_members.end() != it) {
+            if (_members.end() - 1 != it) {
+                std::rotate(it, it + 1, _members.end());
+                ret = true;
+            }
+        }
+        return ret;
+    }
 
     uint32 get_flags() const { return _flags; }
 

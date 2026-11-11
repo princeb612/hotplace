@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Edition 1 · Revision 1125                    │
+│ Source basis: Revision 1125                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -63,7 +63,7 @@ This is a problem-shape map, not an inheritance diagram: the algorithms have sep
 The algorithms differ in when they preprocess and what they return:
 
 - **Preprocess then query:** KMP's `learn()` builds a failure table; Aho-Corasick's `insert()` collects patterns and `build()` computes failure links; regex contexts compile an expression before repeated searches.
-- **Incremental dictionary/index operations:** Trie supports adding and removing keys, exact membership, prefix queries and longest-match scanning. The suffix trie and Ukkonen structure are built from source sequences and return occurrence positions.
+- **Incremental dictionary/index operations:** Trie supports adding and removing keys, exact membership, prefix queries, longest-match scanning, reverse lookup, and terminal-prefix tracing. The suffix trie and Ukkonen structure are built from source sequences and return occurrence positions.
 - **Interpretation during matching:** Standalone wildcard matching uses caller-selected wildcard symbols. Aho-Corasick's wildcard subclass integrates wildcard transitions into multi-pattern search; it is not the same implementation as `t_wildcards`.
 - **Higher-level token reduction:** `aho_corasick_reducer.hpp` extends the automaton with virtual token groups, sub-pattern rules, repeat rules and block reduction. This is a bridge between token matching and parser-oriented structure, not a generic parser.
 - **Backend-dependent matching:** Regex behavior is selected at compile time. In the current source, older GCC builds use PCRE because the project's supported legacy toolchain cannot rely on a working `std::regex` implementation; newer GCC and MSVC use `std::regex`.

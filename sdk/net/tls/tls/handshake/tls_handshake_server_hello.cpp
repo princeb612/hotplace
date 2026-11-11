@@ -148,7 +148,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
     return ret;
 }
 
-return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
+return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -231,6 +231,24 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 // HelloRetryRequest and the client needs to restart the handshake with an appropriate "key_share" extension.
 
                 protection.set_flow(tls_flow_t::hello_retry_request);
+                if (tls_io_operation_t::read == opdir) {
+                    uint32 status = session->get_session_status();
+                    if (session_status_hello_retry_request & status) {
+                        // RFC 8446 4.1.4.  Hello Retry Request
+                        // If a client receives a second HelloRetryRequest in the same connection
+                        // (i.e., where the ClientHello was itself in response to a HelloRetryRequest),
+                        // it MUST abort the handshake with an "unexpected_message" alert.
+                        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                        session->reset_session_status();
+                        ret = errorcode_t::handshake_failure;
+                        __leave2_trace(ret);
+                        // Leaving this entirely to the client is problematic.
+                        // However, defensive handling on the server is also difficult to standardize,
+                        // as the TLS specification does not define how a server should handle an attempt to generate a second HelloRetryRequest.
+                    }
+                }
+                session->update_session_status(session_status_hello_retry_request);
+
                 session->clear_session_status(session_status_client_hello);
 
                 /**

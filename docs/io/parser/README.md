@@ -16,27 +16,39 @@ The ASN.1 parser supports selectable LALR(1) and GLR paths. In the current sourc
 
 The CHANGELOG gives the following parser-oriented sequence:
 
-- **Revision 1064** — LALR parser and CFG for ASN.1 notation
-- **Revision 1069** — parse tree
-- **Revision 1070** — parse-tree visitor
-- **Revision 1072** — ASN.1 parser usertype applied
-- **Revision 1087** — `lalr1_parser` import
-- **Revision 1088** — CFG for ASN.1 module
-- **Revision 1089** — context-aware parser switching pattern
-- **Revision 1090** — GLR parser and integrated CFG work covering ASN.1 notation, module, parameterized constructs, and information object class
-- **Revision 1091** — CFG for ASN.1 information object class
-- **Revision 1093** — CFG for ASN.1 extension marker versions 1 and 2.
-- **Revision 1094** — parser-table binary layout and external table import.
-- **Revision 1095** — build infrastructure changes supporting the parser-table workflow.
-- **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes.
-- **Revision 1097** — loader begins parsing file/memory input to a `parse_tree` (first step).
-- **Revision 1099** — `IMPORTS`, `EXPORTS`, module linkage, `resolve()` and `is_resolvable()` are exercised in the module path.
-- **Revision 1100** — shared ASN.1 knowledge and parser/publisher providers move under `asn1_advisor` (renamed from `asn1_resource`).
-- **Revision 1102** — `asn1_runtime`/`asn1_runtime_context` are renamed to `asn1_module`/`asn1_module_context`; parameterized assignment/type/value grammar is extended and parser tables move to revision 2.
-- **Revision 1103** — `asn1_publisher` fixes `TypeAssignment` semantic publication.
-- **Revision 1104** — parameterized type/value semantic prototypes; module registry renamed to `asn1_modules`; binary parsing-table format revision 3.
+- **Parse-tree and notation foundation**
+  - **Revision 1064** — LALR parser and CFG for ASN.1 notation
+  - **Revision 1069** — parse tree
+  - **Revision 1070** — parse-tree visitor
+  - **Revision 1072** — ASN.1 parser usertype applied
+- **Grammar and parser-engine expansion**
+  - **Revision 1087** — `lalr1_parser` import
+  - **Revision 1088** — CFG for ASN.1 module
+  - **Revision 1089** — context-aware parser switching pattern
+  - **Revision 1090** — GLR parser and integrated CFG work covering ASN.1 notation, module, parameterized constructs, and information object class
+  - **Revision 1091** — CFG for ASN.1 information object class
+  - **Revision 1093** — CFG for ASN.1 extension marker versions 1 and 2.
+  - **Revision 1094** — parser-table binary layout and external table import.
+  - **Revision 1095** — build infrastructure changes supporting the parser-table workflow.
+  - **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes.
+- **Loader and module integration**
+  - **Revision 1097** — loader begins parsing file/memory input to a `parse_tree` (first step).
+  - **Revision 1099** — `IMPORTS`, `EXPORTS`, module linkage, `resolve()` and `is_resolvable()` are exercised in the module path.
+  - **Revision 1100** — shared ASN.1 knowledge and parser/publisher providers move under `asn1_advisor` (renamed from `asn1_resource`).
+  - **Revision 1102** — `asn1_runtime`/`asn1_runtime_context` are renamed to `asn1_module`/`asn1_module_context`; parameterized assignment/type/value grammar is extended and parser tables move to revision 2.
+  - **Revision 1103** — `asn1_publisher` fixes `TypeAssignment` semantic publication.
+  - **Revision 1104** — parameterized type/value semantic prototypes; module registry renamed to `asn1_modules`; binary parsing-table format revision 3.
 
-The important direction is parser selection at a stable semantic boundary, not a simple LALR-to-GLR replacement story. The GSS and parse-tree fixes from 1096 support the GLR path; by 1099–1104, the module path exercises GLR parsing through semantic publication and module resolution. Revision 1104's parameterized type/value work remains prototyping, and parsing-table format revision 3 is a generated-table format change rather than proof that semantic instantiation is complete. The two parser mechanisms and their provider/configuration paths should remain explicit in the explanation.
+The important direction is parser selection at a stable semantic boundary, not a simple LALR-to-GLR replacement story:
+
+- **GLR infrastructure**
+  - The GSS and parse-tree fixes from Revision 1096 support the GLR path.
+- **Module integration**
+  - By Revisions 1099–1104, the module path exercises GLR parsing through semantic publication and module resolution.
+- **Parameterized semantic boundary**
+  - Revision 1104's parameterized type/value work remains prototyping, and parsing-table format revision 3 is a generated-table format change rather than proof that semantic instantiation is complete.
+
+The two parser mechanisms and their provider/configuration paths should remain explicit in the explanation.
 
 ## Why the parser has become a separate study topic
 

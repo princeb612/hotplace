@@ -58,6 +58,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
                     }
 #endif
                     extension->release();
+                    break;
                 }
             }
         }
@@ -75,6 +76,14 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
 
 return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+
+    // RFC 8446 4.2.11
+    // The "pre_shared_key" extension MUST be the last extension in the
+    // ClientHello (this facilitates implementation as described below).
+    // Servers MUST check that it is the last extension and otherwise fail
+    // the handshake with an "illegal_parameter" alert.
+    _extensions.move_to_back(tls_extension_type_t::pre_shared_key, [](tls_extension* ext) -> tls_extension_type_t { return ext->get_type(); });
+
     auto lambda = [&dir, &bin](tls_extension* extension) -> return_t {
         auto ret = extension->write(dir, bin);
         if (errorcode_t::success != ret) {
@@ -130,7 +139,6 @@ tls_extensions& tls_extensions::operator<<(tls_extensions* extensions) {
     if (extensions) {
         auto lambda = [this, &extensions](tls_extension* ext) -> return_t { return add(ext, true); };
 
-        critical_section_guard guard(_lock);
         extensions->for_each(lambda);
     }
     return *this;
@@ -143,6 +151,8 @@ tls_extension* tls_extensions::get(tls_extension_type_t type, bool upref) { retu
 tls_extension* tls_extensions::getat(size_t index, bool upref) { return _extensions.getat(index, upref); }
 
 tls_extension* tls_extensions::operator[](size_t index) { return _extensions[index]; }
+
+bool tls_extensions::find(tls_extension_type_t type, std::vector<size_t>& indexes, size_t& size) { return _extensions.find(type, indexes, size); }
 
 bool tls_extensions::empty() const { return _extensions.empty(); }
 

@@ -61,18 +61,21 @@ COSE, JOSE, or another consumer.
 
 The cryptographic area grew together with the protocols that consumed it. The CHANGELOG provides several useful checkpoints:
 
-- Revision 108: CBOR was introduced; this became the encoding foundation used later by COSE.
-- Revision 211: COSE RFC examples were added, establishing concrete COSE security-object experiments.
-- Revision 442: COSE became a broader implemented feature across RFC 8152 and related registrations.
-- Revision 702: DSA testing appears as an explicit cryptographic checkpoint.
-- Revisions 729–790: TLS/DTLS work exercised certificates, key exchange, CBC, GCM, CCM, ECDSA, and related cryptographic operations.
-- Revision 770: OpenSSL 3.5 was applied and subsequently used by the TLS/DTLS work.
-- Revisions 883–889: OQS-provider KEM/DSA and PQC KEM testing established the post-quantum branch.
-- Revisions 890–902: ML-KEM parameter sets and hybrid TLS groups were tested, including X25519MLKEM768 and SecP256r1MLKEM768/SecP384r1MLKEM1024.
-- Revision 953: TLS 1.3 ML-DSA certificate testing was recorded.
-- Revision 998: ML-DSA was tested for JOSE and COSE.
-- Revision 999: SLH-DSA in TLS 1.3 became a study item.
-- Revision 1020: `crypto_keygen` was added as an explicit key-generation facility.
+- **Encoding and COSE foundation**
+  - Revision 108: CBOR was introduced; this became the encoding foundation used later by COSE.
+  - Revision 211: COSE RFC examples were added, establishing concrete COSE security-object experiments.
+  - Revision 442: COSE became a broader implemented feature across RFC 8152 and related registrations.
+- **Classical cryptography and protocol integration**
+  - Revision 702: DSA testing appears as an explicit cryptographic checkpoint.
+  - Revisions 729–790: TLS/DTLS work exercised certificates, key exchange, CBC, GCM, CCM, ECDSA, and related cryptographic operations.
+  - Revision 770: OpenSSL 3.5 was applied and subsequently used by the TLS/DTLS work.
+- **Post-quantum cryptography**
+  - Revisions 883–889: OQS-provider KEM/DSA and PQC KEM testing established the post-quantum branch.
+  - Revisions 890–902: ML-KEM parameter sets and hybrid TLS groups were tested, including X25519MLKEM768 and SecP256r1MLKEM768/SecP384r1MLKEM1024.
+  - Revision 953: TLS 1.3 ML-DSA certificate testing was recorded.
+  - Revision 998: ML-DSA was tested for JOSE and COSE.
+  - Revision 999: SLH-DSA in TLS 1.3 became a study item.
+  - Revision 1020: `crypto_keygen` was added as an explicit key-generation facility.
 
 This history shows the role of `sdk/crypto` more clearly than a directory listing: protocol studies repeatedly exposed a reusable cryptographic requirement, which then became a shared operation, key representation, algorithm mapping, or provider integration.
 

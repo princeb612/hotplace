@@ -22,7 +22,7 @@ tls_handshake_unknown::tls_handshake_unknown(tls_handshake_type_t type, tls_sess
 
 tls_handshake_unknown::~tls_handshake_unknown() {}
 
-return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
+return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
