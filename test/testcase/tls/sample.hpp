@@ -72,5 +72,6 @@ void testcase_alert();
 void dump_clienthello();
 
 void testcase_rfc();
+void testcase_gpt();
 
 #endif

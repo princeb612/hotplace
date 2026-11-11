@@ -234,22 +234,19 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     }
 
     auto pkey_cert = tlsadvisor->get_key(session, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
-    auto kty_cert = ktyof_evp_pkey(pkey_cert);
+    if (nullptr == pkey_cert) {
+        return errorcode_t::invalid_context;
+    }
 
-    tls_sigscheme_t sigalg = tls_sigscheme_t{};
-    {
-        auto lambda = [&advisor, &kty_cert, &sigalg](tls_sigscheme_t sigscheme, bool* ctrl) -> void {
-            auto hint = advisor->hintof_sigscheme(sigscheme);
-            bool stop = false;
-            if (hint) {
-                if ((hint->kty == kty_cert) && (kty_unknown != kty_cert)) {
-                    sigalg = sigscheme;
-                    stop = true;
-                }
-            }
-            *ctrl = stop;
-        };
-        protection_context.for_each_signature_algorithms(lambda);
+    // RFC 5246 7.4.1.4.1 / RFC 8446 4.2.3:
+    // choose an offered signature scheme compatible with the actual certificate key,
+    // including the EC curve. Matching only the key type can select an ECDSA scheme
+    // for a different curve and make ServerKeyExchange signing fail.
+    hint_advisor_t key_hint;
+    advisor->hintof_pkey(pkey_cert, key_hint);
+    tls_sigscheme_t sigalg = protection_context.select_signature_algorithm(key_hint.kty, key_hint.nid, false);
+    if (tls_sigscheme_t::unknown == sigalg) {
+        return errorcode_t::not_supported;
     }
 
     {
@@ -264,11 +261,13 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(sigalg).build();
-        if (sign) {
-            ret = sign->sign(pkey_cert, message, sig, sign_flag_format_der);
-            sign->release();
-        } else {
-            ret = errorcode_t::not_supported;
+        if (nullptr == sign) {
+            return errorcode_t::not_supported;
+        }
+        ret = sign->sign(pkey_cert, message, sig, sign_flag_format_der);
+        sign->release();
+        if (errorcode_t::success != ret) {
+            return ret;
         }
     }
 

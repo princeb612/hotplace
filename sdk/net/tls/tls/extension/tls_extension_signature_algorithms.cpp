@@ -36,12 +36,29 @@ tls_extension_signature_algorithms::~tls_extension_signature_algorithms() {}
 
 return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    auto session = get_handshake()->get_session();
+    auto handshake = get_handshake();
+    auto session = handshake->get_session();
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
-    protection_context.clear_signature_algorithms();
-    for (const auto& alg : _algorithms) {
-        protection_context.add_signature_algorithm(alg);
+
+    switch (handshake->get_type()) {
+        case tls_handshake_type_t::client_hello: {
+            protection_context.clear_signature_algorithms();
+            protection_context.clear_certificate_request_signature_algorithms();
+            for (const auto& alg : _algorithms) {
+                protection_context.add_signature_algorithm(alg);
+            }
+        } break;
+        case tls_handshake_type_t::certificate_request: {
+            protection_context.clear_certificate_request_signature_algorithms();
+            for (const auto& alg : _algorithms) {
+                protection_context.add_certificate_request_signature_algorithm(alg);
+            }
+        } break;
+        default: {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unsupported_extension);
+            ret = errorcode_t::bad_format;
+        } break;
     }
     return ret;
 }
@@ -49,7 +66,9 @@ return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir)
 return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        _algorithms.clear();
         binary_t algorithms;
+        uint16 vector_len = 0;
         uint16 count = 0;
 
         {
@@ -57,11 +76,24 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
             pl << new payload_member(uint16(0), true, constexpr_algorithms)  //
                << new payload_member(binary_t(), constexpr_algorithm);
             pl.set_reference_value(constexpr_algorithm, constexpr_algorithms);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                ret = errorcode_t::bad_format;
+                __leave2;
+            }
 
-            count = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
+            vector_len = pl.t_value_of<uint16>(constexpr_algorithms);
             pl.get_binary(constexpr_algorithm, algorithms);
+            if (vector_len < 2 || (vector_len & 1) || vector_len != algorithms.size() || pos != endpos_extension()) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                ret = errorcode_t::bad_format;
+                __leave2;
+            }
 
+            count = vector_len >> 1;
             for (auto i = 0; i < count; i++) {
                 auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
                 t_enum_type<tls_sigscheme_t> etalg(alg);
@@ -95,6 +127,11 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (_algorithms.empty() || _algorithms.size() > 0x7fff) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         uint16 cbsize_algorithms = 0;
         binary_t bin_algorithms;
         {

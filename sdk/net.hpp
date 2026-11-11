@@ -216,6 +216,7 @@
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate_request.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_client_key_exchange.hpp>

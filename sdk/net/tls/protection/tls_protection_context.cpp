@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <algorithm>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -61,6 +62,10 @@ void protection_context::add_keyshare_group(tls_group_t group) {
 void protection_context::clear_cipher_suites() { _cipher_suites.clear(); }
 
 void protection_context::clear_signature_algorithms() { _signature_algorithms.clear(); }
+
+void protection_context::add_certificate_request_signature_algorithm(tls_sigscheme_t sa) { _certificate_request_signature_algorithms.push_back(sa); }
+
+void protection_context::clear_certificate_request_signature_algorithms() { _certificate_request_signature_algorithms.clear(); }
 
 void protection_context::clear_supported_groups() { _supported_groups.clear(); }
 
@@ -136,6 +141,7 @@ void protection_context::for_each_keyshare_groups(std::function<void(tls_group_t
 void protection_context::clear() {
     clear_cipher_suites();
     clear_signature_algorithms();
+    clear_certificate_request_signature_algorithms();
     clear_supported_groups();
     clear_supported_versions();
     clear_ec_point_formats();
@@ -298,24 +304,6 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         }
 
         {
-            other.for_each_signature_algorithms([&](tls_sigscheme_t scheme, bool*) -> void {
-                auto hint = advisor->hintof_sigscheme(scheme);
-                if (hint && (tls_flag_support & hint->flags)) {
-                    if (certnid_set.end() != certnid_set.find(hint->nid)) {
-                        _signature_algorithms.push_back(scheme);
-#if defined DEBUG
-                        if (istraceable(trace_category_t::trace_category_net)) {
-                            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
-                                dbs.println(" ! " ANSI_ESCAPE "1;33m#signature 0x%04x(%04u) %s" ANSI_ESCAPE "0m", scheme, scheme, hint->name);
-                            });
-                        }
-#endif
-                    }
-                }
-            });
-        }
-
-        {
             // _supported_groups
 
             other.for_each_supported_groups([&](tls_group_t group, bool*) -> void {
@@ -363,6 +351,11 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                 }
             });
         }
+
+        auto client_hello_signature_algorithms = other._signature_algorithms;
+        auto certificate_request_signature_algorithms = other._certificate_request_signature_algorithms;
+        _signature_algorithms = client_hello_signature_algorithms;
+        _certificate_request_signature_algorithms = certificate_request_signature_algorithms;
     }
     __finally2 {}
     return ret;
@@ -404,19 +397,63 @@ tls_group_t protection_context::get0_keyshare_group() {
     return ret_value;
 }
 
-tls_sigscheme_t protection_context::select_signature_algorithm(crypto_kty_t kty) {
-    tls_sigscheme_t ret_value = tls_sigscheme_t{};
-    auto advisor = crypto_advisor::get_instance();
+tls_sigscheme_t protection_context::select_signature_algorithm(crypto_kty_t kty) { return select_signature_algorithm(kty, 0, false); }
+
+tls_sigscheme_t protection_context::select_signature_algorithm(crypto_kty_t kty, uint32 nid, bool tls13) {
     for (const auto& item : _signature_algorithms) {
-        auto hint = advisor->hintof_sigscheme(item);
-        if (hint) {
-            if ((tls_flag_support & hint->flags) && (hint->kty == kty)) {
-                ret_value = item;
-                break;
-            }
+        if (is_signature_algorithm_compatible(item, kty, nid, tls13)) {
+            return item;
         }
     }
-    return ret_value;
+    return tls_sigscheme_t::unknown;
+}
+
+bool protection_context::has_signature_algorithms() const { return false == _signature_algorithms.empty(); }
+
+bool protection_context::is_signature_algorithm_offered(tls_sigscheme_t scheme) const {
+    return _signature_algorithms.end() != std::find(_signature_algorithms.begin(), _signature_algorithms.end(), scheme);
+}
+
+tls_sigscheme_t protection_context::select_certificate_request_signature_algorithm(crypto_kty_t kty, uint32 nid, bool tls13) {
+    for (const auto& item : _certificate_request_signature_algorithms) {
+        if (is_signature_algorithm_compatible(item, kty, nid, tls13)) {
+            return item;
+        }
+    }
+    return tls_sigscheme_t::unknown;
+}
+
+bool protection_context::has_certificate_request_signature_algorithms() const { return false == _certificate_request_signature_algorithms.empty(); }
+
+bool protection_context::is_certificate_request_signature_algorithm_offered(tls_sigscheme_t scheme) const {
+    return _certificate_request_signature_algorithms.end() !=
+           std::find(_certificate_request_signature_algorithms.begin(), _certificate_request_signature_algorithms.end(), scheme);
+}
+
+bool protection_context::is_signature_algorithm_compatible(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_sigscheme(scheme);
+    if (nullptr == hint || (tls_flag_support & hint->flags) == 0 || hint->kty != kty) {
+        return false;
+    }
+    if (nid &&
+        (sig_category_t::ecdsa == hint->category || sig_category_t::brainpool == hint->category || sig_category_t::eddsa == hint->category ||
+         sig_category_t::mldsa == hint->category || sig_category_t::slhdsa == hint->category) &&
+        hint->nid != nid) {
+        return false;
+    }
+    if (tls13 && (sig_category_t::rsassa_pkcs15 == hint->category || hash_algorithm_t::sha1 == hint->dgst)) {
+        return false;
+    }
+    return true;
+}
+
+bool protection_context::is_signature_algorithm_allowed(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const {
+    return is_signature_algorithm_offered(scheme) && is_signature_algorithm_compatible(scheme, kty, nid, tls13);
+}
+
+bool protection_context::is_certificate_request_signature_algorithm_allowed(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const {
+    return is_certificate_request_signature_algorithm_offered(scheme) && is_signature_algorithm_compatible(scheme, kty, nid, tls13);
 }
 
 }  // namespace net

@@ -256,6 +256,7 @@ int main(int argc, char** argv) {
         testcase_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
 
         testcase_rfc();
+        testcase_gpt();
     } else {
         dump_clienthello();
     }

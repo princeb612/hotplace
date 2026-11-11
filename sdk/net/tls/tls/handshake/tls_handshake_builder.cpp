@@ -11,6 +11,7 @@
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate_request.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_client_key_exchange.hpp>
@@ -23,6 +24,8 @@
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_unknown.hpp>
+#include <hotplace/sdk/net/tls/tls_protection.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -65,6 +68,13 @@ tls_handshake* tls_handshake_builder::build() {
         case tls_handshake_type_t::certificate: {
             handshake = new tls_handshake_certificate(session);
         } break;
+        case tls_handshake_type_t::certificate_request: {
+            if (session && session->get_tls_protection().is_kindof_tls13()) {
+                handshake = new tls_handshake_certificate_request(session);
+            } else {
+                handshake = new tls_handshake_unknown(hstype, session);
+            }
+        } break;
         case tls_handshake_type_t::server_key_exchange: {
             handshake = new tls_handshake_server_key_exchange(session);
         } break;
@@ -83,7 +93,6 @@ tls_handshake* tls_handshake_builder::build() {
         case tls_handshake_type_t::hello_request:
         case tls_handshake_type_t::request_connection_id:
         case tls_handshake_type_t::new_connection_id:
-        case tls_handshake_type_t::certificate_request:  // RFC 4346 7.4.4. Certificate request
         case tls_handshake_type_t::client_certificate_request:
         case tls_handshake_type_t::certificate_url:
         case tls_handshake_type_t::certificate_status:

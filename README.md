@@ -13,6 +13,7 @@
 
 * A personal project space for studying, experimenting, integrating, documenting, and playing.
 * Starting in 2026, actively utilizing AIs like GPT and Gemini.
+* GPT has been involved in development since revision 1128.
 
 ## Documentation
 

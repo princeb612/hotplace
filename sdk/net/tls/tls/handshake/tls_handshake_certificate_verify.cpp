@@ -91,8 +91,18 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
         auto& protection_context = protection.get_protection_context();
         // tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        auto kty = ktyof_evp_pkey(pkey);
-        scheme = protection_context.select_signature_algorithm(kty);
+        auto advisor = crypto_advisor::get_instance();
+        hint_advisor_t key_hint;
+        advisor->hintof_pkey(pkey, key_hint);
+        if (from_client == dir) {
+            scheme = protection_context.select_certificate_request_signature_algorithm(key_hint.kty, key_hint.nid, protection.is_kindof_tls13());
+        } else {
+            scheme = protection_context.select_signature_algorithm(key_hint.kty, key_hint.nid, protection.is_kindof_tls13());
+        }
+        if (tls_sigscheme_t::unknown == scheme) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
 
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(scheme).build();
@@ -122,7 +132,36 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
         }
 
         auto session = get_session();
-        // tls_protection& protection = session->get_tls_protection();
+        auto& protection = session->get_tls_protection();
+        auto& protection_context = protection.get_protection_context();
+
+        if (protection.is_kindof_tls13()) {
+            bool has_offer = (from_client == dir) ? protection_context.has_certificate_request_signature_algorithms() : protection_context.has_signature_algorithms();
+            if (false == has_offer) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
+                ret = errorcode_t::bad_format;
+                __leave2;
+            }
+
+            auto advisor = crypto_advisor::get_instance();
+            hint_advisor_t key_hint;
+            advisor->hintof_pkey(pkey, key_hint);
+            bool scheme_valid = false;
+            if (from_client == dir) {
+                // A client CertificateVerify MUST use a scheme in the server's CertificateRequest.
+                scheme_valid = protection_context.is_certificate_request_signature_algorithm_allowed(scheme, key_hint.kty, key_hint.nid, true);
+            } else {
+                // The client cannot establish the ¡×4.4.3 certificate-chain exception here because
+                // chain validation is external. Accept an unoffered server scheme only if it is
+                // locally supported, TLS 1.3-valid, and compatible with the certificate key.
+                scheme_valid = protection_context.is_signature_algorithm_compatible(scheme, key_hint.kty, key_hint.nid, true);
+            }
+            if (false == scheme_valid) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                ret = errorcode_t::bad_format;
+                __leave2;
+            }
+        }
 
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(scheme).build();
@@ -168,6 +207,11 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
             auto msgdata = tosign.data();
             auto msgsize = tosign.size();
             ret = sign->verify(pkey, msgdata, msgsize, signature, sign_flag_format_der);
+            if (errorcode_t::success != ret) {
+                // RFC 8446 4.4.3: a failed CertificateVerify signature MUST abort
+                // the handshake with a fatal decrypt_error alert.
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decrypt_error);
+            }
 
             sign->release();
         } else {
@@ -283,6 +327,13 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         tls_sigscheme_t scheme = tls_sigscheme_t::unknown;
         binary_t signature;
         ret = sign_certverify(pkey, dir, scheme, signature);
+        if (errorcode_t::success != ret) {
+            if (errorcode_t::not_supported == ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+                session->reset_session_status();
+            }
+            __leave2;
+        }
 
         payload pl;
         pl << new payload_member(uint16(scheme), true, constexpr_signature_alg)  //

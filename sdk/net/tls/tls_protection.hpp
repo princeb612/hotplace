@@ -59,6 +59,8 @@ class HOTPLACE_NET_API protection_context {
 
     void clear_cipher_suites();
     void clear_signature_algorithms();
+    void add_certificate_request_signature_algorithm(tls_sigscheme_t sa);
+    void clear_certificate_request_signature_algorithms();
     void clear_supported_groups();
     void clear_supported_versions();
     void clear_ec_point_formats();
@@ -92,18 +94,28 @@ class HOTPLACE_NET_API protection_context {
     tls_version_t get0_supported_version();
     tls_group_t get0_supported_group();
     tls_sigscheme_t select_signature_algorithm(crypto_kty_t kty);
+    tls_sigscheme_t select_signature_algorithm(crypto_kty_t kty, uint32 nid, bool tls13);
+    tls_sigscheme_t select_certificate_request_signature_algorithm(crypto_kty_t kty, uint32 nid, bool tls13);
+    bool has_signature_algorithms() const;
+    bool has_certificate_request_signature_algorithms() const;
+    bool is_signature_algorithm_offered(tls_sigscheme_t scheme) const;
+    bool is_certificate_request_signature_algorithm_offered(tls_sigscheme_t scheme) const;
+    bool is_signature_algorithm_compatible(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const;
+    bool is_signature_algorithm_allowed(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const;
+    bool is_certificate_request_signature_algorithm_allowed(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const;
     tls_group_t get0_keyshare_group();
 
     void clear();
 
    protected:
    private:
-    std::list<uint16> _cipher_suites;                  // tls_handshake_client_hello
-    std::list<tls_sigscheme_t> _signature_algorithms;  // tls_extension_signature_algorithms
-    std::list<tls_group_t> _supported_groups;          // tls_extension_supported_groups
-    std::list<tls_version_t> _supported_versions;      // tls_extension_client_supported_versions
-    std::list<uint8> _ec_point_formats;                // tls_extension_ec_point_formats
-    std::list<tls_group_t> _keyshare_groups;           // tls_extension_type_t::key_share
+    std::list<uint16> _cipher_suites;                                      // tls_handshake_client_hello
+    std::list<tls_sigscheme_t> _signature_algorithms;                      // ClientHello signature_algorithms offer
+    std::list<tls_sigscheme_t> _certificate_request_signature_algorithms;  // CertificateRequest signature_algorithms offer
+    std::list<tls_group_t> _supported_groups;                              // tls_extension_supported_groups
+    std::list<tls_version_t> _supported_versions;                          // tls_extension_client_supported_versions
+    std::list<uint8> _ec_point_formats;                                    // tls_extension_ec_point_formats
+    std::list<tls_group_t> _keyshare_groups;                               // tls_extension_type_t::key_share
     std::set<tls_group_t> _keyshare_set;
     uint16 _cipher_suite;
 };

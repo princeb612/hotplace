@@ -54,13 +54,23 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
             pl << new payload_member(uint8(0), constexpr_versions)  //
                << new payload_member(binary_t(), constexpr_version);
             pl.set_reference_value(constexpr_version, constexpr_versions);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
-            auto valueof_versions = pl.t_value_of<uint8>(constexpr_versions);
-            count = valueof_versions >> 1;
+            auto vector_len = pl.t_value_of<uint8>(constexpr_versions);
+            count = vector_len >> 1;
             pl.get_binary(constexpr_version, versions);
 
-            if (((2 > valueof_versions) || (valueof_versions > 254) || (0 != (valueof_versions & 1))) || (versions.size() != valueof_versions)) {
+            // The vector must consume the complete extension_data. Checking only
+            // the vector's own length misses trailing bytes after a valid list.
+            if (((2 > vector_len) || (vector_len > 254) || (0 != (vector_len & 1))) || (versions.size() != vector_len) ||
+                (pos != endpos_extension())) {
                 auto session = get_handshake()->get_session();
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
                 session->reset_session_status();
