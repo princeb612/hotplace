@@ -315,7 +315,32 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
             t_enum_type<tls_group_t> etgroup(group);
             auto hint = advisor->hintof_tls_group(etgroup);
 
+            // RFC 8446 4.2.8. A client receiving HelloRetryRequest MUST verify
+            // that selected_group was supported by the original ClientHello and
+            // was not already present in its key_share extension.
+            auto& protection_context = protection.get_protection_context();
+            bool is_offered_sg = false;
+            bool is_offered_ks = false;
+
+            protection_context.for_each_supported_groups([&](tls_group_t candidate, bool*) -> void {
+                if ((uint16)candidate == group) {
+                    is_offered_sg = true;
+                }
+            });
+            protection_context.for_each_keyshare_groups([&](tls_group_t candidate, bool*) -> void {
+                if ((uint16)candidate == group) {
+                    is_offered_ks = true;
+                }
+            });
+
             if (pubkeylen) {
+                if (false == is_offered_sg || false == is_offered_ks) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+
                 crypto_keyexchange keyexchange;
                 auto& tlskey = protection.get_key();
                 binary_t shared_secret;
@@ -329,6 +354,13 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                     // and then ECDHE, HRR (see calc)
                 }
             } else {
+                if (false == is_offered_sg || is_offered_ks) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+
                 session->get_session_info(from_server).get_keyvalue().set(session_hrr, group);
             }
 

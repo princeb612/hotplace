@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* group, binary_t& bin) {
+static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* group, binary_t& bin, const char* omit_supported_group = nullptr) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -59,19 +59,24 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                         return errorcode_t::success;
                                     })
                                .add(tls_extension_type_t::supported_groups, dir, handshake,
-                                    [](tls_extension* extension) -> return_t {
+                                    [&](tls_extension* extension) -> return_t {
                                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                                        (*(tls_extension_supported_groups*)extension)
-                                            .add("x25519")
-                                            .add("secp256r1")
-                                            .add("x448")
-                                            .add("secp521r1")
-                                            .add("secp384r1")
-                                            .add("ffdhe2048")
-                                            .add("ffdhe3072")
-                                            .add("ffdhe4096")
-                                            .add("ffdhe6144")
-                                            .add("ffdhe8192");
+                                        auto supported_groups = (tls_extension_supported_groups*)extension;
+                                        auto add_group = [&](const char* candidate) -> void {
+                                            if ((nullptr == omit_supported_group) || (std::string(omit_supported_group) != candidate)) {
+                                                supported_groups->add(candidate);
+                                            }
+                                        };
+                                        add_group("x25519");
+                                        add_group("secp256r1");
+                                        add_group("x448");
+                                        add_group("secp521r1");
+                                        add_group("secp384r1");
+                                        add_group("ffdhe2048");
+                                        add_group("ffdhe3072");
+                                        add_group("ffdhe4096");
+                                        add_group("ffdhe6144");
+                                        add_group("ffdhe8192");
                                         return errorcode_t::success;
                                     })
                                .add(tls_extension_type_t::encrypt_then_mac, dir, handshake, nullptr)
@@ -208,6 +213,176 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
     }
     __finally2 {}
     return ret;
+}
+
+static bool do_test_mutate_server_hello_key_share_group(binary_t& bin, tls_group_t group) {
+    // TLSPlaintext record + ServerHello handshake framing.
+    auto read_u16 = [&](size_t pos) -> uint16 { return (uint16)(((uint16)bin[pos] << 8) | bin[pos + 1]); };
+    auto read_u24 = [&](size_t pos) -> uint32 { return ((uint32)bin[pos] << 16) | ((uint32)bin[pos + 1] << 8) | (uint32)bin[pos + 2]; };
+
+    if (bin.size() < 9 || bin[0] != 0x16 || bin[5] != 0x02) {
+        return false;
+    }
+
+    size_t record_end = 5 + read_u16(3);
+    size_t handshake_end = 9 + read_u24(6);
+    if (record_end > bin.size() || handshake_end > record_end) {
+        return false;
+    }
+
+    size_t pos = 9;
+    // ServerHello: legacy_version, random, legacy_session_id_echo,
+    // cipher_suite, legacy_compression_method, extensions.
+    if (pos + 2 + 32 + 1 > handshake_end) {
+        return false;
+    }
+    pos += 2 + 32;
+    uint8 session_id_len = bin[pos++];
+    if (pos + session_id_len + 2 + 1 + 2 > handshake_end) {
+        return false;
+    }
+    pos += session_id_len + 2 + 1;
+
+    uint16 extensions_len = read_u16(pos);
+    pos += 2;
+    size_t extensions_end = pos + extensions_len;
+    if (extensions_end > handshake_end) {
+        return false;
+    }
+
+    while (pos + 4 <= extensions_end) {
+        uint16 extension_type = read_u16(pos);
+        uint16 extension_len = read_u16(pos + 2);
+        pos += 4;
+        if (pos + extension_len > extensions_end) {
+            return false;
+        }
+
+        if (0x0033 == extension_type) {  // key_share (ServerHello or HelloRetryRequest)
+            if (extension_len < 2) {
+                return false;
+            }
+            bin[pos] = (byte_t)((uint16)group >> 8);
+            bin[pos + 1] = (byte_t)((uint16)group & 0xff);
+            return true;
+        }
+        pos += extension_len;
+    }
+    return false;
+}
+
+// GPT Generated testcase
+static void test_server_hello_key_share_validation(const char* name, const char* omit_supported_group, bool mutate_group) {
+    _test_case.begin(name);
+
+    tls_session session_client;
+    tls_session session_server;
+    binary_t client_hello;
+    binary_t server_hello;
+    return_t ret = errorcode_t::success;
+
+    ret = do_test_construct_client_hello(&session_client, from_client, "secp256r1", client_hello, omit_supported_group);
+    _test_case.test(ret, __FUNCTION__, "client hello");
+    ret = do_test_send_record(&session_server, from_client, client_hello);
+    _test_case.test(ret, __FUNCTION__, "client hello");
+
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(tls_group_t::secp256r1));
+
+    ret = do_test_construct_server_hello(&session_server, &session_client, from_server, server_hello);
+    _test_case.test(ret, __FUNCTION__, "server hello");
+
+    if (mutate_group) {
+        _test_case.assert(do_test_mutate_server_hello_key_share_group(server_hello, tls_group_t::x25519), __FUNCTION__, "mutate ServerHello key_share group");
+    }
+
+    ret = do_test_send_record(&session_client, from_server, server_hello);
+    _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject invalid ServerHello key_share group");
+
+    std::set<tls_alertdesc_t> fatal_alerts;
+    session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            fatal_alerts.insert(desc);
+        }
+    });
+    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
+}
+
+// GPT Generated testcase
+static void test_hello_retry_request_group_validation(const char* name, const char* omit_supported_group, tls_group_t selected_group) {
+    _test_case.begin(name);
+
+    tls_session session_client;
+    tls_session session_server;
+    binary_t client_hello;
+    binary_t hello_retry_request;
+    return_t ret = errorcode_t::success;
+
+    ret = do_test_construct_client_hello(&session_client, from_client, "secp256r1", client_hello, omit_supported_group);
+    _test_case.test(ret, __FUNCTION__, "client hello");
+    ret = do_test_send_record(&session_server, from_client, client_hello);
+    _test_case.test(ret, __FUNCTION__, "client hello");
+
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(tls_group_t::x25519));
+
+    ret = do_test_construct_server_hello(&session_server, &session_client, from_server, hello_retry_request);
+    _test_case.test(ret, __FUNCTION__, "HelloRetryRequest");
+
+    _test_case.assert(do_test_mutate_server_hello_key_share_group(hello_retry_request, selected_group), __FUNCTION__, "mutate HelloRetryRequest selected_group");
+
+    ret = do_test_send_record(&session_client, from_server, hello_retry_request);
+    _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject invalid HelloRetryRequest selected_group");
+
+    std::set<tls_alertdesc_t> fatal_alerts;
+    session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            fatal_alerts.insert(desc);
+        }
+    });
+    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
+}
+
+// GPT Generated testcase
+static void test_server_hello_after_hrr_group_validation() {
+    _test_case.begin("ServerHello key_share does not match retry ClientHello");
+
+    tls_session session_client;
+    tls_session session_server;
+    binary_t client_hello;
+    binary_t hello_retry_request;
+    binary_t retry_client_hello;
+    binary_t server_hello;
+    return_t ret = errorcode_t::success;
+
+    ret = do_test_construct_client_hello(&session_client, from_client, "secp256r1", client_hello);
+    _test_case.test(ret, __FUNCTION__, "initial client hello");
+    ret = do_test_send_record(&session_server, from_client, client_hello);
+    _test_case.test(ret, __FUNCTION__, "initial client hello");
+
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(tls_group_t::x25519));
+    ret = do_test_construct_server_hello(&session_server, &session_client, from_server, hello_retry_request);
+    _test_case.test(ret, __FUNCTION__, "HelloRetryRequest");
+    ret = do_test_send_record(&session_client, from_server, hello_retry_request);
+    _test_case.test(ret, __FUNCTION__, "HelloRetryRequest");
+
+    ret = do_test_construct_client_hello(&session_client, from_client, "x25519", retry_client_hello);
+    _test_case.test(ret, __FUNCTION__, "retry client hello");
+    ret = do_test_send_record(&session_server, from_client, retry_client_hello);
+    _test_case.test(ret, __FUNCTION__, "retry client hello");
+
+    ret = do_test_construct_server_hello(&session_server, &session_client, from_server, server_hello);
+    _test_case.test(ret, __FUNCTION__, "final ServerHello");
+    _test_case.assert(do_test_mutate_server_hello_key_share_group(server_hello, tls_group_t::secp256r1), __FUNCTION__, "mutate final ServerHello key_share group");
+
+    ret = do_test_send_record(&session_client, from_server, server_hello);
+    _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject ServerHello group not in retry key_share");
+
+    std::set<tls_alertdesc_t> fatal_alerts;
+    session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            fatal_alerts.insert(desc);
+        }
+    });
+    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
 }
 
 void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_group_t svrgroup, tls_group_t reinforcegroup, tls_flow_t flow_expect,
@@ -351,6 +526,16 @@ void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_gr
 }
 
 void testcase_helloretryrequest() {
+    // RFC 8446 4.2.8. ServerHello key_share must be present in both
+    // the client's supported_groups and key_share offers.
+    test_server_hello_key_share_validation("ServerHello key_share not offered", nullptr, true);
+    test_server_hello_key_share_validation("ServerHello key_share not supported", "secp256r1", false);
+
+    // HRR selected_group must be supported, and must not already be in key_share.
+    test_hello_retry_request_group_validation("HRR selected_group not supported", "x25519", tls_group_t::x25519);
+    test_hello_retry_request_group_validation("HRR selected_group already offered", nullptr, tls_group_t::secp256r1);
+    test_server_hello_after_hrr_group_validation();
+
     // RFC 4.2.8.  Key Share
 
     // C->S CH secp256r1

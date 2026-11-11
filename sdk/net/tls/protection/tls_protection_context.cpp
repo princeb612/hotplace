@@ -255,7 +255,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                         // based on the spec, rather than the version. for example is_kindof(tls_13, dtls_13) return true
                         if (tlsadvisor->is_kindof(t, ver)) {
                             // RFC 8446 4.2.1.  Supported Versions
-                            add_supported_version(ver);
+                            add_supported_version(t);
                             ret_value = true;
                             break;
                         }

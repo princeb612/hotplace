@@ -56,8 +56,17 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
             pl.set_reference_value(constexpr_version, constexpr_versions);
             pl.read(stream, endpos_extension(), pos);
 
-            count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
+            auto valueof_versions = pl.t_value_of<uint8>(constexpr_versions);
+            count = valueof_versions >> 1;
             pl.get_binary(constexpr_version, versions);
+
+            if (((2 > valueof_versions) || (valueof_versions > 254) || (0 != (valueof_versions & 1))) || (versions.size() != valueof_versions)) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             for (auto i = 0; i < count; i++) {
                 auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));

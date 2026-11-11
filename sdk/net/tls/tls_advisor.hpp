@@ -196,6 +196,9 @@ class HOTPLACE_NET_API tls_advisor {
      */
     bool is_kindof(tls_version_t lhs, tls_version_t rhs);
 
+    bool is_specof_tls13_or_later(tls_version_t ver);
+    bool is_specof_tls12_or_later(tls_version_t ver);
+
     std::string nameof_tls_flow(tls_flow_t flow);
 
     std::string nameof_session_status(uint32 status);

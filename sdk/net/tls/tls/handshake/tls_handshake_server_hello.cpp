@@ -158,6 +158,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
         auto session_type = session->get_type();
         auto hspos = offsetof_header();
         auto size_header_body = get_size();
+        auto tlsadvisor = tls_advisor::get_instance();
 
         {
             auto ext_version = get_extensions().get(tls_extension_type_t::supported_versions);
@@ -167,6 +168,39 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
             } else {
                 // TLS 1.3 supported_versions extension
                 // read/write member calls protection.set_tls_version
+            }
+            if (tls_io_operation_t::read == opdir) {
+                // RFC 8446 4.2.1
+                auto ver = protection.get_tls_version();
+
+                // RFC 8446 4.2.1
+                // A ServerHello supported_versions extension is only valid when TLS 1.3 or later is selected.
+                // For TLS 1.2 and earlier, the selected version is carried in ServerHello.legacy_version
+                // and the supported_versions extension MUST NOT be sent.
+                if (ext_version && false == tlsadvisor->is_specof_tls13_or_later(ver)) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+
+                // When supported_versions is absent, the legacy ServerHello version is used.
+                // This is the normal TLS 1.2 (or earlier) negotiation path, including when
+                // the ClientHello offered supported_versions.
+                bool found = false;
+                auto lambda = [&ver, &found](tls_version_t v, bool* b) -> void {
+                    if (ver == v) {
+                        *b = true;
+                        found = true;
+                    }
+                };
+                protection.get_protection_context().for_each_supported_versions(lambda);
+                if (false == found) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
             }
         }
 

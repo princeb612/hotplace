@@ -422,6 +422,20 @@ bool tls_advisor::is_kindof(tls_version_t lhs, tls_version_t rhs) {
     return ret;
 }
 
+bool tls_advisor::is_specof_tls13_or_later(tls_version_t ver) {
+    bool ret = false;
+    auto hint = hintof_tls_version(ver);
+    ret = (hint && hint->spec >= tls_13);
+    return ret;
+}
+
+bool tls_advisor::is_specof_tls12_or_later(tls_version_t ver) {
+    bool ret = false;
+    auto hint = hintof_tls_version(ver);
+    ret = (hint && hint->spec >= tls_12);
+    return ret;
+}
+
 std::string tls_advisor::nameof_tls_flow(tls_flow_t flow) {
     std::string value;
     switch (flow) {
