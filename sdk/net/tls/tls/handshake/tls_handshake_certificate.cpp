@@ -139,6 +139,15 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             pl.get_binary(constexpr_certificates, certificates);
         }
 
+        // RFC 8446 4.4.2.4: a server Certificate message must contain at least one certificate.
+        // An empty client Certificate message remains valid when client authentication is requested.
+        if (is_tls13 && (from_server == dir) && (0 == certificates_len)) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
+
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {

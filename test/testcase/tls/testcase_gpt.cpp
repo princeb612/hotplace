@@ -22,6 +22,15 @@ static return_t test_client_supportedversion_clienthello(tls_session* session, t
     return ret;
 }
 
+static return_t test_client_supportedversion_serverhello(tls_session* session, tls_version_t minspec, tls_version_t maxspec, tls_version_t& server_version) {
+    return_t ret = errorcode_t::success;
+    uint16 server_cs = 0;
+
+    auto& protection = session->get_tls_protection();
+    ret = protection.negotiate(session, minspec, maxspec, server_cs, server_version);
+    return ret;
+}
+
 static uint16 test_read_u16(const binary_t& bin, size_t pos) { return (uint16)(((uint16)bin[pos] << 8) | bin[pos + 1]); }
 
 static uint32 test_read_u24(const binary_t& bin, size_t pos) { return ((uint32)bin[pos] << 16) | ((uint32)bin[pos + 1] << 8) | (uint32)bin[pos + 2]; }
@@ -117,6 +126,72 @@ static bool test_rewrite_client_hello_supported_versions(binary_t& bin, uint8 ve
     return false;
 }
 
+static bool test_remove_client_hello_supported_versions(binary_t& bin) {
+    // TLSPlaintext + ClientHello framing.
+    if (bin.size() < 9 || bin[0] != 0x16 || bin[5] != 0x01) {
+        return false;
+    }
+
+    uint16 record_len = test_read_u16(bin, 3);
+    uint32 handshake_len = test_read_u24(bin, 6);
+    size_t record_end = 5 + record_len;
+    size_t handshake_end = 9 + handshake_len;
+    if (record_end > bin.size() || handshake_end > record_end) {
+        return false;
+    }
+
+    size_t pos = 9 + 2 + 32;
+    if (pos + 1 > handshake_end) {
+        return false;
+    }
+    uint8 session_id_len = bin[pos++];
+    if (pos + session_id_len + 2 > handshake_end) {
+        return false;
+    }
+    pos += session_id_len;
+
+    uint16 cipher_suites_len = test_read_u16(bin, pos);
+    pos += 2;
+    if (pos + cipher_suites_len + 1 > handshake_end) {
+        return false;
+    }
+    pos += cipher_suites_len;
+
+    uint8 compression_methods_len = bin[pos++];
+    if (pos + compression_methods_len + 2 > handshake_end) {
+        return false;
+    }
+    pos += compression_methods_len;
+
+    size_t extensions_len_pos = pos;
+    uint16 extensions_len = test_read_u16(bin, pos);
+    pos += 2;
+    size_t extensions_end = pos + extensions_len;
+    if (extensions_end != handshake_end) {
+        return false;
+    }
+
+    while (pos + 4 <= extensions_end) {
+        uint16 extension_type = test_read_u16(bin, pos);
+        uint16 extension_len = test_read_u16(bin, pos + 2);
+        size_t extension_end = pos + 4 + extension_len;
+        if (extension_end > extensions_end) {
+            return false;
+        }
+
+        if (0x002b == extension_type) {  // supported_versions
+            size_t removed = 4 + extension_len;
+            bin.erase(bin.begin() + pos, bin.begin() + extension_end);
+            test_write_u16(bin, extensions_len_pos, (uint16)(extensions_len - removed));
+            test_write_u24(bin, 6, handshake_len - (uint32)removed);
+            test_write_u16(bin, 3, (uint16)(record_len - removed));
+            return true;
+        }
+        pos = extension_end;
+    }
+    return false;
+}
+
 static void test_client_supported_versions_vector(const char* name, uint8 vector_len, const binary_t& versions, bool expect_success) {
     _test_case.begin(name);
 
@@ -143,13 +218,17 @@ static void test_client_supported_versions_vector(const char* name, uint8 vector
     } else {
         _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject malformed supported_versions vector");
 
+        size_t fatal_alert_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
         server_session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
             if (tls_alertlevel_t::fatal == level) {
+                ++fatal_alert_count;
                 fatal_alerts.insert(desc);
             }
         });
-        _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::decode_error}, __FUNCTION__, "decode_error alert");
+        _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::decode_error}, __FUNCTION__,
+                          "exactly one fatal decode_error alert");
+        _test_case.assert(0 == server_session.get_session_status(), __FUNCTION__, "terminate malformed ClientHello handshake state");
     }
 }
 
@@ -215,13 +294,17 @@ static void test_serverhello_unoffered_supported_version() {
     ret = records.read(&client_session, from_server, server_hello);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject unoffered TLS 1.3 selection");
 
+    size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
     client_session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
         if (tls_alertlevel_t::fatal == level) {
+            ++fatal_alert_count;
             fatal_alerts.insert(desc);
         }
     });
-    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
+    _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
+                      "exactly one fatal illegal_parameter alert");
+    _test_case.assert(0 == client_session.get_session_status(), __FUNCTION__, "terminate handshake after unoffered version selection");
 }
 
 static void test_supported_versions_negative_paths() {
@@ -587,9 +670,169 @@ static void test_tls13_certificate_verify_signature_failure() {
     EVP_PKEY_free(pkey);
 }
 
+static void test_tls13_empty_certificate_list_direction_policy() {
+    _test_case.begin("TLS 1.3 empty Certificate list direction policy");
+
+    const binary_t empty_certificate_message{(byte_t)tls_handshake_type_t::certificate, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00};
+
+    tls_session server_reader;
+    server_reader.get_tls_protection().set_tls_version(tls_13);
+    server_reader.update_session_status(session_status_client_hello);
+    server_reader.update_session_status(session_status_server_hello);
+    server_reader.update_session_status(session_status_encrypted_extensions);
+
+    size_t pos = 0;
+    auto parsed = tls_handshake::read(&server_reader, from_server, empty_certificate_message.data(), empty_certificate_message.size(), pos);
+    _test_case.assert(nullptr == parsed, __FUNCTION__, "reject an empty server Certificate list");
+
+    size_t fatal_alert_count = 0;
+    bool decode_error = false;
+    server_reader.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            ++fatal_alert_count;
+            decode_error = (tls_alertdesc_t::decode_error == desc);
+        }
+    });
+    _test_case.assert(1 == fatal_alert_count && decode_error, __FUNCTION__, "queue exactly one fatal decode_error");
+    _test_case.assert(0 == server_reader.get_session_status(), __FUNCTION__, "reset handshake state and do not mark server certificate state after rejection");
+
+    tls_session request_writer;
+    request_writer.get_tls_protection().set_tls_version(tls_13);
+    tls_handshake_certificate_request request(&request_writer);
+    auto algorithms = new tls_extension_signature_algorithms(&request);
+    algorithms->add(tls_sigscheme_t::rsa_pss_rsae_sha256);
+    request.get_extensions().add(algorithms);
+    binary_t request_message;
+    return_t ret = request.write(from_server, request_message);
+    _test_case.test(ret, __FUNCTION__, "construct CertificateRequest for client authentication");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_session client_reader;
+    client_reader.get_tls_protection().set_tls_version(tls_13);
+    client_reader.update_session_status(session_status_client_hello);
+    client_reader.update_session_status(session_status_server_hello);
+    client_reader.update_session_status(session_status_encrypted_extensions);
+
+    pos = 0;
+    auto parsed_request = tls_handshake::read(&client_reader, from_server, request_message.data(), request_message.size(), pos);
+    _test_case.assert(nullptr != parsed_request, __FUNCTION__, "receive CertificateRequest before client Certificate");
+    if (nullptr == parsed_request) {
+        return;
+    }
+    parsed_request->release();
+
+    pos = 0;
+    parsed = tls_handshake::read(&client_reader, from_client, empty_certificate_message.data(), empty_certificate_message.size(), pos);
+    _test_case.assert(nullptr != parsed, __FUNCTION__, "allow an empty client Certificate list in response to CertificateRequest");
+    if (nullptr != parsed) {
+        parsed->release();
+    }
+    _test_case.assert(0 != (client_reader.get_session_status() & session_status_client_cert), __FUNCTION__, "complete the client Certificate message state transition");
+    size_t client_fatal_alert_count = 0;
+    client_reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            ++client_fatal_alert_count;
+        }
+    });
+    _test_case.assert(0 == client_fatal_alert_count, __FUNCTION__, "do not queue a fatal alert for an empty client Certificate list");
+}
+
+static void test_supported_versions_unknown_and_legacy_fallback() {
+    _test_case.begin("supported_versions ignores unknown values and preserves TLS 1.2 fallback");
+
+    tls_session mixed_client;
+    tls_session mixed_server;
+    binary_t mixed_client_hello;
+    return_t ret = test_client_supportedversion_clienthello(&mixed_client, tls_12, tls_13, mixed_client_hello);
+    _test_case.test(ret, __FUNCTION__, "construct mixed-version ClientHello");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    // Unknown versions surrounding known TLS 1.3 and TLS 1.2 values must be ignored.
+    const binary_t mixed_versions{0x7f, 0x1c, 0x03, 0x04, 0x7f, 0x1d, 0x03, 0x03};
+    bool rewritten = test_rewrite_client_hello_supported_versions(mixed_client_hello, (uint8)mixed_versions.size(), mixed_versions);
+    _test_case.assert(rewritten, __FUNCTION__, "write mixed known/unknown supported_versions");
+    if (false == rewritten) {
+        return;
+    }
+
+    tls_records records;
+    ret = records.read(&mixed_server, from_client, mixed_client_hello);
+    _test_case.test(ret, __FUNCTION__, "parse mixed known/unknown supported_versions");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_version_t selected = tls_version_t{};
+    ret = test_client_supportedversion_serverhello(&mixed_server, tls_12, tls_13, selected);
+    _test_case.test(ret, __FUNCTION__, "negotiate from mixed known/unknown versions");
+    _test_case.assert(tls_13 == selected, __FUNCTION__, "select highest locally supported version offered by peer");
+
+    tls_session unknown_client;
+    tls_session unknown_server;
+    binary_t unknown_client_hello;
+    ret = test_client_supportedversion_clienthello(&unknown_client, tls_12, tls_13, unknown_client_hello);
+    _test_case.test(ret, __FUNCTION__, "construct unknown-only ClientHello");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    // Unknown values are ignored; with no mutually supported version, negotiation fails.
+    const binary_t unknown_versions{0x7f, 0x1c, 0x7f, 0x1d};
+    rewritten = test_rewrite_client_hello_supported_versions(unknown_client_hello, (uint8)unknown_versions.size(), unknown_versions);
+    _test_case.assert(rewritten, __FUNCTION__, "write unknown-only supported_versions");
+    if (false == rewritten) {
+        return;
+    }
+
+    tls_records unknown_records;
+    ret = unknown_records.read(&unknown_server, from_client, unknown_client_hello);
+    _test_case.test(ret, __FUNCTION__, "parse unknown-only supported_versions");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    selected = tls_version_t{};
+    ret = test_client_supportedversion_serverhello(&unknown_server, tls_12, tls_13, selected);
+    _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "fail when no mutually supported version remains");
+
+    tls_session legacy_client;
+    tls_session legacy_server;
+    binary_t legacy_client_hello;
+    ret = test_client_supportedversion_clienthello(&legacy_client, tls_12, tls_13, legacy_client_hello);
+    _test_case.test(ret, __FUNCTION__, "construct ClientHello for legacy fallback");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    _test_case.assert(0x0303 == test_read_u16(legacy_client_hello, 9), __FUNCTION__, "ClientHello legacy_version is TLS 1.2");
+    bool removed = test_remove_client_hello_supported_versions(legacy_client_hello);
+    _test_case.assert(removed, __FUNCTION__, "remove supported_versions extension");
+    if (false == removed) {
+        return;
+    }
+
+    tls_records legacy_records;
+    ret = legacy_records.read(&legacy_server, from_client, legacy_client_hello);
+    _test_case.test(ret, __FUNCTION__, "parse ClientHello without supported_versions");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    selected = tls_version_t{};
+    ret = test_client_supportedversion_serverhello(&legacy_server, tls_12, tls_13, selected);
+    _test_case.test(ret, __FUNCTION__, "negotiate using legacy_version fallback");
+    _test_case.assert(tls_12 == selected, __FUNCTION__, "fall back to TLS 1.2 when supported_versions is absent");
+}
+
 void testcase_gpt() {
-    test_tls13_certificate_verify_signature_failure();
     test_supported_versions_negative_paths();
     test_tls13_certificate_verify_signature_policy();
+    test_tls13_certificate_verify_signature_failure();
     test_tls13_certificate_request_signature_algorithms();
+    test_tls13_empty_certificate_list_direction_policy();
+    test_supported_versions_unknown_and_legacy_fallback();
 }

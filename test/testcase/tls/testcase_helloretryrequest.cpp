@@ -298,13 +298,17 @@ static void test_server_hello_key_share_validation(const char* name, const char*
     ret = do_test_send_record(&session_client, from_server, server_hello);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject invalid ServerHello key_share group");
 
+    size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
     session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
         if (tls_alertlevel_t::fatal == level) {
+            ++fatal_alert_count;
             fatal_alerts.insert(desc);
         }
     });
-    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
+    _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
+                      "exactly one fatal illegal_parameter alert");
+    _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after invalid ServerHello key_share");
 }
 
 // GPT Generated testcase
@@ -332,13 +336,17 @@ static void test_hello_retry_request_group_validation(const char* name, const ch
     ret = do_test_send_record(&session_client, from_server, hello_retry_request);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject invalid HelloRetryRequest selected_group");
 
+    size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
     session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
         if (tls_alertlevel_t::fatal == level) {
+            ++fatal_alert_count;
             fatal_alerts.insert(desc);
         }
     });
-    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
+    _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
+                      "exactly one fatal illegal_parameter alert");
+    _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after invalid HRR selected_group");
 }
 
 // GPT Generated testcase
@@ -376,13 +384,17 @@ static void test_server_hello_after_hrr_group_validation() {
     ret = do_test_send_record(&session_client, from_server, server_hello);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject ServerHello group not in retry key_share");
 
+    size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
     session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
         if (tls_alertlevel_t::fatal == level) {
+            ++fatal_alert_count;
             fatal_alerts.insert(desc);
         }
     });
-    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "illegal_parameter alert");
+    _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
+                      "exactly one fatal illegal_parameter alert");
+    _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after mismatched post-HRR ServerHello");
 }
 
 void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_group_t svrgroup, tls_group_t reinforcegroup, tls_flow_t flow_expect,
@@ -443,6 +455,10 @@ void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_gr
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
         ret = do_test_send_record(&session_client, from_server, bin);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+
+        // The client must retain the exact group requested by HRR for ClientHello2.
+        auto selected_group = session_client.get_session_info(from_server).get_keyvalue().get(session_key_share_group);
+        _test_case.assert(t_underlying(svrgroup) == selected_group, __FUNCTION__, "retain HRR selected_group");
     }
 
     {
@@ -472,6 +488,16 @@ void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_gr
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
         ret = do_test_send_record(&session_server, dir, bin);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
+
+        size_t retry_key_share_count = 0;
+        bool retry_key_share_matches_hrr = false;
+        session_server.get_tls_protection().get_protection_context().for_each_keyshare_groups([&](tls_group_t group, bool*) -> void {
+            ++retry_key_share_count;
+            if (group == svrgroup) {
+                retry_key_share_matches_hrr = true;
+            }
+        });
+        _test_case.assert(1 == retry_key_share_count && retry_key_share_matches_hrr, __FUNCTION__, "ClientHello2 contains exactly the HRR-selected key_share group");
     }
 
     session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(reinforcegroup));
@@ -499,6 +525,10 @@ void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_gr
         if (alerts.empty()) {
             _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
 
+            auto negotiated_group = session_client.get_session_info(from_server).get_keyvalue().get(session_key_share_group);
+            _test_case.assert(t_underlying(svrgroup) == negotiated_group, __FUNCTION__, "final ServerHello uses the HRR-selected group");
+            _test_case.assert(0 != (session_client.get_session_status() & session_status_server_hello), __FUNCTION__, "client accepts final ServerHello after HRR");
+
             // test
             session_status = session_server.get_session_status();
             _test_case.assert((session_status_server_hello & session_status), __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
@@ -506,16 +536,22 @@ void test_helloretryrequest(const char* cligroup, const char* retrygroup, tls_gr
             _test_case.ntest(ret, __FUNCTION__, "%s %s", dirstr.c_str(), step.c_str());
         }
 
+        size_t fatal_alert_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
         // unexpected message
         auto lambda = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
             if (tls_alertlevel_t::fatal == level) {
+                ++fatal_alert_count;
                 fatal_alerts.insert(desc);
             }
             _logger->writeln("level %i desc %i", level, desc);
         };
         session_client.get_alert(dir, lambda);
         _test_case.assert(fatal_alerts == alerts, __FUNCTION__, "alert");
+        _test_case.assert(fatal_alert_count == alerts.size(), __FUNCTION__, "exact fatal alert count");
+        if (false == alerts.empty()) {
+            _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after second HRR");
+        }
     }
 
     {

@@ -69,8 +69,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 
             // The vector must consume the complete extension_data. Checking only
             // the vector's own length misses trailing bytes after a valid list.
-            if (((2 > vector_len) || (vector_len > 254) || (0 != (vector_len & 1))) || (versions.size() != vector_len) ||
-                (pos != endpos_extension())) {
+            if (((2 > vector_len) || (vector_len > 254) || (0 != (vector_len & 1))) || (versions.size() != vector_len) || (pos != endpos_extension())) {
                 auto session = get_handshake()->get_session();
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
                 session->reset_session_status();
