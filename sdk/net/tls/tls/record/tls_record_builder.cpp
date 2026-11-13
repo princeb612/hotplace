@@ -81,7 +81,11 @@ tls_record* tls_record_builder::build() {
         t_enum_type<tls_content_type_t> ettype(get_type());
         switch (ettype.get()) {
             case tls_content_type_t::change_cipher_spec: {
-                record = new tls_record_change_cipher_spec(session);
+                if ((session_type_t::dtls == session_type) && session->get_tls_protection().is_kindof_tls13()) {
+                    record = new tls_record_unknown(get_type(), session);
+                } else {
+                    record = new tls_record_change_cipher_spec(session);
+                }
             } break;
             case tls_content_type_t::alert: {
                 if (is_construct()) {
@@ -112,7 +116,11 @@ tls_record* tls_record_builder::build() {
                 }
             } break;
             case tls_content_type_t::application_data: {
-                record = new tls_record_application_data(session);
+                if ((session_type_t::dtls == session_type) && session->get_tls_protection().is_kindof_tls13()) {
+                    record = new tls_record_unknown(get_type(), session);
+                } else {
+                    record = new tls_record_application_data(session);
+                }
             } break;
             case tls_content_type_t::ack: {
                 record = new tls_record_ack(session);
@@ -120,15 +128,12 @@ tls_record* tls_record_builder::build() {
             case tls_content_type_t::heartbeat:
             case tls_content_type_t::tls12_cid:
             default: {
-                if (TLS_CONTENT_TYPE_MASK_CIPHERTEXT & ettype) {
-                    if (session_type_t::tls == session_type) {
-                        //
-                    } else {
-                        // DTLS 1.3 Ciphertext
-                        record = new dtls13_ciphertext(get_type(), session);
-                    }
+                uint8 first_byte = static_cast<uint8>(ettype.get());
+                if (((first_byte & 0xe0) == TLS_CONTENT_TYPE_MASK_CIPHERTEXT) && (session_type_t::dtls == session_type) &&
+                    session->get_tls_protection().is_kindof_tls13()) {
+                    // DTLS 1.3 unified-header ciphertext.
+                    record = new dtls13_ciphertext(get_type(), session);
                 } else {
-                    // TLS 1.2~, DTLS 1.3 Plaintext
                     record = new tls_record_unknown(get_type(), session);
                 }
             } break;

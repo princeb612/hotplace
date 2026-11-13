@@ -45,14 +45,15 @@ enum session_alert_flag_t : uint8 {
  */
 enum sessioninfo_conf_t : uint8 {
     // uint64, session->get_session_info(dir).get_keyvalue()
-    session_dtls_epoch = 1,        // record epoch
-    session_dtls_seq = 2,          // record sequence
-    session_dtls_message_seq = 3,  // handshake sequence
-    session_ticket_lifetime = 4,   // RFC 8446 4.6.1. uint32
-    session_ticket_age_add = 5,    // RFC 8446 4.6.1. uint32
-    session_ticket_timestamp = 6,  // RFC 8446 4.2.11. see obfuscated_ticket_age
-    session_key_share_group = 7,   // key share group (tls_extension_key_share)
-    session_hrr = 8,               // HRR (tls_extension_key_share case pubkeylen == 0)
+    session_dtls_epoch = 1,         // record epoch
+    session_dtls_seq = 2,           // record sequence
+    session_dtls_message_seq = 3,   // handshake sequence
+    session_ticket_lifetime = 4,    // RFC 8446 4.6.1. uint32
+    session_ticket_age_add = 5,     // RFC 8446 4.6.1. uint32
+    session_ticket_timestamp = 6,   // RFC 8446 4.2.11. see obfuscated_ticket_age
+    session_key_share_group = 7,    // key share group (tls_extension_key_share)
+    session_hrr = 8,                // HRR (tls_extension_key_share case pubkeylen == 0)
+    session_record_size_limit = 9,  // RFC 8449: receive limit advertised by this endpoint
 };
 enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()
@@ -78,12 +79,17 @@ class HOTPLACE_NET_API tls_session {
      * @brief TLS/DTLS session
      */
     tls_session();
+    tls_session(const tls_session& other) = delete;
+    tls_session(tls_session&& other) = delete;
     ~tls_session();
     /**
      * @brief session
      * @param session_type_t type [in]
      */
     tls_session(session_type_t type);
+
+    tls_session& operator=(const tls_session& other) = delete;
+    tls_session& operator=(tls_session&& other) = delete;
 
     tls_protection& get_tls_protection();
     dtls_record_publisher& get_dtls_record_publisher();

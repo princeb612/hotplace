@@ -62,6 +62,7 @@ class tls_extension_pre_shared_key;
 class tls_extension_psk_key_exchange_modes;
 class tls_extension_quic_transport_parameters;
 class tls_extension_renegotiation_info;
+class tls_extension_record_size_limit;
 class tls_extension_signature_algorithms;
 class tls_extension_sni;
 class tls_extension_status_request;

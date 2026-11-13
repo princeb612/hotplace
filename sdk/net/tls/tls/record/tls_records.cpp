@@ -79,7 +79,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
 
         if (session_type_t::dtls == session->get_type()) {
             // fragmentation
-            session->get_dtls_record_publisher().publish(this, dir, func);
+            ret = session->get_dtls_record_publisher().publish(this, dir, func);
         } else {
             binary_t bin;
             auto lambda = [&dir, &bin](tls_record* record) -> return_t { return record->write(dir, bin); };

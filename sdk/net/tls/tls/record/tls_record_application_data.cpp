@@ -17,7 +17,6 @@
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_application_data.hpp>
-#include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
 
@@ -32,6 +31,35 @@ constexpr char constexpr_application_data[] = "application data";
 constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_key_epoch[] = "key epoch";
 constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
+constexpr size_t tls_handshake_header_size = 4;
+
+static return_t validate_tls13_finished_message_order(const byte_t* stream, size_t size) {
+    if (nullptr == stream) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    size_t cursor = 0;
+    bool finished_seen = false;
+    while (cursor < size) {
+        if (size - cursor < tls_handshake_header_size) {
+            return errorcode_t::bad_data;
+        }
+
+        auto type = (tls_handshake_type_t)stream[cursor];
+        uint32 message_size = ((uint32)stream[cursor + 1] << 16) | ((uint32)stream[cursor + 2] << 8) | (uint32)stream[cursor + 3];
+        if (message_size > size - cursor - tls_handshake_header_size) {
+            return errorcode_t::bad_data;
+        }
+        if (finished_seen) {
+            return errorcode_t::unexpected;
+        }
+
+        finished_seen = (tls_handshake_type_t::finished == type);
+        cursor += tls_handshake_header_size + message_size;
+    }
+
+    return errorcode_t::success;
+}
 
 tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_t::application_data, session) {}
 
@@ -92,7 +120,6 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
 return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
 
@@ -126,59 +153,107 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
          *     application_data (application_data)
          */
 
-        auto cs = protection.get_cipher_suite();
-        bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
         auto limit = recpos + get_record_size();
         ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
-            if (plainsize) {
-                if (protection.is_kindof_tls13()) {
-                    // auto tlsversion = protection.get_tls_version();
-                    uint8 type = *plaintext.rbegin();  // last_byte
-                    t_enum_type<tls_content_type_t> ettype(type);
-                    if (tls_content_type_t::alert == ettype) {
-                        tls_record_alert alert(session);
-                        alert.read_plaintext(dir, plaintext.data(), plainsize - 1, tpos);
-                    } else if (tls_content_type_t::handshake == ettype) {
-                        ret = get_handshakes().read(session, dir, plaintext.data(), plainsize - 1, tpos);
-                    } else if (tls_content_type_t::application_data == ettype) {
-                        auto flow = protection.get_flow();
-                        if (tls_flow_t::one_rtt == flow) {
-                            uint32 session_status_prerequisite = 0;
-                            if (protection.is_kindof_tls13()) {
-                                session_status_prerequisite = session_status_client_finished;
-                            } else {
-                                session_status_prerequisite = session_status_server_finished;
-                            }
-                            auto session_status = session->get_session_status();
-                            if (0 == (session_status_prerequisite & session_status)) {
-                                ret = errorcode_t::unexpected;
-                                session->reset_session_status();
-                                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
-                                __leave2;
-                            }
-                        }
-                        if (is_cbc) {
-                            ret = get_application_data(plaintext, false);
-                        } else {
-                            ret = get_application_data(plaintext, false);
+            ret = validate_record_size_limit(dir, plainsize);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            if (protection.is_kindof_tls13()) {
+                // RFC 9846 5.2 / 5.4: TLSInnerPlaintext is content || type || zero padding.
+                // The generic decrypt path has already enforced its 2^14+1 size limit.
+                // Scan only the AEAD-decrypted plaintext and locate the last non-zero octet.
+                size_t content_type_pos = plainsize;
+                while (content_type_pos && (0 == plaintext[content_type_pos - 1])) {
+                    --content_type_pos;
+                }
+
+                if (0 == content_type_pos) {
+                    // An empty/all-zero TLSInnerPlaintext has no content type.
+                    ret = errorcode_t::unexpected;
+                    session->reset_session_status();
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                    __leave2;
+                }
+
+                uint8 type = plaintext[content_type_pos - 1];
+                size_t content_size = content_type_pos - 1;
+                t_enum_type<tls_content_type_t> ettype(type);
+                if (tls_content_type_t::alert == ettype) {
+                    // RFC 9846 5.1: an Alert record contains exactly one two-octet Alert message.
+                    if (2 != content_size) {
+                        ret = errorcode_t::unexpected;
+                        session->reset_session_status();
+                        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                        __leave2;
+                    }
+                    tls_record_alert alert(session);
+                    ret = alert.read_plaintext(dir, plaintext.data(), content_size, tpos);
+                } else if (tls_content_type_t::handshake == ettype) {
+                    // Empty Handshake fragments are forbidden, even when padded.
+                    if (0 == content_size) {
+                        ret = errorcode_t::unexpected;
+                        session->reset_session_status();
+                        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                        __leave2;
+                    }
+                    ret = validate_tls13_finished_message_order(plaintext.data(), content_size);
+                    if (errorcode_t::unexpected == ret) {
+                        session->reset_session_status();
+                        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                        __leave2;
+                    }
+                    if (errorcode_t::success != ret) {
+                        __leave2;
+                    }
+                    ret = get_handshakes().read(session, dir, plaintext.data(), content_size, tpos);
+                } else if (tls_content_type_t::application_data == ettype) {
+                    auto flow = protection.get_flow();
+                    if (tls_flow_t::one_rtt == flow) {
+                        // Each endpoint may send application data after its own Finished.
+                        // The server does not need to wait for the client's Finished.
+                        uint32 session_status_prerequisite = (from_server == dir) ? session_status_server_finished : session_status_client_finished;
+                        auto session_status = session->get_session_status();
+                        if (0 == (session_status_prerequisite & session_status)) {
+                            ret = errorcode_t::unexpected;
+                            session->reset_session_status();
+                            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                            __leave2;
                         }
                     }
+
+                    // Remove zero padding but retain the content type for get_application_data().
+                    plaintext.resize(content_type_pos);
+                    ret = get_application_data(plaintext, false);
+                } else if (tls_content_type_t::change_cipher_spec == ettype) {
+                    // ChangeCipherSpec is not a valid TLSInnerPlaintext content type.
+                    ret = errorcode_t::unexpected;
+                    session->reset_session_status();
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                    __leave2;
                 } else {
-                    _bin = std::move(plaintext);
+                    // RFC 9846 Section 6.2: an invalid enum value is illegal_parameter.
+                    ret = errorcode_t::unexpected;
+                    session->reset_session_status();
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    __leave2;
                 }
-#if defined DEBUG
-                if (istraceable(trace_category_t::trace_category_net)) {
-                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                        dbs.autoindent(3);
-                        dbs.println(" > %s", constexpr_application_data);  // data
-                        dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
-                        dbs.autoindent(0);
-                    });
-                }
-#endif
+            } else if (plainsize) {
+                // The generic decrypt path enforces the TLS 1.2 2^14 plaintext limit.
+                _bin = std::move(plaintext);
             }
+#if defined DEBUG
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(3);
+                    dbs.println(" > %s", constexpr_application_data);  // data
+                    dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
+                    dbs.autoindent(0);
+                });
+            }
+#endif
         }
     }
     __finally2 {}
@@ -193,8 +268,23 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     auto& protection = session->get_tls_protection();
     auto is_tls13 = protection.is_kindof_tls13();
     if (handshakes.size()) {
-        handshakes.write(get_session(), dir, bin);
         if (is_tls13) {
+            bool finished_seen = false;
+            for (size_t i = 0; i < handshakes.size(); ++i) {
+                auto handshake = handshakes.getat(i);
+                auto type = handshake ? handshake->get_type() : tls_handshake_type_t{};
+                if (finished_seen) {
+                    ret = errorcode_t::unexpected;
+                    break;
+                }
+                finished_seen = (tls_handshake_type_t::finished == type);
+            }
+            if (errorcode_t::success != ret) {
+                return ret;
+            }
+        }
+        ret = handshakes.write(get_session(), dir, bin);
+        if (errorcode_t::success == ret && is_tls13) {
             binary_append(bin, uint8(tls_content_type_t::handshake));
         }
     } else if (records.size()) {
@@ -213,6 +303,10 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
         auto hsstatus = session->get_session_info(dir).get_status();
         if (tls_handshake_type_t::finished == hsstatus) {
             binary_append(bin, _bin);
+            if (is_tls13) {
+                // TLSInnerPlaintext carries the inner content type after application data.
+                binary_append(bin, uint8(tls_content_type_t::application_data));
+            }
             _bin.clear();
         }
     }
@@ -225,8 +319,8 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
     return_t ret = errorcode_t::success;
     // auto& protection = get_session()->get_tls_protection();
     auto lambda = [this](const binary_t& msg, uint8 trail) -> void {
+        _bin.clear();
         if (msg.size() > trail) {
-            _bin.clear();
             binary_append(_bin, msg.data(), msg.size() - trail);
         }
     };

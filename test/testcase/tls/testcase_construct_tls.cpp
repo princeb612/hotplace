@@ -532,12 +532,9 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
 
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
 
-            // S -> C SF
-            binary_t bin_server_finished;
-            do_test_construct_server_finished(&server_session, from_server, bin_server_finished, "construct server finished");
-            do_test_send_record(&client_session, from_server, bin_server_finished, "send server finished");
-
             // C -> S CCS
+            // Send the compatibility CCS after ServerHello and before the
+            // server Finished. A client must not send it after peer Finished.
             binary_t bin_client_change_cipher_spec;
             do_test_construct_client_change_cipher_spec(&client_session, from_client, bin_client_change_cipher_spec, "construct change_cipher_spec");
             ret = do_test_send_record(&server_session, from_client, bin_client_change_cipher_spec, "send change_cipher_spec");
@@ -546,6 +543,11 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
             }
 
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
+
+            // S -> C SF
+            binary_t bin_server_finished;
+            do_test_construct_server_finished(&server_session, from_server, bin_server_finished, "construct server finished");
+            do_test_send_record(&client_session, from_server, bin_server_finished, "send server finished");
 
             // C -> S CF
             binary_t bin_client_finished;

@@ -86,6 +86,23 @@ class HOTPLACE_NET_API dtls_record_publisher {
     uint16 get_max_size() const;
 
     /**
+     * @brief IP-layer PMTU estimate in bytes supplied by the underlying transport; zero means unknown.
+     * The estimate is not converted automatically into the datagram segment target.
+     */
+    void set_pmtu_estimate(size_t size);
+    size_t get_pmtu_estimate() const;
+
+    /**
+     * @brief Calculate the DTLS record expansion for one record.
+     * @param dir sending direction
+     * @param plaintext_size record content size before DTLS 1.3 inner content-type encoding
+     * @param expansion output bytes added by DTLS framing and record protection
+     * @remarks Excludes IP/UDP headers. DTLS 1.3 uses a conservative two-byte sequence header
+     *          estimate; connection IDs are not currently emitted by this implementation.
+     */
+    return_t get_record_expansion(tls_direction_t dir, size_t plaintext_size, size_t& expansion) const;
+
+    /**
      * @brief publish
      * @param tls_record* record [in]
      * @param tls_direction_t dir [in]
@@ -106,6 +123,7 @@ class HOTPLACE_NET_API dtls_record_publisher {
     tls_session* _session;
     uint16 _fragment_size;
     uint16 _segment_size;
+    size_t _pmtu_estimate;
     uint32 _flags;
 };
 

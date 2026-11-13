@@ -13,6 +13,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/splitter.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/dtls_handshake_fragmented.hpp>
@@ -29,7 +30,7 @@
 namespace hotplace {
 namespace net {
 
-dtls_record_publisher::dtls_record_publisher() : _session(nullptr), _fragment_size(1024), _segment_size(1200), _flags(0) {}
+dtls_record_publisher::dtls_record_publisher() : _session(nullptr), _fragment_size(1024), _segment_size(1200), _pmtu_estimate(0), _flags(0) {}
 
 void dtls_record_publisher::set_fragment_size(uint16 size) {
     const uint16 minsize = 1 << 7;
@@ -43,6 +44,119 @@ uint16 dtls_record_publisher::get_fragment_size() const { return _fragment_size;
 void dtls_record_publisher::set_segment_size(uint16 size) { _segment_size = size; }
 
 uint16 dtls_record_publisher::get_max_size() const { return _segment_size; }
+
+void dtls_record_publisher::set_pmtu_estimate(size_t size) { _pmtu_estimate = size; }
+
+size_t dtls_record_publisher::get_pmtu_estimate() const { return _pmtu_estimate; }
+
+return_t dtls_record_publisher::get_record_expansion(tls_direction_t dir, size_t plaintext_size, size_t& expansion) const {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        expansion = 0;
+
+        auto session = get_session();
+        if ((nullptr == session) || (session_type_t::dtls != session->get_type())) {
+            ret = errorcode_t::no_session;
+            __leave2;
+        }
+        if (plaintext_size > 0xffff) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
+
+        // DTLSPlaintext / legacy DTLS record header.
+        expansion = sizeof(dtls_header);
+
+        auto& protection = session->get_tls_protection();
+        if (false == session->get_session_info(dir).apply_protection()) {
+            // do nothing
+            __leave2;
+        }
+
+        auto tagsize = protection.get_tag_size();
+        if (0 == tagsize) {
+            expansion = 0;
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        auto cs = protection.get_cipher_suite();
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto hint_cipher = tlsadvisor->hintof_cipher(cs);
+        if (nullptr == hint_cipher) {
+            expansion = 0;
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        if (protection.is_kindof_tls13()) {
+            auto mode = typeof_mode(hint_cipher);
+            if ((crypt_mode_t::gcm != mode) && (crypt_mode_t::ccm != mode) && (crypt_mode_t::poly1305 != mode)) {
+                expansion = 0;
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            // Unified header: first byte + conservative two-byte sequence + length.
+            // Include the inner content type, authentication tag, and any padding
+            // needed to make the ciphertext sample at least 16 bytes. CID is not
+            // currently emitted by dtls13_ciphertext.
+            size_t inner_plaintext_size = plaintext_size + 1;
+            size_t sample_size = inner_plaintext_size + tagsize;
+            size_t padding_size = (sample_size < 16) ? (16 - sample_size) : 0;
+            expansion = 6 + tagsize + padding_size;
+            __leave2;
+        }
+
+        if (tlsadvisor->is_kindof_cbc(cs)) {
+            auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
+            if (nullptr == hint_blockcipher) {
+                expansion = 0;
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            size_t block_size = crypto::sizeof_block(hint_blockcipher);
+            size_t iv_size = crypto::sizeof_iv(hint_blockcipher);
+            if ((0 == block_size) || (0 == iv_size)) {
+                expansion = 0;
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
+            size_t encrypted_size = plaintext_size + 1 + (etm ? block_size : tagsize);
+            size_t padding_size = block_size - (encrypted_size % block_size);
+
+            // The CBC implementation adds one padding byte before OpenSSL's
+            // PKCS#7 padding. MtE prepends an explicit IV; EtM encrypts an IV
+            // block with the plaintext and appends the MAC.
+            expansion += (etm ? block_size : iv_size) + tagsize + 1 + padding_size;
+            __leave2;
+        }
+
+        auto mode = typeof_mode(hint_cipher);
+        switch (mode) {
+            case crypt_mode_t::gcm:
+            case crypt_mode_t::ccm:
+                // TLS 1.2 / DTLS 1.2 carries an eight-byte explicit nonce.
+                expansion += 8 + tagsize;
+                break;
+            case crypt_mode_t::poly1305:
+                expansion += tagsize;
+                break;
+            default:
+                ret = errorcode_t::not_supported;
+                break;
+        }
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            expansion = 0;
+        }
+    }
+    return ret;
+}
 
 return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::list<binary_t>& container) {
     return_t ret = errorcode_t::success;
@@ -195,6 +309,15 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             __leave2;
         }
         for (auto& item : container) {
+            if (item.size() > get_max_size()) {
+                ret = errorcode_t::exceed;
+                break;
+            }
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        for (auto& item : container) {
             func(get_session(), item);
         }
     }
@@ -216,15 +339,26 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
         size_t size = 0;
         auto lambda = [this, &dir, &container](tls_record* record) -> return_t { return publish(record, dir, container); };
         ret = records->for_each(lambda);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         for (auto& item : container) {
             auto isize = item.size();
-            if (size + isize > get_max_size()) {
+            if (isize > get_max_size()) {
+                ret = errorcode_t::exceed;
+                break;
+            }
+            if ((false == q.empty()) && (size + isize > get_max_size())) {
                 temp.push_back(std::move(q));
+                q = std::queue<binary_t>();
                 size = 0;
             }
             q.push(std::move(item));
             size += isize;
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
         if (false == q.empty()) {
             temp.push_back(std::move(q));

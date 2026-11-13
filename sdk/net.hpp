@@ -224,6 +224,7 @@
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_end_of_early_data.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_finished.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_hello_verify_request.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_key_update.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_new_session_ticket.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_hello.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
@@ -244,6 +245,7 @@
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_quic_transport_parameters.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_record_size_limit.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_sni.hpp>

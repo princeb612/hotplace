@@ -39,6 +39,11 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_dtls_epoch[] = "epoch";
 constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
+constexpr size_t tls_plaintext_max_size = (1 << 14);
+constexpr size_t tls12_ciphertext_max_size = (1 << 14) + 2048;
+constexpr size_t dtls_legacy_record_max_size = (2 << 14) + 2048;
+constexpr size_t tls13_ciphertext_max_size = (1 << 14) + 256;
+
 tls_record::tls_record(tls_content_type_t type, tls_session* session)
     : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _flags(0), _session(session) {
     if (session) {
@@ -78,7 +83,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
         }
         pos += get_body_size();
 
-        do_postprocess(dir);
+        ret = do_postprocess(dir);
     }
     __finally2 {}
     return ret;
@@ -126,6 +131,9 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         }
 
         ret = do_write_header(dir, bin, body);  // encryption
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
 
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
@@ -142,7 +150,10 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         }
 #endif
 
-        do_postprocess(dir);  // change secret, recno
+        ret = do_postprocess(dir);  // change secret, recno
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         if (is_dtls && (0 == (dont_control_dtls_sequence & get_flags()))) {
             change_epoch_seq(dir);
@@ -157,6 +168,21 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 }
 
 return_t tls_record::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
+
+return_t tls_record::validate_record_size_limit(tls_direction_t dir, size_t plaintext_size) {
+    auto session = get_session();
+    if (((session_type_t::tls != session->get_type()) && (session_type_t::dtls != session->get_type())) || (false == session->get_session_info(dir).apply_protection())) {
+        return errorcode_t::success;
+    }
+
+    auto peer_dir = (from_client == dir) ? from_server : from_client;
+    auto receive_limit = session->get_session_info(peer_dir).get_keyvalue().get(session_record_size_limit);
+    if (receive_limit && (plaintext_size > receive_limit)) {
+        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
+        return errorcode_t::overflow;
+    }
+    return errorcode_t::success;
+}
 
 return_t tls_record::do_postprocess(tls_direction_t dir) {
     auto session = get_session();
@@ -250,16 +276,25 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             }
         }
 
-        if (len > 16384 + 2048) {
-            // more than 2^14+2048 bytes
+        size_t max_record_size = dtls_legacy_record_max_size;
+        if (session_type_t::tls == session->get_type()) {
+            auto& protection = session->get_tls_protection();
+            bool protected_record = session->get_session_info(dir).apply_protection();
+            if (protection.is_kindof_tls13()) {
+                protected_record = protected_record && (tls_content_type_t::application_data == t_enum_type<tls_content_type_t>(content_type));
+                max_record_size = protected_record ? tls13_ciphertext_max_size : tls_plaintext_max_size;
+            } else {
+                max_record_size = protected_record ? tls12_ciphertext_max_size : tls_plaintext_max_size;
+            }
+        }
+        if (len > max_record_size) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
             ret = errorcode_t::overflow;
             __leave2;
-        } else {
-            if (size - pos < len) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
+        }
+        if (size - pos < len) {
+            ret = errorcode_t::bad_data;
+            __leave2;
         }
 
         {
@@ -328,6 +363,14 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
         auto session = get_session();
 
         if (apply_protection() && session->get_session_info(dir).apply_protection()) {
+            if ((session_type_t::tls == session->get_type()) || (session_type_t::dtls == session->get_type())) {
+                auto peer_dir = (from_client == dir) ? from_server : from_client;
+                auto peer_limit = session->get_session_info(peer_dir).get_keyvalue().get(session_record_size_limit);
+                if (peer_limit && (body.size() > peer_limit)) {
+                    ret = errorcode_t::exceed;
+                    __leave2;
+                }
+            }
             binary_t additional;
             binary_t ciphertext;
             binary_t tag;
@@ -372,9 +415,15 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             }
 
             // content header + ciphertext
-            do_write_header_internal(dir, bin, ciphertext);
+            ret = do_write_header_internal(dir, bin, ciphertext);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         } else {
-            do_write_header_internal(dir, bin, body);
+            ret = do_write_header_internal(dir, bin, body);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
     }
     __finally2 {}
@@ -384,6 +433,24 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        if (session_type_t::tls == session->get_type()) {
+            auto& protection = session->get_tls_protection();
+            bool protected_record = apply_protection() && session->get_session_info(dir).apply_protection();
+            size_t max_record_size = tls_plaintext_max_size;
+            if (protection.is_kindof_tls13()) {
+                if (protected_record) {
+                    max_record_size = tls13_ciphertext_max_size;
+                }
+            } else if (protected_record) {
+                max_record_size = tls12_ciphertext_max_size;
+            }
+            if (body.size() > max_record_size) {
+                ret = errorcode_t::exceed;
+                __leave2;
+            }
+        }
+
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto record_version = get_legacy_version();
         // auto is_tls = tlsadvisor->is_kindof_tls(record_version);

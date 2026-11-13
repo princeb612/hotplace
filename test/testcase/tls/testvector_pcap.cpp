@@ -10,21 +10,25 @@
  *
  */
 
+#include <map>
+#include <memory>
+#include <utility>
+
 #include "sample.hpp"
 
 void play_yaml_pcap(const char* filename) {
     auto sslkeylog = sslkeylog_importer::get_instance();
 
-    bool has_fatal = false;
-    auto lambda_test_fatal_alert = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if (tls_alertlevel_t::fatal == level) {
-            if (tls_alertdesc_t::certificate_unknown != desc) {
-                has_fatal = true;
-            }
-        }
-    };
-
     auto lambda_yaml_pcap = [&](const YAML::Node& example, const YAML::Node& items) -> void {
+        bool has_fatal = false;
+        auto lambda_test_fatal_alert = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+            if (tls_alertlevel_t::fatal == level) {
+                if (tls_alertdesc_t::certificate_unknown != desc) {
+                    has_fatal = true;
+                }
+            }
+        };
+
         auto protocol = example["protocol"].as<std::string>("");
 
         session_type_t session_type = session_type_t::tls;
@@ -37,10 +41,9 @@ void play_yaml_pcap(const char* filename) {
             return;
         }
 
-        tls_session session(session_type);
+        std::map<int, std::unique_ptr<tls_session>> sessions;
 
         sslkeylog->clear();
-        sslkeylog->attach(&session);
 
         auto secrets = example["secrets"];
         if (secrets && secrets.IsSequence()) {
@@ -53,6 +56,15 @@ void play_yaml_pcap(const char* filename) {
             std::string text = item["item"].as<std::string>("");
             std::string dir = item["dir"].as<std::string>("");
             std::string record = item["record"].as<std::string>("");
+            int connection = item["connection"].as<int>(0);
+
+            auto iter = sessions.find(connection);
+            if (sessions.end() == iter) {
+                auto session = std::unique_ptr<tls_session>(new tls_session(session_type));
+                sslkeylog->attach(session.get());
+                iter = sessions.emplace(connection, std::move(session)).first;
+            }
+            auto session = iter->second.get();
 
             tls_direction_t direction;
             if (dir == "from_client") {
@@ -68,9 +80,9 @@ void play_yaml_pcap(const char* filename) {
             if (bin_record.empty()) {
                 continue;
             }
-            dump_record(text.c_str(), &session, direction, bin_record);
+            dump_record(text.c_str(), session, direction, bin_record);
 
-            session.get_alert(direction, lambda_test_fatal_alert);
+            session->get_alert(direction, lambda_test_fatal_alert);
             if (has_fatal) {
                 _test_case.test(errorcode_t::failed, __FUNCTION__, "fatal alert");
                 break;

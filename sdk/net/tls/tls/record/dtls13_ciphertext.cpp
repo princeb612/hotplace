@@ -53,6 +53,19 @@ tls_records& dtls13_ciphertext::get_records() { return _records; }
 return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (size <= pos) {
+            ret = errorcode_t::no_more;
+            __leave2;
+        }
+        if ((stream[pos] & 0xe0) != TLS_CONTENT_TYPE_MASK_CIPHERTEXT) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
         size_t recpos = pos;
 
         uint8 uhdr = 0;
@@ -90,7 +103,10 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
                 }
             };
             pl.set_condition(constexpr_unified_header, lambda_condition);
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, size, pos);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
             if (pl.get_group_condition(constexpr_group_c)) {
@@ -166,7 +182,21 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         uint16 rec_enc = 0;
         binary_t protmask;
 
-        ret = protection.protection_mask(session, dir, stream + offset_encdata, size - offset_encdata, protmask, 2);
+        // _offset_encdata is relative to the beginning of this record.
+        size_t ciphertext_offset = recpos + offset_encdata;
+        if ((ciphertext_offset < recpos) || (ciphertext_offset > size) || (_bodysize > (size - ciphertext_offset))) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        // Bound the header-protection sample and AEAD input to this record's declared length.
+        size_t record_end = ciphertext_offset + _bodysize;
+        if (_bodysize < 16) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
+
+        ret = protection.protection_mask(session, dir, stream + ciphertext_offset, _bodysize, protmask, 2);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -186,6 +216,10 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         binary_t additional;
         {
+            if (offset_encdata > (size - recpos)) {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
             binary_append(additional, stream + recpos, offset_encdata);
             for (auto i = 0; i < sequence_len; i++) {
                 additional[1 + i] ^= protmask[i];
@@ -195,7 +229,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         binary_t plaintext;
         {
             // decryption
-            ret = protection.decrypt(session, dir, stream, size, recpos, plaintext, additional);
+            ret = protection.decrypt(session, dir, stream, record_end, recpos, plaintext, additional);
         }
 
 #if defined DEBUG
@@ -220,6 +254,20 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 #endif
 
         if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = validate_record_size_limit(dir, plaintext.size());
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // TLSInnerPlaintext padding is a run of zero bytes after the content type.
+        while ((false == plaintext.empty()) && (0 == plaintext.back())) {
+            plaintext.pop_back();
+        }
+        if (plaintext.empty()) {
+            ret = errorcode_t::bad_data;
             __leave2;
         }
 
@@ -264,6 +312,8 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
                 ret = ack.do_read_body(dir, plaintext.data(), plaintext.size() - 1, tpos);
             } break;
             default:
+                // Optional heartbeat and RFC 9853 RRC handlers are not negotiated in this profile.
+                ret = errorcode_t::bad_data;
                 break;
         }
     }
@@ -276,6 +326,33 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        binary_t inner_plaintext = body;
+        if (session->get_session_info(dir).apply_protection()) {
+            auto peer_dir = (from_client == dir) ? from_server : from_client;
+            auto peer_limit = session->get_session_info(peer_dir).get_keyvalue().get(session_record_size_limit);
+            if (peer_limit && (inner_plaintext.size() > peer_limit)) {
+                ret = errorcode_t::exceed;
+                __leave2;
+            }
+        }
+        uint8 tagsize = protection.get_tag_size();
+        if ((0 == tagsize) || inner_plaintext.empty()) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        // RFC 9147 §4.2.3 requires a 16-byte ciphertext sample for record-number protection.
+        size_t sample_size = inner_plaintext.size() + tagsize;
+        if (sample_size < 16) {
+            inner_plaintext.insert(inner_plaintext.end(), 16 - sample_size, 0x00);
+        }
+        if (session->get_session_info(dir).apply_protection()) {
+            auto peer_dir = (from_client == dir) ? from_server : from_client;
+            auto peer_limit = session->get_session_info(peer_dir).get_keyvalue().get(session_record_size_limit);
+            if (peer_limit && (inner_plaintext.size() > peer_limit)) {
+                ret = errorcode_t::exceed;
+                __leave2;
+            }
+        }
         auto sess_recno = session->get_recordno(dir, false);
         uint8 cap = byte_capacity(sess_recno);
         if (cap > 2) {
@@ -295,22 +372,21 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         binary_t tag;
         uint8 uhdr = 0x20;
         uint8 c = (_cid.empty()) ? 0x00 : 0x01;
-        uint8 s = (1 == cap) ? 0x00 : 0x08;
-        uint8 l = (body.empty()) ? 0x00 : 0x04;
+        uint8 s = (cap <= 1) ? 0x00 : 0x08;
+        uint8 l = (inner_plaintext.empty()) ? 0x00 : 0x04;
         uint8 e = 0x03;
         uhdr |= (c | s | l | e);
         uint8 sequence_len = s ? 2 : 1;
-        uint8 tagsize = protection.get_tag_size();
 
         binary_t cid;
 
         {
             payload pl;
-            pl << new payload_member(uhdr, constexpr_unified_header)                                          //
-               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                        // cid    C:1
-               << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)     // seq 16 S:1
-               << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)              // seq 8  S:0
-               << new payload_member(uint16(body.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
+            pl << new payload_member(uhdr, constexpr_unified_header)                                                     //
+               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                                   // cid    C:1
+               << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)                // seq 16 S:1
+               << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)                         // seq 8  S:0
+               << new payload_member(uint16(inner_plaintext.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
             pl.set_group(constexpr_group_c, (0x10 & uhdr));
             pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
             pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
@@ -322,7 +398,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
         {
             _content_type = etuhdr;
-            _bodysize = t_narrow_cast(body.size());
+            _bodysize = t_narrow_cast(inner_plaintext.size());
             _range.begin = recpos;
             _range.end = header.size();
             _sequence = t_narrow_cast(sess_recno);
@@ -331,7 +407,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         }
 
         {
-            ret = protection.encrypt(session, dir, body, ciphertext, header, tag);
+            ret = protection.encrypt(session, dir, inner_plaintext, ciphertext, header, tag);
             if (errorcode_t::success != ret) {
                 __leave2;
             }

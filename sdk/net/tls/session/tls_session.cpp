@@ -8,8 +8,6 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
@@ -140,7 +138,15 @@ void tls_session::clear_session_status(uint32 status) {
     _sem.signal();
 }
 
-void tls_session::reset_session_status() { _status = 0; }
+void tls_session::reset_session_status() {
+    _status = 0;
+
+    // A fatal alert terminates the current connection. Reset the directional
+    // handshake cursors as well, so a replayed/new connection can start with
+    // an initial ClientHello on the reused session object.
+    get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
+}
 
 uint32 tls_session::get_session_status() const { return _status; }
 

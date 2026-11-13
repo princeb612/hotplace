@@ -8,6 +8,9 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
+  * Revision 1126-
+    * RFC MUST / MUST NOT requirements
+    * GPT has been involved in development since revision 1128.
   * Revision 1086-
     * ASN.1 loader
   * Revision 1031-1084 (Tag 1.139, Revision 1084)
@@ -37,7 +40,7 @@
     * CBOR
 
 * details
-  * Revision 1129
+  * Revision 1130
   * Revision 1124
     * ASN.1 parameterized type reconstruction
       * include state in parse_tree and parse_tree_visitor to paropagate state to child nodes

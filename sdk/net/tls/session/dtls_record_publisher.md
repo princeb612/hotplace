@@ -135,6 +135,17 @@ This is a conceptual view of the testcase comments, not a fixed record-count pro
 
 Fragmentation addresses the handshake-body limit; record segmentation/grouping addresses output-unit boundaries. A successful publish means the implementation generated output bytes, not that a peer received them, that a complete handshake flight fits one datagram, or that loss/retransmission has been handled. Receive-side record validation and ordering are implemented by dtls_record_arrange, not by this publisher.
 
+### PMTU estimate and record expansion
+
+The publisher exposes two pieces of information for upper-layer datagram sizing:
+
+- `set_pmtu_estimate(size)` accepts an IP-layer PMTU estimate in bytes supplied by the underlying transport; `get_pmtu_estimate()` returns that estimate. Zero means that no estimate is available. The publisher does not perform PMTU discovery or query the IP layer itself.
+- `get_record_expansion(dir, plaintext_size, expansion)` reports the bytes added by one DTLS record's framing and protection. It includes the DTLS record header, applicable explicit nonce / authentication tag, CBC padding, and the DTLS 1.3 inner content-type byte. For DTLS 1.3 the unified-header estimate conservatively reserves a two-byte sequence number. The current DTLS 1.3 writer does not emit a connection ID.
+
+The expansion value excludes IP and UDP headers. The upper layer combines the transport's PMTU estimate with its transport-header knowledge and the returned DTLS expansion when selecting a datagram payload budget. It can then configure `set_segment_size()`; setting or updating the PMTU estimate does not silently change the segment target or handshake fragment size.
+
+The publisher only constructs bytes and invokes the caller's callback. The caller owns UDP transmission and observes its own send result, including a too-big error. No socket/ICMP PMTU discovery or automatic retry is claimed here. If a future transport adapter absorbs a too-big indication inside the DTLS layer, that adapter must explicitly surface the error to its upper layer as required by RFC 9147 §4.4.
+
 ## 4. Relationships
 - [TLS/DTLS/QUIC overview](../README.md)
 - [DTLS record arrangement](dtls_record_arrange.md)

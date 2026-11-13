@@ -104,6 +104,7 @@ testvector:
     items:
       - item: string
         dir: from_client
+        connection: integer
         record: hexstring
 ```
 

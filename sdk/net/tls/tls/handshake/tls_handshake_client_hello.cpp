@@ -55,6 +55,10 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        // A new ClientHello starts a fresh record_size_limit negotiation, including
+        // renegotiation and resumption. Do not carry limits from the prior key epoch.
+        session->get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 0);
+        session->get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 0);
         // auto& secrets = protection.get_secrets();
         // auto session_type = session->get_type();
         auto session_status = session->get_session_status();
@@ -131,6 +135,9 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         switch (protection.get_flow()) {
             case tls_flow_t::one_rtt: {
+                // Start a fresh negotiation epoch. Preserve the prior negotiated
+                // version for resumed 0-RTT and HRR flows, which use other branches.
+                session->get_keyvalue().set(session_tls_version, 0);
             } break;
             case tls_flow_t::zero_rtt: {
                 protection.get_key().clear();
@@ -237,6 +244,12 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
 
         session->update_session_status(session_status_client_hello);
 
+        if ((errorcode_t::success == ret) && (tls_flow_t::zero_rtt == protection.get_flow()) && (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
+            // Early data uses the client early traffic secret immediately after ClientHello.
+            // Activate only the client direction; ServerHello later activates both handshake directions.
+            session->schedule(this);
+        }
+
         if (tls_io_operation_t::read == opdir) {
             // RFC 8446 4.2.11
             // The "pre_shared_key" extension MUST be the last extension in the
@@ -258,6 +271,17 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
     }
     __finally2 {}
     return ret;
+}
+
+void tls_handshake_client_hello::run_scheduled(tls_direction_t dir) {
+    (void)dir;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (tls_flow_t::zero_rtt == protection.get_flow()) &&
+        (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
+        session->get_session_info(from_client).begin_protection();
+        session->reset_recordno(from_client);
+    }
 }
 
 return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {

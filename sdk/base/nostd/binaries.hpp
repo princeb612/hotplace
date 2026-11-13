@@ -385,7 +385,7 @@ class t_binaries {
      * @brief   exist
      * @param   T id [in]
      */
-    bool exist(uint64 id) {
+    bool exist(uint64 id) const {
         bool ret = false;
         critical_section_guard guard(_lock);
         auto iter = _map.find(id);
@@ -417,7 +417,7 @@ class t_binaries {
      * @param   T id [in]
      * @param   TAG& tag [out]
      */
-    return_t get_tag(uint64 id, TAG& tag) {
+    return_t get_tag(uint64 id, TAG& tag) const {
         return_t ret = errorcode_t::success;
         critical_section_guard guard(_lock);
         auto iter = _map.find(id);
@@ -462,7 +462,7 @@ class t_binaries {
         }
     };
 
-    critical_section _lock;
+    mutable critical_section _lock;
     std::map<T, entry_t> _map;
 };
 

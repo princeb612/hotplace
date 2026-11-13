@@ -143,6 +143,17 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
+
+        // TLS 1.3 ServerHello is only valid while the peer's handshake cursor
+        // is at ClientHello. The aggregate ClientHello bit remains set after
+        // ServerHello, so it cannot by itself reject a duplicate ServerHello
+        // coalesced into the same plaintext Handshake record.
+        if (session->get_tls_protection().is_kindof_tls13() && (tls_handshake_type_t::client_hello != session->get_session_info(from_client).get_status())) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+            session->reset_session_status();
+            ret = errorcode_t::unexpected;
+            __leave2_trace(ret);
+        }
     }
     __finally2 {}
     return ret;
@@ -159,6 +170,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
         auto hspos = offsetof_header();
         auto size_header_body = get_size();
         auto tlsadvisor = tls_advisor::get_instance();
+        bool activate_tls13_protection = false;
 
         {
             auto ext_version = get_extensions().get(tls_extension_type_t::supported_versions);
@@ -324,6 +336,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
                 secrets.erase(tls_secret_t::client_hello);
             } else {
                 ret = test;
+                activate_tls13_protection = (errorcode_t::success == test) && (session_type_t::tls == session_type) && protection.is_kindof_tls13();
             }
         }
         if ((session_type_t::quic == session_type) || (session_type_t::quic2 == session_type)) {
@@ -332,9 +345,38 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
 
         kv.set(session_tls_version, protection.get_tls_version());
         session->update_session_status(session_status_server_hello);
+        if (activate_tls13_protection) {
+            // Defer activation until the containing ServerHello record has been read/written.
+            // On write, this keeps ServerHello itself in the clear; on read, it activates
+            // the handshake traffic keys before the next record is processed.
+            session->schedule(this);
+        }
     }
     __finally2 {}
     return ret;
+}
+
+void tls_handshake_server_hello::run_scheduled(tls_direction_t dir) {
+    (void)dir;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    if ((session_type_t::tls != session->get_type()) || (false == protection.is_kindof_tls13()) || (tls_flow_t::hello_retry_request == protection.get_flow())) {
+        return;
+    }
+
+    // TLS 1.3 handshake traffic keys become active after ServerHello, independently
+    // of the optional compatibility ChangeCipherSpec record. In 0-RTT, however,
+    // the client direction may still be using its early traffic key until
+    // EndOfEarlyData; preserve that direction's protection and sequence number.
+    auto& client_info = session->get_session_info(from_client);
+    bool client_early_data_active = (tls_flow_t::zero_rtt == protection.get_flow()) && client_info.apply_protection();
+    if (false == client_early_data_active) {
+        client_info.begin_protection();
+        session->reset_recordno(from_client);
+    }
+    auto& server_info = session->get_session_info(from_server);
+    server_info.begin_protection();
+    session->reset_recordno(from_server);
 }
 
 return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
@@ -432,6 +474,18 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             }
 
             ret = get_extensions().read(this, dir, stream, pos + extension_len, pos);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
+
+            // RFC 8449: TLS 1.3 carries record_size_limit in EncryptedExtensions, not ServerHello.
+            if (get_extensions().get(tls_extension_type_t::record_size_limit) && get_extensions().get(tls_extension_type_t::supported_versions) &&
+                session->get_tls_protection().is_kindof_tls13()) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
 
             // encrypt_then_mac
             {
@@ -532,6 +586,12 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             // TLS 1.2 server_hello
             // TLS 1.3 encrypted_extensions
             session->select_into_scheduled_extension(&get_extensions(), tls_extension_type_t::alpn);
+        }
+
+        // RFC 8449: TLS 1.3 record_size_limit responses belong in EncryptedExtensions.
+        if (protection.is_kindof_tls13() && get_extensions().get(tls_extension_type_t::record_size_limit)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
         binary_t extensions;

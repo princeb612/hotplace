@@ -39,7 +39,14 @@ void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     auto session = get_session();
     auto& session_info = session->get_session_info(dir);
     session_info.set_status(get_type());
-    session->reset_recordno(dir);
+
+    // TLS 1.3 switches from handshake traffic keys to application traffic keys
+    // at Finished, so the new protection epoch starts with record number zero.
+    // TLS 1.2 keeps the same write-state sequence across Finished; its sequence
+    // number was reset when ChangeCipherSpec activated the negotiated cipher.
+    if (session->get_tls_protection().is_kindof_tls13()) {
+        session->reset_recordno(dir);
+    }
 }
 
 return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {

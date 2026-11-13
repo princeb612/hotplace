@@ -209,7 +209,7 @@ time cmake --build ${builddir} --config ${target}
 # ctest
 if [[ $do_ctest = 1 ]]; then
     cd ${HOTPLACE_HOME}/${builddir}/
-    ctest -C ${target}
+    ctest -C ${target} --output-on-failure
 fi
 # run build/test/test.sh
 if [[ $do_test = 1 ]]; then

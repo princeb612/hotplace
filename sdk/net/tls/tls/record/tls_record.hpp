@@ -56,6 +56,7 @@ class HOTPLACE_NET_API tls_record {
     virtual return_t do_postprocess(tls_direction_t dir);
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    return_t validate_record_size_limit(tls_direction_t dir, size_t plaintext_size);
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
     return_t do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);

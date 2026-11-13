@@ -35,7 +35,7 @@ enum class tls_content_type_t : uint8 {
     heartbeat = 0x18,                 // 24, RFC 6520, RFC 8446
     tls12_cid = 0x19,                 // 25, RFC 9146 0x19
     ack = 0x1a,                       // 26, RFC 9147 0x1a
-    return_routability_check = 0x1b,  // draft-ietf-tls-dtls-rrc-10
+    return_routability_check = 0x1b,  // RFC 9853 (DTLS 1.2 / 1.3; protected inner content type in DTLS 1.3)
 };
 
 /*

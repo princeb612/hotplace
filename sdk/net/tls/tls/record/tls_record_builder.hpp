@@ -36,7 +36,9 @@ class HOTPLACE_NET_API tls_record_builder {
     tls_record_builder& set(tls_content_type_t type);
     /**
      * @brief   set direction (C->S, S->C)
-     * @remarks get change_cipher_spec status from session
+     * @remarks get directional record-protection state from session
+     *          TLS 1.2 activates it at ChangeCipherSpec. TLS 1.3 ignores compatibility CCS:
+     *          early data activates the client direction after ClientHello; handshake protection activates after ServerHello.
      *          auto apply_protection = session->get_session_info(dir).apply_protection();
      *          if (is_kindof_tls13 && apply_protection) {
      *              // new tls_record_application_data
@@ -51,11 +53,12 @@ class HOTPLACE_NET_API tls_record_builder {
     /**
      * @brief   construct TLS record
      * @remarks
-     *          | spec    | change_cipher_spec | record                          | handshake                  |
-     *          | TLS 1.3 | before             | new tls_record_handshake        | unprotected                |
-     *          | TLS 1.3 | after              | new tls_record_application_data | encapsulated and protected |
-     *          | TLS 1.2 | before             | new tls_record_handshake        | unprotected                |
-     *          | TLS 1.2 | after              | new tls_record_handshake        | protected                  |
+     *          | spec    | activation point                   | record                          | handshake                  |
+     *          | TLS 1.3 | after ClientHello (early_data)     | new tls_record_application_data | client early traffic       |
+     *          | TLS 1.3 | after ServerHello                  | new tls_record_application_data | handshake traffic          |
+     *          | TLS 1.3 | before ServerHello (no early_data) | new tls_record_handshake        | unprotected                |
+     *          | TLS 1.2 | after CCS                          | new tls_record_handshake        | protected                  |
+     *          | TLS 1.2 | before CCS                         | new tls_record_handshake        | unprotected                |
      *
      * @example
      *          // change_cipher_spec here

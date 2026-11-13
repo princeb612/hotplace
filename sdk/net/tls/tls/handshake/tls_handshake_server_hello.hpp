@@ -74,6 +74,7 @@ class HOTPLACE_NET_API tls_handshake_server_hello : public tls_handshake {
     return_t set_cipher_suite(uint16 cs);
     return_t set_cipher_suite(const char* cs);
     uint8 get_compression_method();
+    virtual void run_scheduled(tls_direction_t dir);
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

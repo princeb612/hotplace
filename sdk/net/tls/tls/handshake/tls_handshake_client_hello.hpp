@@ -86,6 +86,7 @@ class HOTPLACE_NET_API tls_handshake_client_hello : public tls_handshake {
     return_t add_ciphersuite(uint16 suite);
 
     tls_handshake_client_hello& operator<<(const std::string& ciphersuites);
+    virtual void run_scheduled(tls_direction_t dir);
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

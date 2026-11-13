@@ -54,6 +54,10 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
                 auto limit = recpos + get_record_size();
                 ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
                 if (errorcode_t::success == ret) {
+                    ret = validate_record_size_limit(dir, plaintext.size());
+                    if (errorcode_t::success != ret) {
+                        __leave2;
+                    }
                     tpos = 0;
                     ret = read_plaintext(dir, plaintext.data(), plaintext.size(), tpos);
                 }
@@ -93,6 +97,12 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
         }
 
         check_status(dir);
+
+        if (tls_alertlevel_t::fatal == etlevel) {
+            auto session = get_session();
+            session->reset_session_status();
+            session->push_alert(dir, etlevel, etdesc);
+        }
 
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {

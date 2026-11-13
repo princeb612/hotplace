@@ -151,7 +151,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
                 // A client CertificateVerify MUST use a scheme in the server's CertificateRequest.
                 scheme_valid = protection_context.is_certificate_request_signature_algorithm_allowed(scheme, key_hint.kty, key_hint.nid, true);
             } else {
-                // The client cannot establish the ¡×4.4.3 certificate-chain exception here because
+                // The client cannot establish the Â§4.4.3 certificate-chain exception here because
                 // chain validation is external. Accept an unoffered server scheme only if it is
                 // locally supported, TLS 1.3-valid, and compatible with the certificate key.
                 scheme_valid = protection_context.is_signature_algorithm_compatible(scheme, key_hint.kty, key_hint.nid, true);

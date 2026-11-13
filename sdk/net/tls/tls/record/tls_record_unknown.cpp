@@ -22,8 +22,17 @@ tls_record_unknown::~tls_record_unknown() {}
 
 return_t tls_record_unknown::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
-    __try2 {}
-    __finally2 {}
+    auto session = get_session();
+    if (session && (session_type_t::dtls == session->get_type())) {
+        auto type = static_cast<uint8>(get_type());
+        bool is_dtls13 = session->get_tls_protection().is_kindof_tls13();
+        bool is_reserved_unified_range = ((type & 0xe0) == TLS_CONTENT_TYPE_MASK_CIPHERTEXT);
+        if (is_dtls13 || is_reserved_unified_range) {
+            // RFC 9147 §4.1 permits only plaintext alert, handshake, and ACK; 0x20..0x3f is reserved for DTLS 1.3 ciphertext.
+            // RFC 9853 requires return_routability_check to be protected.
+            ret = errorcode_t::bad_data;
+        }
+    }
     return ret;
 }
 

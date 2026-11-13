@@ -23,6 +23,7 @@
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_quic_transport_parameters.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_record_size_limit.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_sni.hpp>
@@ -114,6 +115,9 @@ tls_extension* tls_extension_builder::build() {
                     extension = new tls_extension_server_key_share(handshake);
                 }
             } break;
+            case tls_extension_type_t::record_size_limit: /* 0x001c */ {
+                extension = new tls_extension_record_size_limit(handshake);
+            } break;
             case tls_extension_type_t::quic_transport_parameters: /* 0x0039 */ {
                 extension = new tls_extension_quic_transport_parameters(handshake);
             } break;
@@ -142,7 +146,6 @@ tls_extension* tls_extension_builder::build() {
             case tls_extension_type_t::oid_filters:                  /* 0x0030 */
             case tls_extension_type_t::padding:                      /* 0x0015 */
             case tls_extension_type_t::post_handshake_auth:          /* 0x0031 */
-            case tls_extension_type_t::record_size_limit:            /* 0x001c */
             case tls_extension_type_t::server_certificate_type:      /* 0x0014 */
             case tls_extension_type_t::session_ticket:               /* 0x0023 */
             case tls_extension_type_t::signature_algorithms_cert:    /* 0x0032 */

@@ -74,9 +74,11 @@ uint8 tls_protection::get_tag_size() {
     return ret_value;
 }
 
-// RFC 2246 6.2.3 Record payload protection
-// length of TLSCiphertext.fragment may not exceed 2^14 + 2048
-#define TLS_CIPHERTEXT_MAXSIZE ((2 << 14) + 2048)
+constexpr size_t tls12_plaintext_max_size = (1 << 14);
+constexpr size_t tls13_inner_plaintext_max_size = (1 << 14) + 1;
+constexpr size_t tls12_ciphertext_max_size = (1 << 14) + 2048;
+constexpr size_t tls13_ciphertext_max_size = (1 << 14) + 256;
+constexpr size_t dtls_legacy_protection_max_size = (2 << 14) + 2048;
 
 return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag,
                                  protection_space_t space) {
@@ -86,7 +88,11 @@ return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, cons
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (plaintext.size() > TLS_CIPHERTEXT_MAXSIZE) {
+        size_t max_plaintext_size = dtls_legacy_protection_max_size;
+        if (session_type_t::tls == session->get_type()) {
+            max_plaintext_size = is_kindof_tls13() ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
+        }
+        if (plaintext.size() > max_plaintext_size) {
             ret = errorcode_t::exceed;
             __leave2;
         }
@@ -126,7 +132,17 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (size > TLS_CIPHERTEXT_MAXSIZE) {
+        size_t header_size = get_header_size();
+        if (size < pos || size - pos < header_size) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+        size_t ciphertext_size = size - pos - header_size;
+        size_t max_ciphertext_size = dtls_legacy_protection_max_size;
+        if (session_type_t::tls == session->get_type()) {
+            max_ciphertext_size = is_kindof_tls13() ? tls13_ciphertext_max_size : tls12_ciphertext_max_size;
+        }
+        if (ciphertext_size > max_ciphertext_size) {
             ret = errorcode_t::exceed;
             __leave2;
         }
@@ -137,6 +153,18 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
             ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
         } else {
             ret = decrypt_aead(session, dir, stream, size, pos, plaintext, space);
+        }
+        if (errorcode_t::success == ret && session_type_t::tls == session->get_type()) {
+            size_t max_plaintext_size = is_kindof_tls13() ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
+            if (plaintext.size() > max_plaintext_size) {
+                ret = errorcode_t::overflow;
+                session->reset_session_status();
+                if (is_kindof_tls13()) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
+                } else {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
+                }
+            }
         }
     }
     __finally2 {}
