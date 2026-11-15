@@ -389,10 +389,6 @@ void test_case::report(uint32 top_count) {
     // ================================================================================
     // TEST FAILED
     report_unittest(stream);
-    // 3 cases failed
-    // --------------------------------------------------------------------------------
-    // result|errorcode |desc                            |test function       |time       |message
-    report_failed(stream);
 
     report_cases(stream);
 
@@ -400,6 +396,16 @@ void test_case::report(uint32 top_count) {
     // --------------------------------------------------------------------------------
     // result|errorcode |test function       |time       |message
     report_testtime(stream, top_count);
+
+    // 3 cases failed
+    // --------------------------------------------------------------------------------
+    // result|errorcode |desc                            |test function       |time       |message
+    report_failed(stream);
+
+    // redisplay – summary is not displayed on the screen when a test case is long
+    basic_stream summary;
+    compose_summary_line(summary);
+    stream << summary;
 
     if (_total._count_fail) {
         print_fail(stream);
@@ -428,6 +434,47 @@ void test_case::report(uint32 top_count) {
     file.close();
 }
 
+void test_case::compose_summary_line(basic_stream& stream) {
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
+    console_color_t fgcolor = console_color_t::white;
+
+    stream.clear();
+
+    auto advisor = error_advisor::get_instance();
+    auto hint_pass = advisor->hintof(error_category_t::error_category_success);
+    auto hint_expt = advisor->hintof(error_category_t::error_category_expect_failure);
+    auto hint_fail = advisor->hintof(error_category_t::error_category_severe);
+    auto hint_skip = advisor->hintof(error_category_t::error_category_not_supported);
+    auto hint_triv = advisor->hintof(error_category_t::error_category_trivial);  // error_category_low_security, error_category_warn
+
+    critical_section_guard guard(_lock);
+
+    stream << "# ";
+    cprint(console_colored_stream, _concolor, hint_pass->color, fgcolor, hint_pass->testname);
+    stream << " " << _total._count_success;
+    if (_total._count_expect_failure) {
+        stream << " ";
+        cprint(console_colored_stream, _concolor, hint_expt->color, fgcolor, hint_expt->testname);
+        stream << " " << _total._count_expect_failure;
+    }
+    if (_total._count_fail) {
+        stream << " ";
+        cprint(console_colored_stream, _concolor, hint_fail->color, fgcolor, hint_fail->testname);
+        stream << " " << _total._count_fail;
+    }
+    if (_total._count_not_supported) {
+        stream << " ";
+        cprint(console_colored_stream, _concolor, hint_skip->color, fgcolor, hint_skip->testname);
+        stream << " " << _total._count_not_supported;
+    }
+    if (_total._count_trivial) {
+        stream << " ";
+        cprint(console_colored_stream, _concolor, hint_triv->color, fgcolor, hint_triv->testname);
+        stream << " " << _total._count_trivial;
+    }
+    stream << "\n";
+}
+
 void test_case::report_unittest(basic_stream& stream) {
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
     console_color_t fgcolor = console_color_t::white;
@@ -437,7 +484,7 @@ void test_case::report_unittest(basic_stream& stream) {
     //
 
     auto advisor = error_advisor::get_instance();
-    auto hint_pass = advisor->hintof(error_category_t::error_category_success);
+    // auto hint_pass = advisor->hintof(error_category_t::error_category_success);
     auto hint_expt = advisor->hintof(error_category_t::error_category_expect_failure);
     auto hint_fail = advisor->hintof(error_category_t::error_category_severe);
     auto hint_skip = advisor->hintof(error_category_t::error_category_not_supported);
@@ -487,30 +534,10 @@ void test_case::report_unittest(basic_stream& stream) {
         stream << "\n";
     }
 
-    stream << "# ";
-    cprint(console_colored_stream, _concolor, hint_pass->color, fgcolor, hint_pass->testname);
-    stream << " " << _total._count_success;
-    if (_total._count_expect_failure) {
-        stream << " ";
-        cprint(console_colored_stream, _concolor, hint_expt->color, fgcolor, hint_expt->testname);
-        stream << " " << _total._count_expect_failure;
-    }
-    if (_total._count_fail) {
-        stream << " ";
-        cprint(console_colored_stream, _concolor, hint_fail->color, fgcolor, hint_fail->testname);
-        stream << " " << _total._count_fail;
-    }
-    if (_total._count_not_supported) {
-        stream << " ";
-        cprint(console_colored_stream, _concolor, hint_skip->color, fgcolor, hint_skip->testname);
-        stream << " " << _total._count_not_supported;
-    }
-    if (_total._count_trivial) {
-        stream << " ";
-        cprint(console_colored_stream, _concolor, hint_triv->color, fgcolor, hint_triv->testname);
-        stream << " " << _total._count_trivial;
-    }
-    stream << "\n";
+    basic_stream summary;
+    compose_summary_line(summary);
+    stream << summary;
+
     stream.fill(80, '-');
     stream << "\n";
     if (_total._count_fail) {

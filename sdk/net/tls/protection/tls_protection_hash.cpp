@@ -187,27 +187,33 @@ return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_
         // --> The hash does not include handshake reconstruction data bytes in the
         // records.
 
-        transcript_hash_builder builder;
-        auto hash = builder.set(alg).build();
+        // RFC 8446 4.2.11.2: the ClientHello2 binder transcript includes
+        // message_hash(ClientHello1) and HelloRetryRequest before the truncated
+        // ClientHello2. The live transcript already contains that prefix.
+        transcript_hash* hash = nullptr;
+        if (tls_flow_t::hello_retry_request == get_flow()) {
+            auto transcript = get_transcript_hash();
+            if (transcript) {
+                hash = transcript->dup();
+                transcript->release();
+            }
+        } else {
+            transcript_hash_builder builder;
+            hash = builder.set(alg).build();
+        }
         if (hash) {
             if (is_kindof_dtls()) {
-                basic_stream bs;
-                // DTLS
-                size_t offset_version = 12;
-                //  0.. 3 handshake header
+                // DTLS 1.3 transcript excludes the 8-byte handshake
+                // reconstruction fields, but includes the handshake header.
+                constexpr size_t offset_reconstruction = 12;
                 hash->update(stream, sizeof(tls_handshake_t));
-                //  4..11 handshake reconstruction data (8 bytes)
-                //
-                // 12.. $ handshake, extension
-                hash->update(stream + offset_version, size - offset_version);
-                hash->digest(digest);
+                if (size > offset_reconstruction) {
+                    hash->update(stream + offset_reconstruction, size - offset_reconstruction);
+                }
             } else {
-                // TLS
-                // hash->digest(stream, size, digest);
                 hash->update(stream, size);
-                hash->digest(digest);
             }
-
+            hash->digest(digest);
             hash->release();
         }
     }

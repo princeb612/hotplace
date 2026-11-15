@@ -85,6 +85,14 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
 return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if ((tls_extension_type_t::post_handshake_auth == _type) &&
+            ((nullptr == _hs) || (tls_handshake_type_t::client_hello != _hs->get_type()) || (from_client != dir))) {
+            if (_hs && _hs->get_session()) {
+                _hs->get_session()->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+            }
+            ret = errorcode_t::bad_format;
+            __leave2;
+        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -120,6 +128,11 @@ return_t tls_extension::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        if ((tls_extension_type_t::post_handshake_auth == _type) &&
+            ((nullptr == _hs) || (tls_handshake_type_t::client_hello != _hs->get_type()) || (from_client != dir))) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;

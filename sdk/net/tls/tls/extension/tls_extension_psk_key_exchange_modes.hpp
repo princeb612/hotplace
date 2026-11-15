@@ -27,6 +27,7 @@ class HOTPLACE_NET_API tls_extension_psk_key_exchange_modes : public tls_extensi
 
     tls_extension_psk_key_exchange_modes& add(uint8 code);
     tls_extension_psk_key_exchange_modes& add(const std::string& name);
+    uint8 get_modes() const;
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

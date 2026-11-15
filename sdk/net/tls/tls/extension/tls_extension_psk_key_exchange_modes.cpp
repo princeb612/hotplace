@@ -37,22 +37,20 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
         //     PskKeyExchangeMode ke_modes<1..255>;
         // } PskKeyExchangeModes;
 
-        uint8 modes = 0;
-        binary_t mode;
-        {
-            payload pl;
-            pl << new payload_member(uint8(0), constexpr_modes)  //
-               << new payload_member(binary_t(), constexpr_mode);
-            pl.set_reference_value(constexpr_mode, constexpr_modes);
-            pl.read(stream, endpos_extension(), pos);
+        const size_t limit = endpos_extension();
+        if ((nullptr == stream) || (pos > limit) || (limit > size) || (0 == limit - pos)) {
+            ret = errorcode_t::bad_format;
+            __leave2;
+        }
 
-            modes = pl.t_value_of<uint8>(constexpr_modes);
-            pl.get_binary(constexpr_mode, mode);
+        uint8 modes = stream[pos++];
+        if ((0 == modes) || (modes != limit - pos)) {
+            ret = errorcode_t::bad_format;
+            __leave2;
+        }
 
-            for (auto i = 0; i < modes; i++) {
-                auto m = mode[i];
-                add(m);
-            }
+        for (uint16 i = 0; i < modes; ++i) {
+            add(stream[pos++]);
         }
 
 #if defined DEBUG
@@ -75,6 +73,10 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
 
 return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    if (_modes.empty() || (_modes.size() > 255)) {
+        return errorcode_t::bad_format;
+    }
+
     uint8 cbsize_modes = 0;
     binary_t bin_modes;
     {
@@ -95,6 +97,16 @@ return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir
 tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(uint8 code) {
     _modes.push_back(code);
     return *this;
+}
+
+uint8 tls_extension_psk_key_exchange_modes::get_modes() const {
+    uint8 modes = 0;
+    for (const auto& mode : _modes) {
+        if (mode < 8) {
+            modes |= static_cast<uint8>(1u << mode);
+        }
+    }
+    return modes;
 }
 
 tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(const std::string& name) {

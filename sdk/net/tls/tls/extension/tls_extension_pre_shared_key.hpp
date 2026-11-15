@@ -31,6 +31,10 @@ class HOTPLACE_NET_API tls_extension_client_psk : public tls_extension_psk {
     tls_extension_client_psk(tls_handshake* handshake);
     virtual ~tls_extension_client_psk();
 
+    size_t get_binder_list_offset() const;
+    uint16 get_identity_count() const;
+    const std::vector<binary_t>& get_binder_psks() const;
+
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
@@ -41,13 +45,17 @@ class HOTPLACE_NET_API tls_extension_client_psk : public tls_extension_psk {
     uint32 _obfuscated_ticket_age;
     uint16 _psk_binders_len;
     binary_t _psk_binder;
-    // size_t _offset_psk_binders_len;
+    size_t _binder_list_offset;
+    uint16 _identity_count;
+    std::vector<binary_t> _binder_psks;
 };
 
 class HOTPLACE_NET_API tls_extension_server_psk : public tls_extension_psk {
    public:
     tls_extension_server_psk(tls_handshake* handshake);
     virtual ~tls_extension_server_psk();
+    uint16 get_selected_identity() const;
+    void set_selected_identity(uint16 selected_identity);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

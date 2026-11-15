@@ -31,6 +31,24 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
+        // RFC 8446 4.2.11: if the server accepts early data in EncryptedExtensions,
+        // it MUST have selected the first PSK identity offered by the client.
+        if ((from_server == dir) && (tls_io_operation_t::read == opdir) && (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
+            // A received EncryptedExtensions early_data indication is an
+            // acceptance signal. The client must have offered early_data and
+            // the server must have selected the first offered PSK identity.
+            uint16 selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
+            const auto& early_state = session->get_session_info(from_server).get_keyvalue();
+            bool early_data_offered = (0 != early_state.get(session_early_data_offered));
+            if (!early_data_offered || (0 != selected_identity)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+            session->get_session_info(from_server).get_keyvalue().set(session_early_data_accepted, 1);
+        }
+
         protection.update_transcript_hash(session, stream + hspos, get_size());
 
         session->update_session_status(session_status_encrypted_extensions);

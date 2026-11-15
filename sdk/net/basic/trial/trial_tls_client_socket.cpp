@@ -38,8 +38,7 @@ return_t trial_tls_client_socket::send(const char* ptr_data, size_t size_data, s
         auto session = get_session();
 
         binary_t bin;
-        tls_record_application_data record(session);
-        record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
+        tls_record_application_data record(session, (byte_t*)ptr_data, size_data);
         record.write(from_client, bin);
 
         size_t sent = 0;

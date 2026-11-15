@@ -24,7 +24,7 @@ namespace hotplace {
  * @refer   Gemini
  */
 template <typename SOURCE, bool debug_except = false>
-struct t_narrow_cast_t {
+struct t_narrow_cast_proxy_t {
     const SOURCE value;
 
     template <typename TYPE>
@@ -59,13 +59,46 @@ struct t_narrow_cast_t {
     }
 };
 
+/**
+ * @brief   narrow cast with an explicitly selected destination type.
+ *
+ * The conversion is performed when the wrapper is constructed, so the
+ * resulting value behaves like TYPE in comparisons and other expressions.
+ */
 template <typename TYPE>
-constexpr t_narrow_cast_t<TYPE, true> t_narrow_cast(TYPE v) {
+struct t_narrow_cast_t {
+    TYPE value;
+
+    template <typename SOURCE>
+    t_narrow_cast_t(SOURCE source) : value(cast(source)) {}
+
+    operator TYPE() const { return value; }
+
+   private:
+    template <typename SOURCE>
+    static TYPE cast(SOURCE source) {
+#ifdef DEBUG
+        TYPE converted = static_cast<TYPE>(source);
+        if (static_cast<SOURCE>(converted) != source) {
+            throw exception(errorcode_t::miscast_narrow);
+        }
+        if (typename custom::is_signed<SOURCE>::type() != typename custom::is_signed<TYPE>::type()) {
+            if ((source < 0) != (converted < 0)) {
+                throw exception(errorcode_t::miscast_narrow);
+            }
+        }
+#endif
+        return static_cast<TYPE>(source);
+    }
+};
+
+template <typename TYPE>
+constexpr t_narrow_cast_proxy_t<TYPE, true> t_narrow_cast(TYPE v) {
     return {v};
 }
 
 template <typename TYPE>
-constexpr t_narrow_cast_t<TYPE, false> t_justdoit(TYPE v) {
+constexpr t_narrow_cast_proxy_t<TYPE, false> t_justdoit(TYPE v) {
     return {v};
 }
 

@@ -29,6 +29,51 @@
 namespace hotplace {
 namespace net {
 
+namespace {
+
+constexpr uint64 tls13_aes_gcm_max_records = 23726566ULL;        // floor(2^24.5)
+constexpr uint64 tls13_aes_gcm_max_plaintext = 388736063996ULL;  // floor(2^38.5) bytes
+constexpr uint64 tls13_aes_ccm_max_records = (1ULL << 21);       // conservative multi-key profile bound
+constexpr uint64 tls13_aes_ccm_max_plaintext = (1ULL << 35);     // 2^35 bytes per key
+
+static bool tls13_key_usage_limit(uint16 cipher_suite, uint64& max_records, uint64& max_plaintext) {
+    switch (cipher_suite) {
+        case 0x1301:  // TLS_AES_128_GCM_SHA256
+        case 0x1302:  // TLS_AES_256_GCM_SHA384
+            // RFC 9846 §5.5: 2^24.5 full-size records; the byte ceiling is
+            // derived from the corresponding 2^38.5-byte full-size volume.
+            max_records = tls13_aes_gcm_max_records;
+            max_plaintext = tls13_aes_gcm_max_plaintext;
+            return true;
+        case 0x1304:  // TLS_AES_128_CCM_SHA256
+        case 0x1305:  // TLS_AES_128_CCM_8_SHA256
+            // Conservative local policy based on draft-irtf-cfrg-aead-limits-13 §7.3:
+            // target AEA <= 2^-57, at most five traffic keys, L <= 2^11 blocks,
+            // C <= 2^33 blocks per key, q <= 5 * 2^21, v = 1, and o <= 2^64.
+            // This is a work-in-progress profile bound, not a TLS RFC numeric limit.
+            max_records = tls13_aes_ccm_max_records;
+            max_plaintext = tls13_aes_ccm_max_plaintext;
+            return true;
+        case 0x1303:  // TLS_CHACHA20_POLY1305_SHA256
+            // ChaCha20-Poly1305's TLS sequence number is the limiting bound.
+            max_records = ~static_cast<uint64>(0);
+            max_plaintext = ~static_cast<uint64>(0);
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool tls13_is_alert_plaintext(const binary_t& plaintext) {
+    size_t type_pos = plaintext.size();
+    while (type_pos && (0 == plaintext[type_pos - 1])) {
+        --type_pos;
+    }
+    return (3 == type_pos) && (tls_content_type_t::alert == (tls_content_type_t)plaintext[type_pos - 1]);
+}
+
+}  // namespace
+
 constexpr char constexpr_content_type[] = "record content type";
 constexpr char constexpr_record_version[] = "record version";
 constexpr char constexpr_len[] = "len";
@@ -422,7 +467,48 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
         tls_secret_t secret_iv;
         get_aead_key(session, dir, space, secret_key, secret_iv);
 
-        uint64 record_no = 0;
+        uint64 record_no = session->get_recordno(dir, false, space);
+        bool track_tls13_usage = (session_type_t::tls == session->get_type()) && is_kindof_tls13() && (protection_space_t::tls == space);
+        bool track_tls13_plaintext = false;
+        if (track_tls13_usage) {
+            uint64 max_records = 0;
+            uint64 max_plaintext = 0;
+            if (false == tls13_key_usage_limit(cs, max_records, max_plaintext)) {
+                auto& session_info = session->get_session_info(dir);
+                if (false == session_info.has_alert(tls_alertlevel_t::fatal)) {
+                    session_info.push_alert(tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                }
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            track_tls13_plaintext = (~static_cast<uint64>(0) != max_plaintext);
+            auto& usage = session->get_session_info(dir).get_keyvalue();
+            uint64 used_plaintext = usage.get(session_tls13_key_usage_bytes);
+            // Early-data traffic keys cannot use the reserved Alert record.
+            bool alert_record = (tls_secret_t::c_e_traffic_key != secret_key) && tls13_is_alert_plaintext(plaintext);
+            uint64 record_limit = alert_record ? (max_records - 1) : (max_records - 2);
+            bool record_limit_reached = (record_no >= record_limit);
+            bool plaintext_limit_reached = false;
+            if (~static_cast<uint64>(0) != max_plaintext) {
+                uint64 plaintext_limit = alert_record ? (max_plaintext - 3) : (max_plaintext - 6);
+                plaintext_limit_reached = (used_plaintext > plaintext_limit) || (plaintext.size() > (plaintext_limit - used_plaintext));
+            }
+            if (record_limit_reached || plaintext_limit_reached) {
+                // The library has no KeyUpdate sender yet. Fail closed before
+                // using this key beyond its TLS 1.3 confidentiality limit.
+                // Reserve one record and three plaintext bytes for a fatal Alert.
+                // Keep a further record and three bytes unused so the connection
+                // closes strictly before the cryptographic usage ceiling.
+                auto& session_info = session->get_session_info(dir);
+                if (false == session_info.has_alert(tls_alertlevel_t::fatal)) {
+                    session_info.push_alert(tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                }
+                ret = errorcode_t::exceed;
+                __leave2;
+            }
+        }
+
         record_no = session->get_recordno(dir, true, space);
 
         const auto& key = get_secrets().get(secret_key);
@@ -454,6 +540,12 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
         } else {
             build_iv(session, nonce, iv, record_no);
             ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
+        }
+
+        if ((errorcode_t::success == ret) && track_tls13_plaintext) {
+            auto& usage = session->get_session_info(dir).get_keyvalue();
+            uint64 used_plaintext = usage.get(session_tls13_key_usage_bytes);
+            usage.set(session_tls13_key_usage_bytes, used_plaintext + plaintext.size());
         }
 
 #if defined DEBUG

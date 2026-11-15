@@ -193,6 +193,7 @@ class HOTPLACE_BASE_API test_case {
     void report_cases(basic_stream& stream);
     void report_failed(basic_stream& stream);
     void report_testtime(basic_stream& stream, uint32 top_count = -1);
+    void compose_summary_line(basic_stream& stream);
 
     enum testcase_dump_t {
         testcase_dump_error = (1 << 0),

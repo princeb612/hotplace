@@ -37,6 +37,12 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "e4 ff b6 8a c0 5f 8d 96 c9 9d a2 66 98 34"
             "6c 6b e1 64 82 ba dd da fe 05 1a 66 b4 f1 8d 66 8f 0b";
         crypto_key& key = protection.get_key();
+        // RFC 8448 section 4 reuses the session from section 3. Remove
+        // the previous handshake's key shares before installing this vector.
+        key.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+        key.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+        key.erase(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+        key.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);

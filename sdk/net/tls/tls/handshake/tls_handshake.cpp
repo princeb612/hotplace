@@ -156,7 +156,10 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
                 __leave2_trace(ret);
             }
         } else {
-            if (tls_handshake_type_t::encrypted_extensions == get_type()) {
+            if ((tls_handshake_type_t::encrypted_extensions == get_type()) || (tls_handshake_type_t::new_session_ticket == get_type())) {
+                // These messages end with a length-prefixed field. Bound the
+                // parser to this handshake message so trailing record bytes
+                // cannot be consumed as part of the final field.
                 ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
             } else {
                 ret = do_read_body(dir, stream, size, pos);

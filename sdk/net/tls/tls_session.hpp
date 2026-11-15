@@ -24,9 +24,23 @@
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <hotplace/sdk/net/tls/types.hpp>
 #include <queue>
+#include <vector>
 
 namespace hotplace {
 namespace net {
+
+struct tls_resumption_ticket {
+    binary_t identity;
+    binary_t nonce;
+    binary_t psk;
+    uint32 lifetime;
+    uint32 age_add;
+    uint64 timestamp;
+    uint16 cipher_suite;
+    uint32 max_early_data_size;
+
+    tls_resumption_ticket() : lifetime(0), age_add(0), timestamp(0), cipher_suite(0), max_early_data_size(0) {}
+};
 
 enum session_type_t {
     tls = 1,    // TLS session
@@ -45,15 +59,21 @@ enum session_alert_flag_t : uint8 {
  */
 enum sessioninfo_conf_t : uint8 {
     // uint64, session->get_session_info(dir).get_keyvalue()
-    session_dtls_epoch = 1,         // record epoch
-    session_dtls_seq = 2,           // record sequence
-    session_dtls_message_seq = 3,   // handshake sequence
-    session_ticket_lifetime = 4,    // RFC 8446 4.6.1. uint32
-    session_ticket_age_add = 5,     // RFC 8446 4.6.1. uint32
-    session_ticket_timestamp = 6,   // RFC 8446 4.2.11. see obfuscated_ticket_age
-    session_key_share_group = 7,    // key share group (tls_extension_key_share)
-    session_hrr = 8,                // HRR (tls_extension_key_share case pubkeylen == 0)
-    session_record_size_limit = 9,  // RFC 8449: receive limit advertised by this endpoint
+    session_dtls_epoch = 1,              // record epoch
+    session_dtls_seq = 2,                // record sequence
+    session_dtls_message_seq = 3,        // handshake sequence
+    session_ticket_lifetime = 4,         // RFC 8446 4.6.1. uint32
+    session_ticket_age_add = 5,          // RFC 8446 4.6.1. uint32
+    session_ticket_timestamp = 6,        // RFC 8446 4.2.11. see obfuscated_ticket_age
+    session_key_share_group = 7,         // key share group (tls_extension_key_share)
+    session_hrr = 8,                     // HRR (tls_extension_key_share case pubkeylen == 0)
+    session_record_size_limit = 9,       // RFC 8449: receive limit advertised by this endpoint
+    session_tls13_key_usage_bytes = 10,  // RFC 9846 5.5: plaintext encrypted with the current directional traffic key
+    session_early_data_limit = 11,       // RFC 8446 4.2.10: selected ticket's max_early_data_size
+    session_early_data_received = 12,    // RFC 8446 4.2.10: client early-data bytes received on this connection
+    session_early_data_offered = 13,     // RFC 8446 4.2.10: early_data was present in ClientHello
+    session_early_data_finished = 14,    // Client early-data phase ended (EndOfEarlyData or client Finished)
+    session_early_data_accepted = 15,    // RFC 8446: server accepted early data in EncryptedExtensions
 };
 enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()
@@ -63,10 +83,17 @@ enum session_conf_t : uint16 {
     session_conf_enable_renegotiation = 0x1003,           // TLS 1.2 renegotiation
     session_conf_enable_extended_master_secret = 0x1004,  // extended master secret
     // status
-    session_tls_version = 0x2001,             // TLS version
-    session_encrypt_then_mac = 0x2002,        // TLS 1.2 EtM
-    session_handshake_finished = 0x2003,      // if finished HRR->0-RTT else HRR->1-RTT
-    session_extended_master_secret = 0x2004,  // PRF("extended master secret", transcript_hash)
+    session_tls_version = 0x2001,                     // TLS version
+    session_encrypt_then_mac = 0x2002,                // TLS 1.2 EtM
+    session_handshake_finished = 0x2003,              // if finished HRR->0-RTT else HRR->1-RTT
+    session_extended_master_secret = 0x2004,          // PRF("extended master secret", transcript_hash)
+    session_client_post_handshake_auth = 0x2006,      // RFC 9846 4.7.2: ClientHello offer for post-handshake authentication
+    session_client_psk_identity_count = 0x2007,       // RFC 8446 4.2.11: identities offered in the latest ClientHello
+    session_client_psk_modes_present = 0x2008,        // RFC 8446 4.2.9: psk_key_exchange_modes extension was offered
+    session_client_psk_modes = 0x2009,                // RFC 8446 4.2.9: bit mask of offered PSK key exchange modes
+    session_client_psk_hash = 0x200A,                 // RFC 8446 4.2.11: hash associated with the offered PSK binder
+    session_server_psk_selected_identity = 0x200B,    // RFC 8446 4.2.11: identity selected by the server
+    session_server_psk_ticket_cipher_suite = 0x200C,  // RFC 8446 4.6.1: cipher suite that established the selected ticket PSK
     // debug
     session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
 };
@@ -99,6 +126,13 @@ class HOTPLACE_NET_API tls_session {
 
     void set_type(session_type_t type);
     session_type_t get_type() const;
+    return_t generate_ticket_nonce(binary_t& nonce);
+    void store_resumption_ticket(const tls_resumption_ticket& ticket);
+    std::vector<tls_resumption_ticket> get_resumption_tickets();
+    bool find_resumption_ticket(const binary_t& identity, tls_resumption_ticket& ticket);
+    void remove_resumption_ticket(const binary_t& identity);
+    void set_offered_resumption_tickets(const std::vector<tls_resumption_ticket>& tickets);
+    std::vector<tls_resumption_ticket> get_offered_resumption_tickets();
 
     void update_session_status(session_status_t status);
     void clear_session_status(uint32 status);
@@ -149,6 +183,9 @@ class HOTPLACE_NET_API tls_session {
         std::list<alert> _alerts;
         t_key_value<uint8, uint64> _kv;  // sessioninfo_conf_t
     };
+
+    bool register_certificate_request_context(const binary_t& context);
+    void reset_certificate_request_contexts();
 
     session_info& get_session_info(tls_direction_t dir);
     uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_space_t space = protection_space_t::tls);
@@ -203,11 +240,15 @@ class HOTPLACE_NET_API tls_session {
     t_shared_reference<tls_session> _shared;
 
     std::map<tls_direction_t, session_info> _direction;
+    critical_section _certificate_request_context_lock;
+    std::vector<binary_t> _certificate_request_contexts;
     std::queue<tls_handshake*> _handshake_que;
     std::list<tls_extension*> _extension_list;
     tls_protection _tls_protection;
     session_type_t _type;
     uint32 _status;
+    std::vector<tls_resumption_ticket> _resumption_tickets;
+    std::vector<tls_resumption_ticket> _offered_resumption_tickets;
     semaphore _sem;  // _status related
 
     t_key_value<uint16, uint16> _kv;  // session_conf_t

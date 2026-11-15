@@ -13,7 +13,9 @@
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extensions.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -44,6 +46,18 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
             t_enum_type<tls_extension_type_t> etextension_type(extension_type);
             auto extension = builder.set(handshake).set(dir).set(etextension_type).build();
             if (extension) {
+                // RFC 8446 4.2.11 requires pre_shared_key to be the final
+                // ClientHello extension. Check before parsing it so a server
+                // never processes a binder from a structurally invalid offer.
+                if ((from_client == dir) && (tls_handshake_type_t::client_hello == handshake->get_type()) && (tls_extension_type_t::pre_shared_key == etextension_type) &&
+                    (ntoh16(*(uint16*)(stream + pos + 2)) != size - pos - 4)) {
+                    auto session = handshake->get_session();
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    extension->release();
+                    break;
+                }
                 ret = extension->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
                     add(extension);
@@ -85,6 +99,36 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     _extensions.move_to_back(tls_extension_type_t::pre_shared_key, [](tls_extension* ext) -> tls_extension_type_t { return ext->get_type(); });
 
     auto lambda = [&dir, &bin](tls_extension* extension) -> return_t {
+        // A ClientHello without a usable resumption ticket must not carry
+        // either pre_shared_key or early_data. In particular, do not serialize
+        // a stale PSK extension after ClientHello preprocessing selected one_rtt.
+        auto handshake = extension->get_handshake();
+        if ((from_client == dir) && handshake && (tls_handshake_type_t::client_hello == handshake->get_type())) {
+            auto flow = handshake->get_session()->get_tls_protection().get_flow();
+            if (((tls_extension_type_t::pre_shared_key == extension->get_type()) && (tls_flow_t::one_rtt == flow)) ||
+                ((tls_extension_type_t::early_data == extension->get_type()) && (tls_flow_t::zero_rtt != flow))) {
+                return errorcode_t::success;
+            }
+        }
+
+        // A server accepts early data only by echoing early_data in
+        // EncryptedExtensions. If ticket age, ticket policy, selected identity,
+        // or cipher-suite compatibility disallows it, omit the extension and
+        // continue with the PSK 1-RTT handshake.
+        if ((from_server == dir) && handshake && (tls_handshake_type_t::encrypted_extensions == handshake->get_type()) &&
+            (tls_extension_type_t::early_data == extension->get_type())) {
+            auto session = handshake->get_session();
+            auto& protection = session->get_tls_protection();
+            const auto& early_state = session->get_session_info(from_server).get_keyvalue();
+            uint16 selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
+            uint16 ticket_cipher_suite = t_narrow_cast(session->get_keyvalue().get(session_server_psk_ticket_cipher_suite));
+            bool accept_early_data = (0 == selected_identity) && (0 != early_state.get(session_early_data_offered)) && (0 != early_state.get(session_early_data_limit)) &&
+                                     (0 != ticket_cipher_suite) && (protection.get_cipher_suite() == ticket_cipher_suite);
+            if (!accept_early_data) {
+                return errorcode_t::success;
+            }
+        }
+
         auto ret = extension->write(dir, bin);
         if (errorcode_t::success != ret) {
 #if defined DEBUG
@@ -95,6 +139,9 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
                 });
             }
 #endif
+        } else if ((from_server == dir) && handshake && (tls_handshake_type_t::encrypted_extensions == handshake->get_type()) &&
+                   (tls_extension_type_t::early_data == extension->get_type())) {
+            handshake->get_session()->get_session_info(from_server).get_keyvalue().set(session_early_data_accepted, 1);
         }
         return ret;
     };

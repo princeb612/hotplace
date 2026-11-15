@@ -16,6 +16,7 @@
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
@@ -118,12 +119,17 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                 .add(tls_extension_type_t::supported_groups, dir, hs,
                      [&](tls_extension* extension) -> return_t {
                          auto ext = (tls_extension_supported_groups*)extension;
-                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                         auto& protection_context = protection.get_protection_context();
+                         protection_context.clear_supported_groups();
+                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves.
+                         // Keep the local offer in the protection context as well: the client
+                         // validates the server's selected key-share group against this list.
                          advisor->for_each_tls_group([&](const hint_group_t* hint) -> void {
                              auto group = hint->group;
                              if (tlsadvisor->test_tls_group(group)) {
                                  if (tls_flag_support & hint->flags) {
                                      (*ext).add(group);
+                                     protection_context.add_supported_group(group);
                                  }
                              }
                          });
@@ -251,8 +257,40 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         tls_version_t tlsver = tls_version_t{};
         auto dir = from_server;
         auto& protection = session->get_tls_protection();
+        auto decline_psk = [&]() -> void {
+            // RFC 8446 4.2.11: a server may select its preferred
+            // cipher suite, but it MUST decline a PSK whose binder hash
+            // differs from that suite's hash. Clear all server-side
+            // resumption state before the full-handshake key schedule.
+            tls_flow_t flow = protection.get_flow();
+            if ((tls_flow_t::zero_rtt == flow) || (tls_flow_t::hello_retry_request == flow)) {
+                protection.set_flow(tls_flow_t::one_rtt);
+            }
+            protection.get_secrets().assign(tls_secret_t::resumption_early, binary_t());
+            auto& keyvalue = session->get_keyvalue();
+            keyvalue.set(session_server_psk_selected_identity, 0xffff);
+            keyvalue.set(session_server_psk_ticket_cipher_suite, 0);
+            auto& early_data = session->get_session_info(from_server).get_keyvalue();
+            early_data.set(session_early_data_limit, 0);
+            early_data.set(session_early_data_received, 0);
+            early_data.set(session_early_data_finished, 0);
+            early_data.set(session_early_data_accepted, 0);
+        };
         ret = protection.negotiate(session, minspec, maxspec, cs, tlsver);
         if (errorcode_t::success == ret) {
+            if (tls_flow_t::zero_rtt == protection.get_flow()) {
+                uint16 ticket_cipher_suite = t_narrow_cast(session->get_keyvalue().get(session_server_psk_ticket_cipher_suite));
+                const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
+                const tls_cipher_suite_t* negotiated_suite = tlsadvisor->hintof_cipher_suite(cs);
+                if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls_13 != negotiated_suite->spec) ||
+                    (ticket_suite->mac != negotiated_suite->mac)) {
+                    // A TLS 1.3 PSK cannot resume a non-TLS-1.3 handshake,
+                    // even when a legacy suite happens to use the same hash.
+                    // Preserve the negotiated suite; only decline resumption.
+                    decline_psk();
+                }
+            }
+
             tls_handshake_builder builder;
             *handshake = builder.build(tls_handshake_type_t::server_hello, session, [&](tls_handshake* h) -> return_t {
                 auto hs = (tls_handshake_server_hello*)h;
@@ -267,12 +305,51 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                                  return errorcode_t::success;
                              })
                         .add(tls_extension_type_t::key_share, dir, hs,  //
-                             [](tls_extension* extension) -> return_t {
+                             [&](tls_extension* extension) -> return_t {
                                  auto keyshare = (tls_extension_server_key_share*)extension;
                                  keyshare->clear();
-                                 keyshare->add_keyshare();
-                                 return errorcode_t::success;
+                                 ret = keyshare->add_keyshare();
+                                 return ret;
                              });
+                    // tls_extensions::add() owns and discards a failed extension
+                    // callback, but does not return that callback's status.
+                    // Propagate it from the composer builder explicitly.
+                    if (errorcode_t::success != ret) {
+                        return ret;
+                    }
+
+                    // A verified PSK offer is acknowledged in the final
+                    // ServerHello. Do not put pre_shared_key in the HRR itself;
+                    // ClientHello2 is identified by the retained HRR status bit.
+                    bool after_hrr = (session_status_hello_retry_request & session->get_session_status()) != 0;
+                    bool psk_selection_pending =
+                        (tls_flow_t::zero_rtt == protection.get_flow()) || ((tls_flow_t::hello_retry_request == protection.get_flow()) && after_hrr);
+                    t_narrow_cast_t<uint16> selected_identity(session->get_keyvalue().get(session_server_psk_selected_identity));
+                    uint16 identity_count = t_narrow_cast(session->get_keyvalue().get(session_client_psk_identity_count));
+                    if (psk_selection_pending && (0xffff != selected_identity)) {
+                        if ((0 == identity_count) || (selected_identity >= identity_count)) {
+                            return errorcode_t::handshake_failure;
+                        }
+
+                        uint16 ticket_cipher_suite = t_narrow_cast(session->get_keyvalue().get(session_server_psk_ticket_cipher_suite));
+                        const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
+                        const tls_cipher_suite_t* negotiated_suite = tlsadvisor->hintof_cipher_suite(cs);
+                        if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls_13 != negotiated_suite->spec) ||
+                            (ticket_suite->mac != negotiated_suite->mac)) {
+                            // A TLS 1.3 PSK can only resume with a TLS 1.3
+                            // suite using the hash that established its PSK.
+                            // Decline resumption but preserve HRR transcript state.
+                            decline_psk();
+                        }
+
+                        t_narrow_cast_t<uint16> current_selected_identity(session->get_keyvalue().get(session_server_psk_selected_identity));
+                        if (0xffff != current_selected_identity) {
+                            hs->get_extensions().add(tls_extension_type_t::pre_shared_key, dir, hs, [selected_identity](tls_extension* extension) -> return_t {
+                                static_cast<tls_extension_server_psk*>(extension)->set_selected_identity(selected_identity);
+                                return errorcode_t::success;
+                            });
+                        }
+                    }
                 } else {
                     hs->get_extensions()
                         .add(tls_extension_type_t::renegotiation_info, dir, hs, nullptr)
@@ -296,6 +373,13 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                 return ret;
             });
         } else {
+            // No usable cipher suite remains. The handshake will fail, but
+            // do not leave a verified ticket's PSK/early-data state attached
+            // to a session that may be inspected or reused by its owner.
+            t_narrow_cast_t<uint16> selected_identity(session->get_keyvalue().get(session_server_psk_selected_identity));
+            if (0xffff != selected_identity) {
+                decline_psk();
+            }
             session->push_alert(from_server, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
             session->reset_session_status();
         }

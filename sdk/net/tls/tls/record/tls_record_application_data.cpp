@@ -211,6 +211,53 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     ret = get_handshakes().read(session, dir, plaintext.data(), content_size, tpos);
                 } else if (tls_content_type_t::application_data == ettype) {
                     auto flow = protection.get_flow();
+                    if ((tls_flow_t::zero_rtt == flow) && (from_client == dir)) {
+                        auto& early_state = session->get_session_info(from_server).get_keyvalue();
+                        if (0 == early_state.get(session_early_data_finished)) {
+                            // Before EndOfEarlyData (or the client's Finished
+                            // when 0-RTT was rejected), client application data
+                            // is early data and is subject to the ticket limit.
+                            auto selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
+                            uint64 early_data_limit = early_state.get(session_early_data_limit);
+                            bool early_data_accepted =
+                                (0 != early_state.get(session_early_data_offered)) && (0 == static_cast<uint16>(selected_identity)) && (0 != early_data_limit);
+                            if (!early_data_accepted) {
+                                _bin.clear();
+                                __leave2;
+                            }
+
+                            uint64 early_data_received = early_state.get(session_early_data_received);
+                            if ((early_data_received > early_data_limit) || (content_size > early_data_limit - early_data_received)) {
+                                ret = errorcode_t::overflow;
+                                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                                session->reset_session_status();
+                                __leave2;
+                            }
+                            early_state.set(session_early_data_received, early_data_received + content_size);
+                        } else {
+                            // After the client early-data phase, only 1-RTT
+                            // application data is legal, and only after the
+                            // client's Finished has been processed.
+                            uint32 session_status = session->get_session_status();
+                            if (0 == (session_status_client_finished & session_status)) {
+                                ret = errorcode_t::unexpected;
+                                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                                session->reset_session_status();
+                                __leave2;
+                            }
+                        }
+                    } else if ((tls_flow_t::zero_rtt == flow) && (from_server == dir)) {
+                        // The server cannot send 0-RTT data, but it may send 1-RTT
+                        // application data after its own Finished while the client
+                        // is still completing the resumed handshake.
+                        uint32 session_status = session->get_session_status();
+                        if (0 == (session_status_server_finished & session_status)) {
+                            ret = errorcode_t::unexpected;
+                            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                            session->reset_session_status();
+                            __leave2;
+                        }
+                    }
                     if (tls_flow_t::one_rtt == flow) {
                         // Each endpoint may send application data after its own Finished.
                         // The server does not need to wait for the client's Finished.

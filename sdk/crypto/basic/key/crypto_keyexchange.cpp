@@ -114,11 +114,13 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
         auto nid = hint->first.nid;
         // auto kty = hint->first.kty;
 
-        auto pkey = key->find_nid(kid, nid);
-        if (pkey) {
-            ret = errorcode_t::already_exist;
-            __leave2;
-        }
+        // replace
+        // auto pkey = key->find_nid(kid, nid);
+        // if (pkey) {
+        //     ret = errorcode_t::already_exist;
+        //     __leave2;
+        // }
+        key->remove_nid(kid, nid);
 
         // keygen
         crypto_keychain keychain;

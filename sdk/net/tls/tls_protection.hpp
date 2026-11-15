@@ -283,7 +283,12 @@ class HOTPLACE_NET_API tls_protection {
      */
     return_t calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir);
     return_t calc_keyblock(hash_algorithm_t hmac_alg, const binary_t& master_secret, const binary_t& client_hello_random, const binary_t& server_hello_random, uint16 cs);
+    return_t calc_psk_binder(tls_session* session, const binary_t& binder_hash, binary_t& psk_binder);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
+    return_t calc_resumption_ticket_psk(const binary_t& ticket_nonce, binary_t& ticket_psk);
+    return_t calc_resumption_early_secret(const binary_t& psk, binary_t& early_secret);
+    return_t calc_resumption_psk(const binary_t& ticket_nonce);
+    return_t calc_resumption_psk(const binary_t& ticket_nonce, binary_t& resumption_psk);
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
 
     ///////////////////////////////////////////////////////////////////////////

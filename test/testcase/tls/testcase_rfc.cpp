@@ -11,25 +11,7 @@
  */
 
 #include "sample.hpp"
-
-static return_t test_client_supportedversion_clienthello(tls_session* session, tls_version_t minspec, tls_version_t maxspec, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    tls_record_handshake record(session);
-    tls_handshake* handshake = nullptr;
-    ret = tls_composer::construct_client_hello(&handshake, session, nullptr, minspec, maxspec);
-    record << handshake;
-    ret = record.write(from_client, bin);
-    return ret;
-}
-
-static return_t test_client_supportedversion_serverhello(tls_session* session, tls_version_t minspec, tls_version_t maxspec, tls_version_t& server_version) {
-    return_t ret = errorcode_t::success;
-    uint16 server_cs = 0;
-
-    auto& protection = session->get_tls_protection();
-    ret = protection.negotiate(session, minspec, maxspec, server_cs, server_version);
-    return ret;
-}
+#include "testcase_gpt_common.hpp"
 
 void test_client_supportedversion() {
     _test_case.begin("supportedversion");

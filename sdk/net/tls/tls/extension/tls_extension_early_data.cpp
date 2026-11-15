@@ -30,6 +30,8 @@ tls_extension_early_data::tls_extension_early_data(tls_handshake* handshake) : t
 
 tls_extension_early_data::~tls_extension_early_data() {}
 
+uint32 tls_extension_early_data::get_max_early_data_size() const { return _max_early_data_size; }
+
 return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -62,11 +64,21 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
             is_nst = (tls_handshake_type_t::new_session_ticket == get_handshake()->get_type());
             pl.set_group(constexpr_new_session_ticket, is_nst);
 
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, size, pos);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
+            // The extension body must be consumed exactly. NewSessionTicket
+            // carries one uint32; ClientHello and EncryptedExtensions are empty.
+            if (pos != endpos_extension()) {
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             if (is_nst) {
+                _max_early_data_size = pl.t_value_of<uint32>(constexpr_max_early_data_size);
 #if defined DEBUG
-                max_early_data_size = pl.t_value_of<uint32>(constexpr_max_early_data_size);
+                max_early_data_size = _max_early_data_size;
                 if (istraceable(trace_category_t::trace_category_net)) {
                     trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                         dbs.println("  > %s 0x%04x(%i)", constexpr_max_early_data_size, max_early_data_size, max_early_data_size);

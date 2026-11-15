@@ -90,6 +90,16 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
             }
         }
 
+        if ((tls_flow_t::zero_rtt == flow) && (from_client == dir) && (0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_accepted)) &&
+            (0 == session->get_session_info(from_server).get_keyvalue().get(session_early_data_finished))) {
+            // If the server accepted 0-RTT, the client must send EndOfEarlyData
+            // before its Finished. Rejected 0-RTT does not require this message.
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
+        }
+
         if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             session->reset_session_status();
@@ -131,6 +141,12 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                 session->update_session_status(session_status_server_finished);
             } else if (from_client == dir) {
                 session->update_session_status(session_status_client_finished);
+                // A client that was rejected for 0-RTT does not send
+                // EndOfEarlyData. Its Finished still closes the early-data
+                // phase before any subsequent 1-RTT application data.
+                if (protection.is_kindof_tls13() && (tls_flow_t::zero_rtt == protection.get_flow())) {
+                    session->get_session_info(from_server).get_keyvalue().set(session_early_data_finished, 1);
+                }
             }
             session->schedule(this);  // run_scheduled
         }

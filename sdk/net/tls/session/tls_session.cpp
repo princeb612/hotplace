@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <atomic>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
@@ -112,6 +114,86 @@ void tls_session::set_type(session_type_t type) {
 }
 
 session_type_t tls_session::get_type() const { return _type; }
+
+void tls_session::store_resumption_ticket(const tls_resumption_ticket& ticket) {
+    critical_section_guard guard(_lock);
+    for (auto it = _resumption_tickets.begin(); it != _resumption_tickets.end(); ++it) {
+        if (it->identity == ticket.identity) {
+            *it = ticket;
+            return;
+        }
+    }
+    _resumption_tickets.emplace_back(ticket);
+}
+
+std::vector<tls_resumption_ticket> tls_session::get_resumption_tickets() {
+    critical_section_guard guard(_lock);
+    return _resumption_tickets;
+}
+
+bool tls_session::find_resumption_ticket(const binary_t& identity, tls_resumption_ticket& ticket) {
+    critical_section_guard guard(_lock);
+    for (const auto& entry : _resumption_tickets) {
+        if (entry.identity == identity) {
+            ticket = entry;
+            return true;
+        }
+    }
+    return false;
+}
+
+void tls_session::remove_resumption_ticket(const binary_t& identity) {
+    critical_section_guard guard(_lock);
+    for (auto it = _resumption_tickets.begin(); it != _resumption_tickets.end();) {
+        if (it->identity == identity) {
+            it = _resumption_tickets.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void tls_session::set_offered_resumption_tickets(const std::vector<tls_resumption_ticket>& tickets) {
+    critical_section_guard guard(_lock);
+    _offered_resumption_tickets = tickets;
+}
+
+std::vector<tls_resumption_ticket> tls_session::get_offered_resumption_tickets() {
+    critical_section_guard guard(_lock);
+    return _offered_resumption_tickets;
+}
+
+return_t tls_session::generate_ticket_nonce(binary_t& nonce) {
+    // RFC 8446 requires ticket_nonce to be unique for every ticket issued
+    // by a server. The atomic suffix guarantees uniqueness among calls in
+    // this process. The fresh random prefix makes collisions across processes
+    // and restarts negligibly likely; it is not a shared global allocator.
+    binary_t ticket_nonce_prefix;
+    return_t ret = crypto::openssl_prng::random(ticket_nonce_prefix, 16);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
+
+    static std::atomic<uint64> ticket_nonce_counter{0};
+    uint64 value = ticket_nonce_counter.load(std::memory_order_relaxed);
+    for (;;) {
+        if (static_cast<uint64>(-1) == value) {
+            return errorcode_t::internal_error;
+        }
+        if (ticket_nonce_counter.compare_exchange_weak(value, value + 1, std::memory_order_relaxed, std::memory_order_relaxed)) {
+            ++value;
+            break;
+        }
+    }
+
+    nonce = ticket_nonce_prefix;
+    const size_t offset = nonce.size();
+    nonce.resize(offset + sizeof(value));
+    for (size_t i = 0; i < sizeof(value); ++i) {
+        nonce[offset + i] = static_cast<byte_t>(value >> ((sizeof(value) - i - 1) * 8));
+    }
+    return errorcode_t::success;
+}
 
 void tls_session::update_session_status(session_status_t status) {
     _status |= status;
@@ -219,6 +301,30 @@ void tls_session::reset_recordno(tls_direction_t dir, protection_space_t space) 
 }
 
 void tls_session::set_recordno(tls_direction_t dir, uint64 recno, protection_space_t space) { get_session_info(dir).set_recordno(recno, space); }
+bool tls_session::register_certificate_request_context(const binary_t& context) {
+    critical_section_guard guard(_certificate_request_context_lock);
+    for (const auto& registered : _certificate_request_contexts) {
+        if (registered.size() == context.size()) {
+            bool equal = true;
+            for (size_t i = 0; i < context.size(); ++i) {
+                if (registered[i] != context[i]) {
+                    equal = false;
+                    break;
+                }
+            }
+            if (equal) {
+                return false;
+            }
+        }
+    }
+    _certificate_request_contexts.push_back(context);
+    return true;
+}
+
+void tls_session::reset_certificate_request_contexts() {
+    critical_section_guard guard(_certificate_request_context_lock);
+    _certificate_request_contexts.clear();
+}
 
 void tls_session::addref() { _shared.addref(); }
 
@@ -243,7 +349,12 @@ uint64 tls_session::session_info::get_recordno(bool inc, protection_space_t spac
 
 void tls_session::session_info::inc_recordno(protection_space_t space) { ++_recordno_spaces[space]; }
 
-void tls_session::session_info::reset_recordno(protection_space_t space) { _recordno_spaces[space] = 0; }
+void tls_session::session_info::reset_recordno(protection_space_t space) {
+    _recordno_spaces[space] = 0;
+    if (protection_space_t::tls == space) {
+        _kv.set(session_tls13_key_usage_bytes, 0);
+    }
+}
 
 void tls_session::session_info::set_recordno(uint64 recordno, protection_space_t space) { _recordno_spaces[space] = recordno; }
 

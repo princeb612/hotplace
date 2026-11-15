@@ -124,8 +124,7 @@ return_t trial_tls_server_socket::send(socket_context_t* handle, const char* ptr
 
         binary_t bin;
         tls_direction_t dir = from_server;
-        tls_record_application_data record(session);
-        record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
+        tls_record_application_data record(session, (byte_t*)ptr_data, size_data);
         record.write(dir, bin);
 
         size_t sent = 0;

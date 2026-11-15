@@ -653,6 +653,34 @@ const EVP_PKEY* crypto_key::find_nid(const char* kid, uint32 nid, crypto_use_t u
     return ret_value;
 }
 
+bool crypto_key::remove_nid(const char* kid, uint32 nid, crypto_use_t use) {
+    bool ret = false;
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
+    critical_section_guard guard(_lock);
+    __try2 {
+        std::string k;
+        if (kid) {
+            k = kid;
+
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
+                auto& item = iter->second;
+                auto pkey = item.get_pkey();
+                uint32 id = 0;
+                nidof_evp_pkey(pkey, id);
+                if (id == nid) {
+                    ret = true;
+                    item.release();
+                    _key_map.erase(iter);
+                    break;
+                }
+            }
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 const EVP_PKEY* crypto_key::find(const char* kid, tls_group_t group, crypto_use_t use, bool up_ref) const {
     const EVP_PKEY* ret_value = nullptr;
     // crypto_advisor* advisor = crypto_advisor::get_instance();

@@ -185,6 +185,23 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                         lambda_expand_label(tls_secret_t::c_e_traffic_key, secret_c_e_traffic_key, hashalg, keysize, secret_c_e_traffic, "key", empty);
                         binary_t secret_c_e_traffic_iv;
                         lambda_expand_label(tls_secret_t::c_e_traffic_iv, secret_c_e_traffic_iv, hashalg, 12, secret_c_e_traffic, "iv", empty);
+
+#if defined DEBUG
+                        if (istraceable(trace_category_t::trace_category_net)) {
+                            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                                dbs.println("* TLS 1.3 key schedule - ClientHello (0-RTT)");
+                                dbs.println(" > flow %i", static_cast<int>(flow));
+                                dbs.println(" > cipher suite 0x%04x (%s)", cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
+                                dbs.println(" > hash %s", hashalg);
+                                dbs.println(" > transcript hash %s", base16_encode(context_hash).c_str());
+                                dbs.println(" > resumption_early %s", base16_encode(secret_resumption_early).c_str());
+                                dbs.println(" > c e traffic %s", base16_encode(secret_c_e_traffic).c_str());
+                                dbs.println(" > e exp master %s", base16_encode(secret_e_exp_master).c_str());
+                                dbs.println(" > c e traffic key %s", base16_encode(secret_c_e_traffic_key).c_str());
+                                dbs.println(" > c e traffic iv %s", base16_encode(secret_c_e_traffic_iv).c_str());
+                            });
+                        }
+#endif
                     }
                 } else {
                     if (tls_flow_t::renegotiation == flow) {
@@ -356,6 +373,26 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                     lambda_expand_label(tls_secret_t::c_hs_traffic, secret_handshake_client, hashalg, dlen, secret_handshake, "c hs traffic", context_hash);
                     // tls_secret_t::server_handshake_traffic_secret
                     lambda_expand_label(tls_secret_t::s_hs_traffic, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
+
+#if defined DEBUG
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                            dbs.println("* TLS 1.3 key schedule - ServerHello");
+                            dbs.println(" > flow %i", static_cast<int>(flow));
+                            dbs.println(" > cipher suite 0x%04x (%s)", cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
+                            dbs.println(" > hash %s", hashalg);
+                            dbs.println(" > key share group 0x%04x (%s)", static_cast<uint16>(group), tlsadvisor->nameof_group(group).c_str());
+                            dbs.println(" > key exchange private %p public %p", pkey_priv, pkey_pub);
+                            dbs.println(" > transcript hash %s", base16_encode(context_hash).c_str());
+                            dbs.println(" > resumption_early %s", base16_encode(get_secrets().get(tls_secret_t::resumption_early)).c_str());
+                            dbs.println(" > shared secret %s", base16_encode(shared_secret).c_str());
+                            dbs.println(" > handshake derived %s", base16_encode(secret_handshake_derived).c_str());
+                            dbs.println(" > handshake secret %s", base16_encode(secret_handshake).c_str());
+                            dbs.println(" > c hs traffic %s", base16_encode(secret_handshake_client).c_str());
+                            dbs.println(" > s hs traffic %s", base16_encode(secret_handshake_server).c_str());
+                        });
+                    }
+#endif
 
                     binary_t secret_application_derived;
                     lambda_expand_label(tls_secret_t::application_derived, secret_application_derived, hashalg, dlen, secret_handshake, "derived", empty_hash);

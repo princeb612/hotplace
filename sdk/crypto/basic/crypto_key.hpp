@@ -356,6 +356,7 @@ class HOTPLACE_CRYPTO_API crypto_key {
      * @param bool up_ref [inopt]
      */
     const EVP_PKEY* find_nid(const char* kid, uint32 nid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
+    bool remove_nid(const char* kid, uint32 nid, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief find
      * @param const char* kid [in]
