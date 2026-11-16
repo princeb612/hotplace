@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
@@ -19,8 +20,10 @@
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_handshake.hpp>
@@ -62,14 +65,33 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        // RFC 8446 4.2.11: bind cached PSKs to the SNI used by this ClientHello.
+        binary_t client_server_name;
+        auto ext_sni = get_extensions().get(tls_extension_type_t::server_name);
+        if (ext_sni && (0 == static_cast<tls_extension_sni*>(ext_sni)->get_nametype())) {
+            const auto& hostname = static_cast<tls_extension_sni*>(ext_sni)->get_hostname();
+            client_server_name.assign(hostname.begin(), hostname.end());
+        }
+        session->set_client_server_name(client_server_name);
+        session->get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
+        session->get_keyvalue().set(session_server_psk_key_exchange_mode, 0xffff);
+        session->get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0);
+        session->clear_early_data_ticket();
         // A new ClientHello starts a fresh record_size_limit negotiation, including
         // renegotiation and resumption. Do not carry limits from the prior key epoch.
         session->get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 0);
         session->get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 0);
         auto& early_data_state = session->get_session_info(from_server).get_keyvalue();
+        bool after_hrr = (tls_flow_t::hello_retry_request == protection.get_flow());
         early_data_state.set(session_early_data_offered, 0);
         early_data_state.set(session_early_data_limit, 0);
         early_data_state.set(session_early_data_received, 0);
+        early_data_state.set(session_early_data_sent, 0);
+        if (false == after_hrr) {
+            early_data_state.set(session_early_data_offered_initial, 0);
+            early_data_state.set(session_early_data_discard_limit, 0);
+            early_data_state.set(session_early_data_discarded, 0);
+        }
         early_data_state.set(session_early_data_finished, 0);
         early_data_state.set(session_early_data_accepted, 0);
         session->get_keyvalue().set(constexpr_session_client_supported_versions_key, 0);
@@ -77,6 +99,11 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         if (tls_flow_t::hello_retry_request != protection.get_flow()) {
             session->get_keyvalue().set(session_client_post_handshake_auth, 0);
             session->reset_certificate_request_contexts();
+            // The negotiated ALPN belongs to the connection that issued a
+            // ticket. Clear the previous connection's value before parsing or
+            // composing a new ClientHello; the new EncryptedExtensions will
+            // populate it again when ALPN is negotiated.
+            protection.get_secrets().assign(tls_secret_t::alpn, binary_t());
         }
         // auto& secrets = protection.get_secrets();
         // auto session_type = session->get_type();
@@ -124,14 +151,42 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 bool ticket_metadata_valid = false;
                 bool ticket_within_lifetime = false;
                 bool ticket_hash_compatible = false;
+                uint64 first_ticket_early_data_limit = 0;
                 bool psk_extension_configured = (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key));
                 auto cached_tickets = session->get_resumption_tickets();
+                auto alpn_extension = static_cast<tls_extension_alpn*>(get_extensions().get(tls_extension_type_t::application_layer_protocol_negotiation));
+                binary_t offered_alpn = alpn_extension ? alpn_extension->get_protocols() : binary_t();
+                auto ticket_alpn_is_offered = [](const binary_t& offered, const binary_t& ticket_alpn) -> bool {
+                    if (ticket_alpn.empty()) {
+                        return offered.empty();
+                    }
+                    if (ticket_alpn.size() < 2 || static_cast<size_t>(ticket_alpn[0]) + 1 != ticket_alpn.size()) {
+                        return false;
+                    }
+                    size_t pos = 0;
+                    while (pos < offered.size()) {
+                        uint8 protocol_size = offered[pos++];
+                        if ((0 == protocol_size) || (protocol_size > offered.size() - pos)) {
+                            return false;
+                        }
+                        if ((ticket_alpn.size() == static_cast<size_t>(protocol_size) + 1) &&
+                            std::equal(ticket_alpn.begin() + 1, ticket_alpn.end(), offered.begin() + pos)) {
+                            return true;
+                        }
+                        pos += protocol_size;
+                    }
+                    return false;
+                };
 
-                if (!cached_tickets.empty()) {
+                if ((false == cached_tickets.empty())) {
+                    const binary_t current_server_name = session->get_client_server_name();
                     for (const auto& ticket : cached_tickets) {
-                        bool metadata_valid =
-                            !ticket.identity.empty() && !ticket.psk.empty() && (ticket.lifetime > 0) && (ticket.timestamp > 0) && (ticket.timestamp <= now_ms);
-                        if (!metadata_valid) {
+                        if (ticket.server_name != current_server_name) {
+                            continue;
+                        }
+                        bool metadata_valid = (false == ticket.identity.empty()) && (false == ticket.psk.empty()) && (ticket.lifetime > 0) && (ticket.timestamp > 0) &&
+                                              (ticket.timestamp <= now_ms);
+                        if ((false == metadata_valid)) {
                             continue;
                         }
                         ticket_metadata_valid = true;
@@ -143,7 +198,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                         ticket_within_lifetime = true;
 
                         const tls_cipher_suite_t* ticket_suite = tls_advisor::get_instance()->hintof_cipher_suite(ticket.cipher_suite);
-                        if (!psk_extension_configured || (nullptr == ticket_suite) || (tls_13 != ticket_suite->spec)) {
+                        if ((false == psk_extension_configured) || (nullptr == ticket_suite) || (tls_13 != ticket_suite->spec)) {
                             continue;
                         }
                         auto crypto_advisor_instance = crypto_advisor::get_instance();
@@ -159,6 +214,12 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                             }
                         }
                         if (ticket_hash_compatible) {
+                            // 0-RTT is bound to identity zero. Its ALPN must
+                            // still be offered by this ClientHello, and the
+                            // ticket must advertise a nonzero data allowance.
+                            bool ticket_alpn_compatible = ticket_alpn_is_offered(offered_alpn, ticket.alpn);
+                            bool ticket_version_compatible = (static_cast<uint16>(tls_13) == ticket.version);
+                            first_ticket_early_data_limit = (ticket_alpn_compatible && ticket_version_compatible) ? ticket.max_early_data_size : 0;
                             break;
                         }
                     }
@@ -167,12 +228,20 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                     const binary_t& resumption_psk = protection.get_secrets().get(tls_secret_t::resumption_early);
                     uint64 ticket_lifetime = ticket_kv.get(session_ticket_lifetime);
                     uint64 ticket_timestamp = ticket_kv.get(session_ticket_timestamp);
-                    bool metadata_valid = !ticket.empty() && !resumption_psk.empty() && (ticket_lifetime > 0) && (ticket_timestamp > 0) && (ticket_timestamp <= now_ms);
+                    bool metadata_valid = (false == ticket.empty()) && (false == resumption_psk.empty()) && session->get_client_server_name().empty() &&
+                                          (ticket_lifetime > 0) && (ticket_timestamp > 0) && (ticket_timestamp <= now_ms);
                     ticket_metadata_valid = metadata_valid;
                     if (metadata_valid) {
                         uint64 bounded_lifetime = (ticket_lifetime > max_ticket_lifetime) ? max_ticket_lifetime : ticket_lifetime;
                         uint64 ticket_age_ms = now_ms - ticket_timestamp;
                         ticket_within_lifetime = (ticket_age_ms <= bounded_lifetime * 1000);
+                    }
+
+                    // The legacy singleton ticket view has no ticket object,
+                    // so retain its NewSessionTicket early_data allowance as
+                    // separate metadata and restore it only for a valid PSK.
+                    if (metadata_valid && ticket_within_lifetime) {
+                        first_ticket_early_data_limit = ticket_kv.get(session_ticket_max_early_data_size);
                     }
 
                     // Compatibility for sessions that have not yet populated the ticket collection.
@@ -192,6 +261,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                     }
                 }
 
+                session->get_session_info(from_server).get_keyvalue().set(session_early_data_limit, first_ticket_early_data_limit);
                 if (ticket_within_lifetime && ticket_hash_compatible) {
                     // ClientHello2 must remain in the HRR flow. Switching to
                     // zero_rtt here would make the later transcript processing
@@ -201,13 +271,14 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                     }
                 } else {
                     protection.set_flow(tls_flow_t::one_rtt);
-                    if (cached_tickets.empty() && (!ticket_metadata_valid || !ticket_within_lifetime)) {
+                    if (cached_tickets.empty() && ((false == ticket_metadata_valid) || (false == ticket_within_lifetime))) {
                         // Preserve the legacy singleton cleanup only when no authoritative ticket collection exists.
                         protection.get_secrets().assign(tls_secret_t::new_session_ticket, binary_t());
                         protection.get_secrets().assign(tls_secret_t::resumption_early, binary_t());
                         ticket_kv.set(session_ticket_lifetime, 0);
                         ticket_kv.set(session_ticket_age_add, 0);
                         ticket_kv.set(session_ticket_timestamp, 0);
+                        ticket_kv.set(session_ticket_max_early_data_size, 0);
                     }
                 }
                 // Keep the HRR status marker until ClientHello2 postprocessing
@@ -215,7 +286,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 if (tls_flow_t::hello_retry_request != protection.get_flow()) {
                     session->reset_session_status();
                 }
-            } else if (!protection.is_kindof_tls13()) {
+            } else if ((false == protection.is_kindof_tls13())) {
                 // renegotiation
                 //   review
                 //     - tls12renogotiation.pcapng
@@ -314,6 +385,16 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
             }
         }
 
+        // RFC 8446 4.2.9: a ClientHello that offers pre_shared_key
+        // MUST also include psk_key_exchange_modes.
+        if ((from_client == dir) && (tls_io_operation_t::read == opdir) && (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key)) &&
+            (nullptr == get_extensions().get(tls_extension_type_t::psk_key_exchange_modes))) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
+        }
+
         // 0-RTT, pre_shared_key extension
         if (tls_flow_t::zero_rtt == protection.get_flow()) {
             auto ext_psk = get_extensions().get(tls_extension_type_t::pre_shared_key);
@@ -401,20 +482,17 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                 }
 
                 const auto& binder_psks = psk->get_binder_psks();
-                if (binder_psks.empty()) {
+                const auto& offered_tickets = session->get_offered_resumption_tickets();
+                const bool legacy_singleton = offered_tickets.empty();
+                if (binder_psks.empty() || (legacy_singleton ? (1 != binder_psks.size()) : (binder_psks.size() != offered_tickets.size()))) {
                     ret = errorcode_t::bad_format;
                     __leave2_trace(ret);
                 }
 
-                binary_t binder_hash;
-                ret = protection.calc_context_hash(session, hint_tls_alg->mac, stream + hspos, binder_list_offset - hspos, binder_hash);
-                if (errorcode_t::success != ret) {
-                    __leave2_trace(ret);
-                }
-
                 binary_t previous_psk = secrets.get(tls_secret_t::resumption_early);
+                uint16 previous_cipher_suite = protection.get_cipher_suite();
                 size_t binder_offset = binder_list_offset + 2;
-                for (const auto& ticket_psk : binder_psks) {
+                for (size_t i = 0; i < binder_psks.size(); ++i) {
                     if (binder_offset >= binders_end) {
                         ret = errorcode_t::bad_format;
                         break;
@@ -425,12 +503,31 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                         break;
                     }
 
-                    if (session->get_resumption_tickets().empty()) {
+                    uint16 ticket_cipher_suite = legacy_singleton ? previous_cipher_suite : offered_tickets[i].cipher_suite;
+                    const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
+                    if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec)) {
+                        ret = errorcode_t::not_supported;
+                        break;
+                    }
+                    const hint_digest_t* ticket_hash = crypto_advisor::get_instance()->hintof_digest(ticket_suite->mac);
+                    if ((nullptr == ticket_hash) || (binder_len != ticket_hash->digest_size)) {
+                        ret = errorcode_t::bad_format;
+                        break;
+                    }
+
+                    binary_t binder_hash;
+                    ret = protection.calc_context_hash(session, ticket_suite->mac, stream + hspos, binder_list_offset - hspos, binder_hash);
+                    if (errorcode_t::success != ret) {
+                        break;
+                    }
+
+                    if (legacy_singleton) {
                         // Legacy singleton state already stores the early secret.
-                        secrets.assign(tls_secret_t::resumption_early, ticket_psk);
+                        secrets.assign(tls_secret_t::resumption_early, binder_psks[i]);
                     } else {
+                        protection.set_cipher_suite(ticket_cipher_suite);
                         binary_t ticket_early_secret;
-                        ret = protection.calc_resumption_early_secret(ticket_psk, ticket_early_secret);
+                        ret = protection.calc_resumption_early_secret(binder_psks[i], ticket_early_secret);
                         if (errorcode_t::success != ret) {
                             break;
                         }
@@ -449,6 +546,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                     binder_offset += binder_len;
                 }
                 secrets.assign(tls_secret_t::resumption_early, previous_psk);
+                protection.set_cipher_suite(previous_cipher_suite);
                 if ((errorcode_t::success != ret) || (binder_offset != binders_end)) {
                     if (errorcode_t::success == ret) {
                         ret = errorcode_t::bad_format;
@@ -496,12 +594,23 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
         // Preserve whether this exact ClientHello offered early_data. The server
         // must not infer 0-RTT permission merely from successful PSK selection.
         if (from_client == dir) {
-            uint16 early_data_offered =
-                ((tls_flow_t::hello_retry_request != protection.get_flow()) && (nullptr != get_extensions().get(tls_extension_type_t::early_data))) ? 1 : 0;
-            // Track the offer on both peers: the server uses it to decide
-            // whether to accept 0-RTT, and the client validates the server's
-            // EncryptedExtensions acceptance signal against its own offer.
-            session->get_session_info(from_server).get_keyvalue().set(session_early_data_offered, early_data_offered);
+            bool early_data_extension_present = (nullptr != get_extensions().get(tls_extension_type_t::early_data));
+            bool early_data_offered = (tls_flow_t::hello_retry_request != protection.get_flow()) && early_data_extension_present;
+            if (tls_io_operation_t::write == opdir) {
+                // The client writer suppresses early_data when identity zero
+                // has no compatible ticket allowance. Track only an extension
+                // that was actually eligible for serialization.
+                early_data_offered = (tls_flow_t::zero_rtt == protection.get_flow()) && early_data_offered &&
+                                     (0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_limit)) &&
+                                     (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key));
+            }
+            // On read, retain the peer's offer even when the server later
+            // determines that the ticket is ineligible.
+            auto& early_state = session->get_session_info(from_server).get_keyvalue();
+            early_state.set(session_early_data_offered, early_data_offered ? 1 : 0);
+            if (tls_flow_t::hello_retry_request != protection.get_flow()) {
+                early_state.set(session_early_data_offered_initial, early_data_offered ? 1 : 0);
+            }
         }
 
         // Keep the actual PSK identity count from this ClientHello. This is
@@ -513,15 +622,139 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
             session->get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
             session->get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0);
         }
-        uint16 psk_identity_count = 0;
+        auto& psk_secrets = protection.get_secrets();
+        const bool after_hrr = (tls_flow_t::hello_retry_request == protection.get_flow());
+        std::vector<binary_t> current_psk_identities;
         if (nullptr != ext_psk_offer) {
-            psk_identity_count = static_cast<tls_extension_client_psk*>(ext_psk_offer)->get_identity_count();
+            current_psk_identities = static_cast<tls_extension_client_psk*>(ext_psk_offer)->get_identities();
         }
+
+        auto encode_psk_identities = [](const std::vector<binary_t>& identities) -> binary_t {
+            binary_t encoded;
+            for (const auto& identity : identities) {
+                if (identity.empty() || (identity.size() > 0xffff)) {
+                    return binary_t();
+                }
+                uint16 length = t_narrow_cast(identity.size());
+                encoded.push_back(static_cast<byte_t>(length >> 8));
+                encoded.push_back(static_cast<byte_t>(length));
+                encoded.insert(encoded.end(), identity.begin(), identity.end());
+            }
+            return encoded;
+        };
+        auto decode_psk_identities = [](const binary_t& encoded, std::vector<binary_t>& identities) -> bool {
+            size_t pos = 0;
+            while (pos < encoded.size()) {
+                if (encoded.size() - pos < 2) {
+                    return false;
+                }
+                uint16 length = (static_cast<uint16>(encoded[pos]) << 8) | encoded[pos + 1];
+                pos += 2;
+                if ((0 == length) || (length > encoded.size() - pos)) {
+                    return false;
+                }
+                identities.emplace_back(encoded.begin() + pos, encoded.begin() + pos + length);
+                pos += length;
+            }
+            return true;
+        };
+
+        binary_t current_psk_identity_snapshot = encode_psk_identities(current_psk_identities);
+        if ((false == current_psk_identities.empty()) && current_psk_identity_snapshot.empty()) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
+        }
+        if (after_hrr) {
+            std::vector<binary_t> original_psk_identities;
+            const binary_t& original_snapshot = psk_secrets.get(tls_secret_t::client_hello_psk_identities);
+            bool valid_identity_snapshot = decode_psk_identities(original_snapshot, original_psk_identities);
+            bool valid_identity_order = valid_identity_snapshot;
+            size_t original_index = 0;
+            // Only remove a PSK when its hash incompatibility with the HRR
+            // cipher suite is known. Unknown external PSKs and incomplete ticket
+            // metadata must be retained because their compatibility cannot be
+            // inferred safely.
+            auto must_retain_psk = [&](const binary_t& identity) -> bool {
+                tls_resumption_ticket ticket;
+                const tls_cipher_suite_t* retry_suite = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
+                if ((nullptr == retry_suite) || (tls_13 != retry_suite->spec)) {
+                    return true;
+                }
+                if ((false == session->find_resumption_ticket(identity, ticket))) {
+                    const binary_t& legacy_identity = psk_secrets.get(tls_secret_t::new_session_ticket);
+                    uint16 original_hash = t_narrow_cast(session->get_keyvalue().get(session_client_psk_hash));
+                    if (legacy_identity.empty() || (legacy_identity != identity) || (0 == original_hash)) {
+                        return true;
+                    }
+                    return original_hash == static_cast<uint16>(retry_suite->mac);
+                }
+                const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket.cipher_suite);
+                if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec)) {
+                    return true;
+                }
+                return ticket_suite->mac == retry_suite->mac;
+            };
+            for (const auto& identity : current_psk_identities) {
+                while (valid_identity_order && (original_index < original_psk_identities.size()) && (original_psk_identities[original_index] != identity)) {
+                    if (must_retain_psk(original_psk_identities[original_index])) {
+                        valid_identity_order = false;
+                        break;
+                    }
+                    ++original_index;
+                }
+                if ((false == valid_identity_order) || (original_index >= original_psk_identities.size())) {
+                    valid_identity_order = false;
+                    break;
+                }
+                ++original_index;
+            }
+            while (valid_identity_order && (original_index < original_psk_identities.size())) {
+                if (must_retain_psk(original_psk_identities[original_index])) {
+                    valid_identity_order = false;
+                    break;
+                }
+                ++original_index;
+            }
+            if ((false == valid_identity_order)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+        } else {
+            psk_secrets.assign(tls_secret_t::client_hello_psk_identities, std::move(current_psk_identity_snapshot));
+        }
+
+        // RFC 8446 4.1.2 permits ClientHello2 to update PSK ages/binders and
+        // remove PSKs incompatible with the HRR cipher suite, but not to add
+        // or reorder identities. psk_key_exchange_modes is not an exception:
+        // preserve its exact extension encoding across the retry.
+        auto ext_psk_modes = get_extensions().get(tls_extension_type_t::psk_key_exchange_modes);
+        binary_t current_psk_modes_wire;
+        if (nullptr != ext_psk_modes) {
+            ret = ext_psk_modes->write(dir, current_psk_modes_wire);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
+        }
+        if (after_hrr) {
+            if (current_psk_modes_wire != psk_secrets.get(tls_secret_t::client_hello_psk_modes)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+        } else {
+            psk_secrets.assign(tls_secret_t::client_hello_psk_modes, std::move(current_psk_modes_wire));
+        }
+
+        uint16 psk_identity_count = t_narrow_cast(current_psk_identities.size());
         session->get_keyvalue().set(session_client_psk_identity_count, psk_identity_count);
 
         // Preserve the PSK exchange modes and binder hash from this exact
         // ClientHello. ClientHello2 replaces these values after HRR.
-        auto ext_psk_modes = get_extensions().get(tls_extension_type_t::psk_key_exchange_modes);
         uint8 psk_modes = 0;
         if (nullptr != ext_psk_modes) {
             psk_modes = static_cast<tls_extension_psk_key_exchange_modes*>(ext_psk_modes)->get_modes();
@@ -564,7 +797,9 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
 
         session->update_session_status(session_status_client_hello);
 
-        if ((errorcode_t::success == ret) && (tls_flow_t::zero_rtt == protection.get_flow()) && (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
+        if ((errorcode_t::success == ret) && (tls_flow_t::zero_rtt == protection.get_flow()) &&
+            (0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_limit)) &&
+            (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
             // Early data uses the client early traffic secret immediately after ClientHello.
             // Activate only the client direction; ServerHello later activates both handshake directions.
             session->schedule(this);

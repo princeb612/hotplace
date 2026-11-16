@@ -289,82 +289,89 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                     //  psk_dhe_ke  ... key_share
                     binary_t shared_secret;
 
-                    const EVP_PKEY* pkey_priv = nullptr;
-                    const EVP_PKEY* pkey_pub = nullptr;
+                    uint16 selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
+                    uint16 selected_psk_mode = t_narrow_cast(session->get_keyvalue().get(session_server_psk_key_exchange_mode));
+                    bool use_psk_ke = (0xffff != selected_identity) && (0 == selected_psk_mode);
+                    if (use_psk_ke) {
+                        // RFC 8446 7.1: psk_ke supplies Hash.length zero bytes as the (EC)DHE input.
+                        shared_secret.assign(dlen, 0);
+                    } else {
+                        const EVP_PKEY* pkey_priv = nullptr;
+                        const EVP_PKEY* pkey_pub = nullptr;
 
-                    auto group = get_protection_context().get0_keyshare_group();
-                    auto hint_group = advisor->hintof_tls_group(group);
-                    if (hint_group) {
-                        if (tls_flag_pqc & hint_group->flags) {
-                            // tls_extension_key_share
-                            shared_secret = get_secrets().get(tls_secret_t::shared_secret);
-                            uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_hrr));
-                            if (group) {
-                                session->get_session_info(from_server).get_keyvalue().remove(session_hrr);
-                                ret = errorcode_t::warn_retry;
-                                __leave2_trace(ret);
+                        auto group = get_protection_context().get0_keyshare_group();
+                        auto hint_group = advisor->hintof_tls_group(group);
+                        if (hint_group) {
+                            if (tls_flag_pqc & hint_group->flags) {
+                                // tls_extension_key_share
+                                shared_secret = get_secrets().get(tls_secret_t::shared_secret);
+                                uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_hrr));
+                                if (group) {
+                                    session->get_session_info(from_server).get_keyvalue().remove(session_hrr);
+                                    ret = errorcode_t::warn_retry;
+                                    __leave2_trace(ret);
+                                }
+                            } else {
+                                pkey_priv = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
+                                if (pkey_priv) {
+                                    // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
+                                    pkey_pub = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);  // client_hello
+                                } else {
+                                    // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
+                                    pkey_priv = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
+                                    pkey_pub = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, group);  // server_hello
+                                }
+
+                                // warn_retry
+                                // If the server selects an (EC)DHE group and the client did not offer a compatible "key_share" extension in the initial
+                                // ClientHello, the server MUST respond with a HelloRetryRequest (Section 4.1.4) message.
+
+                                if (nullptr == pkey_priv || nullptr == pkey_pub) {
+                                    ret = errorcode_t::warn_retry;  // HRR
+                                    __leave2_trace(ret);
+                                }
+
+                                uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
+                                if (group_enforced) {
+                                    // enforcing
+                                    auto pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
+                                    if (nullptr == pkey_ch) {
+                                        pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
+                                    }
+                                    if (nullptr == pkey_ch) {
+                                        ret = errorcode_t::warn_retry;
+                                        __leave2_trace(ret);  // HRR
+                                    }
+                                }
+
+                                ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
                             }
                         } else {
-                            pkey_priv = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
-                            if (pkey_priv) {
-                                // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
-                                pkey_pub = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);  // client_hello
-                            } else {
-                                // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
-                                pkey_priv = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
-                                pkey_pub = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, group);  // server_hello
-                            }
-
-                            // warn_retry
-                            // If the server selects an (EC)DHE group and the client did not offer a compatible "key_share" extension in the initial
-                            // ClientHello, the server MUST respond with a HelloRetryRequest (Section 4.1.4) message.
-
-                            if (nullptr == pkey_priv || nullptr == pkey_pub) {
-                                ret = errorcode_t::warn_retry;  // HRR
-                                __leave2_trace(ret);
-                            }
-
-                            uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
-                            if (group_enforced) {
-                                // enforcing
-                                auto pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
-                                if (nullptr == pkey_ch) {
-                                    pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
-                                }
-                                if (nullptr == pkey_ch) {
-                                    ret = errorcode_t::warn_retry;
-                                    __leave2_trace(ret);  // HRR
-                                }
-                            }
-
-                            ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
+                            ret = errorcode_t::warn_retry;  // HRR
+                            __leave2_trace(ret);
                         }
-                    } else {
-                        ret = errorcode_t::warn_retry;  // HRR
-                        __leave2_trace(ret);
                     }
 
+                    // RFC 8446 7.1: the early secret is derived from the
+                    // selected PSK, independently of whether 0-RTT was offered
+                    // or accepted. Flow describes the record/transcript path;
+                    // it must not decide whether the handshake uses the PSK.
                     binary_t early_secret;
-                    {
+                    if (0xffff != selected_identity) {
+                        early_secret = get_secrets().get(tls_secret_t::resumption_early);
+                        if (early_secret.empty()) {
+                            ret = errorcode_t::bad_request;
+                            __leave2;
+                        }
+                        get_secrets().assign(tls_secret_t::early_secret, early_secret);
+                    } else {
                         binary_t salt;
                         salt.resize(1);
                         lambda_extract(tls_secret_t::early_secret, early_secret, hashalg, salt, empty_ikm);
                     }
 
                     binary_t secret_handshake_derived;
-                    switch (flow) {
-                        case tls_flow_t::one_rtt:
-                        case tls_flow_t::hello_retry_request: {
-                            lambda_expand_label(tls_secret_t::handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
-                        } break;
-                        case tls_flow_t::zero_rtt: {
-                            const binary_t& secret_resumption_early = get_secrets().get(tls_secret_t::resumption_early);
-                            lambda_expand_label(tls_secret_t::handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived", empty_hash);
-                        } break;
-                        case tls_flow_t::renegotiation: {
-                            // TODO
-                        } break;
-                    }
+                    lambda_expand_label(tls_secret_t::handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
 
                     binary_t secret_handshake;
                     lambda_extract(tls_secret_t::handshake, secret_handshake, hashalg, secret_handshake_derived, shared_secret);
@@ -381,8 +388,15 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                             dbs.println(" > flow %i", static_cast<int>(flow));
                             dbs.println(" > cipher suite 0x%04x (%s)", cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
                             dbs.println(" > hash %s", hashalg);
-                            dbs.println(" > key share group 0x%04x (%s)", static_cast<uint16>(group), tlsadvisor->nameof_group(group).c_str());
-                            dbs.println(" > key exchange private %p public %p", pkey_priv, pkey_pub);
+                            uint16 selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
+                            uint16 selected_psk_mode = t_narrow_cast(session->get_keyvalue().get(session_server_psk_key_exchange_mode));
+                            if (0xffff != selected_identity) {
+                                dbs.println(" > PSK selected identity %u, key exchange mode %s", selected_identity,
+                                            (0 == selected_psk_mode) ? "psk_ke" : ((1 == selected_psk_mode) ? "psk_dhe_ke" : "unknown"));
+                            } else {
+                                auto group = get_protection_context().get0_keyshare_group();
+                                dbs.println(" > key share group 0x%04x", static_cast<uint16>(group));
+                            }
                             dbs.println(" > transcript hash %s", base16_encode(context_hash).c_str());
                             dbs.println(" > resumption_early %s", base16_encode(get_secrets().get(tls_secret_t::resumption_early)).c_str());
                             dbs.println(" > shared secret %s", base16_encode(shared_secret).c_str());

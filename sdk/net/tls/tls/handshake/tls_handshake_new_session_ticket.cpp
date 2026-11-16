@@ -206,6 +206,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
                 ticket_kv.set(session_ticket_lifetime, 0);
                 ticket_kv.set(session_ticket_age_add, 0);
                 ticket_kv.set(session_ticket_timestamp, 0);
+                ticket_kv.set(session_ticket_max_early_data_size, 0);
             }
         } else {
             binary_t resumption_psk;
@@ -215,12 +216,15 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             }
             tls_resumption_ticket ticket;
             ticket.identity = session_ticket;
+            ticket.server_name = session->get_client_server_name();
             ticket.nonce = ticket_nonce;
             ticket.psk = resumption_psk;
             ticket.lifetime = bounded_ticket_lifetime;
             ticket.age_add = ticket_age_add;
             ticket.timestamp = ticket_timestamp_ms;
+            ticket.version = static_cast<uint16>(protection.get_tls_version());
             ticket.cipher_suite = protection.get_cipher_suite();
+            ticket.alpn = secrets.get(tls_secret_t::alpn);
             ticket.max_early_data_size = max_early_data_size;
             session->store_resumption_ticket(ticket);
 
@@ -230,6 +234,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             ticket_kv.set(session_ticket_lifetime, bounded_ticket_lifetime);
             ticket_kv.set(session_ticket_age_add, ticket_age_add);
             ticket_kv.set(session_ticket_timestamp, ticket_timestamp_ms);
+            ticket_kv.set(session_ticket_max_early_data_size, max_early_data_size);
 
             secrets.assign(tls_secret_t::new_session_ticket, session_ticket);
         }
@@ -244,6 +249,14 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
+        // RFC 8446 4.2.9: do not issue a ticket when the client explicitly
+        // advertised no PSK key-exchange mode supported by this implementation.
+        const auto& session_values = session->get_keyvalue();
+        constexpr uint16 supported_psk_modes = 0x03;  // psk_ke | psk_dhe_ke
+        if ((0 != session_values.get(session_client_psk_modes_present)) && (0 == (session_values.get(session_client_psk_modes) & supported_psk_modes))) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
         uint32 ticket_lifetime = 0;
         uint32 ticket_age_add = 0;
         binary_t ticket_nonce;
@@ -311,7 +324,9 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         issued_ticket.lifetime = ticket_lifetime;
         issued_ticket.age_add = ticket_age_add;
         issued_ticket.timestamp = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+        issued_ticket.version = static_cast<uint16>(protection.get_tls_version());
         issued_ticket.cipher_suite = protection.get_cipher_suite();
+        issued_ticket.alpn = secrets.get(tls_secret_t::alpn);
         session->store_resumption_ticket(issued_ticket);
 
         // Publish the compatibility metadata only after the per-ticket PSK

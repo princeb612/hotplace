@@ -87,35 +87,42 @@ return_t tls_handshake_certificate_request::do_read_body(tls_direction_t dir, co
             __leave2;
         }
 
-        uint8 context_len = stream[pos++];
+        binary_t extensions;
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_request_context_len)    //
+               << new payload_member(binary_t(), constexpr_request_context)      //
+               << new payload_member(uint16(0), true, constexpr_extensions_len)  //
+               << new payload_member(binary_t(), constexpr_extensions);          //
+            pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
+            pl.set_reference_value(constexpr_extensions, constexpr_extensions_len);
+
+            ret = pl.read(stream, body_end, pos);
+            if (errorcode_t::success != ret) {
+                fail_decode();
+                __leave2;
+            }
+            pl.get_binary(constexpr_request_context, _request_context);
+            pl.get_binary(constexpr_extensions, extensions);
+        }
+
         // RFC 8446 4.4.2: the context is empty in the main handshake.
         // Post-handshake authentication may use a context; the RFC does not
         // require its length to be non-zero.
         if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_server == dir) && (false == post_handshake_certificate_request) &&
-            (0 != context_len)) {
+            (false == _request_context.empty())) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
             ret = errorcode_t::bad_format;
             __leave2;
         }
-        if (context_len > body_end - pos || body_end - pos - context_len < 2) {
-            fail_decode();
-            __leave2;
-        }
-        _request_context.assign(stream + pos, stream + pos + context_len);
-        pos += context_len;
 
-        uint16 extensions_len = t_binary_to_integer<uint16>(stream + pos, sizeof(uint16));
-        pos += sizeof(uint16);
-        if (extensions_len != body_end - pos) {
-            fail_decode();
-            __leave2;
-        }
-
-        ret = get_extensions().read(this, dir, stream, body_end, pos);
+        size_t extensions_pos = 0;
+        const byte_t* extensions_stream = extensions.empty() ? stream + body_end : extensions.data();
+        ret = get_extensions().read(this, dir, extensions_stream, extensions.size(), extensions_pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        if (pos != body_end) {
+        if ((extensions_pos != extensions.size()) || (pos != body_end)) {
             fail_decode();
             __leave2;
         }

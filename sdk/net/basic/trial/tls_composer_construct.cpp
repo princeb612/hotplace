@@ -263,13 +263,14 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
             // differs from that suite's hash. Clear all server-side
             // resumption state before the full-handshake key schedule.
             tls_flow_t flow = protection.get_flow();
-            if ((tls_flow_t::zero_rtt == flow) || (tls_flow_t::hello_retry_request == flow)) {
+            if (tls_flow_t::zero_rtt == flow) {
                 protection.set_flow(tls_flow_t::one_rtt);
             }
             protection.get_secrets().assign(tls_secret_t::resumption_early, binary_t());
             auto& keyvalue = session->get_keyvalue();
             keyvalue.set(session_server_psk_selected_identity, 0xffff);
             keyvalue.set(session_server_psk_ticket_cipher_suite, 0);
+            keyvalue.set(session_server_psk_key_exchange_mode, 0xffff);
             auto& early_data = session->get_session_info(from_server).get_keyvalue();
             early_data.set(session_early_data_limit, 0);
             early_data.set(session_early_data_received, 0);
@@ -298,25 +299,13 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                 hs->set_cipher_suite(cs);
 
                 if (tlsadvisor->is_kindof_tls13(tlsver)) {
-                    hs->get_extensions()
-                        .add(tls_extension_type_t::supported_versions, dir, hs,
-                             [&](tls_extension* extension) -> return_t {
-                                 (*(tls_extension_server_supported_versions*)extension).set(tlsver);
-                                 return errorcode_t::success;
-                             })
-                        .add(tls_extension_type_t::key_share, dir, hs,  //
-                             [&](tls_extension* extension) -> return_t {
-                                 auto keyshare = (tls_extension_server_key_share*)extension;
-                                 keyshare->clear();
-                                 ret = keyshare->add_keyshare();
-                                 return ret;
-                             });
-                    // tls_extensions::add() owns and discards a failed extension
-                    // callback, but does not return that callback's status.
-                    // Propagate it from the composer builder explicitly.
-                    if (errorcode_t::success != ret) {
-                        return ret;
-                    }
+                    hs->get_extensions().add(tls_extension_type_t::supported_versions, dir, hs, [&](tls_extension* extension) -> return_t {
+                        (*(tls_extension_server_supported_versions*)extension).set(tlsver);
+                        return errorcode_t::success;
+                    });
+
+                    auto& keyvalue = session->get_keyvalue();
+                    keyvalue.set(session_server_psk_key_exchange_mode, 0xffff);
 
                     // A verified PSK offer is acknowledged in the final
                     // ServerHello. Do not put pre_shared_key in the HRR itself;
@@ -324,14 +313,15 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                     bool after_hrr = (session_status_hello_retry_request & session->get_session_status()) != 0;
                     bool psk_selection_pending =
                         (tls_flow_t::zero_rtt == protection.get_flow()) || ((tls_flow_t::hello_retry_request == protection.get_flow()) && after_hrr);
-                    t_narrow_cast_t<uint16> selected_identity(session->get_keyvalue().get(session_server_psk_selected_identity));
-                    uint16 identity_count = t_narrow_cast(session->get_keyvalue().get(session_client_psk_identity_count));
+                    t_narrow_cast_t<uint16> selected_identity(keyvalue.get(session_server_psk_selected_identity));
+                    uint16 identity_count = t_narrow_cast(keyvalue.get(session_client_psk_identity_count));
+                    bool psk_ke_selected = false;
                     if (psk_selection_pending && (0xffff != selected_identity)) {
                         if ((0 == identity_count) || (selected_identity >= identity_count)) {
                             return errorcode_t::handshake_failure;
                         }
 
-                        uint16 ticket_cipher_suite = t_narrow_cast(session->get_keyvalue().get(session_server_psk_ticket_cipher_suite));
+                        uint16 ticket_cipher_suite = t_narrow_cast(keyvalue.get(session_server_psk_ticket_cipher_suite));
                         const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
                         const tls_cipher_suite_t* negotiated_suite = tlsadvisor->hintof_cipher_suite(cs);
                         if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls_13 != negotiated_suite->spec) ||
@@ -342,12 +332,48 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                             decline_psk();
                         }
 
-                        t_narrow_cast_t<uint16> current_selected_identity(session->get_keyvalue().get(session_server_psk_selected_identity));
+                        t_narrow_cast_t<uint16> current_selected_identity(keyvalue.get(session_server_psk_selected_identity));
                         if (0xffff != current_selected_identity) {
-                            hs->get_extensions().add(tls_extension_type_t::pre_shared_key, dir, hs, [selected_identity](tls_extension* extension) -> return_t {
-                                static_cast<tls_extension_server_psk*>(extension)->set_selected_identity(selected_identity);
-                                return errorcode_t::success;
-                            });
+                            uint8 offered_modes = t_narrow_cast(keyvalue.get(session_client_psk_modes));
+                            bool offered_psk_ke = (0 != (offered_modes & (1u << 0)));
+                            bool offered_psk_dhe_ke = (0 != (offered_modes & (1u << 1)));
+                            bool has_client_key_share = (tls_group_t::unknown != protection.get_protection_context().get0_keyshare_group());
+
+                            // Prefer psk_dhe_ke when a compatible ClientHello share is available.
+                            // Otherwise use psk_ke only when the client explicitly offered it.
+                            if (offered_psk_dhe_ke && has_client_key_share) {
+                                keyvalue.set(session_server_psk_key_exchange_mode, 1);
+                            } else if (offered_psk_ke) {
+                                psk_ke_selected = true;
+                                keyvalue.set(session_server_psk_key_exchange_mode, 0);
+                            } else {
+                                decline_psk();
+                            }
+
+                            current_selected_identity = t_narrow_cast_t<uint16>(keyvalue.get(session_server_psk_selected_identity));
+                            if (0xffff != current_selected_identity) {
+                                hs->get_extensions().add(tls_extension_type_t::pre_shared_key, dir, hs, [selected_identity](tls_extension* extension) -> return_t {
+                                    static_cast<tls_extension_server_psk*>(extension)->set_selected_identity(selected_identity);
+                                    return errorcode_t::success;
+                                });
+                            }
+                        }
+                    }
+
+                    // psk_ke has no (EC)DHE input and MUST NOT carry ServerHello key_share.
+                    // A full handshake or psk_dhe_ke continues through the key-share writer.
+                    if (!psk_ke_selected) {
+                        hs->get_extensions().add(tls_extension_type_t::key_share, dir, hs, [&](tls_extension* extension) -> return_t {
+                            auto keyshare = (tls_extension_server_key_share*)extension;
+                            keyshare->clear();
+                            ret = keyshare->add_keyshare();
+                            return ret;
+                        });
+                        // tls_extensions::add() owns and discards a failed extension
+                        // callback, but does not return that callback's status.
+                        // Propagate it from the composer builder explicitly.
+                        if (errorcode_t::success != ret) {
+                            return ret;
                         }
                     }
                 } else {

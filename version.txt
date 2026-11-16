@@ -1,5 +1,8 @@
+# RFC MUST / MUST NOT requirements
+# 1.150 -> 1.151 -> 1.151.x
 # working git tag
 set (VERSION_MAJOR 1)
 set (VERSION_MINOR 151)
+set (VERSION_PATCH 1)
 # working svn revision
-set (VERSION_BUILD 1131)
+set (VERSION_BUILD 1132)

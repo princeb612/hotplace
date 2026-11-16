@@ -226,7 +226,10 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
             clear();
             group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
             t_enum_type<tls_group_t> etgroup(group);
-            add(etgroup);
+            ret = add(etgroup);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
 
         auto& tlskey = protection.get_key();

@@ -93,6 +93,17 @@ return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t s
             ret = errorcode_t::bad_format;
             __leave2;
         }
+        // RFC 8446 4.2.9: psk_key_exchange_modes is a ClientHello-only
+        // client extension. A peer must not send it in any other message.
+        if ((tls_extension_type_t::psk_key_exchange_modes == _type) &&
+            ((nullptr == _hs) || (tls_handshake_type_t::client_hello != _hs->get_type()) || (from_client != dir))) {
+            if (_hs && _hs->get_session()) {
+                _hs->get_session()->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                _hs->get_session()->reset_session_status();
+            }
+            ret = errorcode_t::bad_format;
+            __leave2;
+        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -129,6 +140,13 @@ return_t tls_extension::write(tls_direction_t dir, binary_t& bin) {
 
     __try2 {
         if ((tls_extension_type_t::post_handshake_auth == _type) &&
+            ((nullptr == _hs) || (tls_handshake_type_t::client_hello != _hs->get_type()) || (from_client != dir))) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        // psk_key_exchange_modes may only be serialized by the client
+        // in ClientHello; in particular, a server MUST NOT send it.
+        if ((tls_extension_type_t::psk_key_exchange_modes == _type) &&
             ((nullptr == _hs) || (tls_handshake_type_t::client_hello != _hs->get_type()) || (from_client != dir))) {
             ret = errorcode_t::invalid_parameter;
             __leave2;

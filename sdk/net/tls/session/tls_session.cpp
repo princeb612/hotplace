@@ -8,7 +8,9 @@
  * Date         Name                Description
  */
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
@@ -161,6 +163,43 @@ void tls_session::set_offered_resumption_tickets(const std::vector<tls_resumptio
 std::vector<tls_resumption_ticket> tls_session::get_offered_resumption_tickets() {
     critical_section_guard guard(_lock);
     return _offered_resumption_tickets;
+}
+
+void tls_session::set_early_data_ticket(const tls_resumption_ticket& ticket) {
+    critical_section_guard guard(_lock);
+    _early_data_ticket = ticket;
+}
+
+tls_resumption_ticket tls_session::get_early_data_ticket() {
+    critical_section_guard guard(_lock);
+    return _early_data_ticket;
+}
+
+void tls_session::clear_early_data_ticket() {
+    critical_section_guard guard(_lock);
+    _early_data_ticket = tls_resumption_ticket();
+}
+
+void tls_session::set_early_data_discard_limit(uint64 limit) {
+    critical_section_guard guard(_lock);
+    _early_data_discard_limit = limit;
+}
+
+uint64 tls_session::get_early_data_discard_limit() {
+    critical_section_guard guard(_lock);
+    return _early_data_discard_limit;
+}
+
+void tls_session::set_client_server_name(const binary_t& server_name) {
+    binary_t normalized = server_name;
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](byte_t value) { return static_cast<byte_t>(std::tolower(value)); });
+    critical_section_guard guard(_lock);
+    _client_server_name = std::move(normalized);
+}
+
+binary_t tls_session::get_client_server_name() {
+    critical_section_guard guard(_lock);
+    return _client_server_name;
 }
 
 return_t tls_session::generate_ticket_nonce(binary_t& nonce) {

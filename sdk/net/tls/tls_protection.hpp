@@ -267,6 +267,11 @@ class HOTPLACE_NET_API tls_protection {
     // stream include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                      protection_space_t space = protection_space_t::tls);
+    // Trial decryption is used only when rejecting TLS 1.3 early data. Authentication
+    // failure is returned without queuing bad_record_mac; the caller restores the
+    // record sequence number before discarding the rejected record.
+    return_t decrypt_trial(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+                           protection_space_t space = protection_space_t::tls);
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad,
                      protection_space_t space = protection_space_t::tls);
     // stream do not include a tag
@@ -316,13 +321,13 @@ class HOTPLACE_NET_API tls_protection {
      *          stream include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                          protection_space_t space = protection_space_t::tls);
+                          protection_space_t space = protection_space_t::tls, bool suppress_alert = false);
     /**
      * @brief   decrypt
      * @remarks stream do not include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                          const binary_t& tag, protection_space_t space = protection_space_t::tls);
+                          const binary_t& tag, protection_space_t space = protection_space_t::tls, bool suppress_alert = false);
     /**
      * @brief   TLS 1 decrypt
      */

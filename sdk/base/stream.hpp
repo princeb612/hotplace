@@ -41,6 +41,29 @@ class stream_t {
     virtual return_t vprintf(const char* buf, va_list ap) = 0;
     virtual void autoindent(uint8 indent) = 0;
     virtual void resize(size_t size) = 0;
+
+    // Reserve writable storage and report failure before callers write through the returned pointer.
+    virtual return_t reserve(size_t size_reserve, byte_t** output) {
+        if (nullptr == output) {
+            return errorcode_t::invalid_parameter;
+        }
+        *output = nullptr;
+        size_t pos = static_cast<size_t>(size());
+        if (size_reserve > static_cast<size_t>(-1) - pos) {
+            return errorcode_t::overflow;
+        }
+        size_t required = pos + size_reserve;
+        resize(required);
+        if (size() < required) {
+            return errorcode_t::overflow;
+        }
+        byte_t* base = data();
+        if ((nullptr == base) && (required > 0)) {
+            return errorcode_t::internal_error;
+        }
+        *output = (nullptr == base) ? nullptr : base + pos;
+        return errorcode_t::success;
+    }
 };
 
 }  // namespace hotplace

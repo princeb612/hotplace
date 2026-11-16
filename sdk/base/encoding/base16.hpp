@@ -40,13 +40,17 @@ return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 f
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
-    ret = lowlevel::base16_encode(source, size, nullptr, &size_reserve, flags);         // required size
-    if (errorcode_t::insufficient_buffer == ret) {                                      // how many size required
-        value_type* buf = traits::reserve(streambuf, size_reserve);                     // reserve
-        size_t size_written = size_reserve;                                             //
-        ret = lowlevel::base16_encode(source, size, (char*)buf, &size_written, flags);  // encode
-        if (errorcode_t::success == ret) {                                              //
-            traits::commit(streambuf, size_reserve, size_written);                      // shrink
+    ret = lowlevel::base16_encode(source, size, nullptr, &size_reserve, flags);  // required size
+    if (errorcode_t::insufficient_buffer == ret) {                               // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);              // reserve
+        if (nullptr == buf) {
+            ret = errorcode_t::overflow;
+        } else {
+            size_t size_written = size_reserve;                                             //
+            ret = lowlevel::base16_encode(source, size, (char*)buf, &size_written, flags);  // encode
+            if (errorcode_t::success == ret) {                                              //
+                traits::commit(streambuf, size_reserve, size_written);                      // shrink
+            }
         }
     }
     return ret;
@@ -73,13 +77,17 @@ return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 fla
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
-    ret = lowlevel::base16_decode(source, size, nullptr, &size_reserve);           // required size
-    if (errorcode_t::insufficient_buffer == ret) {                                 // how many size required
-        value_type* buf = traits::reserve(streambuf, size_reserve);                // reserve
-        size_t size_written = size_reserve;                                        //
-        ret = lowlevel::base16_decode(source, size, (byte_t*)buf, &size_written);  // decode
-        if (errorcode_t::success == ret) {                                         //
-            traits::commit(streambuf, size_reserve, size_written);                 // shrink
+    ret = lowlevel::base16_decode(source, size, nullptr, &size_reserve);  // required size
+    if (errorcode_t::insufficient_buffer == ret) {                        // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);       // reserve
+        if (nullptr == buf) {
+            ret = errorcode_t::overflow;
+        } else {
+            size_t size_written = size_reserve;                                        //
+            ret = lowlevel::base16_decode(source, size, (byte_t*)buf, &size_written);  // decode
+            if (errorcode_t::success == ret) {                                         //
+                traits::commit(streambuf, size_reserve, size_written);                 // shrink
+            }
         }
     }
     return ret;

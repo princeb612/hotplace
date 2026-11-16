@@ -95,6 +95,26 @@ static void test_tls13_certificate_verify_signature_failure() {
     }
 
     const tls_sigscheme_t expected_scheme = tls_sigscheme_t::rsa_pss_rsae_sha256;
+
+    // No peer signature_algorithms offer means the local endpoint cannot
+    // select a CertificateVerify scheme. The fatal alert must be reflected
+    // by a severe handshake_failure return code, not warning not_supported.
+    tls_session unsupported_signer;
+    unsupported_signer.get_tls_protection().set_tls_version(tls_13);
+    unsupported_signer.get_tls_protection().get_key().add(pkey, KID_TLS_SERVER_CERTIFICATE_PRIVATE, crypto_use_t::use_sig, true);
+    testable_tls_handshake_certificate_verify unsupported_handshake(&unsupported_signer);
+    binary_t unsupported_body;
+    return_t unsupported_ret = unsupported_handshake.write_for_test(from_server, unsupported_body);
+    _test_case.assert(errorcode_t::handshake_failure == unsupported_ret, __FUNCTION__, "map unsupported CertificateVerify signing to severe handshake_failure");
+    std::set<tls_alertdesc_t> unsupported_alerts;
+    unsupported_signer.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            unsupported_alerts.insert(desc);
+        }
+    });
+    _test_case.assert(unsupported_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::handshake_failure}, __FUNCTION__,
+                      "queue exactly fatal handshake_failure when no signing scheme is selectable");
+
     tls_session signer;
     signer.get_tls_protection().set_tls_version(tls_13);
     signer.get_tls_protection().get_protection_context().add_signature_algorithm(expected_scheme);

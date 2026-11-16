@@ -168,7 +168,7 @@ return_t basic_stream::printf(const char* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = bufferio::vprintf(_handle, buf, ap);
+        ret = vprintf(buf, ap);
         va_end(ap);
     }
     __finally2 {}
@@ -188,10 +188,10 @@ return_t basic_stream::println(const char* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = bufferio::vprintf(_handle, buf, ap);
+        ret = vprintf(buf, ap);
         va_end(ap);
 
-        bufferio::write(_handle, "\n", 1);
+        write("\n", 1);
     }
     __finally2 {}
     return ret;
@@ -209,7 +209,7 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = bufferio::vprintf(_handle, buf, ap);
+        ret = vwprintf(buf, ap);
         va_end(ap);
     }
     __finally2 {}
@@ -229,10 +229,10 @@ return_t basic_stream::println(const wchar_t* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = bufferio::vprintf(_handle, buf, ap);
+        ret = vwprintf(buf, ap);
         va_end(ap);
 
-        bufferio::write(_handle, L"\n", 2);
+        write(L"\n", 2);
     }
     __finally2 {}
     return ret;
@@ -243,7 +243,7 @@ return_t basic_stream::vaprintf(const char* fmt, valist ap) { return sprintf(thi
 
 return_t basic_stream::vaprintln(const char* fmt, valist ap) {
     auto rc = sprintf(this, fmt, ap);
-    bufferio::write(_handle, "\n", 1);
+    write("\n", 1);
     return rc;
 }
 

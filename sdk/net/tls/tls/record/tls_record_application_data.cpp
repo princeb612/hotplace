@@ -102,12 +102,29 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
     if (tls_flow_t::one_rtt == flow) {
         if (protection.is_kindof_tls13()) {
             session_status_prerequisite = session_status_server_hello;
+            if ((from_client == dir) &&
+                ((0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_offered_initial)) ||
+                 (0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_offered))) &&
+                (0 == session->get_session_info(from_server).get_keyvalue().get(session_early_data_accepted)) && (0 == (session_status_server_hello & session_status))) {
+                // Rejected 0-RTT records can arrive before ServerHello. Allow
+                // the trial-decryption path to discard them while no handshake
+                // traffic keys are available yet.
+                session_status_prerequisite = session_status_client_hello;
+            }
         } else {
             session_status_prerequisite = session_status_server_finished;
         }
     } else if (tls_flow_t::zero_rtt == flow) {
-        // RTF 8448 RFC 8448 4.  Resumed 0-RTT Handshake
+        // RFC 8448 4.  Resumed 0-RTT Handshake
         session_status_prerequisite = session_status_client_hello;
+    } else if ((tls_flow_t::hello_retry_request == flow) && (from_client == dir)) {
+        const auto& early_state = session->get_session_info(from_server).get_keyvalue();
+        if (((0 != early_state.get(session_early_data_offered_initial)) || (0 != early_state.get(session_early_data_offered))) &&
+            (0 == early_state.get(session_early_data_accepted))) {
+            // RFC 9846 4.3.10: after HRR the server skips any already-in-flight
+            // 0-RTT records before processing ClientHello2.
+            session_status_prerequisite = session_status_hello_retry_request;
+        }
     }
     if (0 == (session_status_prerequisite & session_status)) {
         session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
@@ -153,8 +170,89 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
          *     application_data (application_data)
          */
 
+        auto& early_state = session->get_session_info(from_server).get_keyvalue();
+        auto discard_rejected_early_data = [&]() -> return_t {
+            constexpr uint64 max_tls13_ciphertext_record_size = (1u << 14) + 256;
+            constexpr uint64 max_rejected_early_data_records = 64;
+            constexpr uint64 max_rejected_early_data_ciphertext = max_tls13_ciphertext_record_size * max_rejected_early_data_records;
+            uint64 discarded = early_state.get(session_early_data_discarded);
+            uint64 discard_limit = early_state.get(session_early_data_discard_limit);
+            uint64 discarded_records = early_state.get(session_early_data_discarded_records);
+            // Count encrypted record fragments, not outer TLS headers. The
+            // ticket's max_early_data_size is a plaintext limit, so rejected
+            // ciphertext uses a separate byte budget plus record-count ceiling.
+            uint64 ciphertext_size = get_body_size();
+            if ((0 == discard_limit) || (discarded_records >= max_rejected_early_data_records) || (0 == ciphertext_size) ||
+                (ciphertext_size > max_tls13_ciphertext_record_size) || (discarded > max_rejected_early_data_ciphertext) ||
+                (ciphertext_size > max_rejected_early_data_ciphertext - discarded)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                session->reset_session_status();
+                return errorcode_t::overflow;
+            }
+            discard_limit = (discard_limit > max_rejected_early_data_ciphertext) ? max_rejected_early_data_ciphertext : discard_limit;
+            if ((discarded > discard_limit) || (ciphertext_size > discard_limit - discarded)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                session->reset_session_status();
+                return errorcode_t::overflow;
+            }
+            early_state.set(session_early_data_discarded, discarded + ciphertext_size);
+            early_state.set(session_early_data_discarded_records, discarded_records + 1);
+            _bin.clear();
+            return errorcode_t::success;
+        };
+
+        bool trial_decrypt_rejected_early_data = false;
+        if (protection.is_kindof_tls13() && (from_client == dir) &&
+            ((0 != early_state.get(session_early_data_offered_initial)) || (0 != early_state.get(session_early_data_offered))) &&
+            (0 == early_state.get(session_early_data_accepted))) {
+            auto flow = protection.get_flow();
+            uint16 selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
+            uint64 early_data_limit = early_state.get(session_early_data_limit);
+            uint32 session_status = session->get_session_status();
+            bool client_finished = (0 != (session_status_client_finished & session_status));
+
+            if (tls_flow_t::hello_retry_request == flow) {
+                // RFC 9846 4.3.10: HRR rejects 0-RTT; skip in-flight records
+                // with an external application_data content type.
+                ret = discard_rejected_early_data();
+                if (errorcode_t::success == ret) {
+                    __leave2;
+                }
+                __leave2_trace(ret);
+            }
+            if ((tls_flow_t::zero_rtt == flow) && ((0 != selected_identity) || (0 == early_data_limit))) {
+                // The server did not select identity zero or the ticket did
+                // not permit early data. These records cannot be authenticated
+                // with the selected PSK's early traffic secret.
+                ret = discard_rejected_early_data();
+                if (errorcode_t::success == ret) {
+                    __leave2;
+                }
+                __leave2_trace(ret);
+            }
+            if ((tls_flow_t::one_rtt == flow) && (false == client_finished)) {
+                // RFC 9846 4.3.10: after rejecting 0-RTT, trial-decrypt with
+                // handshake traffic keys. Failed records are discarded; the
+                // first successful record begins the client's second flight.
+                trial_decrypt_rejected_early_data = true;
+            }
+        }
+
         auto limit = recpos + get_record_size();
-        ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
+        if (trial_decrypt_rejected_early_data) {
+            uint64 record_no = session->get_session_info(dir).get_recordno(false);
+            ret = protection.decrypt_trial(session, dir, stream, limit, recpos, plaintext);
+            if ((errorcode_t::success != ret) && (errorcode_t::overflow != ret)) {
+                session->get_session_info(dir).set_recordno(record_no);
+                ret = discard_rejected_early_data();
+                if (errorcode_t::success == ret) {
+                    __leave2;
+                }
+                __leave2_trace(ret);
+            }
+        } else {
+            ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
+        }
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
             ret = validate_record_size_limit(dir, plainsize);
@@ -214,16 +312,18 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     if ((tls_flow_t::zero_rtt == flow) && (from_client == dir)) {
                         auto& early_state = session->get_session_info(from_server).get_keyvalue();
                         if (0 == early_state.get(session_early_data_finished)) {
-                            // Before EndOfEarlyData (or the client's Finished
-                            // when 0-RTT was rejected), client application data
-                            // is early data and is subject to the ticket limit.
+                            // Before EndOfEarlyData, client application_data
+                            // records remain 0-RTT and are subject to the ticket limit.
                             auto selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
                             uint64 early_data_limit = early_state.get(session_early_data_limit);
-                            bool early_data_accepted =
-                                (0 != early_state.get(session_early_data_offered)) && (0 == static_cast<uint16>(selected_identity)) && (0 != early_data_limit);
-                            if (!early_data_accepted) {
-                                _bin.clear();
-                                __leave2;
+                            bool early_data_accepted = (0 != early_state.get(session_early_data_offered)) && (0 != early_state.get(session_early_data_accepted)) &&
+                                                       (0 == static_cast<uint16>(selected_identity)) && (0 != early_data_limit);
+                            if ((false == early_data_accepted)) {
+                                ret = discard_rejected_early_data();
+                                if (errorcode_t::success == ret) {
+                                    __leave2;
+                                }
+                                __leave2_trace(ret);
                             }
 
                             uint64 early_data_received = early_state.get(session_early_data_received);
@@ -344,17 +444,39 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
         };
         ret = records.for_each(lambda);
     } else if (get_binary().size()) {
-        // RFC 8446 2.  Protocol Overview
-        // Application Data MUST NOT be sent prior to sending the Finished message
         auto session = get_session();
         auto hsstatus = session->get_session_info(dir).get_status();
-        if (tls_handshake_type_t::finished == hsstatus) {
+        auto flow = protection.get_flow();
+        if (is_tls13 && (from_client == dir) && (tls_flow_t::zero_rtt == flow)) {
+            // Client 0-RTT application data is protected with the early traffic
+            // secret and is bounded by identity zero's NewSessionTicket limit.
+            auto& early_state = session->get_session_info(from_server).get_keyvalue();
+            uint64 early_data_limit = early_state.get(session_early_data_limit);
+            uint64 early_data_sent = early_state.get(session_early_data_sent);
+            bool can_send_early_data = (0 != early_state.get(session_early_data_offered)) && (0 != early_data_limit) && (tls_handshake_type_t::client_hello == hsstatus);
+            if ((false == can_send_early_data)) {
+                ret = errorcode_t::bad_request;
+            } else if ((early_data_sent > early_data_limit) || (_bin.size() > early_data_limit - early_data_sent)) {
+                ret = errorcode_t::overflow;
+            } else {
+                binary_append(bin, _bin);
+                binary_append(bin, uint8(tls_content_type_t::application_data));
+                early_state.set(session_early_data_sent, early_data_sent + _bin.size());
+                _bin.clear();
+            }
+        } else if (tls_handshake_type_t::finished == hsstatus) {
+            // Ordinary application data is not sent until this endpoint has
+            // sent Finished.
             binary_append(bin, _bin);
             if (is_tls13) {
                 // TLSInnerPlaintext carries the inner content type after application data.
                 binary_append(bin, uint8(tls_content_type_t::application_data));
             }
             _bin.clear();
+        } else if (is_tls13) {
+            // Do not silently consume application data when 0-RTT was
+            // rejected or the endpoint has not sent Finished yet.
+            ret = errorcode_t::bad_request;
         }
     }
     return ret;

@@ -13,6 +13,8 @@ return_t testable_tls_handshake_certificate_verify::sign_for_test(const EVP_PKEY
     return sign_certverify(pkey, dir, scheme, signature);
 }
 
+return_t testable_tls_handshake_certificate_verify::write_for_test(tls_direction_t dir, binary_t& body) { return do_write_body(dir, body); }
+
 return_t testable_tls_handshake_certificate_verify::verify_for_test(const EVP_PKEY* pkey, tls_direction_t dir, tls_sigscheme_t scheme, const binary_t& signature) {
     return verify_certverify(pkey, dir, scheme, signature);
 }
@@ -38,6 +40,12 @@ return_t test_tls13_server_hello_postprocess_probe::postprocess_read() {
     // leaves the encoded ServerHello body empty.
     byte_t stream[4] = {0, 0, 0, 0};
     return do_postprocess(from_server, tls_io_operation_t::read, stream, sizeof(stream));
+}
+
+return_t test_tls13_server_hello_postprocess_probe::postprocess_write() {
+    // The same minimal buffer is sufficient for the synthetic HRR postprocess probe.
+    byte_t stream[4] = {0, 0, 0, 0};
+    return do_postprocess(from_server, tls_io_operation_t::write, stream, sizeof(stream));
 }
 
 test_tls13_server_hello_writer_probe::test_tls13_server_hello_writer_probe(tls_session* session) : tls_handshake_server_hello(session), _postprocessed(false) {}

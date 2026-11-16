@@ -52,8 +52,8 @@ class HOTPLACE_BASE_API basic_stream : public stream_t {
      */
     basic_stream(const basic_stream& other);
     basic_stream(basic_stream&& other) noexcept;
-    basic_stream& operator=(const basic_stream& other);
-    basic_stream& operator=(basic_stream&& other) noexcept;
+    virtual basic_stream& operator=(const basic_stream& other);
+    virtual basic_stream& operator=(basic_stream&& other) noexcept;
     /**
      * @brief   destructor
      */
@@ -80,7 +80,7 @@ class HOTPLACE_BASE_API basic_stream : public stream_t {
      */
     virtual return_t write(const void* data, size_t size);
     return_t cut(size_t begin_pos, size_t length);
-    return_t insert(size_t begin, const void* data, size_t data_size);
+    virtual return_t insert(size_t begin, const void* data, size_t data_size);
     /**
      * @brief   fill
      * @param   size_t l [in]
@@ -107,7 +107,7 @@ class HOTPLACE_BASE_API basic_stream : public stream_t {
     return_t println(const char* buf, ...);
 #if defined _WIN32 || defined _WIN64
     virtual return_t printf(const wchar_t* buf, ...);
-    return_t vwprintf(const wchar_t* buf, va_list ap);
+    virtual return_t vwprintf(const wchar_t* buf, va_list ap);
     return_t println(const wchar_t* buf, ...);
 #endif
 
@@ -253,9 +253,8 @@ struct encoder_stream_traits<basic_stream> {
     static constexpr bool value = true;
     static void trunc(basic_stream& buf) { buf.resize(0); }
     static value_type* reserve(basic_stream& buf, size_t size_reserve) {
-        size_t pos = buf.size();
-        buf.resize(pos + size_reserve);
-        return buf.data() + pos;
+        byte_t* output = nullptr;
+        return (errorcode_t::success == buf.reserve(size_reserve, &output)) ? output : nullptr;
     }
     static void commit(basic_stream& buf, size_t size_reserve, size_t size_written) {
         if (size_written < size_reserve) {

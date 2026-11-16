@@ -31,15 +31,18 @@ namespace net {
 
 struct tls_resumption_ticket {
     binary_t identity;
+    binary_t server_name;  // SNI associated with this cached PSK
+    binary_t alpn;         // negotiated ALPN associated with this cached PSK
     binary_t nonce;
     binary_t psk;
     uint32 lifetime;
     uint32 age_add;
     uint64 timestamp;
+    uint16 version;
     uint16 cipher_suite;
     uint32 max_early_data_size;
 
-    tls_resumption_ticket() : lifetime(0), age_add(0), timestamp(0), cipher_suite(0), max_early_data_size(0) {}
+    tls_resumption_ticket() : lifetime(0), age_add(0), timestamp(0), version(0), cipher_suite(0), max_early_data_size(0) {}
 };
 
 enum session_type_t {
@@ -59,21 +62,27 @@ enum session_alert_flag_t : uint8 {
  */
 enum sessioninfo_conf_t : uint8 {
     // uint64, session->get_session_info(dir).get_keyvalue()
-    session_dtls_epoch = 1,              // record epoch
-    session_dtls_seq = 2,                // record sequence
-    session_dtls_message_seq = 3,        // handshake sequence
-    session_ticket_lifetime = 4,         // RFC 8446 4.6.1. uint32
-    session_ticket_age_add = 5,          // RFC 8446 4.6.1. uint32
-    session_ticket_timestamp = 6,        // RFC 8446 4.2.11. see obfuscated_ticket_age
-    session_key_share_group = 7,         // key share group (tls_extension_key_share)
-    session_hrr = 8,                     // HRR (tls_extension_key_share case pubkeylen == 0)
-    session_record_size_limit = 9,       // RFC 8449: receive limit advertised by this endpoint
-    session_tls13_key_usage_bytes = 10,  // RFC 9846 5.5: plaintext encrypted with the current directional traffic key
-    session_early_data_limit = 11,       // RFC 8446 4.2.10: selected ticket's max_early_data_size
-    session_early_data_received = 12,    // RFC 8446 4.2.10: client early-data bytes received on this connection
-    session_early_data_offered = 13,     // RFC 8446 4.2.10: early_data was present in ClientHello
-    session_early_data_finished = 14,    // Client early-data phase ended (EndOfEarlyData or client Finished)
-    session_early_data_accepted = 15,    // RFC 8446: server accepted early data in EncryptedExtensions
+    session_dtls_epoch = 1,                     // record epoch
+    session_dtls_seq = 2,                       // record sequence
+    session_dtls_message_seq = 3,               // handshake sequence
+    session_ticket_lifetime = 4,                // RFC 8446 4.6.1. uint32
+    session_ticket_age_add = 5,                 // RFC 8446 4.6.1. uint32
+    session_ticket_timestamp = 6,               // RFC 8446 4.2.11. see obfuscated_ticket_age
+    session_key_share_group = 7,                // key share group (tls_extension_key_share)
+    session_hrr = 8,                            // HRR (tls_extension_key_share case pubkeylen == 0)
+    session_record_size_limit = 9,              // RFC 8449: receive limit advertised by this endpoint
+    session_tls13_key_usage_bytes = 10,         // RFC 9846 5.5: plaintext encrypted with the current directional traffic key
+    session_early_data_limit = 11,              // RFC 8446 4.2.10: selected ticket's max_early_data_size
+    session_early_data_received = 12,           // RFC 8446 4.2.10: client early-data bytes received on this connection
+    session_early_data_offered = 13,            // RFC 8446 4.2.10: early_data was present in ClientHello
+    session_early_data_finished = 14,           // Client early-data phase ended (EndOfEarlyData or client Finished)
+    session_early_data_accepted = 15,           // RFC 8446: server accepted early data in EncryptedExtensions
+    session_early_data_sent = 16,               // RFC 8446: client early-data bytes sent on this connection
+    session_early_data_discard_limit = 17,      // RFC 8446: server rejection-skip byte limit
+    session_early_data_discarded = 18,          // RFC 8446: rejected early-data ciphertext bytes skipped
+    session_early_data_offered_initial = 19,    // RFC 9846: ClientHello1 offered early_data; retain through HRR
+    session_ticket_max_early_data_size = 20,    // RFC 8446: max_early_data_size from the legacy latest-ticket view
+    session_early_data_discarded_records = 21,  // Local limit: rejected early-data TLS records skipped
 };
 enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()
@@ -94,6 +103,7 @@ enum session_conf_t : uint16 {
     session_client_psk_hash = 0x200A,                 // RFC 8446 4.2.11: hash associated with the offered PSK binder
     session_server_psk_selected_identity = 0x200B,    // RFC 8446 4.2.11: identity selected by the server
     session_server_psk_ticket_cipher_suite = 0x200C,  // RFC 8446 4.6.1: cipher suite that established the selected ticket PSK
+    session_server_psk_key_exchange_mode = 0x200D,    // RFC 8446 4.2.9: selected psk_ke (0) or psk_dhe_ke (1) mode
     // debug
     session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
 };
@@ -133,6 +143,19 @@ class HOTPLACE_NET_API tls_session {
     void remove_resumption_ticket(const binary_t& identity);
     void set_offered_resumption_tickets(const std::vector<tls_resumption_ticket>& tickets);
     std::vector<tls_resumption_ticket> get_offered_resumption_tickets();
+    void set_early_data_ticket(const tls_resumption_ticket& ticket);
+    tls_resumption_ticket get_early_data_ticket();
+    void clear_early_data_ticket();
+    /**
+     * Configure the maximum ciphertext bytes to skip while rejecting 0-RTT.
+     * The default is 1 MiB; set this on the server before parsing ClientHello.
+     * Zero disables rejected-record skipping. The independent 64-record and
+     * TLSCiphertext per-record limits still apply.
+     */
+    void set_early_data_discard_limit(uint64 limit);
+    uint64 get_early_data_discard_limit();
+    void set_client_server_name(const binary_t& server_name);
+    binary_t get_client_server_name();
 
     void update_session_status(session_status_t status);
     void clear_session_status(uint32 status);
@@ -249,6 +272,9 @@ class HOTPLACE_NET_API tls_session {
     uint32 _status;
     std::vector<tls_resumption_ticket> _resumption_tickets;
     std::vector<tls_resumption_ticket> _offered_resumption_tickets;
+    tls_resumption_ticket _early_data_ticket;
+    uint64 _early_data_discard_limit = 1024 * 1024;
+    binary_t _client_server_name;
     semaphore _sem;  // _status related
 
     t_key_value<uint16, uint16> _kv;  // session_conf_t

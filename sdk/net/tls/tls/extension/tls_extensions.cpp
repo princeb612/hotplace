@@ -11,11 +11,13 @@
 #include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extensions.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
+#include <set>
 
 namespace hotplace {
 namespace net {
@@ -36,6 +38,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
         //  ...
 
         tls_extension_builder builder;
+        std::set<uint16> seen_extension_types;
         while (pos < size) {
             if (pos + 4 > size) {
                 ret = errorcode_t::no_more;
@@ -43,6 +46,17 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
             }
 
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
+            if (false == seen_extension_types.insert(extension_type).second) {
+                // RFC 9846 4.3: an extension block MUST NOT contain more
+                // than one extension of the same type. Reject before parsing
+                // the duplicate so it cannot overwrite state established by
+                // the first extension (notably PSK and early-data state).
+                auto session = handshake->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                break;
+            }
             t_enum_type<tls_extension_type_t> etextension_type(extension_type);
             auto extension = builder.set(handshake).set(dir).set(etextension_type).build();
             if (extension) {
@@ -53,6 +67,19 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
                     (ntoh16(*(uint16*)(stream + pos + 2)) != size - pos - 4)) {
                     auto session = handshake->get_session();
                     session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    extension->release();
+                    break;
+                }
+                // RFC 8446 4.2.9: the server must reject a PSK offer
+                // without psk_key_exchange_modes before parsing/verifying
+                // its binder. At this point all preceding ClientHello
+                // extensions have been parsed and added to the collection.
+                if ((from_client == dir) && (tls_handshake_type_t::client_hello == handshake->get_type()) && (tls_extension_type_t::pre_shared_key == etextension_type) &&
+                    (nullptr == handshake->get_extensions().get(tls_extension_type_t::psk_key_exchange_modes))) {
+                    auto session = handshake->get_session();
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
                     session->reset_session_status();
                     ret = errorcode_t::handshake_failure;
                     extension->release();
@@ -98,15 +125,18 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     // the handshake with an "illegal_parameter" alert.
     _extensions.move_to_back(tls_extension_type_t::pre_shared_key, [](tls_extension* ext) -> tls_extension_type_t { return ext->get_type(); });
 
-    auto lambda = [&dir, &bin](tls_extension* extension) -> return_t {
+    auto lambda = [this, &dir, &bin](tls_extension* extension) -> return_t {
         // A ClientHello without a usable resumption ticket must not carry
         // either pre_shared_key or early_data. In particular, do not serialize
         // a stale PSK extension after ClientHello preprocessing selected one_rtt.
         auto handshake = extension->get_handshake();
-        if ((from_client == dir) && handshake && (tls_handshake_type_t::client_hello == handshake->get_type())) {
-            auto flow = handshake->get_session()->get_tls_protection().get_flow();
+        if ((from_client == dir) && (nullptr != handshake) && (tls_handshake_type_t::client_hello == handshake->get_type())) {
+            auto session = handshake->get_session();
+            auto flow = session->get_tls_protection().get_flow();
+            const auto& early_state = session->get_session_info(from_server).get_keyvalue();
             if (((tls_extension_type_t::pre_shared_key == extension->get_type()) && (tls_flow_t::one_rtt == flow)) ||
-                ((tls_extension_type_t::early_data == extension->get_type()) && (tls_flow_t::zero_rtt != flow))) {
+                ((tls_extension_type_t::early_data == extension->get_type()) &&
+                 ((tls_flow_t::zero_rtt != flow) || (0 == early_state.get(session_early_data_limit)) || (nullptr == get(tls_extension_type_t::pre_shared_key))))) {
                 return errorcode_t::success;
             }
         }
@@ -115,16 +145,23 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
         // EncryptedExtensions. If ticket age, ticket policy, selected identity,
         // or cipher-suite compatibility disallows it, omit the extension and
         // continue with the PSK 1-RTT handshake.
-        if ((from_server == dir) && handshake && (tls_handshake_type_t::encrypted_extensions == handshake->get_type()) &&
+        if ((from_server == dir) && (nullptr != handshake) && (tls_handshake_type_t::encrypted_extensions == handshake->get_type()) &&
             (tls_extension_type_t::early_data == extension->get_type())) {
             auto session = handshake->get_session();
             auto& protection = session->get_tls_protection();
             const auto& early_state = session->get_session_info(from_server).get_keyvalue();
             uint16 selected_identity = t_narrow_cast(session->get_keyvalue().get(session_server_psk_selected_identity));
             uint16 ticket_cipher_suite = t_narrow_cast(session->get_keyvalue().get(session_server_psk_ticket_cipher_suite));
-            bool accept_early_data = (0 == selected_identity) && (0 != early_state.get(session_early_data_offered)) && (0 != early_state.get(session_early_data_limit)) &&
-                                     (0 != ticket_cipher_suite) && (protection.get_cipher_suite() == ticket_cipher_suite);
-            if (!accept_early_data) {
+            tls_resumption_ticket early_ticket = session->get_early_data_ticket();
+            auto alpn_extension = static_cast<tls_extension_alpn*>(get(tls_extension_type_t::application_layer_protocol_negotiation));
+            binary_t negotiated_alpn = (nullptr != alpn_extension) ? alpn_extension->get_protocols() : binary_t();
+            bool ticket_parameters_match = (false == early_ticket.identity.empty()) && (early_ticket.version == static_cast<uint16>(protection.get_tls_version())) &&
+                                           (early_ticket.cipher_suite == protection.get_cipher_suite()) && (early_ticket.alpn == negotiated_alpn) &&
+                                           (early_state.get(session_early_data_limit) <= early_ticket.max_early_data_size);
+            bool accept_early_data = (tls_flow_t::zero_rtt == protection.get_flow()) && (0 == selected_identity) && (0 != early_state.get(session_early_data_offered)) &&
+                                     (0 != early_state.get(session_early_data_limit)) && (0 != ticket_cipher_suite) &&
+                                     (protection.get_cipher_suite() == ticket_cipher_suite) && ticket_parameters_match;
+            if (false == accept_early_data) {
                 return errorcode_t::success;
             }
         }
@@ -139,9 +176,16 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
                 });
             }
 #endif
-        } else if ((from_server == dir) && handshake && (tls_handshake_type_t::encrypted_extensions == handshake->get_type()) &&
+        } else if ((from_server == dir) && (nullptr != handshake) && (tls_handshake_type_t::encrypted_extensions == handshake->get_type()) &&
                    (tls_extension_type_t::early_data == extension->get_type())) {
             handshake->get_session()->get_session_info(from_server).get_keyvalue().set(session_early_data_accepted, 1);
+        } else if ((from_client == dir) && (nullptr != handshake) && (tls_handshake_type_t::client_hello == handshake->get_type()) &&
+                   (tls_extension_type_t::early_data == extension->get_type())) {
+            // Remember the local offer so the client can validate the server's
+            // EncryptedExtensions acceptance indication.
+            auto& early_state = handshake->get_session()->get_session_info(from_server).get_keyvalue();
+            early_state.set(session_early_data_offered, 1);
+            early_state.set(session_early_data_offered_initial, 1);
         }
         return ret;
     };

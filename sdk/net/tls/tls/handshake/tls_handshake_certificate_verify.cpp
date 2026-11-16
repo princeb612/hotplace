@@ -331,6 +331,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
             if (errorcode_t::not_supported == ret) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                 session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
             }
             __leave2;
         }

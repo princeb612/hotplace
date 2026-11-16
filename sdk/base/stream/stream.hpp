@@ -26,9 +26,8 @@ struct encoder_stream_traits<stream_t*> {
     static constexpr bool value = true;
     static void trunc(stream_t* buf) { buf->resize(0); }
     static value_type* reserve(stream_t* buf, size_t size_reserve) {
-        size_t pos = buf->size();
-        buf->resize(pos + size_reserve);
-        return (char*)buf->data() + pos;
+        byte_t* output = nullptr;
+        return (errorcode_t::success == buf->reserve(size_reserve, &output)) ? (value_type*)output : nullptr;
     }
     static void commit(stream_t* buf, size_t size_reserve, size_t size_written) {
         if (size_written < size_reserve) {

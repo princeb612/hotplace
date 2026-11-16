@@ -10,6 +10,8 @@ void testcase_gpt_certificate();
 void testcase_gpt_record();
 void testcase_gpt_early_data();
 void testcase_gpt_session_ticket();
+void testcase_gpt_psk();
+void testcase_gpt_psk_offer();
 void testcase_gpt_finished();
 
 void testcase_gpt() {
@@ -18,5 +20,7 @@ void testcase_gpt() {
     testcase_gpt_record();
     testcase_gpt_early_data();
     testcase_gpt_session_ticket();
+    testcase_gpt_psk();
+    testcase_gpt_psk_offer();
     testcase_gpt_finished();
 }

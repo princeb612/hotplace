@@ -43,3 +43,6 @@
 - handshake_failure.pcapng
   - [server](handshake_failure-server.md)
   - [client](handshake_failure-client.md)
+- tls13_key_update.pcapng
+  - [server](tls13_key_update-server.md)
+  - [client](tls13_key_update-client.md)

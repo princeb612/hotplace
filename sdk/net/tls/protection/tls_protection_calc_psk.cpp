@@ -57,7 +57,18 @@ return_t tls_protection::calc_psk_binder(tls_session* session, const binary_t& b
         // the cipher suite used to establish this resumption PSK.
         binary_t context_resumption_binder_key;
         const binary_t& secret_resumption_early = get_secrets().get(tls_secret_t::resumption_early);
-        const binary_t& context_empty_hash = get_secrets().get(tls_secret_t::empty_hash);
+        if ((binder_hash.size() != hint_mac->digest_size) || (secret_resumption_early.size() != hint_mac->digest_size)) {
+            ret = errorcode_t::bad_format;
+            __leave2;
+        }
+        // The empty transcript hash is specific to the PSK's hash. Do not
+        // reuse a cached value that may belong to another ticket's suite.
+        binary_t context_empty_hash;
+        openssl_digest digest;
+        ret = digest.digest(hint_mac->fetchname, binary_t(), context_empty_hash);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
         ret = kdf.hkdf_expand_tls13_label(context_resumption_binder_key, hint_mac->fetchname, hint_mac->digest_size, secret_resumption_early, "res binder",
                                           context_empty_hash);
         if (errorcode_t::success != ret) {

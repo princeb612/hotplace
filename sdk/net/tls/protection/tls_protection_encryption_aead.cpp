@@ -478,7 +478,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
                 if (false == session_info.has_alert(tls_alertlevel_t::fatal)) {
                     session_info.push_alert(tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
                 }
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::internal_error;
                 __leave2;
             }
 
@@ -571,7 +571,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
 }
 
 return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                      protection_space_t space) {
+                                      protection_space_t space, bool suppress_alert) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -591,14 +591,14 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         uint8 tagsize = get_tag_size();
         binary_append(tag, stream + size - tagsize, tagsize);
 
-        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, space);
+        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, space, suppress_alert);
     }
     __finally2 {}
     return ret;
 }
 
 return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                                      const binary_t& tag, protection_space_t space) {
+                                      const binary_t& tag, protection_space_t space, bool suppress_alert) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -696,7 +696,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
             ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, aad, tag, options);
         }
 
-        if (errorcode_t::success != ret) {
+        if ((errorcode_t::success != ret) && !suppress_alert) {
             // RFC 8446 5.2.  Record Payload Protection
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::bad_record_mac);
         }

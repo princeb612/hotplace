@@ -14,6 +14,7 @@ class testable_tls_handshake_certificate_verify : public tls_handshake_certifica
    public:
     explicit testable_tls_handshake_certificate_verify(tls_session* session);
     return_t sign_for_test(const EVP_PKEY* pkey, tls_direction_t dir, tls_sigscheme_t& scheme, binary_t& signature);
+    return_t write_for_test(tls_direction_t dir, binary_t& body);
     return_t verify_for_test(const EVP_PKEY* pkey, tls_direction_t dir, tls_sigscheme_t scheme, const binary_t& signature);
 };
 
@@ -39,6 +40,7 @@ class test_tls13_server_hello_postprocess_probe : public tls_handshake_server_he
    public:
     explicit test_tls13_server_hello_postprocess_probe(tls_session* session);
     return_t postprocess_read();
+    return_t postprocess_write();
 };
 
 class test_tls13_server_hello_writer_probe : public tls_handshake_server_hello {
