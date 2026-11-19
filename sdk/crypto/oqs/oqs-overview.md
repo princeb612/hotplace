@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -42,7 +42,7 @@ The direct integration tests enumerate algorithms from the loaded provider and g
 
 ## Development Notes (for maintainer review)
 
-The following legacy overview material is retained as supplied. Review algorithm names, standardization status, and external links before treating this table as current.
+The following legacy overview material is retained as supplied. The `Source base : Revision 1132` marker records the revision used to check this document's current integration boundary and scope; it does not re-date or revalidate the historical algorithm/provider table below. Review algorithm names, standardization status, and external links before treating that table as current.
 
 #### PQC
 

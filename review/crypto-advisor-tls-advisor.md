@@ -6,7 +6,9 @@
 
 ## Review scope
 
-This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1124.
+This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in Revision 1132.
+
+> Source base : Revision 1132
 
 The important distinction is that these are **two related vocabulary/metadata layers**, not a single generic dictionary:
 
@@ -16,7 +18,7 @@ The important distinction is that these are **two related vocabulary/metadata la
 
 ## Historical review context
 
-The initial architecture review established the relationship model at revision 1097. That earlier pass is retained here as review history; the current document-wide assessment is based on revision 1124.
+The initial architecture review established the relationship model at revision 1097. That earlier pass is retained here as review history; the current document-wide assessment is based on Revision 1132.
 
 ## 1. Two advisor domains
 
@@ -133,7 +135,7 @@ identifier knowledge
 
 ## 4. `tls_advisor`: protocol identity
 
-The reviewed TLS side is broader than a TLS cipher-suite table; the 1097 pass found no material architectural change to this distinction.
+The TLS side is broader than a TLS cipher-suite table. The Revision 1132 resource families still cover alerts, handshake types, extensions, cipher suites, groups, KDFs, PSK modes, AEADs, QUIC frames, transport parameters, and related identifiers.
 
 The `tls_advisor` resource family covers identifiers and parameters for:
 
@@ -375,7 +377,7 @@ The TLS cipher-suite resource table must not be read as a list of cipher suites 
 `sdk/net/tls/advisor/resource_ciphersuite.cpp` is also used as an identifier and diagnostic catalogue. The flags distinguish catalogue presence from operational eligibility:
 
 - `tls_flag_secure | tls_flag_support`: recommended and supported.
-- `tls_flag_support` without `tls_flag_secure`: retained for legacy or debugging purposes, but still marked as supported by the implementation's resource policy.
+- `tls_flag_support` without `tls_flag_secure`: supported by the implementation's resource policy, but not in the resource table's secure/recommended subset; such entries may include legacy or compatibility suites.
 - No `tls_flag_support`: recognized metadata may remain available for inspection, but the entry is not eligible for ordinary negotiation.
 
 This distinction is important when interpreting legacy RSA, static DH, and static ECDH entries. Their presence in the resource table alone is not evidence that the handshake can select them. In the reviewed resource definitions, the static DH and static ECDH families are not marked with `tls_flag_support`; ECDHE remains a separate supported key-exchange family.
@@ -389,7 +391,7 @@ The relevant implementation gates reinforce this separation:
 
 ### RFC policy cross-check
 
-The first-pass review of RFC 8996, RFC 9852, and RFC 10015 therefore does not identify a required change to the resource table merely because historical cipher-suite identifiers are retained.
+The earlier RFC 8996, RFC 9852, and RFC 10015 cross-check remains consistent with the Revision 1132 resource flags. Retaining an identifier in the catalogue does not by itself make it eligible for ordinary negotiation.
 
 - **RFC 8996** deprecates TLS 1.0, TLS 1.1, and DTLS 1.0. The current version-support flags already exclude these from ordinary supported-version advertisement/selection.
 - **RFC 9852** updates the TLS security baseline for new protocols using TLS and requires TLS 1.3 for such new protocol designs. This does not mean that an existing general-purpose TLS implementation must remove TLS 1.2 compatibility. DTLS has a distinct deployment and transition context.
@@ -397,11 +399,11 @@ The first-pass review of RFC 8996, RFC 9852, and RFC 10015 therefore does not id
 
 Accordingly, the retained legacy entries should be understood as protocol-identity/debugging data, not as a recommendation to negotiate those suites. No immediate cipher-suite resource-table change is indicated by this pass.
 
-### Follow-up observation: ClientHello advertisement mask
+### ClientHello advertisement mask: resolved source comparison
 
-One implementation detail remains worth checking separately. The ClientHello construction path uses a mask containing both `tls_flag_secure` and `tls_flag_support`, while the server-side candidate selection explicitly requires `tls_flag_support`.
+The trial `tls_composer_construct` ClientHello builder applies a mask containing both `tls_flag_secure` and `tls_flag_support`. Read in isolation, that expression could appear to include secure-only entries. However, the builder obtains entries through `tls_advisor::enum_cipher_suites()`, and that enumeration function already filters the resource table to entries with `tls_flag_support`.
 
-That distinction may be intentional—for example, to advertise a broader diagnostic or compatibility set—but it should be reconciled with the intended meaning of the flags. The current review records this as a policy-consistency question, not as a confirmed vulnerability or an RFC violation.
+Therefore the effective ClientHello list is still support-gated. The additional `tls_flag_secure` bit in the later mask is redundant; it does not broaden the advertised set to secure-only entries. This resolves the earlier policy-consistency question for the Revision 1132 source.
 
 ### Review conclusion
 
@@ -420,10 +422,13 @@ References:
 - [RFC 9852 — Updated TLS recommendations](https://www.rfc-editor.org/rfc/rfc9852)
 - [RFC 10015 — TLS 1.2 and DTLS 1.2 security updates](https://www.rfc-editor.org/rfc/rfc10015)
 - `sdk/net/tls/tls_advisor.hpp`
+- `sdk/net/tls/advisor/tls_advisor.cpp` — `enum_cipher_suites()` applies the `tls_flag_support` filter
 - `sdk/net/tls/advisor/resource_ciphersuite.cpp`
 - `sdk/net/tls/advisor/resource.cpp`
 - `sdk/net/tls/protection/tls_protection_context.cpp`
+- `sdk/net/tls/tls/handshake/tls_handshake_server_hello.cpp`
 - `sdk/net/tls/tls/extension/tls_extension_supported_versions.cpp`
+- `sdk/net/basic/trial/tls_composer_construct.cpp`
 
 ## Related source documentation
 
@@ -438,14 +443,15 @@ References:
 
 ## Review status
 
-This document reviews the advisor architecture as of revision 1124. It retains the earlier revision-1097 observations as historical context and includes the TLS resource-policy assessment in the same revision-1124 review baseline. The review distinguishes identifier recognition, support eligibility, security recommendation, and diagnostic override. The RFC cross-check found no immediate cipher-suite table change required; the ClientHello advertisement-mask distinction remains a follow-up policy question. Future revisions may add or reorganize resource tables, but the separation between protocol identity and cryptographic identity remains the central architectural point.
+This document reviews the advisor architecture against Revision 1132 source. It retains the earlier Revision 1097 observations as historical context and rechecks the TLS resource-policy assessment against the current resource tables and negotiation gates. The review distinguishes identifier recognition, support eligibility, security recommendation, and diagnostic override. The Revision 1132 source uses the documented support/secure gates. The ClientHello mask question is resolved by the support filter in `tls_advisor::enum_cipher_suites()`; the mask's secure bit is redundant after that filter. Future revisions may add or reorganize resource tables, but the separation between protocol identity and cryptographic identity remains the central architectural point.
 
 ## Publication
 
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1124                                │
+│ Revision 1132                                │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

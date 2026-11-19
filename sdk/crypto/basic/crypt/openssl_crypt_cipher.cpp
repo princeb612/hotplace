@@ -583,7 +583,11 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
 
             ret_cipher = EVP_CipherUpdate(context->decrypt_context, plaintext, &size_update, ciphertext, t_narrow_cast(ciphersize));
             if (1 != ret_cipher) {
-                ret = errorcode_t::cipher_failure;
+                // CCM verifies its authentication tag during the ciphertext
+                // update itself. OpenSSL documents this return value as the
+                // CCM authentication result; unlike GCM, there is no final
+                // authentication step for CCM decryption.
+                ret = (crypt_mode_t::ccm == context->mode) ? errorcode_t::verification_failure : errorcode_t::cipher_failure;
                 __leave2_trace_openssl(ret);
             }
 #if defined DEBUG
@@ -596,6 +600,14 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
                 });
             }
 #endif
+        }
+
+        if (crypt_mode_t::ccm == context->mode) {
+            // CCM authentication is completed by the ciphertext update.
+            // OpenSSL explicitly does not require (or support) a decrypt-final
+            // call for CCM; its output length is the update length.
+            *plainsize = size_update;
+            __leave2;
         }
 
         ret_cipher = EVP_CipherFinal(context->decrypt_context, plaintext + size_update, &size_final);

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -18,18 +18,15 @@ This directory contains direct tests for hotplace's PQC abstractions and the opt
 
 ## 2. How
 
-### Procedure: common PQC signature operations
+### Procedure: common PQC signature placeholder
 
-1. Resolve the supported PQC signature algorithm/key identifier for the active OpenSSL build.
-2. Create or load the key, sign the test message, and pass the produced signature to the verification operation.
-3. Record sign and verify statuses. The common DSA-style PQC test is an operation/round-trip path, not a fixed signature-byte known-answer vector.
-4. Unsupported algorithms/providers are reported as unsupported, not as successful signature verification.
+`testcase_pqc_dsa.cpp` is not yet an implemented common PQC signature test. Its OpenSSL 3.5+ branch contains only `// TODO`; before OpenSSL 3.5 it records `not_supported`. Do not describe this source as executing key generation, signing, or verification. The provider-backed OQS signature path is separate and lives under `pqc/oqs/testcase_oqs_dsa.cpp`.
 
-### Procedure: key encoding and decoding
+### Procedure: ML-KEM key encoding and decoding
 
-1. Create or obtain a PQC key and select the supported public/private representation.
-2. Encode the key, decode the resulting representation, and check each operation's status.
-3. Compare the reconstructed key object where the source explicitly asserts equality. Successful decoding alone does not prove canonical encoding or full parameter preservation.
+1. `testcase_pqc_encode.cpp` generates ML-KEM-512/768/1024 key pairs and exercises RAW private/public encode/decode paths under the OpenSSL 3.5+ guard.
+2. It checks operation statuses and verifies that the generated key is private and the decoded public key is not private. It does not compare the original and decoded key objects; the decoded private-key object is not otherwise inspected.
+3. `testcase_pqc_kem.cpp` separately encodes/decodes public keys in DER and RAW forms, then compares the DER-decoded and RAW-decoded public-key objects with `EVP_PKEY_eq()`. Successful decoding alone does not prove canonical encoding or full parameter preservation.
 
 ### Procedure: run the common ML-KEM path
 
@@ -41,9 +38,9 @@ This directory contains direct tests for hotplace's PQC abstractions and the opt
 
 ### Procedure: hybrid ECDHE-ML-KEM key agreement
 
-1. Run the composed classical X25519 and ML-KEM-768 key-agreement flow when the required OpenSSL support is available.
+1. Run the standalone classical X25519 + ML-KEM-768 key-share composition from draft-ietf-tls-ecdhe-mlkem/01 when the required OpenSSL support is available. This is not a complete TLS 1.3 handshake or a final-spec conformance test.
 2. Construct the Alice and Bob key-share buffers from their classical and PQC components.
-3. Check the expected combined key-share lengths and the resulting shared-secret lengths.
+3. Check the expected combined key-share lengths and the resulting shared-secret lengths. The current source records only the two public-key decode statuses; key generation, key encoding, ECDH, encapsulation, decapsulation, and the final public-key decode return statuses are not checked.
 4. Compare Alice's and Bob's combined shared-secret buffers byte-for-byte.
 5. Treat unsupported-version results separately from a completed hybrid agreement.
 
@@ -73,7 +70,7 @@ OpenSSL >= 3.5?
            -> assert shared_secret_alice == shared_secret_bob
 ~~~
 
-The test compares decoded public-key objects and both shared secrets. Capsule and secret dumps are diagnostic, not expected-value assertions.
+The KEM testcase compares the DER-decoded and RAW-decoded public-key objects through `EVP_PKEY_eq()` and compares both shared-secret buffers. Its assertion tests the return value as a boolean (nonzero), rather than requiring the documented equality result `1`; the test does not distinguish other nonzero return codes. Capsule and secret dumps are diagnostic, not expected-value assertions.
 
 **2. PQC key encoding**
 
@@ -112,10 +109,10 @@ A source file being compiled or a provider listing an algorithm is not itself a 
 
 | Source file | Focus | Explicit evidence / limitation |
 |---|---|---|
-| `testcase_pqc_dsa.cpp` | Common PQC signature operations | Sign/verify operation status; not a fixed signature-byte vector |
-| `testcase_pqc_encode.cpp` | Common PQC key encoding and decoding | Status checks and reconstructed-key equality where explicitly asserted |
-| `testcase_pqc_kem.cpp` | ML-KEM-512/768/1024 | OpenSSL 3.5+ guard; decoded public-key equality and encapsulated/decapsulated shared-secret equality |
-| `testcase_pqc_hybrid_kem.cpp` | Classical + PQC hybrid KEM | Key-share and shared-secret lengths, then Alice/Bob shared-secret comparison where supported |
+| `testcase_pqc_dsa.cpp` | Common PQC signature placeholder | OpenSSL 3.5+ branch is `TODO`; older versions record `not_supported`; no sign/verify operation is implemented |
+| `testcase_pqc_encode.cpp` | ML-KEM RAW private/public encoding | Status checks and private/public classification; no original-versus-decoded key equality assertion |
+| `testcase_pqc_kem.cpp` | ML-KEM-512/768/1024 | OpenSSL 3.5+ guard; compares DER-decoded and RAW-decoded public keys with `EVP_PKEY_eq`, then compares encapsulated/decapsulated shared secrets |
+| `testcase_pqc_hybrid_kem.cpp` | Draft X25519 + ML-KEM-768 hybrid key-share prototype | Checks component lengths and combined shared-secret equality; most keygen/encode/ECDH/KEM operation return values are ignored |
 | `oqs/testcase_oqs_encode.cpp` | Enumerate OQS KEM/signature algorithms and try PEM/DER encoding variants for OID-registered entries | Enumeration or successful encoding alone does not prove an end-to-end algorithm operation |
 | `oqs/testcase_oqs_kem.cpp` | OQS key generation, serialization, encapsulation and decapsulation | Compare sender/receiver shared secrets |
 | `oqs/testcase_oqs_dsa.cpp` | OID-registered OQS signatures | Sign/verify operation path; inspect source assertions for the precise oracle |
@@ -136,7 +133,7 @@ The common ML-KEM and hybrid KEM paths are distinct from the provider-backed OQS
 
 ### Documentation and verification status
 
-No tests were run during this documentation pass. The supplied aggregate crypto report does not isolate the PQC/OQS directory, so no per-directory result is asserted here.
+The current branch does not contain the referenced `test/testcase/crypto/report` file. No aggregate report is available here to substantiate a PQC/OQS result, and no tests were run during this documentation pass.
 
 ## 4. Relationships
 

@@ -1,5 +1,8 @@
 # Developer Notes — CBC-HMAC Construction Survey
 
+> Source base : Revision 1132 — historical construction study cross-checked against current CBC-HMAC source and vector files.
+
+
 ## Purpose and scope
 This is a developer study note, not a module reference. Its value is the side-by-side comparison of TLS MAC-then-encrypt (MtE), TLS encrypt-then-MAC (EtM), and JOSE AES-CBC-HMAC processing. It records why the authenticated bytes, tag placement, and composition order differ even when the broad ingredients are CBC and HMAC. Use it to understand the legacy construction and its test vectors, not as a generic recipe for designing a new protocol.
 

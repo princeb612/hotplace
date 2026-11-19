@@ -45,6 +45,15 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
         // RFC 9001 8.2.  QUIC Transport Parameters Extension
         // RFC 9000 18.  Transport Parameter Encoding
         ret = read_quic_params(stream, endpos_extension(), pos, _params);
+        if (errorcode_t::success != ret) {
+            if (errorcode_t::bad_format == ret || errorcode_t::bad_data == ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+            }
+            __leave2_trace(ret);
+        }
     }
     __finally2 {}
     return ret;
@@ -54,7 +63,10 @@ return_t tls_extension_quic_transport_parameters::do_write_body(tls_direction_t 
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     for (const auto& item : _params) {
-        write_quic_param(item.first, item.second, bin);
+        ret = write_quic_param(item.first, item.second, bin);
+        if (errorcode_t::success != ret) {
+            break;
+        }
     }
     return ret;
 }
@@ -115,7 +127,11 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
             payload pl;
             pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id)  //
                << new payload_member(new quic_encoded(binary_t()), constexpr_param);   //
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, size, pos);
+            if (errorcode_t::success != ret) {
+                ret = errorcode_t::bad_format;
+                break;
+            }
 
             uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);
             binary_t param;
@@ -137,12 +153,22 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
                 default: {
                     size_t epos = 0;
                     uint64 value = 0;
-                    quic_read_vle_int(param.data(), param.size(), epos, value);
+                    ret = quic_read_vle_int(param.data(), param.size(), epos, value);
+                    if ((errorcode_t::success != ret) || (epos != param.size())) {
+                        ret = errorcode_t::bad_format;
+                        break;
+                    }
 
                     variant vt(value);
                     params.push_back({param_id, std::move(vt)});
                 } break;
             }
+            if (errorcode_t::success != ret) {
+                break;
+            }
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
 #if defined DEBUG
@@ -197,7 +223,7 @@ return_t tls_extension_quic_transport_parameters::write_quic_param(uint64 id, co
         default:
             break;
     }
-    pl.write(params);
+    ret = pl.write(params);
     return ret;
 }
 

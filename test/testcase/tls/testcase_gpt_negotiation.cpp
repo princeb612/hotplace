@@ -2,7 +2,7 @@
 /**
  * @file   testcase_gpt_negotiation.cpp
  * @author GPT
- * @desc
+ * @desc   TLS version, cipher-suite, and downgrade negotiation tests.
  */
 
 #include "testcase_gpt_common.hpp"
@@ -30,6 +30,9 @@ static void test_supported_versions_negative_paths() {
 }
 
 static void test_supported_versions_unknown_and_legacy_fallback() {
+    // Scenario under test: supported_versions ignores unknown values and preserves TLS 1.2 fallback.
+    // Action: construct mixed-version ClientHello.
+    // Expected: write mixed known/unknown supported_versions.
     _test_case.begin("supported_versions ignores unknown values and preserves TLS 1.2 fallback");
 
     tls_session mixed_client;
@@ -119,6 +122,9 @@ static void test_supported_versions_unknown_and_legacy_fallback() {
 }
 
 static void test_psk_hash_does_not_override_cipher_suite_preference() {
+    // Scenario under test: TLS 1.3 PSK hash mismatch does not override cipher-suite preference.
+    // Action: negotiate with a verified SHA-256 PSK and SHA-384-first client preference.
+    // Expected: preserve the client's first offered TLS 1.3 cipher suite even when its hash differs from the PSK.
     _test_case.begin("TLS 1.3 PSK hash mismatch does not override cipher-suite preference");
 
     auto run_case = [](bool psk_selected, uint16& selected_suite) -> return_t {
@@ -159,6 +165,9 @@ static void test_tls_downgrade_sentinel() {
     static const byte_t downgrade_tls11[8] = {0x44, 0x4f, 0x57, 0x4e, 0x47, 0x52, 0x44, 0x00};
     static const byte_t no_sentinel[8] = {0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5};
 
+    // Scenario under test: TLS downgrade sentinel emission and validation.
+    // Action: construct TLS 1.2 ServerHello after a TLS 1.3-capable ClientHello.
+    // Expected: TLS 1.3 server emits DOWNGRD\\x01 in TLS 1.2 ServerHello.random.
     _test_case.begin("TLS downgrade sentinel emission and validation");
 
     {

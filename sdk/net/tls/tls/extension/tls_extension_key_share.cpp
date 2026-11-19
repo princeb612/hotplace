@@ -151,6 +151,10 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
         size_t limit = endpos_extension();
+        uint16 retry_group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
+        bool enforce_retry_group =
+            (from_client == dir) && (tls_flow_t::hello_retry_request == protection.get_flow()) && (static_cast<uint16>(tls_group_t::unknown) != retry_group);
+        size_t key_share_entry_count = 0;
 #if defined DEBUG
         uint16 len = 0;
 #endif
@@ -166,9 +170,23 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
         {
             payload pl;
             pl << new payload_member(uint16(0), true, constexpr_len);
-            pl.read(stream, limit, pos);
+            ret = pl.read(stream, limit, pos);
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
+
+            uint16 vector_len = pl.t_value_of<uint16>(constexpr_len);
+            if (vector_len != (limit - pos)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 #if defined DEBUG
-            len = pl.t_value_of<uint16>(constexpr_len);
+            len = vector_len;
 #endif
         }
 
@@ -176,6 +194,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 
         while (pos < limit) {
             uint16 group = 0;
+            uint16 pubkeylen = 0;
             binary_t pubkey;
 
             payload pl;
@@ -183,10 +202,30 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
                << new payload_member(binary_t(), constexpr_pubkey);          //
             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-            pl.read(stream, limit, pos);
+            ret = pl.read(stream, limit, pos);
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                break;
+            }
 
             group = pl.t_value_of<uint16>(constexpr_group);
+            pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             pl.get_binary(constexpr_pubkey, pubkey);
+            ++key_share_entry_count;
+            if (enforce_retry_group && ((1 != key_share_entry_count) || (group != retry_group))) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                break;
+            }
+            if (0 == pubkeylen) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                break;
+            }
 
             t_enum_type<tls_group_t> etgroup(group);
             protection.get_protection_context().add_keyshare_group(etgroup);
@@ -209,6 +248,17 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                 });
             }
 #endif
+        }
+
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
+
+        if (enforce_retry_group && (1 != key_share_entry_count)) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -236,6 +286,9 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
         binary_t bin_keyshare;
 
         protection.get_protection_context().for_each_keyshare_groups([&](tls_group_t group, bool*) -> void {
+            if (errorcode_t::success != ret) {
+                return;
+            }
             binary_t pubkey;
 
             crypto_keyexchange keyexchange;
@@ -255,9 +308,12 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
                 pl << new payload_member(uint16(group), true, constexpr_group)               //
                    << new payload_member(uint16(pubkey.size()), true, constexpr_pubkey_len)  //
                    << new payload_member(pubkey, constexpr_pubkey);
-                pl.write(bin_keyshare);
+                ret = pl.write(bin_keyshare);
             }
         });
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
 
         binary_t bin_keysharelen;
         binary_append(bin_keysharelen, uint16(bin_keyshare.size()), hton16);
@@ -299,15 +355,31 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
         protection.get_secrets().erase(tls_secret_t::shared_secret);
 
         {
-            //  struct {
-            //      KeyShareEntry server_share;
-            //  } KeyShareServerHello;
+            // A ServerHello carries a KeyShareEntry. A HelloRetryRequest
+            // carries only selected_group, so the missing trailing fields are
+            // expected only for the two-byte HRR form.
             payload pl;
             pl << new payload_member(uint16(0), true, constexpr_group)       //
                << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
                << new payload_member(binary_t(), constexpr_pubkey);          //
             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+
+            if (errorcode_t::success != ret) {
+                // payload::read reports fragmented when it has decoded the
+                // two-byte selected_group but cannot read the following
+                // ServerHello-only key_exchange length. That is the valid
+                // HelloRetryRequest encoding, provided the extension body is
+                // exactly two bytes.
+                if (((errorcode_t::fragmented != ret) && (errorcode_t::no_data != ret)) || (2 != get_body_size())) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
+                    ret = errorcode_t::bad_format;
+                    __leave2_trace(ret);
+                }
+
+                ret = errorcode_t::success;
+            }
 
             group = pl.t_value_of<uint16>(constexpr_group);
             pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
@@ -367,7 +439,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                 session->get_session_info(from_server).get_keyvalue().set(session_hrr, group);
             }
 
-            session->get_session_info(from_server).get_keyvalue().set(session_key_share_group, group);
+            session->get_session_info(from_server).get_keyvalue().set(session_key_share_group, static_cast<unsigned long long>(group));
         }
 
 #if defined DEBUG
@@ -467,6 +539,12 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             pubkeylen = t_narrow_cast(pubkey.size());
         }
 
+        // Persist the selected_group on the server when this extension is
+        // serialized in its two-byte HelloRetryRequest form.
+        if ((false == correct_group) && (tls_group_t::unknown != group)) {
+            session->get_session_info(from_server).get_keyvalue().set(session_key_share_group, static_cast<unsigned long long>(group));
+        }
+
         payload pl;
         pl << new payload_member(uint16(group), true, constexpr_group)           //
            << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
@@ -477,7 +555,10 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             pl->set_group(constexpr_pubkey, correct_group);
         };
         pl.set_condition(constexpr_group, lambda_hook);
-        pl.write(bin);
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
 #if defined DEBUG
         if (hint_group) {

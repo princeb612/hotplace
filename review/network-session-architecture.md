@@ -2,7 +2,8 @@
 
 ## Source Baseline
 
-- Source revision: 1097
+- Source revision: 1132
+- Source base : Revision 1132
 - Review question: how does the session boundary separate network lifecycle from protocol-specific wire construction and reconstruction?
 
 ## 1. Perspective
@@ -69,7 +70,7 @@ In hotplace, the socket and multiplexer layers under `sdk/io/system` and the net
 
 ## 3. `network_session`
 
-`network_session` can be viewed as the central abstraction for handling one connection or communication unit at a higher level.
+`network_session` can be viewed as the central abstraction for handling one connection or communication unit at a higher level. The current implementation uses it for TCP/TLS connection sessions, a shared UDP listener-socket session, and per-peer DTLS sessions; it is not restricted to one accepted TCP connection.
 
 Conceptually:
 
@@ -109,7 +110,7 @@ session
 stream
 ```
 
-A stream is suitable for representing a continuous data flow in an actual protocol.
+A `network_stream` is implemented as a per-session queue of `network_stream_data` chunks, rather than as a protocol's logical stream identifier. Each chunk owns a copy of its bytes and can retain the peer address for datagram input.
 
 For connection-oriented protocols, the following model is natural:
 
@@ -119,7 +120,7 @@ connection
 one or more data flows
 ```
 
-`network_stream` can therefore be understood as the intermediate layer between session lifecycle and actual data transfer.
+`network_session` maintains two `network_stream` instances: `_stream` receives raw data chunks, while `_request` holds data after protocol interpretation. `network_session::consume()` reads from `_stream` through `_request.read(protocol_group, &_stream)` and then returns the completed request buffers. `network_stream::write()` uses `network_protocol_group` to identify a protocol and call its `read_stream()` method; it can retain incomplete input, emit complete messages, or discard input classified as forged, crash, or too large.
 
 ```text
 network_session
@@ -259,6 +260,8 @@ A producer creates and forwards data or events, while a consumer connects them t
 
 This does not mean that every network path must use exactly the same producer/consumer structure.
 
+The current server implementation makes this separation concrete: `network_server` runs a multiplexer event loop through producer threads, queues ready `network_session` objects in a priority-aware `t_mlfq<network_session>`, and uses consumer threads to call `network_session::consume()` before dispatching completed buffers to the application callback. TLS acceptance has a separate worker/queue path where required. This is a concrete implementation path, not a requirement that every transport use identical scheduling.
+
 The important architectural direction is that **I/O readiness can be separated from protocol processing**.
 
 ---
@@ -297,7 +300,7 @@ Putting the preceding pieces together gives an approximate architecture:
                          producer/consumer
 ```
 
-The actual implementation has more detailed relationships than this diagram, but these are the core connections worth retaining when reconstructing the architecture.
+The actual implementation has more detailed relationships than this diagram, but these are the core connections worth retaining when reconstructing the architecture. At Revision 1132, `network_session_manager` tracks stream sessions by transport identity and datagram sessions by peer/address; a QUIC-session map/accessor is declared but the QUIC accessor has no implementation.
 
 ---
 
@@ -319,7 +322,7 @@ TLS / DTLS
 application protocol
 ```
 
-QUIC requires a different mapping because the protocol itself strongly defines connection, packet, and stream concepts.
+QUIC requires a different mapping because the protocol itself strongly defines connection, packet, and stream concepts. In the current source, QUIC has its own `quic_session`, `quic_streams`, and packet publisher; these are not yet integrated into the common `network_server` session-manager path.
 
 ```text
 QUIC connection
@@ -423,7 +426,7 @@ TLS handshake / application / transport state
                QUIC packet
 ```
 
-The architectural point is not that DTLS and QUIC share one publisher class. It is that the session-level protocol boundary provides a place where semantic protocol state is materialized into wire units without making the lower network foundation responsible for protocol-specific layout.
+The architectural point is not that DTLS and QUIC share one publisher class. It is that the protocol boundary provides a place where semantic protocol state is materialized into wire units without making the lower network foundation responsible for protocol-specific layout. This wire-construction path must not be mistaken for completed QUIC session integration: `network_session_manager::get_quic_session()` is declared but has no implementation in Revision 1132, and `network_server` currently routes datagram events through the generic datagram-session path. The HTTP server builder can select `service_http3` and open a QUIC listener, but `http_server::consume()` currently dispatches HTTP/1.1 and HTTP/2 only; it does not parse or dispatch HTTP/3 requests. Thus QUIC listener startup is not completed HTTP/3 server integration. This publisher boundary exists independently of whether the common `network_server` has a complete transport-specific session path for that protocol.
 
 ---
 
@@ -507,21 +510,21 @@ The layering relationship between TLS and QUIC is not literally a simple serial 
 
 - `sdk/io/system/socket`
 - `sdk/io/system/multiplexer`
-- `sdk/io/system/epoll`
-- `sdk/io/system/iocp`
-- platform-specific network code
+- `sdk/io/system/multiplexer.hpp` — common multiplexer contract and event identifiers
+- platform-specific multiplexer implementations selected by the I/O system layer
 
 ### Network Abstraction
 
-- `sdk/net/network_session`
-- `sdk/net/network_stream`
-- `sdk/net/network_protocol`
-- accept / producer / consumer implementations
+- `sdk/net/server/network_session.hpp/.cpp` — session and session-manager implementation
+- `sdk/net/server/network_stream.hpp/.cpp` — queued byte data and protocol-aware framing
+- `sdk/net/server/network_protocol.hpp/.cpp` and `network_protocol_group.cpp` — protocol recognition/dispatch
+- `sdk/net/server/network_server.hpp/.cpp` — accept, producer, consumer, and multiplexer orchestration
 
 ### Higher-Level Protocols
 
 - TLS / DTLS
 - HTTP/HTTP2
+- HTTP/3 frame/QPACK source (server request consumption remains incomplete)
 - QUIC
 
 When reading the source after this document, it is often easier to start from `network_session` and move downward or upward rather than beginning at the socket layer.
@@ -546,9 +549,11 @@ network stream
 protocol semantics
 ```
 
-Server-side accept handling and event producer/consumer roles connect the session lifecycle to I/O processing.
+Server-side accept handling and event producer/consumer roles connect the session lifecycle to I/O processing. At Revision 1132, the common `network_server` path covers TCP/UDP and the TLS/DTLS session model. The UDP event path obtains generic datagram sessions through `get_dgram_session()`; `network_session_manager::get_quic_session()` is declared but has no implementation and is not used by `network_server`. QUIC packet/session machinery exists separately, but full QUIC-specific session integration is not complete.
 
-Rather than treating this as one large network framework, it is more accurate to view it as the result of **separating network responsibilities while implementing multiple protocols directly in hotplace**.
+The HTTP/3 boundary is similarly split: `http_server_builder` can start an H3/QUIC listener, but `http_server::consume()` still dispatches HTTP/1.1 and HTTP/2 only. Listener configuration should not be confused with an end-to-end HTTP/3 server path.
+
+Rather than treating this as one large network framework, it is more accurate to view it as the result of **separating network responsibilities while implementing multiple protocols directly in hotplace, with transport-specific integration boundaries at different completion levels**.
 
 ---
 

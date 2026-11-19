@@ -1,6 +1,8 @@
 # Error Model — Error Code, Category, Testcase & Function Pipeline
 
-**Edition 1 · Revision 1078**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 ## Context
 
@@ -84,7 +86,7 @@ struct error_category_hint {
 };
 ```
 
-For example, the current advisor maps success to `pass`, severe errors to `fail`, expected failures to `expt`, and non-supported conditions to `skip`.
+For example, the current advisor maps success to `pass`, severe errors to `fail`, expected failures to `expt`, and non-supported conditions to `skip`. It also assigns the `skip` label to the low-security category, even though the testcase aggregation path groups low-security results with trivial and warning results; that distinction is visible in the reporting behavior described below.
 
 Thus `hintof()` is more than a formatting helper: it is the bridge from an error result to the conventions used by the unit-test framework.
 
@@ -217,10 +219,11 @@ It stores per-test results and aggregates counts for:
 success
 fail
 not supported
-low security
-trivial / warn
 expect failure
+trivial aggregate (low security / trivial / warn)
 ```
+
+There is a small but observable distinction in the current implementation: `error_advisor` gives `low_security` the row label `skip`, while `test_case::vtest()` increments the same `_count_trivial` counter used for `trivial` and `warn`. The summary therefore groups those categories under `triv`; the per-result row can still display `skip`. The `test_stat_t` structure also contains `_count_low_security`, but the current result-classification switch does not increment it.
 
 The result path is:
 

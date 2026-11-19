@@ -1,12 +1,13 @@
 ## Publication
 
 ```text
-┌──────────────────────────────────────────────┐
-│ hotplace source tree                         │
-│ Edition 1 · Revision 1104                    │
-│ Documented with GPT-6                        │
-│ — source structure, implementation & tests   │
-└──────────────────────────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ hotplace source tree                          │
+│ Edition 1 · Revision 1104                     │
+│ Source base : Revision 1132 (reference check) │
+│ Documented with GPT-6                         │
+│ — source structure, implementation & tests    │
+└───────────────────────────────────────────────┘
 ```
 # Test Vectors
 
@@ -70,7 +71,7 @@ No claim of algorithmic coverage is inferred from this reference document alone.
 
 ### 4.2 Documentation and verification status
 
-The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv entries. The report does not identify the OS, compiler/build configuration, or source revision, and this documentation pass did not execute the tests.
+A previously supplied aggregate crypto report snapshot (not tracked in this branch) records 4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv entries. It does not identify the tested source revision or exact build configuration. These historical totals are not a Revision 1132 test result; this documentation pass did not execute the tests.
 
 ## 5. Relationships
 

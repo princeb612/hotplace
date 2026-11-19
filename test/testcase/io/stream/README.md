@@ -3,7 +3,7 @@
 ```text
 hotplace source tree
 Edition 2 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 — source structure, testcase procedure & evidence
 ```
@@ -26,14 +26,14 @@ The stream testcase exercises `file_stream` through a temporary file: open/trunc
 2. Open it for writing. The guarded flow exits if opening fails.
 3. Truncate the file to 1024 bytes and assert that the reported size is 1024.
 4. Begin a memory mapping. The mapping status is recorded through the testcase harness; failure prevents the subsequent mapped write path.
-5. Write a sequence of 32-bit values through the mapped pointer at four-byte intervals. The first value is `0x12345678`; later positions are populated with the loop index.
+5. Write `0x12345678` through the mapped pointer at every four-byte offset. Since the file size is 1024 (divisible by four), the later byte-tail loop does not execute; all 256 32-bit slots receive the same value.
 6. End the mapping before switching back to the stream API.
 7. Seek to `FILE_BEGIN`, read four bytes into a `uint32`, and assert that the value equals `0x12345678`.
 8. Remove `testfile` on the normal successful path.
 
-3. **What the assertions establish:** the file's reported truncated size and the first 32-bit value's visibility through the stream read path after a mapped write. The testcase does not compare all 1024 bytes, validate all loop-written values, test concurrent mapping, or systematically inject open/map/read failures. The read assertion is host-endian sensitive because the test writes a native integer through the mapped pointer and reads it back as a native integer; it is not a portable on-disk byte-order test.
+3. **What the assertions establish:** the file's reported truncated size and the first 32-bit value's visibility through the stream read path after a mapped write. The testcase does not compare all 1024 bytes, validate all 256 written slots, test concurrent mapping, or systematically inject open/map/read failures. It calls `end_mmap()` and `read()` but ignores both return statuses, and it does not assert the reported `size_read`; the value equality is the only read-back assertion. The read assertion is host-endian sensitive because the test writes a native integer through the mapped pointer and reads it back as a native integer; it is not a portable on-disk byte-order test.
 
-4. **Cleanup boundary:** because deletion occurs in the normal flow, an early failure can leave `testfile` in the working directory. A leftover file alone does not prove the testcase passed or failed.
+4. **Cleanup boundary:** deletion occurs after the read-back assertion. The explicit early exits after a failed `open()` or `begin_mmap()` can leave `testfile` in the working directory. A leftover file alone does not prove the testcase passed or failed.
 
 ## 3. Evidence
 
@@ -48,7 +48,7 @@ create/truncate file -> assert file size == 1024
   -> assert first value == 0x12345678
 ```
 
-This proves the first mapped write is visible through the stream read API. The other loop-written values are not compared, so this is neither a full-file byte check nor a portable byte-order test. Cleanup is on the normal path; early failure may leave the temporary file. The aggregate I/O report has no per-stream result row.
+This proves the first mapped write is visible through the stream read API. All 256 aligned 32-bit positions receive the same native integer, but only the first is read and compared; the second byte-tail loop is not entered for a 1024-byte file. This is neither a full-file byte check nor a portable byte-order test. The testcase ignores the `read()` status and `size_read`, and early exits after open/mmap failure may leave the temporary file. The aggregate I/O report has no per-stream result row.
 
 
 
@@ -62,7 +62,7 @@ Source-level evidence consists of the 1024-byte size assertion and the read-back
 
 - `sdk/io/stream/` — file-backed stream implementation.
 - `sdk/base/stream/` — shared in-memory stream abstractions.
-- [I/O testcase suite](../README.md) — dispatch and aggregate report context.
+- [I/O testcase suite](../README.md) — dispatch and aggregate report context. `sample.cpp` invokes `testcase_filestream()` unconditionally; `test/testcase/io/CMakeLists.txt` includes `stream/*.cpp` in the I/O testcase target.
 - [`CMakeLists.txt`](../CMakeLists.txt) — target source collection.
 - [`testcase_filestream.cpp`](testcase_filestream.cpp) — mapped write/read sequence.
 

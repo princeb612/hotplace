@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -22,7 +22,7 @@ payload
   ├── payload_member
   │     ├── fixed-size integer
   │     ├── binary / string / stream
-  │     ├── uint24 / uint48 / uint128
+  │     ├── uint24 / uint48 / uint128 (compiler-dependent)
   │     ├── bignumber
   │     └── payload_encoded
   │
@@ -78,7 +78,7 @@ The payload layer can therefore place a specialized field among ordinary members
 
 ### Group state and length references
 
-A member's group label associates it with a named condition. The payload stores group enablement separately, so changing a group can include or exclude the corresponding fields without rebuilding the ordered member list.
+A member's group label associates it with a named condition. The payload stores group enablement separately (groups default to enabled until explicitly disabled), so changing a group can include or exclude the corresponding fields without rebuilding the ordered member list.
 
 A length reference is a pointer relationship between two members. For example, if `padlen` stores 3 and `pad` refers to `padlen`, the field metadata describes a three-byte `pad` field. The reference relationship does not itself encode or update the length field; it supplies sizing information to the payload read/write path.
 
@@ -89,7 +89,7 @@ A length reference is a pointer relationship between two members. For example, i
 `get_space()`, `get_capacity()`, and `get_reference_value()` answer different questions; callers should not treat them as interchangeable:
 
 - `get_space()` estimates the field's contribution to layout traversal. For an encoded member it reports `lsize()`, the encoded prefix width exposed by that implementation.
-- `get_capacity()` reports the currently occupied/capacity-oriented size used by `payload::size_occupied()`.
+- `get_capacity()` reports the currently occupied/capacity-oriented size used by `payload::size_occupied()`. For `payload_encoded`, this is also `lsize()` (the encoded prefix width), not the total encoded payload length.
 - `get_reference_value()` returns the value used when another member refers to this member; an encoded field can supply that value through `payload_encoded::value()`.
 
 The exact interpretation of a specialized field's prefix and value belongs to its `payload_encoded` implementation.
@@ -182,11 +182,12 @@ The hook runs after the named field has been read, so it can inspect the decoded
 - If a fixed, reserved, or referenced field cannot fit in the remaining buffer, the payload read path returns `fragmented`.
 - More than one unresolved unknown-width member returns `bad_data`.
 - The caller's `pos` is updated to the final offset only when the overall payload read status is `success`.
-- Member decoding handles the byte representation for the member's variant type; specialized encoded members own their own parser and consumed-byte count.
+- Important status-propagation limitation: `payload_member::doread()` and `doread_encoded()` return `return_t`, but `payload_member::read()` discards those return values, and `payload::read()` in turn cannot observe a member decode failure. A failed specialized decoder can therefore leave `size_read` at zero while the outer payload read still reports success and commits its offset. The payload-level errors above describe its own prechecks/ambiguity handling, not complete validation of every member decode.
+- `payload::write()` also returns success unconditionally; `payload_member::write()` exposes no status from `payload_encoded::write()` or variant serialization. Treat the return code as a layout-level result, not a guarantee that every member operation succeeded.
 
 ### Source-level examples
 
-The canonical reference example is `padlen | data | value | pad`, where `pad` refers to `padlen). The encoded input `03 64 61 74 61 00 00 10 00 70 61 64` supplies a three-byte pad and a fixed 32-bit value; `data` is the one unresolved field and is assigned the remaining four bytes after the known fields are accounted for.
+The canonical reference example is `padlen | data | value | pad`, where `pad` refers to `padlen`. The encoded input `03 64 61 74 61 00 00 10 00 70 61 64` supplies a three-byte pad and a fixed 32-bit value; `data` is the one unresolved field and is assigned the remaining four bytes after the known fields are accounted for.
 
 The test sources cover write/read round trips, group selection, reference-sized fields, 24-bit and 48-bit integers, big-number values, and the `payload_encoded` extension used by QUIC. Test existence establishes source-level coverage; it does not by itself establish a runtime execution result.
 
@@ -212,6 +213,7 @@ It is used by higher-level protocol implementations such as HTTP/2, TLS-related 
 - `sdk/io/basic/payload.hpp`
 - `sdk/io/basic/payload.cpp`
 - `sdk/io/basic/types.hpp`
-- `sdk/io/system/types.hpp` — `payload_encoded` integration types
+- `sdk/io/basic/payload.hpp` — defines the `payload_encoded` extension interface and `payload_member`/`payload`
+- `sdk/net/tls/quic/quic_encoded.hpp` — concrete QUIC encoded-field implementation
 - `sdk/base/basic/variant.hpp`
 - `sdk/base/system/bignumber.hpp`

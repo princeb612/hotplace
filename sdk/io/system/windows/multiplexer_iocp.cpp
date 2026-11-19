@@ -199,7 +199,8 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
             data_vector[3] = (void*)overlapped;
 
             DWORD type = 0;
-            if (0 == size_transfered) {
+            if ((FALSE == bRet) || (0 == size_transfered)) {
+                /* failed overlapped I/O or orderly peer shutdown */
                 type = multiplexer_event_type_t::mux_disconnect;
             } else {
                 type = (is_dgram ? multiplexer_event_type_t::mux_dgram : multiplexer_event_type_t::mux_read);

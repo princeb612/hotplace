@@ -118,6 +118,7 @@ return_t crypto_advisor::build() {
             // distinguish between crypto_scheme_t::aes_128_gcm and crypto_scheme_t::tls_aes_128_gcm
             _cipher_fetch_map.emplace(item->hint.scheme, std::move(block));
             _evp_cipher_map.emplace(item->_cipher, &item->hint);
+            _cipher_byname_map.emplace(item->hint.fetchname, &item->hint);
 
             set_feature(item->hint.fetchname, advisor_feature_wrap);
         }

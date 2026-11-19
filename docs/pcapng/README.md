@@ -3,8 +3,9 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Source base : Revision 1132          │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```
@@ -181,13 +182,13 @@ The PCAPNG document therefore records the observation/reproduction boundary. The
 
 Once real traffic became useful and stable, some captures were promoted into reproducible test vectors.
 
-The central implementation is:
+The TLS/DTLS replay implementation is:
 
 ```text
 test/testcase/tls/testvector_pcap.cpp
 ```
 
-The TLS PCAP test runner imports SSL key-log material, attaches it to a TLS session, reads the YAML-described capture records, and replays the recorded traffic through the implementation.
+That runner imports SSL key-log material, attaches it to a TLS session, reads the YAML-described TLS/DTLS records, and replays those records through the TLS session. A separate QUIC/HTTP/3 capture runner is located at `test/testcase/quic/testvector_pcap.cpp`; its narrower behavior is described below.
 
 The current YAML vectors include:
 
@@ -269,28 +270,26 @@ The key log is therefore not the packet payload itself. It is auxiliary state th
 
 ### HTTP/3 / QUIC Replay
 
-The QUIC test uses the same general idea but exposes an additional framing layer.
+The QUIC capture test uses the same general fixture shape but has a narrower active path. `test/testcase/quic/testvector_pcap.cpp` creates both a TLS session and a QUIC session, attaches the SSL key-log importer to both, and processes YAML items according to their protocol field.
 
-`test/testcase/quic/testvector_pcap.cpp` creates both a TLS session and a QUIC session, attaches the SSL key-log importer to both, and processes YAML items according to their protocol field.
-
-For `QUIC` items, the hexadecimal frame/packet data is decoded and passed to `quic_packets::read()`.
+For `QUIC` items, the hexadecimal packet data is decoded and passed to `quic_packets::read()`. For item-level `TLS 1.3` records, the active handler returns `errorcode_t::do_nothing`; the TLS-record parser call is commented out.
 
 ```text
 HTTP/3 capture
       ↓
 YAML
-      ├── QUIC packet/frame item
+      ├── QUIC packet item
       │       ↓
       │   quic_packets::read()
       │       ↓
-      │   QUIC state / TLS handshake
+      │   QUIC packet / CRYPTO / STREAM processing
       │
       └── TLS 1.3 item
               ↓
-          TLS session context
+          do_nothing (record parsing inactive)
 ```
 
-The accompanying `testvector_pcap_http3.yml` records the observed sequence of QUIC Initial/Handshake/Application packets, CRYPTO frames, ACKs, STREAM frames, and other transport activity. This makes the HTTP/3 vector particularly useful for studying how several framing layers coexist:
+The accompanying `testvector_pcap_http3.yml` records the observed sequence of QUIC Initial/Handshake/Application packets, CRYPTO frames, ACKs, STREAM frames, and other transport activity. The active replay handler does not call `http3_frame::read()` or QPACK decoding, so the fixture verifies the QUIC packet/stream boundary for a capture containing HTTP/3 traffic, not HTTP/3 frame interpretation or request dispatch. This makes the HTTP/3 vector useful for studying how several lower framing layers coexist:
 
 ```text
 UDP datagram
@@ -376,6 +375,8 @@ test/testcase/tls/tls12/
 test/testcase/tls/tls13/
 
 test/testcase/tls/testvector_pcap.cpp
+test/testcase/quic/testvector_pcap.cpp
+test/testcase/quic/testvector_pcap_http3.yml
 test/testcase/tls/testvector_pcap_dtls12.yml
 test/testcase/tls/testvector_pcap_http.yml
 test/testcase/tls/testvector_pcap_tls12.yml
@@ -404,7 +405,7 @@ It should be read together with the QUIC/HTTP/3 study material rather than inter
 - `-T` traces identify the trial TLS adapter path.
 - README/debug traces preserve surrounding execution context.
 - SSL key-log material connects encrypted captures with TLS processing.
-- `testvector_pcap.cpp` and YAML vectors provide capture-replay regression coverage.
+- `test/testcase/tls/testvector_pcap.cpp` and TLS/DTLS YAML vectors provide TLS/DTLS replay coverage; `test/testcase/quic/testvector_pcap.cpp` and `testvector_pcap_http3.yml` provide QUIC packet/stream replay for an HTTP/3 capture, not HTTP/3 frame/QPACK decoding.
 - TLS 1.2, TLS 1.3, DTLS 1.2, HTTP, and TLS 1.3 MLKEM captures participate in this verification history.
 
 PCAPNG is therefore best understood as a **development → interoperability → analysis → regression** artifact.

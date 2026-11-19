@@ -3,7 +3,7 @@
 ```text
 hotplace source-tree documentation
 Edition 2 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 — Windows-specific test behavior & evidence
 ```

@@ -65,8 +65,6 @@ void testcase_construct_dtls12_1();
 void testcase_construct_dtls12_2();
 void testcase_resource();
 
-void testcase_helloretryrequest();
-
 void testcase_alert();
 
 void dump_clienthello();

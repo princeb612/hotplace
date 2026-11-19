@@ -5,7 +5,7 @@
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
@@ -96,6 +96,17 @@ The mutable position is significant: a handshake parser operates on a byte range
 - A record boundary need not equal a handshake-message boundary.
 - DTLS adds message fragmentation and ordering/reassembly concerns.
 - QUIC carries TLS handshake bytes in CRYPTO frames and uses QUIC packet-number spaces and packet protection.
+
+### TLS 1.3 PSK, HelloRetryRequest, and early-data boundaries
+
+The PSK handshake path has state that cannot be inferred from the extension object alone:
+
+- ClientHello with `pre_shared_key` must also carry `psk_key_exchange_modes`. The client binder is generated after the full ClientHello has been serialized, using each offered ticket's original cipher-suite hash and the appropriate transcript prefix.
+- A server's ServerHello PSK selection must reference an identity present in the latest ClientHello, use a compatible TLS 1.3 cipher-suite hash, and satisfy the offered PSK key-exchange mode/key_share combination. HelloRetryRequest cannot contain a PSK selection.
+- After HRR, ClientHello2 remains in the HRR transcript flow. It can carry a PSK offer with a newly computed binder, but it must not repeat the `early_data` extension.
+- The server's EncryptedExtensions `early_data` extension is the acceptance signal. The implementation checks that the client offered early data, the selected PSK identity is zero, and the ticket's version, cipher suite, ALPN, and early-data allowance match before recording acceptance.
+
+The source-level coverage is split across `testcase_gpt_psk.cpp`, `testcase_gpt_psk_offer.cpp`, and `testcase_gpt_early_data.cpp`. These exercise ticket-PSK derivation, binder generation/validation, selected-identity bounds, ticket-age handling, HRR restrictions, and early-data offer/accept/reject cases. The cases are focused implementation tests, not proof of complete TLS 1.3 conformance.
 
 ### Real-code example: one handshake object, several output boundaries
 

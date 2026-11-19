@@ -35,7 +35,17 @@ void tls_protection::set_flow(tls_flow_t flow) { _flow = flow; }
 uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
 void tls_protection::set_cipher_suite(uint16 ciphersuite) {
-    _ciphersuite = ciphersuite;
+    if (_ciphersuite != ciphersuite) {
+        // The transcript hash algorithm is selected by the negotiated cipher
+        // suite. A provisional PSK suite may be replaced by the HRR-selected
+        // suite before the handshake transcript is committed; discard any
+        // lazily-created hash state so the next use adopts the new algorithm.
+        if (_transcript_hash) {
+            _transcript_hash->release();
+            _transcript_hash = nullptr;
+        }
+        _ciphersuite = ciphersuite;
+    }
     get_protection_context().set_cipher_suite(ciphersuite);
 }
 

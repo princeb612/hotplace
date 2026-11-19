@@ -2,7 +2,8 @@
 
 ## Source Baseline
 
-- Source revision: 1097
+- Source revision: 1132
+- Source base : Revision 1132
 - Review question: how does the wire representation change as the study moves from TLS records to DTLS datagrams and then to QUIC packets?
 
 ## 1. Perspective
@@ -401,7 +402,11 @@ ACK range representation
 
 network_session
    ↓
-connection/session abstraction
+server I/O session abstraction
+
+quic_session
+   ↓
+QUIC connection-level protocol state
 
 binary_stream
    ↓
@@ -628,14 +633,14 @@ Related material can be grouped along the following axes.
 - `sdk/net`
 - `sdk/io/basic/payload`
 - `sdk/base/nostd/range_set`
-- `sdk/net/network_session`
+- `sdk/net/server/network_session.hpp/.cpp` — server-side socket/session lifecycle, not the QUIC protocol session
 - parser / binary-construction components
 
 ---
 
 ## 22. Current Status
 
-The current TLS → DTLS → QUIC path in hotplace is better understood as the result of repeatedly studying and implementing the protocols and using each stage to strengthen understanding of the others, rather than as one finished "protocol stack product".
+The current TLS → DTLS → QUIC path in hotplace is better understood as the result of repeatedly studying and implementing the protocols and using each stage to strengthen understanding of the others, rather than as one finished "protocol stack product". The QUIC subsystem has packet, frame, stream, `quic_session`, and packet-publisher components, but the server-side `network_session_manager::get_quic_session()` integration is only declared and the generic `network_server` datagram path does not yet use it. QUIC protocol-session state (`quic_session`) must therefore be distinguished from the server I/O session (`network_session`).
 
 The core path is:
 
@@ -654,6 +659,20 @@ QUIC
   ↓
 transport + TLS integration
 ```
+
+At the public Revision 1132 checkpoint, the TLS study also has a verified TLS 1.3 resumption/0-RTT conformance layer. The implementation keeps the PSK identity and binder vectors aligned, computes each binder with its ticket's associated hash, checks the selected identity and offered key-exchange mode, and validates early-data acceptance against identity zero and the selected ticket's version, cipher suite, and ALPN. The record-processing boundary separately limits ciphertext retained while the early-data decision is pending and ciphertext skipped after rejection; these are not the ticket's plaintext `max_early_data_size` allowance.
+
+The relevant public source paths include `tls_extension_pre_shared_key`,
+`tls_extension_psk_key_exchange_modes`, `tls_extension_early_data`,
+`tls_extensions`, `tls_handshake_client_hello`,
+`tls_handshake_server_hello`, and `tls_record_application_data`. Focused
+regressions are maintained in `testcase_gpt_psk.cpp`,
+`testcase_gpt_psk_offer.cpp`, and `testcase_gpt_early_data.cpp`.
+The user reports the public Release CTest run passed all 12 tests (0 failures),
+including `test-tls`.
+
+This checkpoint updates the protocol-state and record-boundary evidence; it
+does not change the historical TLS → DTLS → QUIC development sequence.
 
 Throughout this process, test vectors, packet captures, debug logs, and OpenSSL comparisons have served as important validation methods.
 

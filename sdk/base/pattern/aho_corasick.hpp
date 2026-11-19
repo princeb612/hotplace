@@ -403,19 +403,19 @@ enum class trigger_t {
 /**
  * @examples
  *          // sketch
- *          travel_ranges(trigger_t::level, results, [](matched_t type, hotplace::range_t r, size_t pid) -> bool {
+ *          travel_ranges(trigger_t::level, results, [](matched_t type, range_t r, size_t pid) -> bool {
  *              if (matched_t::unmatched == type) {
  *                  // handling of all unmatched areas
  *              }
  *              return true;
  *          });
- *          travel_ranges(trigger_t::edge, results, [](matched_t type, hotplace::range_t r, size_t pid) -> bool {
+ *          travel_ranges(trigger_t::edge, results, [](matched_t type, range_t r, size_t pid) -> bool {
  *              // detecting the edge where change occurs
  *              return true;
  *          });
  */
 template <typename F>
-return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results, F&& func) {
+return_t travel_ranges(trigger_t trigger, const std::multimap<range_t, size_t>& results, F&& func) {
     return_t ret = errorcode_t::success;
 
     if (results.empty()) return errorcode_t::empty;
@@ -430,7 +430,7 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
 
             // unmatched gap
             if (current_cursor < r.begin) {
-                hotplace::range_t gap;
+                range_t gap;
                 gap.begin = current_cursor;
                 gap.end = r.begin - 1;
 
@@ -452,7 +452,7 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
         // edge triggered: coalesce consecutive same-type states  and emit only on state transitions
         bool has_pending = false;
         matched_t pending_type = matched_t::unmatched;
-        hotplace::range_t pending_range;
+        range_t pending_range;
         size_t pending_pid = 0;
 
         for (const auto& pair : results) {
@@ -461,7 +461,7 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
 
             // 1. check unmatched gap
             if (current_cursor < r.begin) {
-                hotplace::range_t gap;
+                range_t gap;
                 gap.begin = current_cursor;
                 gap.end = r.begin - 1;
 
@@ -528,11 +528,10 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
 
 /**
  * @param trigger_t trigger [in] trigger_t::level
- * @param const std::multimap<hotplace::range_t, size_t>& results [in] sorted results
- * @param std::function<bool(matched_t, hotplace::range_t, size_t)> func [in]
+ * @param const std::multimap<range_t, size_t>& results [in] sorted results
+ * @param std::function<bool(matched_t, range_t, size_t)> func [in]
  */
-HOTPLACE_BASE_API return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results,
-                                         std::function<bool(matched_t, hotplace::range_t, size_t)> func);
+HOTPLACE_BASE_API return_t travel_ranges(trigger_t trigger, const std::multimap<range_t, size_t>& results, std::function<bool(matched_t, range_t, size_t)> func);
 
 }  // namespace hotplace
 

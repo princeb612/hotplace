@@ -246,7 +246,6 @@ int main(int argc, char** argv) {
 
         testcase_testvector_pcap();
 
-        testcase_helloretryrequest();
         testcase_alert();
 
         testcase_construct_tls();

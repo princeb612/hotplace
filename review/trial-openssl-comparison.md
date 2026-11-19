@@ -1,10 +1,12 @@
 # Hotplace Trial / OpenSSL Comparison Architecture
 
-> **Review baseline:** Revision 1097
+> **Review baseline:** Revision 1132
+>
+> **Source base : Revision 1132**
 
 ## Review thesis
 
-**The trial/OpenSSL environment is a verification architecture in which an independent implementation provides comparison evidence, while debug state and wire captures connect a protocol result back to the exact conditions that produced it.**
+**The trial/OpenSSL environment is a verification architecture in which hotplace's trial protocol path can be compared with the separate OpenSSL TLS/DTLS protocol adapter or an external OpenSSL peer, while debug state and wire captures connect a result back to the conditions that produced it. The independence boundary must be stated precisely: the trial path owns hotplace's TLS/DTLS protocol/session logic, but its cryptographic primitives still use the shared crypto/OpenSSL substrate.**
 
 ## Comparison model
 
@@ -23,6 +25,13 @@ same protocol / same crypto parameters
 ```
 
 OpenSSL is therefore an independent comparison axis, not an absolute correctness oracle. Agreement is evidence; disagreement is a diagnostic signal that must be explained from the protocol state and parameters.
+
+There are two different OpenSSL roles in this repository:
+
+- **OpenSSL socket adapter:** a separate TLS/DTLS protocol implementation selected by `socket_scheme_openssl`; it wraps OpenSSL's `SSL_CTX`/`SSL` path.
+- **OpenSSL cryptographic substrate:** the trial protocol path uses hotplace TLS/session/record logic but relies on the common crypto layer for primitive operations. Therefore, a trial-vs-OpenSSL-adapter comparison is independent at the protocol-engine boundary, not at every cryptographic primitive boundary.
+
+The server applet makes the selection explicit. `test/applet/tlsserver/run_server.cpp` adds `socket_scheme_trial` when `-T` is supplied; otherwise it adds `socket_scheme_openssl`. `trial_server_socket_adapter` accepts TLS, DTLS, QUIC and QUIC2 schemes, while `openssl_server_socket_adapter` accepts TLS and DTLS and returns `not_supported` for QUIC/QUIC2.
 
 ## Comparison directions
 
@@ -66,6 +75,17 @@ hotplace debug log
 
 This creates two complementary forms of evidence. Debug information explains **why** the implementation produced a value; packet capture shows **what actually crossed the wire**.
 
+## Current source-backed evidence at Revision 1132
+
+| Evidence path | What it demonstrates | Boundary |
+|---|---|---|
+| `test/applet/tlsserver -T` + external `openssl s_client` | An OpenSSL client can exercise the hotplace trial TLS server; the applet README preserves a TLS 1.3 scenario using an ML-KEM group list and key logging. | One recorded configuration does not establish support for every group, certificate, client version, or TLS option. |
+| Trial HTTP server + `curl` | Captured HTTP/1.1/HTTP/2-over-TLS exchanges connect trial TLS debug output, SSL key-log material, and wire traffic. | Evidence is limited to the specific capture and negotiated parameters. |
+| `test/applet/tlsserver` without `-T` | The same applet can select the OpenSSL-backed TLS/DTLS socket adapter instead of the trial protocol implementation. | This is an alternative in-process backend, not an external peer interoperability test. |
+| `test/testcase/tls/testvector_pcap.cpp` | YAML-described TLS/DTLS records and key-log secrets are replayed through hotplace `tls_session` processing. | Capture replay is a deterministic input path, not a new live network exchange with OpenSSL. |
+
+The retained artifacts are indexed by `test/applet/tlsserver/pcap/README.md` and `docs/pcapng/README.md`. The latter also documents the relationship among trial-server traces, external clients, PCAPNG, SSL key logs, and selected replay vectors.
+
 ## Why the comparison architecture matters
 
 The important relationship is not that hotplace happens to use OpenSSL. The important relationship is that an external implementation is deliberately placed outside the implementation under test, creating an independent reference path for protocol and cryptographic behavior.
@@ -85,7 +105,7 @@ OpenSSL cannot by itself prove that hotplace is correct. Two implementations can
 
 ## Current state
 
-Revision 1097 retains the trial/OpenSSL workflow as a comparison and verification layer around protocol development. Exact executable inventory is intentionally not expanded here where source-level relationships were not verified during this review pass.
+Revision 1132 retains both the trial and OpenSSL socket-adapter paths, plus recorded external-client captures and TLS/DTLS capture-replay tests. The strongest explicitly documented external comparison is OpenSSL `s_client` against the trial TLS server; other combinations must be supported by their own capture or run record.
 
 ### Related source / documents
 
@@ -98,6 +118,6 @@ Revision 1097 retains the trial/OpenSSL workflow as a comparison and verificatio
 
 ---
 
-**GPT Review**
+**Reviewer**
 
-Reviewed against the hotplace source/documentation state around **revision 1097**.
+Prepared with the assistance of ChatGPT (GPT-6) as an external reviewer. Reviewed against the hotplace source/documentation state at **Revision 1132**. This document audit did not execute a live interoperability test or rerun the retained captures.

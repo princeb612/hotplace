@@ -1,20 +1,26 @@
 ### thirdparty
 
+> Source base : Revision 1132
+
 * build
-  ./make.sh debug
+  * From this directory: `./make.sh debug`
 
-* thirdparty
+* Active dependency selection
 
-| OSS          | brief       |           | description                                                              |
-| --           | --          | --        | --                                                                       |
-| openssl      | CRYPTO, TLS | mandatory | general-purpose cryptography and secure communication                    |
-| jansson      | JSON        | mandatory | encoding, decoding and manipulating JSON data                            |
-| zlib         | compression | mandatory | A Massively Spiffy Yet Delicately Unobtrusive Compression Library        |
-| yaml-cpp     | YAML        | mandatory | yaml                                                                     |
-| liboqs       | PQC         | optional  | quantum-safe cryptographic algorithms                                    |
-| oqs-provider | PQC         | optional  | quantum-safe cryptography (QSC) in a standard OpenSSL (3.x) distribution |
+The current `thirdparty/dependency` array selects `oss_openssl40`, `oss_jansson`, `oss_zlib`, and `oss_yaml`. The resolved package definitions are OpenSSL 4.0.3, Jansson 2.15.0, zlib 1.3.2, and yaml-cpp 0.9.0. This is the default dependency array used by `thirdparty/make.sh`.
 
-* summary
+| OSS | Current default selection | Description |
+| -- | -- | -- |
+| openssl | Selected: 4.0.3 | General-purpose cryptography and secure communication |
+| jansson | Selected: 2.15.0 | JSON encoding, decoding and manipulation |
+| zlib | Selected: 1.3.2 | Compression library |
+| yaml-cpp | Selected: 0.9.0 | YAML parser |
+| liboqs | Declared, not selected | Optional quantum-safe cryptographic algorithms |
+| oqs-provider | Declared, not selected | External OpenSSL provider for quantum-safe algorithms |
+
+`liboqs` and `oqs-provider` have package definitions in `thirdparty/dependency`, but neither appears in the active `dependency` array. The `SUPPORT_OQS` option controls inclusion of hotplace's OQS adapter/test sources; it does not add these two packages to the third-party build. An OQS-enabled runtime still requires an independently installed and loadable `oqsprovider` module.
+
+* Historical OpenSSL compatibility notes
   * openssl 1.1.1 or newer
     * RSA-OAEP-256
     * Ed25519 Ed448 X25519 X448
@@ -28,7 +34,7 @@
   * openssl 3.5
     * ML-KEM, ML-DSA
 
-* comments
+* historical build comments
   * openssl
     * MSVC
       * [MUST] manual build
@@ -42,7 +48,7 @@
       | 3.3 | OPENSSL_LH_set_thunks |
       | 3.4 | EVP_MD_CTX_get_size_ex |
 
-* old platforms
+* historical platform notes
   * bash 3.x to 4 or later
     * https://ftp.kaist.ac.kr/gnu/bash/bash-4.4.tar.gz
     * https://ftp.kaist.ac.kr/gnu/bash/bash-5.3.tar.gz
@@ -57,3 +63,4 @@
     * -B option   (3.13.?)
     * Unknown CMake command "target_precompile_headers".
       * declare -A oss_cmake316=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.16.0.tar.gz [dir]=CMake-3.16.0 [build]=build_tool [buildscript]=)
+

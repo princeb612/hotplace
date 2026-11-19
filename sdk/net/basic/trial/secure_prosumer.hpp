@@ -31,6 +31,9 @@ class HOTPLACE_NET_API secure_prosumer {
     void set_pending_early_data_buffer_limit(uint64 limit);
     uint64 get_pending_early_data_buffer_limit() const;
 
+    /** Mark the underlying transport as terminal and wake a pending consumer. */
+    return_t notify_transport_closed();
+
     return_t produce(tls_session* session, tls_direction_t dir, std::function<void(basic_stream&, sockaddr_storage_t&)> func);
     return_t produce(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, struct sockaddr* addr = nullptr, socklen_t* addrlen = nullptr);
     return_t consume(int sock_type, uint32 wto, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr = nullptr, socklen_t* addrlen = nullptr);
@@ -49,6 +52,7 @@ class HOTPLACE_NET_API secure_prosumer {
     basic_stream _mbs;
     bool _producing;
     bool _resume_pending;
+    bool _transport_closed;
     uint64 _pending_early_data_buffer_limit;
 };
 

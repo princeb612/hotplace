@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_CLIENTSOCKETPROSUMER__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_CLIENTSOCKETPROSUMER__
 
+#include <atomic>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
@@ -72,6 +73,9 @@ class HOTPLACE_NET_API client_socket_prosumer : public client_socket {
     virtual return_t do_secure();
     virtual return_t do_shutdown();
     virtual return_t do_close();
+    virtual return_t do_transport_disconnect();
+    virtual return_t do_remote_transport_disconnect();
+    bool is_remote_transport_closed() const;
 
     return_t start_consumer();
     return_t stop_consumer();
@@ -80,9 +84,10 @@ class HOTPLACE_NET_API client_socket_prosumer : public client_socket {
     return_t producer_routine(void* param);
     static return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
     return_t do_consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
-    void async_read();
+    return_t async_read();
 
    protected:
+    std::atomic<bool> _remote_transport_closed;
     socket_t _fd;
     sockaddr_storage_t _sa;
     multiplexer_context_t* _mphandle;

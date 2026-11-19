@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1124                    │
-│ Source basis: Revision 1124                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -26,19 +26,19 @@ parser action
                  parse_tree
 ```
 
-It is the bridge between parser mechanics and higher-level semantic construction. In the current GLR path, the parser reports reductions while GSS paths are being reduced, so the parse tree is the first shared representation after parser execution and before domain-specific semantic objects are built.
+It is an event-driven syntax builder between parser mechanics and higher-level semantic construction. The tree stores one working node stack; it is not a branch-aware representation of GLR's GSS paths. In the current GLR path, reductions from active GSS paths are sent to this same stack, so the resulting `parse_tree` must not be treated as a complete shared representation of every competing derivation.
 
 ## 2. Data Model
 
 ### parse_treenode: grammar-shaped node
 
-A node records a grammar symbol, optional token/value text, terminal/non-terminal identity and an ordered child list. A terminal's value comes from the shifted input token. A non-terminal's children are the RHS nodes consumed by a reduction, kept in grammar order.
+A node records a grammar symbol, optional token/value text, an ordered child list and a rule ID (or the sentinel `(uint32)-1`). It does not store a separate terminal/non-terminal flag: `is_terminal()` infers terminal status when the child list is empty and the value is non-empty. Consequently, an empty-valued leaf is classified as non-terminal. A terminal's value comes from the shifted input token. A non-terminal's children are the RHS nodes consumed by a reduction, kept in grammar order.
 
 A completed reduction may carry the rule ID when the parser calls the overload that supplies it. Rule ID, LHS symbol and RHS child count are distinct: the rule ID identifies a production, while the child sequence represents one recognized instance.
 
 ### parse_tree: working stack and root
 
-The tree builder maintains nodes needed to assemble reductions and exposes the completed root through get_root(). The root and descendants belong to the tree; callers should not delete them independently. clear() releases nodes still held by the working stack and the parser reference registered through set_parser().
+The tree builder maintains a single working node stack needed to assemble reductions and exposes the last stack node through `get_root()`. `get_root()` does not verify that exactly one node remains. The root and descendants belong to the tree; callers should not delete them independently. `clear()` releases nodes still held by the working stack and the parser reference registered through `set_parser()`.
 
 ### Visitor interface
 
@@ -122,11 +122,11 @@ The traversal is pre-order for the state hook and post-order for reductions. Eac
 
 ### Semantic boundary
 
-The syntax tree is the hand-off point between generic parser execution and domain-specific construction. A consumer walks the grammar-shaped tree and builds its own semantic objects. A syntactically valid tree is not proof that input meets ASN.1 type, reference or constraint rules.
+The syntax tree is the hand-off point between generic parser execution and domain-specific construction. A consumer walks the grammar-shaped tree and builds its own semantic objects. A syntactically valid tree is not proof that input meets ASN.1 type, reference or constraint rules. For LALR's single path this is a natural reduction stack; for GLR, the single-stack event consumer can mix reductions from competing GSS paths and is not an ambiguity-preserving forest.
 
 ### Source-level evidence
 
-test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through test_asn1parser(). In `parse_tree.cpp`, `accept()` delegates to `visit(root, visitor, initial_state)`. Each visit copies the inherited state, invokes `on_visit(node, state)`, passes the resulting state to `on_shift` or `on_reduce`, and passes it to child visits. The generic parser does not interpret the bits; consumers define their own state flags. The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
+test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp sends notation through `test_asn1parser()`, which calls `parser.parse(tokens, &pt)` and dumps the tree regardless of parse status; a failed parse can therefore leave a partial tree for diagnostics. In `parse_tree.cpp`, `accept()` delegates to `visit(root, visitor, initial_state)`. Each visit copies the inherited state, invokes `on_visit(node, state)`, passes the resulting state to `on_shift` or `on_reduce`, and passes it to child visits. The generic parser does not interpret the bits; consumers define their own state flags. The return value from `on_visit()` is ignored, while errors from `on_shift()` / `on_reduce()` abort and propagate. The current testcase suite prints trees but has no dedicated assertion for visitor state propagation, callback errors, or exact tree shape. The compact input Type1 ::= VisibleString is useful for tracing the Statement → Assignment → TypeSpec-style tree.
 
 ## 4. Relationships
 ### Related areas

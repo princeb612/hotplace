@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -24,7 +24,7 @@ The node stores:
 
 - identifier/P-C information
 - tag
-- encoded length
+- decoded content length (the TLV V length, not the complete TLV byte count)
 - name
 - parent
 - child list
@@ -61,15 +61,20 @@ Keeping these representations separate allows a decoded TLV tree to exist before
 ### From decoded structure to semantic interpretation
 
 ```text
-DER / TLV
+DER / TLV bytes
    |
    v
-asn1_node
+asn1_bytestream
    |
-   | structural representation
+   | t_tree<asn1_tlv_t> (identifier, tag, length, value offset)
    v
-semantic construction
+asn1_weakly_typed
    |
+   | asn1_primitive_node / asn1_constructed_node
+   v
+asn1_node tree
+   |
+   | schema-less semantic promotion
    v
 asn1_object
 ```
@@ -77,7 +82,7 @@ asn1_object
 
 ### Build and traverse the structural tree
 
-The structural node layer provides the generic operations needed to assemble and inspect a TLV tree: assign parent relationships, insert children, iterate descendants, count children, clone, clear, and manage shared lifetime.
+The structural node layer provides the generic operations needed to assemble and inspect a TLV tree: assign parent relationships, insert children into containers, iterate immediate children, count direct children, clone, clear, and manage lifetime. `for_each()` is not recursive; callers must recurse themselves to visit descendants.
 
 ```text
 encoded ASN.1 TLV
@@ -99,11 +104,11 @@ schema-aware interpretation (separate step)
 asn1_object model
 ```
 
-A structural tree can exist before a schema has been selected or references resolved. It records tag/length and tree relationships; it does not by itself know the named ASN.1 type or all constraints implied by a schema.
+A structural tree can exist before a schema has been selected or references resolved. It records tag/length and tree relationships; it does not by itself know the named ASN.1 type or all constraints implied by a schema. A primitive node stores the value octets only, not the complete TLV header; a constructed node stores its child nodes. The primitive-node constructor copies value bytes only when the supplied span is in bounds; an invalid span leaves the value empty without returning an error. `add()` stores a child pointer and sets its parent without `addref()`; adding to a non-container primitive node releases the supplied child and silently does not insert it. The parent releases its children when cleared/destroyed. `addref()` / `release()` adjust the node's own shared counter; child references are released by `clear()` / destruction. Copy/clone is shallow: it copies child pointers and addrefs them rather than cloning descendants, and it copies the original parent pointer without rewriting the shared children's parent pointers. A clone is therefore not an independent deep tree.
 
 ### Related tests
 
-Structural parsing and DER behavior are exercised across `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/`. Those directories contain the relevant source-level test paths; this documentation update did not run them.
+The weakly typed DER path is exercised through `asn1_module::read_weakly_typed()` in `testcase_basic1.cpp`, `testvector_der.cpp` and `testvector_parser.cpp`: the runtime path is `asn1_bytestream` → `asn1_weakly_typed` → structural nodes → semantic objects. These tests exercise the surrounding decode/promotion path, but the current test tree has no direct assertions for `asn1_node::add()`, `for_each()`, `clone()` or parent-pointer behavior. The structural-node diagram in `testcase_basic2.cpp` is a source comment, not an executed node test. This documentation update did not run the tests.
 
 ## 4. Relationships
 ### Related documents

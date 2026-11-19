@@ -28,8 +28,11 @@ return_t tls_handshake_end_of_early_data::do_preprocess(tls_direction_t dir) {
     auto& early_state = session->get_session_info(from_server).get_keyvalue();
     bool accepted = (0 != early_state.get(session_early_data_accepted));
     bool already_finished = (0 != early_state.get(session_early_data_finished));
-    bool server_finished = (0 != (session_status_server_finished & session->get_session_status()));
-    if ((from_client != dir) || !protection.is_kindof_tls13() || (tls_flow_t::zero_rtt != protection.get_flow()) || !accepted || !server_finished || already_finished) {
+    auto session_status = session->get_session_status();
+    bool server_finished = (0 != (session_status_server_finished & session_status));
+    bool client_authentication_started = (0 != ((session_status_client_cert | session_status_client_cert_verified) & session_status));
+    if ((from_client != dir) || (false == protection.is_kindof_tls13()) || (tls_flow_t::zero_rtt != protection.get_flow()) || (false == accepted) ||
+        (false == server_finished) || client_authentication_started || already_finished) {
         session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
         session->reset_session_status();
         return errorcode_t::handshake_failure;
@@ -63,7 +66,24 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, tl
     return ret;
 }
 
-return_t tls_handshake_end_of_early_data::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+return_t tls_handshake_end_of_early_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+    if (0 != get_body_size()) {
+        // RFC 8446 4.5.4: EndOfEarlyData is an empty handshake message.
+        auto session = get_session();
+        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+        session->reset_session_status();
+        return errorcode_t::bad_format;
+    }
+
+    // EndOfEarlyData has no fields to decode. payload::read() treats an
+    // empty input as no_data, so the zero-length body is validated above.
+    return errorcode_t::success;
+}
+
+return_t tls_handshake_end_of_early_data::do_write_body(tls_direction_t dir, binary_t& bin) {
+    payload pl;
+    return pl.write(bin);
+}
 
 }  // namespace net
 }  // namespace hotplace

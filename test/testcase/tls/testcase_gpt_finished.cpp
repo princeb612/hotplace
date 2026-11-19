@@ -2,12 +2,14 @@
 /**
  * @file   testcase_gpt_finished.cpp
  * @author GPT
- * @desc
+ * @desc   TLS Finished verification and record-epoch transition tests.
  */
 
 #include "testcase_gpt_common.hpp"
 
 static void test_finished_record_sequence_transition() {
+    // Scenario under test: TLS Finished record sequence transition.
+    // Expected: preserve TLS 1.2 client record sequence after Finished.
     _test_case.begin("TLS Finished record sequence transition");
 
     {
@@ -44,6 +46,8 @@ static void test_finished_record_sequence_transition() {
 }
 
 static void test_tls13_finished_record_boundary() {
+    // Scenario under test: TLS 1.3 Finished record boundary.
+    // Expected: reject NewSessionTicket coalesced after TLS 1.3 Finished.
     _test_case.begin("TLS 1.3 Finished record boundary");
 
     tls_session writer;
@@ -62,6 +66,9 @@ static void test_tls13_finished_record_boundary() {
 }
 
 static void test_tls13_finished_application_epoch_integration() {
+    // Scenario under test: TLS 1.3 Finished application traffic epoch integration.
+    // Action: select the expected server-direction traffic key.
+    // Expected: select the expected server-direction traffic IV.
     _test_case.begin("TLS 1.3 Finished application traffic epoch integration");
 
     auto configure = [](tls_session& session) -> void {
@@ -83,6 +90,7 @@ static void test_tls13_finished_application_epoch_integration() {
         secrets.assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x88));
 
         session.update_session_status(session_status_server_hello);
+        session.update_session_status(session_status_encrypted_extensions);
         session.update_session_status(session_status_server_cert_verified);
         session.get_session_info(from_server).set_status(tls_handshake_type_t::certificate_verify);
         session.get_session_info(from_server).begin_protection();
@@ -236,7 +244,107 @@ static void test_tls13_finished_application_epoch_integration() {
     _test_case.assert(1 == reader.get_recordno(from_client), __FUNCTION__, "consume client application epoch inbound sequence zero");
 }
 
+static void test_tls13_psk_finished_without_certificate_authentication() {
+    // Scenario under test: TLS 1.3 PSK-authenticated Finished without certificate authentication.
+    // Action: exchange Server Finished and Client Finished after EncryptedExtensions.
+    // Expected: accept both Finished messages without server certificate verification.
+    _test_case.begin("TLS 1.3 PSK Finished does not require certificate authentication");
+
+    auto configure = [](tls_session& session, bool psk_selected) -> void {
+        session.set_type(session_type_t::tls);
+        auto& protection = session.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1301);
+        protection.use_pre_master_secret(true);
+
+        auto& secrets = protection.get_secrets();
+        secrets.assign(tls_secret_t::s_hs_traffic, binary_t(32, 0x11));
+        secrets.assign(tls_secret_t::c_hs_traffic, binary_t(32, 0x22));
+        secrets.assign(tls_secret_t::s_ap_traffic, binary_t(32, 0x33));
+        secrets.assign(tls_secret_t::c_ap_traffic, binary_t(32, 0x44));
+        secrets.assign(tls_secret_t::application, binary_t(32, 0x99));
+        secrets.assign(tls_secret_t::handshake_server_key, binary_t(16, 0x55));
+        secrets.assign(tls_secret_t::handshake_server_iv, binary_t(12, 0x66));
+        secrets.assign(tls_secret_t::handshake_client_key, binary_t(16, 0x77));
+        secrets.assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x88));
+
+        session.update_session_status(session_status_server_hello);
+        session.update_session_status(session_status_encrypted_extensions);
+        session.get_keyvalue().set(session_client_psk_identity_count, psk_selected ? 1 : 0);
+        session.get_keyvalue().set(session_server_psk_selected_identity, psk_selected ? 0 : 0xffff);
+        session.get_session_info(from_server).set_status(tls_handshake_type_t::encrypted_extensions);
+        session.get_session_info(from_server).begin_protection();
+        session.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+        session.get_session_info(from_client).begin_protection();
+    };
+
+    tls_session writer;
+    tls_session reader;
+    configure(writer, true);
+    configure(reader, true);
+
+    _test_case.assert(0 == (writer.get_session_status() & session_status_server_cert_verified), __FUNCTION__,
+                      "begin the PSK handshake without server certificate verification");
+    _test_case.assert(0 == (reader.get_session_status() & session_status_server_cert_verified), __FUNCTION__,
+                      "receive the PSK handshake without server certificate verification");
+
+    tls_record_application_data outgoing_server_finished(&writer);
+    outgoing_server_finished << new tls_handshake_finished(&writer);
+    binary_t server_finished_wire;
+    return_t ret = outgoing_server_finished.write(from_server, server_finished_wire);
+    _test_case.test(ret, __FUNCTION__, "write PSK-authenticated Server Finished after EncryptedExtensions");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_records decoded_server_finished;
+    ret = decoded_server_finished.read(&reader, from_server, server_finished_wire);
+    _test_case.test(ret, __FUNCTION__, "verify PSK-authenticated Server Finished without a certificate");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(0 != (reader.get_session_status() & session_status_server_finished), __FUNCTION__, "record successful PSK-authenticated Server Finished");
+
+    tls_record_application_data outgoing_client_finished(&writer);
+    outgoing_client_finished << new tls_handshake_finished(&writer);
+    binary_t client_finished_wire;
+    ret = outgoing_client_finished.write(from_client, client_finished_wire);
+    _test_case.test(ret, __FUNCTION__, "write Client Finished after the PSK-authenticated Server Finished");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_records decoded_client_finished;
+    ret = decoded_client_finished.read(&reader, from_client, client_finished_wire);
+    _test_case.test(ret, __FUNCTION__, "verify Client Finished in the PSK-authenticated handshake");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(0 != (reader.get_session_status() & session_status_client_finished), __FUNCTION__, "record successful PSK-authenticated Client Finished");
+
+    // Keep the full-handshake prerequisite intact: without a selected PSK,
+    // Finished must still wait for server certificate verification.
+    tls_session unauthenticated_full_handshake;
+    configure(unauthenticated_full_handshake, false);
+    tls_record_application_data premature_server_finished(&unauthenticated_full_handshake);
+    premature_server_finished << new tls_handshake_finished(&unauthenticated_full_handshake);
+    binary_t rejected_server_finished_wire;
+    ret = premature_server_finished.write(from_server, rejected_server_finished_wire);
+    _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject full-handshake Server Finished before server certificate verification");
+
+    size_t unexpected_message_count = 0;
+    unauthenticated_full_handshake.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
+            ++unexpected_message_count;
+        }
+    });
+    _test_case.assert(1 == unexpected_message_count, __FUNCTION__, "retain the fatal unexpected_message alert for a full handshake without certificate verification");
+}
+
 static void test_tls12_finished_record_sequence_integration() {
+    // Scenario under test: TLS 1.2 Finished record sequence integration.
+    // Action: write protected TLS 1.2 Client Finished.
+    // Expected: consume one TLS 1.2 record sequence number for outbound Finished.
     _test_case.begin("TLS 1.2 Finished record sequence integration");
 
     auto configure = [](tls_session& session) -> void {
@@ -403,9 +511,99 @@ static void test_tls12_finished_record_sequence_integration() {
     }
 }
 
+static void test_finished_calculation_propagates_invalid_algorithm() {
+    _test_case.begin("Finished calculation propagates an invalid hash algorithm");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls_13);
+    protection.set_cipher_suite(0x1301);
+
+    tls_secret_t typeof_secret{};
+    binary_t verify_data;
+    return_t ret = protection.calc_finished(from_server, hash_algorithm_t{}, 32, typeof_secret, verify_data);
+    _test_case.assert(errorcode_t::unknown == ret, __FUNCTION__, "return the Finished calculation error to the caller");
+    _test_case.assert(verify_data.empty(), __FUNCTION__, "do not produce verify_data after a calculation error");
+}
+
+static void test_tls13_finished_postprocess_key_schedule_failure_is_terminal() {
+    _test_case.begin("TLS 1.3 Finished key-schedule failure terminates the session");
+
+    class finished_postprocess_probe : public tls_handshake_finished {
+       public:
+        explicit finished_postprocess_probe(tls_session* session) : tls_handshake_finished(session) {}
+        return_t run_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return do_postprocess(dir, tls_io_operation_t::read, stream, size); }
+    };
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls_13);
+    protection.set_cipher_suite(0x1301);
+    protection.set_flow(tls_flow_t::one_rtt);
+    protection.reset_transcript_hash(&session);
+    // Cipher suite zero resolves to the TLS_NULL registry entry, which has no
+    // block-cipher parameters and makes the local key-schedule calculation fail.
+    protection.set_cipher_suite(0);
+
+    session.update_session_status(session_status_server_hello);
+    session.update_session_status(session_status_encrypted_extensions);
+    session.get_session_info(from_server).set_status(tls_handshake_type_t::encrypted_extensions);
+    session.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    session.get_keyvalue().set(session_client_psk_identity_count, 1);
+    session.get_keyvalue().set(session_server_psk_selected_identity, 0);
+
+    finished_postprocess_probe finished(&session);
+    const byte_t marker = 0;
+    return_t ret = finished.run_postprocess(from_server, &marker, sizeof(marker));
+    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "return the local key-schedule failure");
+
+    _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "reset handshake status after local Finished processing failure");
+    _test_case.assert(tls_handshake_type_t::client_hello == session.get_session_info(from_server).get_status(), __FUNCTION__,
+                      "reset the server handshake cursor after local Finished processing failure");
+    _test_case.assert(0 == session.get_keyvalue().get(session_handshake_finished), __FUNCTION__, "do not commit Finished after key-schedule failure");
+
+    size_t fatal_internal_error_count = 0;
+    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
+            ++fatal_internal_error_count;
+        }
+    });
+    _test_case.assert(1 == fatal_internal_error_count, __FUNCTION__, "queue exactly one fatal internal_error for local Finished processing failure");
+}
+
+static void test_tls13_finished_requires_cipher_suite() {
+    // Scenario under test: TLS 1.3 Finished without a negotiated cipher suite.
+    // Expected: fail before emitting a malformed empty Finished message.
+    _test_case.begin("TLS 1.3 Finished requires a negotiated cipher suite");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls_13);
+    protection.set_flow(tls_flow_t::one_rtt);
+    session.update_session_status(session_status_server_hello);
+    session.update_session_status(session_status_encrypted_extensions);
+    // Satisfy the non-PSK Finished flow prerequisite so the test reaches
+    // do_write_body() and specifically exercises the missing-cipher-suite path.
+    session.update_session_status(session_status_server_cert_verified);
+
+    tls_handshake_finished finished(&session);
+    binary_t wire;
+    return_t ret = finished.write(from_server, wire);
+    _test_case.assert(errorcode_t::not_supported == ret, __FUNCTION__, "reject Finished when no cipher suite has been negotiated");
+    _test_case.assert(wire.empty(), __FUNCTION__, "emit no partial or empty Finished handshake message");
+    _test_case.assert(0 == session.get_keyvalue().get(session_handshake_finished), __FUNCTION__, "do not commit Finished status after the write failure");
+}
+
 void testcase_gpt_finished() {
+    test_finished_calculation_propagates_invalid_algorithm();
+    test_tls13_finished_postprocess_key_schedule_failure_is_terminal();
+    test_tls13_finished_requires_cipher_suite();
     test_finished_record_sequence_transition();
     test_tls13_finished_record_boundary();
     test_tls13_finished_application_epoch_integration();
+    test_tls13_psk_finished_without_certificate_authentication();
     test_tls12_finished_record_sequence_integration();
 }

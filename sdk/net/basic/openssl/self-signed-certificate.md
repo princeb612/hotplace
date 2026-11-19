@@ -1,5 +1,7 @@
 ### Developer Notes — self-signed certificate
 
+> Source base : Revision 1132 (certificate-script instructions cross-checked)
+
 see test/cert/make.sh
 
 ```

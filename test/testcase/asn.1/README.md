@@ -3,7 +3,7 @@
 ```text
 hotplace source tree
 Edition 2 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 — testcase procedure, parser flow & evidence
 ```
@@ -27,7 +27,7 @@ The test executable's `main()` first checks that the advisor's LALR(1) notation 
 | `runtime/testcase_parser.cpp` | Table-driven ASN.1 notation inputs covering assignments, types, tags and constraints |
 | `runtime/testcase_publish.cpp` | Parse-tree semantic construction and publication experiments |
 | `loader/testcase_loader.cpp` | ASN.1 file-to-token, parse-tree, module build, exports/imports and symbol lookup |
-| `parameterized/testcase_parameterized.cpp` | Direct semantic specialization prototypes; parser-to-loader integration probe remains disabled |
+| `parameterized/testcase_parameterized.cpp` | Direct semantic specialization plus active inline and file-based parser/loader/publisher reconstruction cases; `example7.asn1` remains a commented in-progress vector |
 | Advisor/provider path | Entity dictionaries, tagging/class lookups, shared publisher and parser providers are described in the integrated sections below |
 
 The runtime's current module representation is `asn1_module`, with the named-module registry `asn1_modules`. The earlier `asn1_module_context` name is not current in the source basis documented here.
@@ -62,14 +62,14 @@ The runtime's current module representation is `asn1_module`, with the named-mod
 
 1. For each row in `testcase_constraints.cpp`, build the ASN.1 type/object and its constraint tree.
 2. Publish the type as notation and compare it with the expected source or canonical notation.
-3. Parse the expected notation into a module as part of the case setup.
+3. Call `parse_notation()` on the expected notation as a separate parser check. The helper records the parse status; the parsed module is not used to build the semantic type later validated in this table.
 4. Instantiate an `asn1_value` and assign the test data: integer/real scalars, strings, OCTET STRING/BIT STRING values, collections, enumerated values, or nested SEQUENCE fields.
 5. Call `type->validate(value)`.
 6. Use the row's `expect` flag to select `_test_case.assert(test, ...)` for valid inputs or `_test_case.nassert(test, ...)` for invalid inputs.
 7. The selected cases cover single values/unions, integer and real ranges, intersections and EXCEPT/ALL EXCEPT, SIZE, permitted alphabets, string and collection sizes, ENUMERATED members, nested fields, patterns, and an exclusive boundary. They do not exhaustively enumerate the full value domain.
 8. Object-level validation also checks built-in value representations for the corresponding ASN.1 entity. The reviewed cases include BOOLEAN, NULL, INTEGER, REAL, OBJECT IDENTIFIER, RELATIVE-OID, OCTET STRING, BIT STRING and supported string types; ENUMERATED validation rejects values that are not declared members.
-9. Constructed SEQUENCE/SET values are traversed recursively so named child values are checked against their own types and constraints.
-10. These checks are layered: basic type validation and constraint evaluation are distinct responsibilities. Do not infer complete validation of all referenced types or all ASN.1 productions from a successful fallback branch.
+9. `asn1_object::validate_node()` first applies the current node's built-in type check. If that node reports constraints, it returns the constraint-validation result immediately; it does not also recurse into that node's children in the same call. Otherwise, container children are visited recursively. Consequently, child validation is conditional on the ancestor path not returning early through its own constraints.
+10. These checks are layered: basic type validation and constraint evaluation are distinct responsibilities. ENUMERATED takes the constraint path through its `have_constraints()` override even when no explicit constraint nodes are attached. Do not infer complete validation of all referenced types or all ASN.1 productions from a successful fallback branch.
 
 ### 2.5 YAML DER vectors
 
@@ -224,7 +224,7 @@ ASN.1 fixture
   -> end
 ~~~
 
-The regenerated notation is not compared against a complete expected source string. The active test_asn1loader_babystep() is invoked by testcase_loader(), while the separate parameterized parser → loader → publisher probe remains disabled.
+The regenerated notation is not compared against a complete expected source string. The active `test_asn1loader_babystep()` is invoked by `testcase_loader()`. Separately, the active `testcase_parameterized()` group runs `test_parameterized2()` and `test_parameterized3()`, both of which load parameterized notation through `asn1_loader` and publish the parse tree; the broader `example7.asn1` vector remains commented out.
 
 **Constraint evaluation / value validation — testcase_constraints.cpp**
 
@@ -251,7 +251,7 @@ The runtime publisher's constraint table is a separate path: it parses constrain
 
 **Parameterized types**
 
-The active parameterized test checks direct semantic specialization through `test_parameterized1()`; it does not establish the disabled parser → loader → publisher integration path in `test_parameterized2()`.
+The active `testcase_parameterized()` dispatcher runs `test_parameterized1()`, `test_parameterized2()`, and `test_parameterized3()`. The latter two exercise inline `FRAME` reconstruction via `asn1_loader::load()` and file-based `example6.asn1` reconstruction via `asn1_loader::load_file()`, respectively, followed by `asn1_publisher::build()`. These are bounded integration cases, not exhaustive parameterized ASN.1 coverage.
 
 **Coverage limits**
 
@@ -262,7 +262,7 @@ The active parameterized test checks direct semantic specialization through `tes
 
 ### Documentation and verification status
 
-The supplied `asn.1/report` records **1,628 pass, 40 expt, 0 fail, 0 skip, 0 triv**. The shared [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on the conversation's run context; the report itself does not independently identify the tested source commit, exact compiler version, build flags or command line. The meaning of `expt` is not inferred. This documentation uses Revision 1105 as its source basis, which is distinct from that last known test-run context. No tests were executed during this documentation update.
+A previously supplied aggregate ASN.1 report snapshot (not tracked as `test/testcase/asn.1/report` in this branch) records **1,628 pass, 40 expt, 0 fail, 0 skip, 0 triv**. The shared [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on the conversation's run context; the snapshot itself does not independently identify the tested source commit, exact compiler version, build flags or command line. The meaning of `expt` is not inferred. The report remains historical runtime evidence, separate from this document's current Source base : Revision 1132. No tests were executed during this documentation update.
 
 ## 4. Relationships
 
@@ -284,9 +284,9 @@ The following material is retained as developer working notes rather than normat
 
 ### Preserved source material
 
-The ASN.1 runtime representation is now `asn1_module`; the singleton registry for named modules is `asn1_modules`. The former `asn1_module_context` name is not current in Revision 1105.
+The current ASN.1 runtime representation is `asn1_module`; the singleton registry for named modules is `asn1_modules`. `asn1_module_context` is historical terminology (renamed in Revision 1102).
 
-Parameterized ASN.1 has two distinct workstreams in this revision. The LALR/GLR grammar and binary parsing tables are at revision 3, while `parameterized/testcase_parameterized.cpp` actively exercises direct semantic prototypes through `test_parameterized1()` (`define()`, `specialize()`, and parameter values). The parser → loader → publisher probe (`test_parameterized2()`) remains disabled in `testcase_parameterized()`. This is progress beyond grammar-only work, but it is not complete end-to-end parameterized ASN.1 support.
+Parameterized ASN.1 has two distinct workstreams in this revision. The notation-oriented binary parsing table `asn1notation.ptb` remains at revision 3, while the module/schema table `asn1.ptb` advanced to binary table revision 4 in Revision 1124. The `parameterized/testcase_parameterized.cpp` suite exercises direct semantic prototypes through `test_parameterized1()` (`define()`, `specialize()`, and parameter values), inline parser/loader/publisher reconstruction through `test_parameterized2()`, and file-based `example6.asn1` parser/loader/publisher reconstruction through `test_parameterized3()`. The broader `example7.asn1` vector remains commented out. These active cases establish selected paths, not complete end-to-end parameterized ASN.1 support.
 
 ##### references
 

@@ -3,9 +3,9 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Revision: workspace-docs-1111                │
-│ Source basis: current printf implementation  │
-│ — source structure, implementation & history│
+│ Documentation origin: workspace-docs-1111    │
+│ Source base : Revision 1132                  │
+│ — source structure, implementation & history │
 └──────────────────────────────────────────────┘
 ```
 

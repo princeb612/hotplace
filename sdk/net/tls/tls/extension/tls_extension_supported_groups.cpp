@@ -68,11 +68,26 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
             pl << new payload_member(uint16(0), true, constexpr_curves)  //
                << new payload_member(binary_t(0), constexpr_curve);
             pl.set_reference_value(constexpr_curve, constexpr_curves);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
-            curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
+            const uint16 vector_len = pl.t_value_of<uint16>(constexpr_curves);
             pl.get_binary(constexpr_curve, supported_groups);
+            if ((vector_len < 2) || (vector_len & 1) || (vector_len != supported_groups.size()) || (pos != endpos_extension())) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
+            curves = vector_len >> 1;
             for (auto i = 0; i < curves; i++) {
                 auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
                 t_enum_type<tls_group_t> etcurve(curve);

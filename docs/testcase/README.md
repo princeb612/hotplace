@@ -1,5 +1,7 @@
 # Testcase
 
+> Source base : Revision 1132
+
 ## Context
 
 `testcase` is the repository's executable verification environment. It is not a
@@ -16,7 +18,7 @@ executed**, **how the result is judged**, and **how execution is observed**.
                             │
              ┌──────────────┼──────────────┐
              │              │              │
-          cmdarg         test_case       logger
+    t_cmdline_t<T>      test_case        logger
              │              │              │
       execution setup   verification    observation
              │              │              │
@@ -27,9 +29,9 @@ executed**, **how the result is judged**, and **how execution is observed**.
                      concrete tests
 ```
 
-The three axes should not be read as one call hierarchy. `cmdarg` prepares the
-execution conditions, `test_case` owns verification semantics, and `logger`
-provides an observation/output path. They meet around concrete test execution
+The three axes should not be read as one call hierarchy. `t_cmdline_t<T>` and its
+`t_cmdarg_t<T>` entries prepare the execution conditions, `test_case` owns
+verification semantics, and `logger` provides an observation/output path. They meet around concrete test execution
 without becoming one subsystem.
 
 This is a conceptual relationship, not a claim that these components form one
@@ -75,7 +77,7 @@ process / command line
  result state             console / file / diagnostics
 ```
 
-### cmdarg / cmdline — execution conditions
+### `t_cmdline_t<T>` / `t_cmdarg_t<T>` — execution conditions
 
 The command-line layer provides a typed option object and a collection of
 `t_cmdarg_t<T>` definitions managed by `t_cmdline_t<T>`.
@@ -184,8 +186,10 @@ do not depend on the logger being the source of truth.
 
 ## Structural
 
-The common testcase infrastructure is provided from `sdk/base/unittest`, while
-subject-specific tests live under `test/testcase`.
+The common result/reporting infrastructure (`test_case` and `logger`) is
+provided from `sdk/base/unittest`. Command-line option parsing is provided
+separately by `sdk/base/basic/cmdline.hpp`; subject-specific tests live under
+`test/testcase`.
 
 ```text
 sdk/base/unittest
@@ -338,10 +342,10 @@ topics without forcing all topics to use the same kind of test data.
 The testcase environment should be understood as a **cross-cutting
 verification layer** of the repository.
 
-- `cmdarg` / `cmdline` (`t_cmdarg_t`, `t_cmdline_t`) controls execution conditions and option binding.
+- `t_cmdline_t` / `t_cmdarg_t` (`sdk/base/basic/cmdline.hpp`) controls execution conditions and option binding.
 - `testcase` organizes concrete test execution by subject.
-- `test_case` owns assertion, result aggregation, reporting, and final status.
-- `logger` provides observation and presentation and can be used beyond tests.
+- `test_case` (`sdk/base/unittest/testcase.hpp/.cpp`) owns assertion, result aggregation, reporting, and final status; `result()` returns `EXIT_FAILURE` when the aggregate fail count is nonzero, otherwise `EXIT_SUCCESS.
+- `logger` (`sdk/base/unittest/logger.hpp/.cpp`) provides observation and presentation and can be used beyond tests.
 - Test vectors provide reusable, often externally derived test data.
 - Subject-specific testcase directories remain responsible for the semantics of
   the thing being tested.

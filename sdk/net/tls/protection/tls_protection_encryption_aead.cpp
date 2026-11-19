@@ -140,7 +140,10 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
         };
         pl.set_condition(constexpr_record_version, lambda_check_dtls);
         size_t apos = 0;
-        pl.read(record_header.data(), record_header.size(), apos);
+        ret = pl.read(record_header.data(), record_header.size(), apos);
+        if (errorcode_t::success != ret) {
+            return ret;
+        }
 
         content_type = pl.t_value_of<uint8>(constexpr_content_type);
         record_version = pl.t_value_of<uint16>(constexpr_record_version);
@@ -571,7 +574,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
 }
 
 return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                      protection_space_t space, bool suppress_alert) {
+                                      protection_space_t space, decrypt_alert_policy_t alert_policy) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -580,31 +583,44 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         }
 
         size_t aadlen = get_header_size();
+        uint8 tagsize = get_tag_size();
+        // Validate the complete header and authentication tag before
+        // calculating size - tagsize; truncated records must not underflow.
+        if ((size < pos) || (size - pos < aadlen) || (0 == tagsize) || (size - pos - aadlen < tagsize)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
 
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
         pos += aadlen;
 
         // aad(aadlen) encdata tag(tagsize)
-        //             \_ pos
+        //             \\_ pos
         binary_t tag;
-        uint8 tagsize = get_tag_size();
         binary_append(tag, stream + size - tagsize, tagsize);
 
-        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, space, suppress_alert);
+        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, space, alert_policy);
     }
     __finally2 {}
     return ret;
 }
 
 return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                                      const binary_t& tag, protection_space_t space, bool suppress_alert) {
+                                      const binary_t& tag, protection_space_t space, decrypt_alert_policy_t alert_policy) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (size < pos) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+        // An empty TLS 1.3 encrypted fragment can still carry a valid AEAD tag.
+        // Authenticate it first; the record layer rejects the resulting empty
+        // TLSInnerPlaintext because it has no inner content type.
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint16 cs = 0;
@@ -618,6 +634,19 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 break;
         }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
+        if (nullptr == hint_cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto mode = typeof_mode(hint_cipher);
+
+        // TLS 1.2 AES-GCM and AES-CCM records carry an 8-byte explicit nonce
+        // before the encrypted fragment. Validate it before consuming a record number.
+        if (is_kindof_tls12() && (crypt_mode_t::gcm == mode || crypt_mode_t::ccm == mode) && (size - pos < 8)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
         encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
 
         openssl_crypt crypt;
@@ -633,7 +662,6 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         binary_t tls12_aad;
         binary_t nonce;
         auto alg = typeof_alg(hint_cipher);
-        auto mode = typeof_mode(hint_cipher);
 
         if (is_kindof_tls12()) {
             uint8 size_nonce_explicit = 8;
@@ -696,8 +724,9 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
             ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, aad, tag, options);
         }
 
-        if ((errorcode_t::success != ret) && !suppress_alert) {
-            // RFC 8446 5.2.  Record Payload Protection
+        if ((errorcode_t::success != ret) && ((decrypt_alert_policy_t::report == alert_policy) || (errorcode_t::verification_failure != ret))) {
+            // Suppress only authentication failures during rejected-0-RTT
+            // trial decryption. Internal/setup failures must remain visible.
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::bad_record_mac);
         }
 

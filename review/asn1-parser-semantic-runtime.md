@@ -1,6 +1,7 @@
 # ASN.1 Parser → Semantic Construction → Module Model
 
-> **Review baseline:** Revision 1125
+> **Review baseline:** Revision 1132
+> **Source base : Revision 1132**
 
 ## Review thesis
 
@@ -140,7 +141,7 @@ GLR
        └── InformationObjectAssignment
 ```
 
-The GLR grammar provides the broader language structure needed for the loader direction, while the LALR(1) grammar provides the more focused notation-oriented reconstruction path. Revision 1097's production-level switching is therefore significant because it lets parser selection participate in the semantic reconstruction strategy rather than treating parser choice as an isolated implementation detail.
+The GLR grammar provides the broader language structure needed for the loader direction, while the LALR(1) grammar provides the more focused notation-oriented reconstruction path. Revision 1097's production-level switching is therefore significant because it lets parser selection participate in the semantic reconstruction strategy rather than treating parser choice as an isolated implementation detail. At Revision 1132, `asn1_module::add_schema()` selects GLR for module/schema construction, while the notation-oriented providers retain LALR build/import paths.
 
 ## Constraint semantics fit below the parser
 
@@ -272,18 +273,21 @@ semantic implementation
 complete loader support
 ```
 
-Revisions through 1124 establish stronger connections between syntax, semantic reconstruction, and runtime objects, including formal parameter definition reconstruction and a tested actual-argument specialization path. They do not claim that every ASN.1 language feature or every parameterized form is fully supported.
+Revisions through 1125 establish stronger connections between syntax, semantic reconstruction, and runtime objects, including formal parameter definition reconstruction, actual-argument collection, and move-aware specialization. The active `test_parameterized2()` and `test_parameterized3()` paths cover selected `FRAME`/MyPacket and module reconstruction cases. They do not claim that every ASN.1 language feature or every parameterized form is fully supported.
 
 ## Current state
 
-The current implementation state is described by the following revision-specific steps:
+The current implementation state is described by the following revision-specific steps. The public changelog records no later ASN.1 implementation milestone after Revision 1125 through the current BUILD 1132; this review was rechecked against that current source baseline:
 
 - **Revision 1118** — Adds built-in ASN.1 type/value validation through `asn1_object::validate_type` and corrects ENUMERATED validation in `asn1_constraints::do_validate`.
 - **Revision 1119** — Adds the OID-related adjustment to the built-in validation path.
 - **Revision 1120** — Records runtime parameterized type specialization/instantiation and parameter-dependent validation work.
 - **Revision 1122** — Advances parameterized specialization/instantiation and its verification, including the removal of the future/promise behavior from `t_value`.
 - **Revision 1123** — Reconstructs parameterized type definitions and formal parameter lists in the loader/publisher semantic model.
-- **Revision 1124** — Extends the syntax → semantic construction → module/runtime path beyond formal parameter reconstruction. State propagation in `parse_tree`/`parse_tree_visitor` lets the publisher distinguish a `ParameterizedType` instantiation subtree without creating a separate reconstruction context. The publisher gathers type/value actual arguments and calls `specialize()`; the parameterized testcase verifies the resulting module representation. This establishes one integrated instantiation case, not complete support for all parameterized ASN.1 notation.
+- **Revision 1124** — Extends the syntax → semantic construction → module/runtime path beyond formal parameter reconstruction. State propagation in `parse_tree`/`parse_tree_visitor` lets the publisher distinguish a `ParameterizedType` instantiation subtree without creating a separate reconstruction context. The publisher gathers type/value actual arguments and calls `specialize()`; `test_parameterized2()` verifies the resulting module representation.
+- **Revision 1125** — Adds move-aware specialization overloads so collected parameter values can be transferred into the specialized object.
+
+At the current Revision 1132 source base, `test_parameterized2()` calls `asn1_loader::load()` for inline `FRAME`/`MyPacket` notation and then calls `asn1_publisher::build()`. `test_parameterized3()` calls `asn1_loader::load_file()` for `example6.asn1`, then publishes the parse tree and checks the module kind, module name, and reconstructed `Envelope {INTEGER}` representation. Both are active through `testcase_parameterized()`; the broader `example7.asn1` vector remains commented out. These are selected integration cases, not complete support for all parameterized ASN.1 notation.
 
 ### Related source / documents
 
@@ -300,4 +304,4 @@ The current implementation state is described by the following revision-specific
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state through **Revision 1124**.
+Reviewed against the hotplace source/documentation state through **Revision 1132**.

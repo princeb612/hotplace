@@ -61,7 +61,14 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
             pl << new payload_member(uint8(0), constexpr_len)  //
                << new payload_member(binary_t(0), constexpr_formats);
             pl.set_reference_value(constexpr_formats, constexpr_len);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
 #if defined DEBUG
             len = pl.t_value_of<uint8>(constexpr_len);
@@ -113,7 +120,10 @@ return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, bina
             payload pl;
             pl << new payload_member(uint8(cbsize_formats), constexpr_len)  //
                << new payload_member(bin_formats, constexpr_formats);
-            pl.write(bin);
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
     }
     __finally2 {}

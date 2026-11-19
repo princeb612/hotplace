@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -72,7 +72,7 @@ The semantic objects may also be assembled directly by client code or tests. In 
 
 ### Runtime value validation
 
-Validation is performed against an `asn1_value` using its associated semantic schema. The object-level path combines built-in type checks with the type's constraint validation; for constructed SEQUENCE/SET values, validation also descends through the named child values. This is distinct from parsing notation, reconstructing a semantic object, or encoding a value as DER.
+Validation is performed against an `asn1_value` using its associated semantic schema. The object-level path first applies the entity-specific `validate_type()` check. If the current node reports constraints, validation returns the result of `asn1_constraints::validate()`; otherwise, constructed containers recurse through their named child values. ENUMERATED participates in the constraint path through its `have_constraints()` override even when no explicit constraint nodes are attached. A constrained constructed node therefore does not also recurse into its children in the same `validate_node()` call. This is distinct from parsing notation, reconstructing a semantic object, or encoding a value as DER.
 
 The validation path is conceptually:
 
@@ -81,9 +81,9 @@ asn1_object::validate(value)
         |
         +--> validate built-in value representation
         |
-        +--> validate attached constraints
+        +--> if node has constraints: return constraint result
         |
-        `--> for constructed values, validate child components
+        `--> otherwise, recurse through constructed child components
 ```
 
 The exact checks depend on the ASN.1 entity. A successful check of a value's basic representation does not imply that every constraint form or every referenced-type relationship is validated by that same branch; follow the relevant type and constraint implementation separately.
@@ -93,14 +93,14 @@ The exact checks depend on the ASN.1 entity. A successful check of a value's bas
 - **Syntax recognition vs semantic construction:** a grammar production can recognize notation without the publisher constructing every corresponding semantic form.
 - **Semantic linkage vs module resolution:** parent/inner-object linkage propagates local structure; resolving a reference name requires the module/runtime lookup path.
 - **Constraint representation vs evaluation:** constraint nodes describe restrictions; the evaluator converts supported forms into a runtime set/value domain.
-- **Parameterized prototype vs integrated support:** `parameterized/` contains a direct semantic prototype and specialization path, but the integrated parser/loader/publisher path is not complete.
+- **Parameterized prototype vs integrated support:** `parameterized/` contains a direct semantic prototype and specialization path, and selected parser/loader/publisher integration paths are active; broader parameterized notation and runtime coverage remain incomplete.
 - **Schema vs encoded structure:** semantic types express declared meaning; structural TLV nodes preserve the wire-level shape.
 
 ### Source-level evidence
 
 - `test/testcase/asn.1/testcase_basic3.cpp` — direct semantic definitions/references and linkage-oriented cases.
 - `test/testcase/asn.1/runtime/` — parser and publisher cases that connect notation processing to semantic reconstruction.
-- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` — direct parameterized-model tests and the separately bounded integration probe.
+- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` — direct parameterized-model tests and active, bounded inline/file parser-loader-publisher cases.
 
 These paths indicate which behavior the source tests address; they are not a blanket claim of full X.680 conformance or complete end-to-end support for every grammar family.
 
@@ -108,7 +108,7 @@ These paths indicate which behavior the source tests address; they are not a bla
 - [ASN.1 object model](../asn1-object-model.md) — common object, type/reference and value relationships.
 - [Structural representation](../structural/README.md) — wire-level TLV structure versus semantic schema.
 - [Constraints](constraints/README.md) — constraint nodes and runtime set evaluation.
-- [Parameterized semantic prototype](parameterized/README.md) — direct definition/specialization and integration boundary.
+- [Parameterized semantic prototype](parameterized/README.md) — direct definition/specialization plus the active, bounded parser/loader/publisher cases.
 - [Subtype notation](constraints/subtype-notation.md) — retained study note, distinct from implemented evaluator coverage.
 - [Generic parser](../../../parser/README.md) — lexical/grammar parsing and parse-tree construction.
 - [ASN.1 publisher](../../runtime/asn1_publisher.md) — semantic reconstruction from the parse tree.

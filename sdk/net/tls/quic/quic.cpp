@@ -18,7 +18,7 @@ namespace net {
 return_t quic_read_vle_int(const byte_t* stream, size_t size, size_t& pos, uint64& value) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream || 0 == size || (pos > size)) {
+        if (nullptr == stream || 0 == size || (pos >= size)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

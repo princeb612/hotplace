@@ -1,6 +1,8 @@
 # Developer Notes — ASN.1 Loader Flow Sketch - Gemini
 
 > based on Revision 1085
+>
+> Historical design sketch. Reviewed against Source base : Revision 1132. This proposal is not the current loader/runtime pipeline: in particular, the described `asn1_module_context`, DER-input-to-`asn1_builder` flow and dynamic DER codec-binary linkage are not the current implementation. See `asn1_loader.md` for the current source-backed file → tokens → parse tree → publisher → module path.
 
 ### 1. overview & architecture
 

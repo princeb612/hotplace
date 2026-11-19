@@ -187,19 +187,32 @@ return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_
         // --> The hash does not include handshake reconstruction data bytes in the
         // records.
 
-        // RFC 8446 4.2.11.2: the ClientHello2 binder transcript includes
-        // message_hash(ClientHello1) and HelloRetryRequest before the truncated
-        // ClientHello2. The live transcript already contains that prefix.
+        // RFC 8446 4.2.11.2 / RFC 9846: the ClientHello2 binder transcript
+        // includes message_hash(ClientHello1), HelloRetryRequest, and the
+        // truncated ClientHello2, using the PSK-associated hash for the outer digest.
         transcript_hash* hash = nullptr;
         if (tls_flow_t::hello_retry_request == get_flow()) {
-            auto transcript = get_transcript_hash();
-            if (transcript) {
-                hash = transcript->dup();
-                transcript->release();
+            // The live handshake transcript is maintained with the HRR-selected
+            // cipher-suite hash. RFC 9846 requires the binder's outer transcript
+            // hash to use the PSK-associated hash instead; only the synthetic
+            // message_hash payload itself uses the HRR-selected hash.
+            const binary_t& binder_transcript_prefix = get_secrets().get(tls_secret_t::hello_retry_request_transcript_prefix);
+            if (binder_transcript_prefix.empty()) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            }
+            transcript_hash_builder builder;
+            hash = builder.set(alg).build();
+            if (hash) {
+                hash->update(binder_transcript_prefix.data(), binder_transcript_prefix.size());
             }
         } else {
             transcript_hash_builder builder;
             hash = builder.set(alg).build();
+        }
+        if (nullptr == hash) {
+            ret = errorcode_t::not_supported;
+            __leave2;
         }
         if (hash) {
             if (is_kindof_dtls()) {

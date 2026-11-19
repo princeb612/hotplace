@@ -3,7 +3,7 @@
 ~~~text
 hotplace source tree
 Edition 2 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 — parser, publisher, module model & verification
 ~~~
@@ -101,12 +101,12 @@ Candidate-value validation is exercised separately by `test/testcase/asn.1/testc
 **Other coverage limits**
 
 - Positive notation samples cover selected assignments, tags, constructed types and constraints; exhaustive grammar or parse-tree shape coverage is not established.
-- test_parameterized1() tests direct semantic specialization. The parser → loader → publisher probe test_parameterized2() is not enabled in the active dispatcher, so end-to-end parameterized parsing and instantiation remain unverified.
+- test_parameterized1() tests direct semantic specialization. The active `testcase_parameterized()` dispatcher runs `test_parameterized2()` and `test_parameterized3()`: the first loads an inline parameterized notation sample and publishes its parse tree; the second loads `example6.asn1` from a file and publishes the resulting module. These are bounded integration tests, not exhaustive parameterized parsing and instantiation coverage.
 - The tests do not establish full X.690 conformance, exhaustive malformed-input recovery, or complete semantic equivalence of regenerated notation.
 
 ### Documentation and verification status
 
-The supplied ASN.1 report is aggregate at the parent-suite level and does not isolate runtime parser, publisher or module functions. The last known report context is Revision 1104 · MinGW64/GCC · CTest; the source basis here is Revision 1105. No tests were run during this documentation update.
+The supplied ASN.1 report is aggregate at the parent-suite level and does not isolate runtime parser, publisher or module functions. The last known report context is Revision 1104 · MinGW64/GCC · CTest; the source base here is Revision 1132. No tests were run during this documentation update.
 
 ## 4. Relationships
 
@@ -127,4 +127,4 @@ The supplied ASN.1 report is aggregate at the parent-suite level and does not is
 
 ## 6. Developer Notes (for maintainer review)
 
-The former parser/publisher child documents contained implementation-status and GPT-review notes. Their relevant boundary is retained here: grammar productions for parameterized notation and direct semantic specialization are not equivalent to enabled end-to-end parameterized parsing and instantiation. The current module name is asn1_module; the old asn1_module_context name is not current in the documented source basis.
+The former parser/publisher child documents contained implementation-status and GPT-review notes. Their relevant boundary is retained here: selected parser-to-publisher parameterized integration is now active in `test_parameterized2()` (inline `FRAME` definition/instantiation) and `test_parameterized3()` (file-based `example6.asn1` module/instantiation). This is bounded integration evidence, not complete parameterized ASN.1 support. The active parameterized integration paths both use `asn1_loader`: `test_parameterized2()` calls `load()` for inline notation and `test_parameterized3()` calls `load_file()` for `example6.asn1`, then both call the publisher. The broader `example7.asn1` vector remains commented out. The current module name is `asn1_module`; the old `asn1_module_context` name is not current.

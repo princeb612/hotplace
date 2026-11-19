@@ -4,6 +4,14 @@
 
 This document connects the project review to actual repository evidence.
 
+## Review Attribution
+
+Prepared with the assistance of ChatGPT (GPT-6) as an external reviewer of the hotplace project.
+
+Review date: 2026-11-18
+
+Source base : Revision 1132
+
 **Recommendation → Existing Evidence → Current Status → Missing Evidence →
 Possible Direction**
 
@@ -14,12 +22,13 @@ The purpose is to avoid recommending work that already exists.
 Known project structure:
 
 - CMake / CTest is the primary testcase execution mechanism.
-- MinGW64 / GCC is a ctest-based verification environment.
-- CentOS 7 / GCC 4.8.5 is a ctest-based verification environment.
-- Rocky Linux 8 is a ctest-based verification environment.
-- `./test.sh` is an additional Valgrind verification path.
-- Valgrind checks include memcheck, helgrind, and drd.
-- The oldest previously identified test environment is FC4 x64 in a VM.
+- MinGW64 / GCC: CTest, with Application Verifier as an additional check.
+- Ubuntu 20: CTest with Sanitizer.
+- CentOS 7 / GCC 4.8.5: CTest; `test/testcase/test.sh` provides an additional Valgrind path.
+- Rocky Linux 8: CTest; `test/testcase/test.sh` provides an additional Valgrind path.
+- Windows / MSVC: CTest, with Application Verifier as an additional check.
+- The Valgrind script selects `memcheck`, `helgrind`, and `drd`.
+- FC4 x64 in a VM is retained as a historical environment previously identified for the project, but it is not independently evidenced by the current public source tree.
 
 Therefore the review should not describe hotplace as simply "lacking
 testing".
@@ -35,19 +44,22 @@ protocol-oriented implementation records.
 
 ### Conformance
 
-**Classification: Already Strong**
+**Classification: Substantial Existing Evidence; not blanket conformance certification**
 
-The public README documents many RFCs and implementation/application
-statuses, including published cryptographic test-vector-related work.
-citeturn0search0
+The root `README.md` maps RFC-oriented implementation/application areas.
+Additional source evidence is distributed across `docs/pcapng/README.md`,
+`docs/cose_jose/README.md`, `sdk/net/tls/README.md`, and the crypto/TLS
+testcase documentation. These establish substantial vector and protocol
+verification activity, not complete conformance for every listed RFC.
 
 ### Wire / Packet Evidence
 
-**Classification: Already Strong**
+**Classification: Substantial Existing Evidence, scenario-specific**
 
-PCAP-oriented protocol testing is part of the project's existing verification
-approach. The remaining task is to make its role more visible, not to
-assume it is absent.
+PCAP-oriented protocol testing and capture replay are part of the existing
+verification approach. The evidence is scenario-specific; the remaining
+task is to inventory which protocol, direction, version, and implementation
+pairs each capture actually verifies.
 
 ### Interoperability
 
@@ -106,6 +118,8 @@ Prefer:
 
 ## 5. Scope Limitation
 
-This audit uses the publicly visible GitHub repository as evidence as of
-2026-10-03. It does not prove the absence of unpublished, local, or
-working-tree experiments.
+This audit uses the publicly visible GitHub repository at Source base : Revision 1132 (reviewed 2026-11-18). It does not prove the absence of
+unpublished, local, or working-tree experiments. The platform matrix is
+cross-checked against `test/README.md`, `test/testcase/README.md`, and
+`test/testcase/test.sh`; the FC4 x64 VM note remains historical rather than
+independently reproducible repository evidence.

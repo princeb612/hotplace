@@ -5,7 +5,7 @@
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```
@@ -94,6 +94,18 @@ The final contextual branch is not decided by the envelope parser alone. A paylo
 A recognized extension identifier does not prove that its payload is supported or valid in every handshake message, role, or TLS version. Parsing, protocol validation, negotiation, and applying the negotiated result are separate steps.
 
 ALPN contributes to application-protocol selection; it does not route HTTP requests. QUIC transport parameters contribute to QUIC connection configuration; they do not construct packets. Those consumers remain outside the extension representation layer.
+
+### TLS 1.3 PSK is a special extension path
+
+The `pre_shared_key` extension is not only a typed identity/binder payload. Its correctness depends on the enclosing ClientHello serialization, the ticket record associated with each identity, the transcript checkpoint, and the negotiated cipher-suite hash.
+
+- On the client write path, `tls_handshake_client_hello.cpp` serializes the complete ClientHello first, locates the PSK binder vector in that final message, and patches each binder using the corresponding offered ticket's cipher-suite hash. Multiple cached tickets retain their own suite/hash metadata; the current connection's provisional suite is not a substitute for each ticket's original suite.
+- On the server read path, `tls_extension_pre_shared_key.cpp` parses identity and binder vectors as paired entries, searches cached tickets in client preference order, checks the ticket's server-side issuance timestamp/lifetime and hash length, and verifies the binder against the truncated ClientHello transcript. The server does not trust the client-reported obfuscated age as the authoritative ticket lifetime.
+- After HelloRetryRequest, the selected cipher suite is fixed. ClientHello2 remains in the HRR transcript flow, and a PSK with a different hash cannot be selected. HelloRetryRequest itself must not contain `pre_shared_key`.
+- ServerHello `selected_identity` is checked against the identities actually emitted in the latest ClientHello, the offered `psk_key_exchange_modes`, the required key_share condition, and the selected suite's hash.
+- The server may accept early data only for identity zero and only when the ticket's version, cipher suite, ALPN, and early-data allowance match. EncryptedExtensions is the acceptance signal; ClientHello2 after HRR does not carry `early_data`.
+
+These are handshake-context rules, not properties established by successful extension-body parsing alone. See the PSK and early-data testcase sources for selected examples; they are not a claim of complete RFC 8446/RFC 9257 conformance.
 
 ### Real-code example: extension parsing is not negotiation by itself
 

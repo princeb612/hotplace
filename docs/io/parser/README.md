@@ -1,10 +1,12 @@
 # Parser — Grammar to Parse Structure
 
-**Edition 1 · Revision 1105**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 ## Context
 
-The parser work is currently extending a working notation-oriented path toward a broader grammar model. LALR and GLR are mechanisms used to explore that problem; the reader-facing boundary is simpler: turn language structure into a parse result that later stages can interpret.
+The parser work grew from a notation-oriented path into a broader grammar model. LALR and GLR provide distinct execution mechanisms; the reader-facing boundary is simpler: turn language structure into a parse result that later stages can interpret.
 
 This document owns the parser question:
 
@@ -38,15 +40,19 @@ The CHANGELOG gives the following parser-oriented sequence:
   - **Revision 1102** — `asn1_runtime`/`asn1_runtime_context` are renamed to `asn1_module`/`asn1_module_context`; parameterized assignment/type/value grammar is extended and parser tables move to revision 2.
   - **Revision 1103** — `asn1_publisher` fixes `TypeAssignment` semantic publication.
   - **Revision 1104** — parameterized type/value semantic prototypes; module registry renamed to `asn1_modules`; binary parsing-table format revision 3.
+  - **Revisions 1120/1122** — runtime parameterized-type specialization and instantiation work.
+  - **Revision 1123** — publisher reconstruction of parameterized type definitions and formal parameter lists.
+  - **Revision 1124** — parse-tree visitor state scopes parameterized-instantiation context to descendants; publisher handlers collect actual type/value parameters and specialize the referenced type. The ASN.1 parsing-table format advances to revision 4.
+  - **Revision 1125** — move-aware specialization overloads support transferring collected parameter values into specialized objects.
 
 The important direction is parser selection at a stable semantic boundary, not a simple LALR-to-GLR replacement story:
 
 - **GLR infrastructure**
   - The GSS and parse-tree fixes from Revision 1096 support the GLR path.
 - **Module integration**
-  - By Revisions 1099–1104, the module path exercises GLR parsing through semantic publication and module resolution.
+  - The module/schema path selects GLR through `asn1_module::add_schema()`; advisor-provided notation parsers retain LALR build/import paths, while GLR build/import paths are also exercised.
 - **Parameterized semantic boundary**
-  - Revision 1104's parameterized type/value work remains prototyping, and parsing-table format revision 3 is a generated-table format change rather than proof that semantic instantiation is complete.
+  - Parameterized support has advanced beyond the Revision 1104 prototypes. The active parser → loader → publisher path reconstructs a concrete `FRAME` instantiation, while direct semantic tests exercise additional specializations. This is bounded integration, not proof that every parameter form or nested construct is complete.
 
 The two parser mechanisms and their provider/configuration paths should remain explicit in the explanation.
 
@@ -66,7 +72,7 @@ retain structure
 interpret meaning
 ```
 
-LALR and GLR are mechanisms inside the first step. They are important for the current experiment, but the reason for the parser work is the boundary it creates for semantic construction.
+LALR and GLR are mechanisms inside the first step. Both remain relevant to the current parser paths, but the reason for the parser work is the boundary it creates for semantic construction.
 
 ## Conceptual
 
@@ -126,9 +132,9 @@ broader ASN.1 CFG
  semantic construction
 ```
 
-This does not mean every parser entry point uses GLR, nor does it mean parameterized semantic instantiation is complete. Revision 1104's parameterized type/value support remains at the prototype stage.
+This does not mean every parser entry point uses GLR. The notation-oriented provider paths still expose LALR, while the integrated module/schema path selects GLR. Parameterized semantic instantiation is now integrated for a bounded path: Revision 1124 adds visitor-state propagation and actual-argument collection, and the active `test_parameterized2()` and `test_parameterized3()` cases check selected inline `FRAME` and file-based `example6.asn1` reconstructions. The broader grammar and semantic edge cases remain separate coverage questions.
 
-The purpose of the experiment is to make the grammar itself more expressive where a deterministic LALR table would otherwise require grammar-specific conflict avoidance or restructuring.
+The GLR path makes the broader grammar executable where a deterministic LALR table would otherwise require grammar-specific conflict avoidance or restructuring.
 
 ### Graph-structured stack
 
@@ -172,11 +178,11 @@ ASN.1 language
        ┌──────┴──────┐
        ▼             ▼
      LALR           GLR
-   current          study
-    runtime         path
+   notation       module /
+   provider       schema path
 ```
 
-At Revision 1105, the unified CFG and its parser providers feed a module path that selects GLR for `add_schema()`. Grammar coverage and semantic coverage are not identical: Revision 1104 adds prototypes for parameterized type/value semantics, but full parameter binding/substitution/instantiation is not yet complete.
+At Revision 1132, the unified CFG and its parser providers feed a module path that selects GLR for `add_schema()`. Grammar coverage and semantic coverage are not identical: the active publisher path collects actual type/value parameters and specializes a referenced parameterized type, and the parameterized testcase checks a concrete reconstruction. This does not establish complete parameter binding/substitution for every grammar form.
 
 ### Parser result and semantic construction
 
@@ -196,17 +202,17 @@ asn1_object*
 
 This preserves the existing design direction from the ASN.1 semantic-construction study: parser reductions expose structure; publisher handlers interpret that structure.
 
-Publisher coverage must track grammar coverage, but recognition and semantic instantiation are distinct. Module and TypeAssignment publication are exercised; parameterized productions have grammar/handler work, while complete parameter binding, substitution, and instantiated-object behavior remain unfinished.
+Publisher coverage must track grammar coverage, but recognition and semantic instantiation are distinct. Module and TypeAssignment publication are exercised. Parameterized definitions and instantiations now have publisher handlers; the active `test_parameterized2()` path checks a parsed `FRAME` definition and `MyPacket ::= FRAME{ OCTET STRING, 1024 }` reconstruction, while `test_parameterized3()` checks a parameterized module. These tests establish selected integration paths, not complete parameter binding, substitution, or instantiated-object behavior across all ASN.1 forms.
 
 ### Context-aware parser switching
 
 Revision 1089 introduced a context-aware parser switching pattern. The relevant idea is that parser behavior can be selected from grammar/context information rather than hard-coding one parser mechanism for every language fragment.
 
-This is useful for the current study because LALR remains the established runtime path while GLR can be exercised against the broader grammar without prematurely replacing the existing path.
+This remains useful because the parser providers preserve a notation-oriented LALR path while the integrated module/schema path uses GLR. The two paths can coexist without treating one as a universal replacement for the other.
 
 ## Flow
 
-The current and experimental paths should be kept visually separate:
+The notation and module/schema paths should be kept visually separate; both parser engines are present in active source paths:
 
 ```text
                     ASN.1 notation
@@ -217,7 +223,7 @@ The current and experimental paths should be kept visually separate:
                           ▼
                   integrated CFG model
                      │           │
-             current │           │ experimental
+             notation path       module/schema path
                      ▼           ▼
                    LALR         GLR
                      │           │
@@ -234,50 +240,62 @@ The current and experimental paths should be kept visually separate:
                       runtime model
 ```
 
-For the existing runtime:
+The notation-oriented provider path:
+
+```text
+asn1_advisor notation parser provider
+        ↓
+LALR(1) table build or import
+        ↓
+parse_tree
+        ↓
+syntax result
+```
+
+The integrated module/schema path:
 
 ```text
 asn1_module::add_schema()
         ↓
-parse()
+asn1_parser(parser_type_t::glr, true)
         ↓
-lalr1_parser
+glr_parser
         ↓
 parse_tree
         ↓
-asn1_builder / asn1_publisher
+asn1_publisher
         ↓
-asn1_object*
+asn1_object* / module schema
 ```
 
-For the next study direction:
+The parameterized loader/publisher integration path:
 
 ```text
-integrated CFG validation
+asn1_loader::load()
         ↓
-GLR parser application
+parse_tree
         ↓
-multiple parse paths where required
+asn1_publisher::build()
         ↓
-semantic construction policy
+collect actual type/value parameters
         ↓
-publisher expansion
+specialize parameterized type
         ↓
-loader integration later
+module representation comparison
 ```
 
-The loader path has advanced since Revision 1097: input can flow through parser and publisher into module-level information, including IMPORTS/EXPORTS and resolvability checks. Parameterized semantic instantiation remains a separate incomplete area.
+The loader path has advanced since Revision 1097: input can flow through parser and publisher into module-level information, including IMPORTS/EXPORTS and resolvability checks. The parameterized path is now exercised for selected definitions and instantiations; complete support for all parameter forms remains a separate coverage question.
 
 ## Study & Verification
 
 The parser study should verify the layers independently before combining them:
 
-1. **CFG coverage** — confirm that notation, module, parameterized constructs, information-object-class, and extension-marker grammar can be represented by the intended unified CFG.
-2. **LALR baseline** — preserve the existing ASN.1 runtime parser behavior while the new grammar is being explored.
-3. **GLR experiment** — exercise the broader grammar and observe where multiple parse paths are produced.
-4. **Semantic construction** — determine how each parse result maps to semantic values and eventually to `asn1_object*` or related runtime structures.
-5. **Publisher expansion** — add handlers only as grammar coverage produces new semantic categories.
-6. **Loader integration** — extend the new loader parser-entry step toward Module construction and runtime registration after the parser and publisher boundaries are stable.
+1. **CFG coverage** — track the selected notation, module, parameterized-construct, information-object-class, and extension-marker productions represented by the unified CFG.
+2. **LALR notation path** — preserve and verify the notation-oriented build/import parser providers.
+3. **GLR module/schema path** — verify the GLR path selected by `asn1_module::add_schema()` and the parser's broader grammar cases.
+4. **Semantic construction** — keep syntax acceptance distinct from semantic publication and runtime-object validation.
+5. **Parameterized integration** — retain the bounded parser → loader → publisher checks for concrete type/value actual arguments, without generalizing them to every ASN.1 parameter form.
+6. **Loader/module integration** — track file/memory loading, module construction, IMPORTS/EXPORTS, and reference resolution as separate assertions.
 
 The verification target is therefore not simply “GLR parses ASN.1.” It is the complete boundary:
 

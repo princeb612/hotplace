@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -47,7 +47,7 @@ crypto_hash_builder
 open hash_context_t → update(input) → finalize → digest bytes
 ```
 
-The builder chooses the algorithm-bound facade; it does not hash the input. The backend opens the selected digest context, consumes the bytes, finalizes the digest and releases the context according to the concrete API path.
+The builder chooses the algorithm-bound facade; it does not hash the input. The backend opens the selected digest context, consumes the bytes, finalizes the digest and releases the context according to the concrete API path. A current error-propagation limitation is worth noting: `crypto_hash::digest()` returns the result of `open()`, but does not propagate failures from the subsequent `init()`, `update()`, `finalize()` or `close()` calls. The `openssl_digest` convenience methods have the same pattern. Callers that need each backend operation's status should use the explicit `openssl_hash` context API and check every return value.
 
 ### Incremental transcript lifecycle
 
@@ -68,7 +68,7 @@ transcript_hash_builder
           +-- reset() ------------> fresh state for selected algorithm
 ```
 
-The transcript object's retained state represents the ordered bytes accepted so far. In this API, `digest(message, result)` first adds the supplied message to that state and then returns the resulting digest; it is not an independent one-shot digest of `message`. `dup()` allows a branch/checkpoint to continue without mutating the original state. `reset()` starts a new accumulation for the configured algorithm.
+The transcript object's retained state represents the ordered bytes accepted so far. In this API, `digest(message, result)` first adds the supplied message to that state and then returns the resulting digest; it is not an independent one-shot digest of `message`. `digest(result)` is intended to snapshot the current state without adding bytes, but the current `openssl_hash::update(handle, nullptr, 0, result)` path exits early in the underlying `update()` overload and returns success without writing a digest. Do not rely on this no-message overload until that path is corrected. `dup()` allows a branch/checkpoint to continue without mutating the original state. `reset()` starts a new accumulation for the configured algorithm.
 
 ### Concrete transcript use from `testcase_transcript_hash.cpp`
 
@@ -94,7 +94,7 @@ This test demonstrates that the transcript facade's successive `digest()` calls 
 
 A digest is computed over a byte sequence. A transcript object retains incremental state across calls, so message order and the exact set of messages included in a checkpoint matter. In the `transcript_hash` API, `digest(message, result)` adds the supplied message to the current state and returns the resulting digest; it is not simply an independent one-shot hash of that message.
 
-`dup()` clones backend state so a caller can preserve a checkpoint while exploring a later branch. `reset()` reinitializes state for the selected algorithm. Callers must follow the open/update/finalize/close contract of the backend context on all paths.
+`dup()` clones backend state so a caller can preserve a checkpoint while exploring a later branch. `reset()` reinitializes state for the selected algorithm, but its public method returns `void` and the current implementation does not propagate the backend `init()` status. The `transcript_hash` constructor and builder also do not expose the initial `open()`/`init()` status; a non-null object from `build()` is therefore not proof that the internal backend context initialized successfully. Callers should check the return values from each `update()`/`digest()` operation.
 
 ### Relationship to TLS
 
@@ -129,7 +129,7 @@ if (transcript) {
 - `../mac/README.md` documents keyed HMAC/CMAC contracts that share hash-context machinery.
 - `../kdf/README.md` uses digest/HMAC algorithms for key derivation.
 - `sdk/net/tls/` owns handshake message ordering and transcript checkpoints.
-- `../digest-and-mac.md` preserves the combined source-maintained digest/HMAC/CMAC inventory.
+- `../README.md#62-digest-hmac-and-cmac-inventory` preserves the combined digest/HMAC/CMAC inventory.
 
 ### Implementation entry points
 
@@ -141,9 +141,9 @@ if (transcript) {
 
 ### Source-test evidence
 
-- `testcase_openssl_hash.cpp` checks digest operations against known results.
+- `testcase_openssl_hash.cpp` enumerates digest and HMAC algorithms through a status-oriented operation path. Its helper has an expected-digest comparison overload, but the current `test_openssl_hash()` entry point does not call that overload; do not describe this generic entry point as a known-answer test.
 - `testcase_transcript_hash.cpp` hashes `client hello` followed by `server hello` in one incremental context, then repeats the sequence while capturing intermediate hashes. It compares the final incremental result with the result produced through `transcript_hash_builder`, demonstrating agreement for the same accumulated transcript.
-- The hash testcase directory also contains HMAC/CMAC RFC groups; those are related backend coverage, not all direct tests of `crypto_hash`.
+- The hash testcase directory separately contains RFC 4231 HMAC and RFC 4493 AES-CMAC known-answer tests; those are related backend coverage, not direct tests of the `crypto_hash` facade.
 
 ## 5. References
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.

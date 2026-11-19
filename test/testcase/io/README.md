@@ -3,7 +3,7 @@
 ```text
 hotplace source tree
 Edition 2 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 — source structure, testcase procedure & evidence
 ```
@@ -131,7 +131,7 @@ The default dispatcher does not invoke these paths without the options. The aggr
 
 The common [Test Report Snapshot](../test-report-status.md) records the last supplied aggregate report as **Revision 1104 · MinGW64/GCC · CTest**, associated with 596 pass, 0 expt, 0 fail, 0 skip, and 0 triv for the entire `io` group. This is a parent-target report; it does not provide separate outcome totals for the child directories and does not prove that the optional Linux netlink path ran.
 
-The report's run association comes from the maintainer-supplied context; the report files do not independently identify the tested commit, exact GCC version, or full build flags. The source/documentation basis here is Revision 1105, documented as Revision 1106. This documentation change did not execute tests.
+The report's run association comes from the maintainer-supplied context; the report files do not independently identify the tested commit, exact GCC version, or full build flags. The existing Edition/Revision 1106 metadata is retained as the document's historical publication version; the current source comparison is Revision 1132, as recorded by the `Source base : Revision 1132` marker. This documentation change did not execute tests.
 
 Revision 1106 CTest counts from other groups/environments must not be substituted for this Revision 1104 testcase-level report: they count CTest test files/targets rather than individual categorized testcase outcomes.
 

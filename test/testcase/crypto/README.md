@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -478,7 +478,7 @@ A source file or YAML fixture being present is not evidence that its consumer wa
 
 ### Documentation and runtime verification status
 
-The supplied `test/testcase/crypto/report` records **4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv** entries. The [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on conversation context. The report itself does not identify the tested source revision, exact compiler version, build flags, or all optional crypto flags. These totals remain historical runtime evidence, separate from this documentation's Revision 1106 source basis. No runtime tests were executed as part of this documentation update.
+A previously supplied aggregate crypto report snapshot (not tracked as `test/testcase/crypto/report` in this branch) records **4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv** entries. The [Test Report Snapshot](../test-report-status.md) associates the last known run with **Revision 1104 · MinGW64/GCC · CTest** based on conversation context. The report snapshot does not identify the tested source commit, exact compiler version, build flags, or all optional crypto flags. These totals remain historical runtime evidence, separate from this documentation's Source base : Revision 1132. No runtime tests were executed as part of this documentation update.
 
 ## 4. Relationships
 

@@ -1,6 +1,8 @@
 # COSE / JOSE — CBOR, JSON, Keys & Key Exchange
 
-**Edition 1 · Revision 1105**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 ## Context
 
@@ -314,7 +316,12 @@ Nested signing and encryption are represented by `json_object_signing_encryption
 
 ### COSE Partial IV is an input to nonce construction
 
-The COSE Partial IV header parameter is not the complete message IV. The implementation follows RFC 8152 §3.1: left-pad the Partial IV with zero bytes to the full IV length, then XOR that value with the context IV. Revision 1105 fixes this path in COSE cryptographic processing. The Partial IV is interpreted together with the security context; copying it directly into the AEAD IV would skip the required construction.
+The COSE Partial IV header parameter is not the complete message IV. RFC 8152 §3.1 describes the message-IV generation procedure as left-padding the Partial IV to the context-IV length and XORing the padded value with the context IV. Revision 1105 records a fix in this area, but the current Revision 1132 source must be described by its actual operation rather than by the RFC comment alone:
+
+- In the shared `cbor_object_signing_encryption::docrypt()` path, used for both encrypt and decrypt, the implementation left-pads the Partial IV obtained from the unprotected header to the context-IV length and combines it with the context IV using bitwise OR (`|=`). The source comment above this code still describes XOR, so the comment and executable operation differ.
+- In `domac()`, the Partial-IV alignment/XOR block is commented out; the current MAC path does not combine the Partial IV with the context IV there. The MAC implementation uses its own MAC operation path, so this must not be described as the same nonce-processing path as AEAD encryption.
+
+This records source behavior, not a conformance verdict. The difference between the RFC's described generation procedure and the current `docrypt()` operation needs a separate protocol-level assessment; the operator difference alone is not enough to label the implementation conformant or non-conformant. The Partial IV remains an input to nonce construction, not the final nonce by itself.
 
 ```text
 context IV ────────────────────────┐
@@ -459,7 +466,7 @@ That makes the testcase tree a second layer of documentation for the implementat
 
 ## Status
 
-The latest relevant implementation checkpoint is Revision 1105:
+The latest COSE-specific implementation checkpoint recorded in `CHANGELOG.md` remains Revision 1105; the current COSE source was rechecked at Revision 1132:
 
 - Revision 1105 fixes COSE Partial IV handling in nonce construction.
 - CBOR is an established lower serialization layer.

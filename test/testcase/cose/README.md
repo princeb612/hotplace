@@ -5,7 +5,7 @@
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ — testcase assets and verification           │
 └──────────────────────────────────────────────┘
 ```
@@ -27,7 +27,7 @@ The tests consume fixtures and exercise implementations in `sdk/crypto/cose/`; C
 
 ### 2.1 Setup and dispatch
 
-1. Build the `jose/cose` testcase target through the repository's existing CMake workflow. The COSE target's `CMakeLists.txt` copies `*.diag`, `*.cbor`, `*.yml`, and `*.json` fixtures into the runtime directory.
+1. Build the `cose` testcase target through the repository's existing CMake workflow. The COSE target's `CMakeLists.txt` copies `*.diag`, `*.cbor`, `*.yml`, and `*.json` fixtures into the runtime directory.
 2. Run the executable from the expected working directory because fixture names are opened as relative paths.
 3. The entry point configures logging and command-line options, calls `openssl_startup()`, then dispatches resource metadata, RFC 8152 examples, COSE YAML examples, generated-key COSE cases, RFC 8392 CWT cases and AKP/ML-DSA cases before cleanup and reporting.
 4. Record the actual command line and OpenSSL/provider version with each report. The options below change coverage and should not be treated as cosmetic logging choices.
@@ -105,7 +105,7 @@ The tests consume fixtures and exercise implementations in `sdk/crypto/cose/`; C
 
 ### 2.10 COSE Examples YAML schema and field use
 
-The YAML consumer in `testvector_cose_examples.cpp` loads the `COSE EXAMPLES` schema. The top-level `keys` list describes key records; `items` describes COSE message inputs and optional processing parameters. The variants below preserve the distinctions between EC, OKP, and RSA key records.
+The YAML consumer in `testvector_cose_examples.cpp` loads the `COSE EXAMPLES` schema. The top-level `keys` list describes key records; `items` describes COSE message inputs and optional processing parameters. The consumer accepts `oct`, `ec`, `okp`, and `rsa` key types, and its encoding switch accepts `base16`, `base16rfc`, `base64`, and `base64url`. The variants below preserve the distinctions between symmetric octet, EC, OKP, and RSA key records.
 
 ````yaml
 testvector:
@@ -116,7 +116,14 @@ testvector:
         keyuse: string          # "enc"|"sig"
         keyalg: string
         keyset: string          # [mandatory]
-        encoding: string        # [mandatory] "base64url"|"base64"|"base16"
+        encoding: string        # [mandatory] "base16"|"base16rfc"|"base64"|"base64url"
+        kty: oct                # [mandatory] "oct"
+        k: encoding             # [mandatory] symmetric key bytes
+      - item: string            # [mandatory] kid
+        keyuse: string          # "enc"|"sig"
+        keyalg: string
+        keyset: string          # [mandatory]
+        encoding: string        # [mandatory] "base16"|"base16rfc"|"base64"|"base64url"
         kty: ec                 # [mandatory] "ec"
         crv: string             # [mandatory] "P-256"|"P-384"|"P-521"|...
         x: encoding             # [mandatory] x
@@ -126,7 +133,7 @@ testvector:
         keyuse: string          # "enc"|"sig"
         keyalg: string
         keyset: string          # [mandatory]
-        encoding: string        # [mandatory] "base64url"|"base64"|"base16"
+        encoding: string        # [mandatory] "base16"|"base16rfc"|"base64"|"base64url"
         kty: okp                # [mandatory] "okp"
         crv: string             # [mandatory] "Ed25519"|"Ed448"
         x: encoding             # [mandatory] x
@@ -135,7 +142,7 @@ testvector:
         keyuse: string          # "enc"|"sig"
         keyalg: string
         keyset: string          # [mandatory]
-        encoding: string        # [mandatory] "base64url"|"base64"|"base16"
+        encoding: string        # [mandatory] "base16"|"base16rfc"|"base64"|"base64url"
         kty: rsa                # [mandatory] "rsa"
         n: encoding             # [mandatory] n
         e: encoding             # [mandatory] e
@@ -155,7 +162,7 @@ testvector:
           apv_other: hexstring
           pub_other: hexstring
           priv: hexstring
-        enc:                    # optional encryption parameters
+        enc:                    # optional diagnostic-only fields (not applied to the COSE context)
           aad: hexstring
           cek: hexstring
           tomac: hexstring
@@ -164,7 +171,7 @@ testvector:
         debug: bit              # breakpoint/debug aid
 ````
 
-The source consumer decides which fields are applicable to a particular message and key type. A field's presence in this schema does not mean it is used or asserted for every item; the case diagrams below distinguish decoded inputs, operation-status checks, and explicit comparisons.
+The source consumer decides which fields are applicable to a particular message and key type. In the current implementation, `keyuse: enc` sets the encryption-use flag, while `keyuse: sig` leaves the key's default use flags unchanged. The loader calls the `cbor_web_key::add_*` functions without checking their return values, so a failed key insertion is not reported at the point of loading. The `enc` submap (`aad`, `cek`, `tomac`) is currently passed only to a diagnostic-dump helper; it is not applied to the COSE context. By contrast, the supported `shared` fields are passed through `cose.set()`, although those setter return values are not checked. A field's presence in this schema does not mean it is used or asserted for every item; the case diagrams below distinguish decoded inputs, operation-status checks, and explicit comparisons.
 
 ### 2.11 How key records and message vectors are connected
 
@@ -349,7 +356,7 @@ C.5.4 Multi-Recipient MACed Message
 
 C.6.1 MAC0 / shared-secret MAC
   → construct single-recipient-free MAC0 example → verify
-  → dountag=false
+  → untagged comparison disabled
 
 Each case:
   → serialize source-built message
@@ -385,7 +392,7 @@ The explicit assertions here include selected-key identity metadata and operatio
 testvector_cose_examples.yml
   → parse schema "COSE EXAMPLES"
   → load keys by keyset (oct / EC / OKP / RSA)
-       decode base16 / base64 / base64url material
+       decode base16 / base16rfc / base64 / base64url material
   → for each item:
        if skip=true → continue without processing this item
        decode expected CBOR bytes
@@ -506,7 +513,8 @@ The shared [Test Report Snapshot](../test-report-status.md) records the supplied
 - `sdk/crypto/cose/` — COSE message model, recipients, keys, countersignatures and cryptographic processing.
 - `sdk/io/cbor/` — CBOR parsing, object representation, publishing and serialization.
 - `sdk/crypto/basic/` — keys, signatures, MAC, AEAD and KDF implementations.
-- `test/testcase/cose/testcase_cose.md` — supplementary source and vector index.
+- `testcase_cose.cpp` — generated-key sign/encrypt/MAC algorithm matrices.
+- `testvector_cose_examples.yml` — COSE working-group key sets and encoded-message vectors.
 
 
 ## 5. References

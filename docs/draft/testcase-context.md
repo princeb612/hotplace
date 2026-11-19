@@ -1,15 +1,17 @@
 # Testcase Context — Draft
 
+> Source base : Revision 1132
+
 ## Why preserve this
 
-`testcase` is easy to misunderstand as simply a directory containing many test functions. The more useful project-level view is that testcase is an execution environment where four common concerns meet:
+`testcase` is easy to misunderstand as simply a directory containing many test functions. The more useful project-level view is that testcase is an execution environment where four common concerns meet. Their source locations are distinct: command-line parsing is in `sdk/base/basic/cmdline.hpp`, while `test_case` and `logger` are in `sdk/base/unittest/`.
 
 ```text
                          testcase
                             │
           ┌─────────────────┼─────────────────┐
           │                 │                 │
-       cmdarg           test_case          logger
+ t_cmdline_t<T>       test_case          logger
           │                 │                 │
  execution conditions   verification       observation
           │              / result             │
@@ -22,7 +24,7 @@ The components are related, but they are not one class hierarchy and do not have
 
 ## Four axes
 
-### `cmdarg` / command-line
+### `t_cmdline_t<T>` / `t_cmdarg_t<T>` — command-line
 
 Answers:
 
@@ -76,7 +78,7 @@ test_case
       └── final result
 ```
 
-`test_case` is therefore the verification/result boundary, not a synonym for `testcase`.
+`test_case` is therefore the verification/result boundary, not a synonym for `testcase`. Its `result()` returns `EXIT_FAILURE` when the aggregate fail count is nonzero and `EXIT_SUCCESS` otherwise.
 
 ### `logger`
 
@@ -99,7 +101,7 @@ process
   │
   ├── argv
   │    ↓
-  │  cmdarg / cmdline
+  │  t_cmdline_t<T> / t_cmdarg_t<T>
   │    ↓
   │  execution conditions
   │
@@ -157,7 +159,7 @@ base
         ▼
      testcase
         │
-        ├── cmdarg
+        ├── t_cmdline_t<T> / t_cmdarg_t<T>
         ├── test_case
         └── logger
 

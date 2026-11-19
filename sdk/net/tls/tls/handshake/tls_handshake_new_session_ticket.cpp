@@ -74,6 +74,14 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
+        const size_t body_end = offsetof_body() + get_body_size();
+        if ((body_end > size) || (pos > body_end)) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
+
         // TLS 1.2 (including DTLS 1.2) uses the RFC 5077 ticket
         // format. It has no ticket_nonce, ticket_age_add, or extensions.
         // Keep this legacy path separate from the TLS 1.3 RFC 8446 format.
@@ -85,8 +93,11 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             pl << new payload_member(uint32(0), true, "ticket lifetime hint") << new payload_member(uint16(0), true, "session ticket len")
                << new payload_member(binary_t(), "session ticket");
             pl.set_reference_value("session ticket", "session ticket len");
-            ret = pl.read(stream, size, pos);
-            if (errorcode_t::success != ret) {
+            ret = pl.read(stream, body_end, pos);
+            if ((errorcode_t::success != ret) || (pos != body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
                 __leave2_trace(ret);
             }
 
@@ -137,7 +148,10 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             pl.set_reference_value(constexpr_session_ticket, constexpr_session_ticket_len);
             pl.set_reference_value(constexpr_ticket_extensions, constexpr_ticket_extension_len);
             ret = pl.read(stream, size, pos);
-            if (errorcode_t::success != ret) {
+            if ((errorcode_t::success != ret) || (pos != body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
                 __leave2_trace(ret);
             }
 
@@ -151,6 +165,8 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
         // RFC 8446 4.6.1 defines ticket as opaque<1..2^16-1>.
         // A zero-length identity cannot be offered in a PSK identity vector.
         if (session_ticket.empty()) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
             ret = errorcode_t::bad_format;
             __leave2_trace(ret);
         }
@@ -283,13 +299,16 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
             for (size_t attempt = 0; attempt < ticket_identity_attempts; ++attempt) {
                 ret = crypto::openssl_prng::random(session_ticket, ticket_identity_size);
                 if (errorcode_t::success != ret) {
-                    __leave2;
+                    break;
                 }
                 tls_resumption_ticket existing_ticket;
                 if (false == session->find_resumption_ticket(session_ticket, existing_ticket)) {
                     unique_identity = true;
                     break;
                 }
+            }
+            if (errorcode_t::success != ret) {
+                __leave2;
             }
             if (false == unique_identity) {
                 ret = errorcode_t::internal_error;
@@ -311,7 +330,10 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
                << new payload_member(session_ticket, constexpr_session_ticket)                                //
                << new payload_member(uint16(ticket_extensions.size()), true, constexpr_ticket_extension_len)  //
                << new payload_member(ticket_extensions, constexpr_ticket_extensions);
-            pl.write(bin);
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
 
         // Retain every issued ticket independently on the server side as

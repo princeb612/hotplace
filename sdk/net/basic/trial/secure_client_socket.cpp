@@ -29,7 +29,7 @@ return_t secure_client_socket::do_handshake() {
         composer.set_minver(_spec);
         composer.set_maxver(_spec);
 
-        auto lambda = [this](tls_session*, binary_t& bin) -> void { do_send(bin); };
+        auto lambda = [this](tls_session*, binary_t& bin) -> return_t { return do_send(bin); };
         // TLS  client_hello,                                             server_hello, ...
         // DTLS client_hello, hello_verify_request, client_hello(cookie), server_hello, ...
         ret = composer.handshake(from_client, get_wto(), lambda);
@@ -59,10 +59,21 @@ return_t secure_client_socket::do_secure() {
     return ret;
 }
 
+return_t secure_client_socket::do_transport_disconnect() { return _secure.notify_transport_closed(); }
+
 return_t secure_client_socket::do_shutdown() {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
+        uint32 status = session->get_session_status();
+        const uint32 established = session_status_client_finished | session_status_server_finished;
+
+        // close_notify is meaningful only after the TLS handshake completed and
+        // while the transport is still usable. A peer-closed transport cannot
+        // complete the reciprocal close_notify exchange.
+        if (is_remote_transport_closed() || (established != (status & established)) || (INVALID_SOCKET == get_socket())) {
+            __leave2;
+        }
 
         binary_t bin;
 
@@ -71,17 +82,22 @@ return_t secure_client_socket::do_shutdown() {
         auto record = builder.set(session).set(tls_content_type_t::alert).set(dir).construct().build();
         if (record) {
             *record << new tls_record_alert(session, tls_alertlevel_t::warning, tls_alertdesc_t::close_notify);
-            record->write(dir, bin);
+            ret = record->write(dir, bin);
             record->release();
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         } else {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        do_send(bin);
+        ret = do_send(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-        session->wait_change_session_status(session_status_server_close_notified, get_wto());
-        // auto session_status = session->get_session_status();
+        ret = session->wait_change_session_status(session_status_server_close_notified, get_wto());
     }
     __finally2 {}
     return ret;

@@ -1,6 +1,8 @@
 # Document Guide
 
-Edition 1 · Based on hotplace Revision 1090
+Edition 1 · Based on hotplace Revision 1132
+
+> Source base : Revision 1132
 
 ## Purpose
 
@@ -55,14 +57,23 @@ source relationships and study chronology.
 
 ## Revision / Edition
 
-Each document records the source baseline used for that document. A topic may
-retain an older baseline when its content has not required re-audit; that does
-not mean the rest of the study map is frozen at that revision. The project
-map itself records the current study baseline.
+At the start of a documentation pass, read the public repository's root
+`version.txt`. Its `VERSION_BUILD` value is the authoritative current source
+baseline; `CHANGELOG.md` is a corroborating history, not a substitute for the
+build value. If `VERSION_BUILD` advances, the workspace target and current
+audit baseline must advance with it.
+
+Each topic document records the source revision actually inspected for its
+claims. A topic may retain an older baseline when it has not been re-audited;
+do not imply that an older topic baseline is current. When a document is
+re-audited against the current `VERSION_BUILD`, update its marker only after
+the relevant claims have been checked. The project map itself records the
+current study baseline.
 
 ```text
 Edition: 1
-Based on: Revision <topic baseline>
+Based on: Revision <inspected source baseline>
+Current workspace baseline: version.txt VERSION_BUILD
 ```
 
 ## Reading Density
@@ -75,8 +86,8 @@ repeated explanations, and source dumps.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

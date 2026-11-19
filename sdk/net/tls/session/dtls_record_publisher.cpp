@@ -278,9 +278,17 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     // write record
                     for (auto& item : records) {
                         binary_t bin;
-                        item->write(dir, bin);
+                        ret = item->write(dir, bin);
+                        if (errorcode_t::success != ret) {
+                            break;
+                        }
                         container.push_back(std::move(bin));
+                    }
+                    for (auto& item : records) {
                         item->release();
+                    }
+                    if (errorcode_t::success != ret) {
+                        __leave2;
                     }
                 } else {
                     binary_t bin;
@@ -296,6 +304,16 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 }
 
 return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
+    return publish(record, dir, std::function<return_t(tls_session*, binary_t&)>([func](tls_session* session, binary_t& bin) -> return_t {
+                       func(session, bin);
+                       return errorcode_t::success;
+                   }));
+}
+
+return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == record || nullptr == func) {
@@ -318,14 +336,26 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             __leave2;
         }
         for (auto& item : container) {
-            func(get_session(), item);
+            ret = func(get_session(), item);
+            if (errorcode_t::success != ret) {
+                break;
+            }
         }
     }
     __finally2 {}
     return ret;
 }
-
 return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
+    return publish(records, dir, [func](tls_session* session, binary_t& bin) -> return_t {
+        func(session, bin);
+        return errorcode_t::success;
+    });
+}
+
+return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == records || nullptr == func) {
@@ -367,14 +397,20 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
         for (auto& qitem : temp) {
             auto qsize = qitem.size();
             if (1 == qsize) {
-                func(get_session(), qitem.front());
+                ret = func(get_session(), qitem.front());
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
                 qitem.pop();
             } else {
                 binary_t bin;
                 for (; false == qitem.empty(); qitem.pop()) {
                     binary_append(bin, qitem.front());
                 }
-                func(get_session(), bin);
+                ret = func(get_session(), bin);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
             }
         }
     }

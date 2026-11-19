@@ -3,8 +3,9 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Source base : Revision 1132          │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```
@@ -172,7 +173,7 @@ network_server
   └── UDP datagram ──► QUIC packet/frame ──► HTTP/3
 ```
 
-The important distinction is that the common server layer owns **when and where processing occurs**, while TLS, QUIC, HTTP/2, and HTTP/3 own **what the bytes mean**. The current HTTP/3 server path is especially important to read as a boundary: QUIC endpoint selection exists, but the HTTP/3 request-consumption path is not yet connected to `http_server` in the same way as HTTP/1.1 and HTTP/2.
+The important distinction is that the common server layer owns **when and where processing occurs**, while TLS, QUIC, HTTP/2, and HTTP/3 own **what the bytes mean**. The current HTTP/3 server path is especially important to read as a boundary: `http_server_builder` can start a `service_http3` listener using the QUIC socket path and select `h3` ALPN, but `http_server::consume()` currently dispatches HTTP/1.1 and optional HTTP/2 only. The listener/configuration path therefore exists without an end-to-end HTTP/3 request-consumption path.
 
 ## Structural
 
@@ -262,7 +263,7 @@ server_socket
 network_server
 ```
 
-The current family includes naive TCP/UDP, OpenSSL TLS/DTLS, trial TLS/DTLS, and the current trial QUIC socket path.
+The current family includes naive TCP/UDP, OpenSSL TLS/DTLS, trial TLS/DTLS, and a trial QUIC socket path. `server_socket_builder` constructs QUIC only through the trial provider; its OpenSSL QUIC branch is explicitly unsupported.
 
 The useful abstraction is therefore not “TLS socket class” but:
 
@@ -363,9 +364,9 @@ TCP stream
    ▼
 network_stream
    │
-   ├── queued chunks
-   ├── t_chain
-   └── basic_stream
+   ├── queued `network_stream_data` nodes
+   ├── `t_chain` handoff when consuming queued nodes
+   └── temporary `basic_stream` aggregation for protocol detection/framing
    │
    ▼
 protocol detection / framing
@@ -931,10 +932,10 @@ Source anchors:
 sdk/net/server/
   network_server.*
   network_session.*
-  network_session_manager.*
-  network_stream.*
-  network_protocol.*
-  network_protocol_group.*
+  network_session.hpp/.cpp (includes network_session_manager)
+  network_stream.hpp/.cpp
+  network_protocol.hpp/.cpp
+  network_protocol_group.cpp
   server_conf.*
   types.hpp
 ```
@@ -964,11 +965,11 @@ protocol vectors / captures
       application
 ```
 
-PCAPNG is therefore useful for checking the traffic observed around this boundary, but it does not replace the network-server tests that verify session scheduling, stream retention, event ordering, and transport integration. The current QUIC boundary remains incomplete at the common `network_server` level.
+PCAPNG is therefore useful for checking the traffic observed around this boundary, but it does not replace the network-server tests that verify session scheduling, stream retention, event ordering, and transport integration. At Revision 1132, the QUIC socket factory path exists only for the trial provider, while the common server's UDP event path still obtains a generic datagram session through `get_dgram_session()`. `network_session_manager::get_quic_session()` is declared but has no implementation and is not used by `network_server`; complete QUIC session integration remains unfinished.
 
 ## Status
 
-| Area | Revision 1090 |
+| Area | Revision 1132 |
 |---|---|
 | TCP server path | Implemented |
 | UDP server path | Implemented |
@@ -977,11 +978,14 @@ PCAPNG is therefore useful for checking the traffic observed around this boundar
 | Stream assembly | Implemented |
 | TLS server path | Implemented |
 | DTLS server path | Implemented |
-| HTTP server use | Present |
-| QUIC integration through network_server | Not complete |
+| HTTP server use (HTTP/1.1 and HTTP/2) | Present |
+| QUIC socket construction | Present through trial provider; OpenSSL QUIC unsupported |
+| HTTP/3 listener startup / `h3` ALPN | Present |
+| QUIC session integration through `network_server` | Not complete; UDP path still uses generic datagram sessions |
+| HTTP/3 request consumption in `http_server` | Not complete; current consume path dispatches HTTP/1.1 and HTTP/2 only |
 | `network_stream` as ring buffer | Not applicable |
 
-The important current boundary is therefore clear: the common server/session architecture is established, while complete QUIC integration into that architecture remains unfinished.
+The important current boundary is therefore clear: the common TCP/UDP/TLS/DTLS server/session architecture is established; trial QUIC socket selection and HTTP/3 listener setup exist, but QUIC-specific session integration and HTTP/3 request consumption remain unfinished.
 
 ## Related topics
 

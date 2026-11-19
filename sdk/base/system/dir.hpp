@@ -70,7 +70,7 @@ inline bool makedirp(const std::string& path) {
         current_path += c;
     }
 
-    if (!current_path.empty()) {
+    if (false == current_path.empty()) {
         return makedir(current_path);
     }
 

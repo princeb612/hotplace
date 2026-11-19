@@ -6,7 +6,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -26,7 +26,7 @@ The PE plugin consumes an open `file_stream` and interprets the mapped bytes as 
 | NT headers (`IMAGE_NT_HEADERS`) | Validates the `PE\0\0` signature and exposes the optional header. |
 | Optional header / security directory | Supplies the certificate-table file offset and byte size. The security directory's address is a file offset, not a normal RVA. |
 | Certificate-table range | Offset and size used to extract the embedded Authenticode payload. |
-| Authenticode payload (`binary_t`) | Certificate-table bytes returned to the verifier for PKCS#7 decoding. |
+| Authenticode payload (`binary_t`) | Payload bytes from the first `WIN_CERTIFICATE` record returned to the verifier for PKCS#7 decoding; the binary-output overload does not return/iterate the entire certificate-table range. |
 | Digest algorithm and output (`binary_t`) | Caller-selected hash algorithm and calculated Authenticode image digest. |
 | PE `CheckSum` value | Separate 32-bit header checksum read, calculated, or updated by checksum APIs. |
 
@@ -51,15 +51,15 @@ The recognition routine rejects null, unopened, undersized, or incorrectly signe
 
 ### 3.2 Locate and extract the Authenticode payload
 
-The plugin selects the PE32 or PE32+ optional-header layout, reads `DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY]`, and uses its file offset and size as the certificate-table range. It validates the file range before returning the bytes. The verifier then passes these bytes to OpenSSL for PKCS#7 decoding. The plugin's range-returning overload exposes the location; the binary-output overload reads that range into the payload object.
+The plugin selects the PE32 or PE32+ optional-header layout, reads `DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY]`, and uses its file offset and size as the certificate-table range. The range-returning overload checks that `offset + size` is within the mapped file and exposes the location. The binary-output overload then reads only the first `WIN_CERTIFICATE`, accepts revision 2.0 and `WIN_CERT_TYPE_PKCS_SIGNED_DATA`, and copies `dwLength - FIELD_OFFSET(WIN_CERTIFICATE, bCertificate)` bytes. It does not iterate subsequent aligned records, and it does not validate that `dwLength` is at least the header size or bounded by the directory size before subtracting/copying. The verifier passes the extracted payload to OpenSSL for PKCS#7 decoding.
 
 ### 3.3 Calculate the Authenticode image digest
 
-The digest path uses the selected hash algorithm and PE layout rather than hashing the entire file as one continuous byte sequence. It accounts for the `CheckSum` field and the certificate-table range according to the Authenticode image-hashing rules. The resulting digest is compared by the verifier with the expected digest in `SpcIndirectDataContent`; the plugin itself does not decide whether the signer or certificate chain is trusted.
+The current digest path performs a linear hash over the file prefix ending at the certificate-table file offset. It hashes bytes before the PE `CheckSum`, skips the four-byte checksum field, hashes up to the security-directory entry, skips that eight-byte entry, then hashes from after the entry up to the certificate-table offset. It does not hash bytes at or after that offset and does not iterate PE section headers or use the certificate-table size to resume hashing after the table. This is the exact current source behavior; it should not be described more broadly as a complete section-by-section implementation of every Authenticode image-hashing case. The PE plugin checks `hash.open()` but ignores `hash.init()`, `hash.update()` and `hash.finalize()` return values. The resulting digest is compared by the verifier with the expected digest in `SpcIndirectDataContent`; the plugin itself does not decide whether the signer or certificate chain is trusted.
 
 ### 3.4 Read and update the PE checksum
 
-`read_checksum()`, `calc_checksum()`, and `update_checksum()` form a separate utility path over the PE `CheckSum` field. They support reading the stored value, calculating a checksum, and updating the field. These operations are not substitutes for the cryptographic Authenticode digest and are not required to establish signer trust.
+`read_checksum()`, `calc_checksum()`, and `update_checksum()` form a separate utility path over the PE `CheckSum` field. `read_checksum()` reads the stored value; `calc_checksum()` computes a PE checksum with the field treated as zero; `update_checksum()` computes and writes that value. These operations are not substitutes for the cryptographic Authenticode digest and are not required to establish signer trust. Their input validation is not uniform: `read_checksum()` checks the NT-header range but not the complete optional-header range, while `calc_checksum()` and `update_checksum()` do not perform equivalent NT/optional-header bounds checks before dereferencing those structures.
 
 ### Example from the source applet
 
@@ -80,7 +80,7 @@ The associated applet is `test/applet/authenticode/sample.cpp`. It passes a PE f
 ### Development Notes (for maintainer review)
 
 - The interface's comments mention PE, MSI, and Cabinet engines, and revision history records a refactor that split those engines. This document describes the concrete PE implementation only; it does not claim MSI/Cabinet support in this directory.
-- The plugin includes writing and separated-file hooks in its API surface. Keep API presence distinct from what the current PE implementation actually supports.
+- The plugin includes writing and separated-file hooks in its API surface. Keep API presence distinct from what the current PE implementation actually supports. `separated()` returns false, and both separated-file methods return `not_available`. The current `write_authenticode()` truncates the file and updates the security-directory size, but its assignments to `WIN_CERTIFICATE.dwLength`, `wRevision` and `wCertificateType` are commented out; it also does not add record alignment. Treat this as an incomplete write path, not a complete Authenticode signing/rewriting implementation.
 
 ## 5. References
 - [Microsoft PE/COFF specification](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) — PE headers and certificate-table layout.

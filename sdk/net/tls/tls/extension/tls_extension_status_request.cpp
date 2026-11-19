@@ -50,7 +50,14 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
                << new payload_member(binary_t(), constexpr_request_ext_info);
             pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
             pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);
 #if defined DEBUG

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -17,24 +17,24 @@
 This record describes the in-memory state used by hotplace's JOSE processing classes. The key architectural point is that JOSE state is represented separately from its eventual compact or JSON serialization.
 
 ## 2. Data Model
-The central `jose_context_t` groups a key reference, protected-header data, encryption configurations, and signing entries:
+The central `jose_context_t` groups a retained key reference, protected-header data, encryption configurations, and signing entries. `open()` stores the supplied `crypto_key*` and increments its reference count; it does not copy the key material. `close()` clears transient state, releases that reference, and deletes the context:
 
 ```text
 jose_context_t
  ├── crypto_key* key
  ├── protected_header
- ├── encryptions : jose_encryptions_map_t
- └── signs       : jose_signs_t
+ ├── encryptions : map<jwe_t, jose_encryption_t>
+ └── signs       : list<jose_sign_t>
 ```
 
-`jose_encryption_t` represents a content-encryption configuration and its recipient map, keyed by `jwa_t`. `jose_recipient_t` carries algorithm metadata, key, `kid`, headers, and parameters such as `epk`, `apu`/`apv`, PBES2 `p2s`/`p2c`, and AES-GCM key-wrap `iv`/`tag`.
+`jose_encryption_t` represents a content-encryption configuration keyed by `jwe_t` and its recipient map, keyed by `jwa_t`. This is an algorithm-keyed map, not a list of recipient identities: two distinct recipients using the same `jwa_t` cannot occupy separate entries. `jose_recipient_t` carries algorithm metadata, key pointer, `kid`, headers, and parameters such as `epk`, `apu`/`apv`, PBES2 `p2s`/`p2c`, and AES-GCM key-wrap `iv`/`tag`.
 
 `jose_sign_t` carries JWS header, payload, signature, key identifier, and selected `jws_t` algorithm. `jose_signs_t` can represent multiple signing entries, rather than only one compact signature.
 
 ## 3. Behavior Model
 The data model preserves the distinction between a JWE content-encryption key (CEK) and the per-recipient operation that transports, wraps, or derives that key. `jose_serialization_t` selects compact, flattened JSON, or general JSON output without being the owner of the cryptographic state itself.
 
-`json_object_signing_encryption` manages context lifecycle through `open`, `close`, and `clear_context`; callers should follow that lifecycle instead of assuming the context is a stateless value object.
+`json_object_signing_encryption` manages context lifecycle through `open`, `close`, and `clear_context`; callers should follow that lifecycle instead of assuming the context is a stateless value object. `clear_context()` frees the retained ephemeral-key pointers and clears `protected_header`, `encryptions`, and `signs`, but it does not release the retained `crypto_key` reference. That reference is released by `close()`.
 
 ### Real-code example: serialized input through an explicit context lifetime
 

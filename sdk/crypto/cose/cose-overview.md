@@ -1,5 +1,7 @@
 # Developer Notes — COSE Algorithm Inventory
 
+> Source base : Revision 1132
+
 ## Purpose and current-status boundary
 
 This note preserves the compact COSE message-shape and algorithm-identifier inventory. For the detailed CBOR-to-COSE processing flow and the source/test-based algorithm-family summary, see [COSE README](README.md). The table below is a developer-maintained inventory, not a blanket guarantee of runtime support across OpenSSL/provider builds.
@@ -23,7 +25,7 @@ This note preserves the compact COSE message-shape and algorithm-identifier inve
 - party : apu-id/nonce/other, apv-id/nonce/other
 - epk   : ephemeral key
 - s-key : static key
-- s-kid : staic kid
+- s-kid : static key identifier
 
 | Implemented | Name      | Value | Description                                | aad | salt| party | epk | s-key | s-kid | comments |
 |-- |--                   |--     |--                                                    |-- |-- |-- |-- |-- |-- |--                |

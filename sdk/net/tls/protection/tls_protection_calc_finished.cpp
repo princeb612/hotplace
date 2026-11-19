@@ -64,15 +64,23 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             openssl_kdf kdf;
             binary_t context;
             if (is_kindof_dtls()) {
-                kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
+                ret = kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
             } else {
-                kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
+                ret = kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
+            }
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
             }
             crypto_hmac_builder builder;
             crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
-            if (hmac) {
-                hmac->mac(fin_hash, maced);
-                hmac->release();
+            if (nullptr == hmac) {
+                ret = errorcode_t::not_supported;
+                __leave2_trace(ret);
+            }
+            ret = hmac->mac(fin_hash, maced);
+            hmac->release();
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
             }
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net)) {
@@ -98,20 +106,26 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
 
             crypto_hmac_builder builder;
             auto hmac = builder.set(alg).set(fin_key).build();
-            size_t size_maced = 12;
-            if (hmac) {
-                binary_t temp = seed;
-                binary_t atemp;
-                binary_t ptemp;
-                while (maced.size() < size_maced) {
-                    hmac->mac(temp, atemp);
-                    hmac->update(atemp).update(seed).finalize(ptemp);
-                    binary_append(maced, ptemp);
-                    temp = atemp;
-                }
-                hmac->release();
-                maced.resize(size_maced);
+            if (nullptr == hmac) {
+                ret = errorcode_t::not_supported;
+                __leave2_trace(ret);
             }
+            size_t size_maced = 12;
+            binary_t temp = seed;
+            binary_t atemp;
+            binary_t ptemp;
+            while (maced.size() < size_maced) {
+                ret = hmac->mac(temp, atemp);
+                if (errorcode_t::success != ret) {
+                    hmac->release();
+                    __leave2_trace(ret);
+                }
+                hmac->update(atemp).update(seed).finalize(ptemp);
+                binary_append(maced, ptemp);
+                temp = atemp;
+            }
+            hmac->release();
+            maced.resize(size_maced);
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net)) {
                 trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {

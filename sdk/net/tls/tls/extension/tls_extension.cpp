@@ -58,7 +58,7 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
         //  uint16 type
         //  uint16 len
         //  ...
-        if (pos + 4 > size) {
+        if ((pos > size) || (size - pos < 4)) {
             ret = errorcode_t::no_more;
             __leave2;
         }
@@ -89,6 +89,22 @@ return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t s
             ((nullptr == _hs) || (tls_handshake_type_t::client_hello != _hs->get_type()) || (from_client != dir))) {
             if (_hs && _hs->get_session()) {
                 _hs->get_session()->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+            }
+            ret = errorcode_t::bad_format;
+            __leave2;
+        }
+        // RFC 8446 4.2.11: pre_shared_key is only valid in a
+        // client ClientHello or a server ServerHello. Reject it in every
+        // other handshake-message/direction combination.
+        bool valid_psk_context = false;
+        if (_hs) {
+            valid_psk_context = ((tls_handshake_type_t::client_hello == _hs->get_type()) && (from_client == dir)) ||
+                                ((tls_handshake_type_t::server_hello == _hs->get_type()) && (from_server == dir));
+        }
+        if ((tls_extension_type_t::pre_shared_key == _type) && (false == valid_psk_context)) {
+            if (_hs && _hs->get_session()) {
+                _hs->get_session()->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                _hs->get_session()->reset_session_status();
             }
             ret = errorcode_t::bad_format;
             __leave2;

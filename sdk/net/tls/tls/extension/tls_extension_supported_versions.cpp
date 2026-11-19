@@ -149,7 +149,19 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
         {
             payload pl;
             pl << new payload_member(uint16(0), true, constexpr_version);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
+            if (pos != endpos_extension()) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             version = pl.t_value_of<uint16>(constexpr_version);
         }

@@ -2,8 +2,8 @@
 
 ```text
 hotplace source tree
-Edition 2 · Revision 1125
-Source basis: Revision 1125
+Edition 2 · Revision 1132
+Source base : Revision 1132
 Documented with GPT-6
 — source structure, implementation & tests
 ```
@@ -12,7 +12,7 @@ Documented with GPT-6
 
 ## 1. What
 
-This directory tests project-owned STL-style utilities under [`sdk/base/nostd`](../../../../sdk/base/nostd/README.md): binary conversion, range and bit sets, AVL and binary trees, general tree traversal, list/vector/map/heap containers, integer conversion, lookup helpers, checked narrowing, exceptions, and deferred values.
+This directory tests project-owned STL-style utilities under [`sdk/base/nostd`](../../../../sdk/base/nostd/README.md): binary conversion, range and bit sets, AVL and binary trees, general tree traversal, list/vector/map/heap containers, integer conversion, lookup helpers, checked narrowing, exceptions, and named-value behavior.
 
 The directory is not one uniform conformance suite. Some tests compare exact values and state transitions; others only print traversal or lifetime diagnostics and finish with `assert(true)`. The sections below distinguish those levels rather than treating a testcase name or report entry as proof of every behavior suggested by the name.
 
@@ -110,18 +110,18 @@ SEQUENCE
 
 2. This checks nondecreasing extraction order for one random sample; it does not compare against a sorted copy of the generated input or make the exact sequence deterministic. The use of `openssl_prng` also means this testcase depends on the crypto/random subsystem.
 
-### 2.11 Exception and deferred value behavior
+### 2.11 Exception and named-value behavior
 
 1. [`testcase_exception.cpp`](testcase_exception.cpp) throws `exception(errorcode_t::not_specified)`, catches it by value, captures the error code and message, and asserts that the captured code is `not_specified`. The message is logged but not compared with an expected string.
 
-2. [`testcase_value.cpp`](testcase_value.cpp) checks immediate and deferred `t_value<int64>` behavior:
+2. [`testcase_value.cpp`](testcase_value.cpp) checks the immediate value/name contract of `t_value<int64>`:
 
-- An immediate value of 1 is read through `value()`.
-- A deferred value named `"test"` is updated to 2 by a worker thread; after `start()` and `join()`, both `value()` and conversion to `int64` must return 2.
-- A value initially constructed as 1 is changed to deferred with name `"test"`; the test checks the name and deferred flag, sets its value to 2 from a worker thread, and reads it twice to check the result and cached read.
-- The `t_range_value<int64>` cases check a literal value 20, a deferred parameter named `"maxSize"`, resolution to 1024 while retaining the deferred marker, and a comparison showing 500 is less than the resolved value.
+- A value initialized to 1 is read through `value()`.
+- A named value initialized to 0 is changed to 2 by a worker thread. The main thread joins the worker before reading, then checks both `value()` and conversion to `int64`.
+- A separately initialized value is named `"test"`, updated to 2 by a worker thread, and read after `join()`. The repeated read checks that the stored value remains 2; it is not a cache test.
+- The `t_range_value<int64>` cases check a literal value 20, a named value `"maxSize"` whose stored value is subsequently set to 1024, retention of its name, and a comparison showing 500 is less than the stored value. These are ordinary value/name operations, not deferred resolution.
 
-3. The worker routine's return code is not independently asserted; the main observable checks are the state flags, names, values, and comparison results.
+3. Revision 1122 removed the future/promise behavior from `t_value<T>`. The worker-thread examples perform an explicit `set_value()` followed by `join()`; they do not establish thread safety or synchronization provided by `t_value<T>` itself. The worker routine's return code is not independently asserted.
 
 ## 3. Evidence
 
@@ -150,10 +150,10 @@ binary value -> width/endian/truncation conversion -> compare selected bytes/val
 text integer -> parse / checked narrowing -> compare value or expected status
 ```
 
-**4. Priority queue, exceptions and deferred values**
+**4. Priority queue, exceptions and named values**
 
 ```text
-selected inputs -> pop / throw / defer-resolve operation
+selected inputs -> pop / throw / set and read value
   -> compare only explicit order, exception or state assertions
 ```
 
@@ -174,7 +174,7 @@ The report does not independently identify the tested source revision, OS, compi
 - [`../CMakeLists.txt`](../CMakeLists.txt) — base testcase source collection.
 - [`testcase_set.cpp`](testcase_set.cpp), [`testcase_bitset.cpp`](testcase_bitset.cpp), [`testcase_avltree.cpp`](testcase_avltree.cpp), and [`testcase_btree.cpp`](testcase_btree.cpp) — interval, bit-set, and tree checks.
 - [`testcase_tree.cpp`](testcase_tree.cpp), [`testcase_list.cpp`](testcase_list.cpp), [`testcase_vector.cpp`](testcase_vector.cpp), [`testcase_map.cpp`](testcase_map.cpp), and [`testcase_pq.cpp`](testcase_pq.cpp) — traversal, container, and heap behavior.
-- [`testcase_binary.cpp`](testcase_binary.cpp), [`testcase_int.cpp`](testcase_int.cpp), [`testcase_narrowcast.cpp`](testcase_narrowcast.cpp), [`testcase_findlte.cpp`](testcase_findlte.cpp), [`testcase_exception.cpp`](testcase_exception.cpp), and [`testcase_value.cpp`](testcase_value.cpp) — conversion, lookup, exception, and deferred-value checks.
+- [`testcase_binary.cpp`](testcase_binary.cpp), [`testcase_int.cpp`](testcase_int.cpp), [`testcase_narrowcast.cpp`](testcase_narrowcast.cpp), [`testcase_findlte.cpp`](testcase_findlte.cpp), [`testcase_exception.cpp`](testcase_exception.cpp), and [`testcase_value.cpp`](testcase_value.cpp) — conversion, lookup, exception, and named-value checks.
 - [Test Report Snapshot](../../test-report-status.md) — report provenance and interpretation notes.
 
 ## 5. References

@@ -78,7 +78,7 @@ return_t odbc_query::build_fieldinfo(void) {
         while (nCol <= NumResCols) {
             ret_sql =
                 SQLDescribeCol(_stmt_handle, nCol, reinterpret_cast<SQLTCHAR*>(ColName), RTL_NUMBER_OF(ColName), &ColNameLength, &ColType, &ColSize, &Scale, &Nullable);
-            if (!SQL_SUCCEEDED(ret_sql)) {
+            if (SQL_FAILED(ret_sql)) {
                 ret = errorcode_t::internal_error;
                 break;
             }
@@ -258,7 +258,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
             __leave2;
         }
 #endif
-        if (!SQL_SUCCEEDED(ret_sql)) {
+        if (SQL_FAILED(ret_sql)) {
             ret = errorcode_t::fetch_failure;
             __leave2;
         }
@@ -364,7 +364,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
                         break;
                     }
 
-                    if (!SQL_SUCCEEDED(ret_sql)) {
+                    if (SQL_FAILED(ret_sql)) {
                         ret = errorcode_t::no_data; /* error */
                         break;
                     }

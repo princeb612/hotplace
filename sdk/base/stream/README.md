@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,8 +20,8 @@
 
 ```text
 basic_stream ──────────────► formatted text / append operations
-ansi_string, wide_string ─► mutable string operations
-binary_stream ────────────► primitive binary assembly
+ansi_string, wide_string ──► mutable string operations
+binary_stream ─────────────► primitive binary assembly
           │
           ▼
  low-level buffer / formatting helpers

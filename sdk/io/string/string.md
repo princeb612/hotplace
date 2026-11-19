@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -19,15 +19,15 @@ The `string.hpp` / `string_charset.cpp` pair provides lightweight tokenization h
 ### Character-set variants
 
 - Narrow-string implementations are in `string_charset.cpp`.
-- Windows builds expose `A2W()` and `W2A()` helpers, with overloads returning `return_t` for reporting invalid parameters. They use `MultiByteToWideChar()` and `WideCharToMultiByte()` with a selected Windows code page.
+- Windows builds expose `A2W()` and `W2A()` helpers, with overloads returning `return_t` for reporting a null source pointer. They use `MultiByteToWideChar()` and `WideCharToMultiByte()` with a selected Windows code page. The status-returning overloads do not translate a failed Win32 conversion call or a non-positive sizing result into an error status; a non-null source can therefore leave the target empty while the wrapper still returns success. The value-returning `W2A()` overload also does not guard a null source pointer.
 - `unicode/string_wcs.cpp` provides the Unicode build variant of the string helper implementation.
 
 ## 3. Behavior Model
 
 ### Tokenization
 
-- `tokenize(source, tokens, pos, mode)` extracts the next token and advances the caller-owned `pos`. The `token_quoted` mode flag enables quoted-token handling.
-- `gettoken(source, token, index, value)` retrieves a token by index and is implemented in terms of `tokenize()`.
+- `tokenize(source, tokens, pos, mode)` extracts the next token and advances the caller-owned `pos`. The `token_quoted` mode flag adds simple quote-aware delimiter skipping; it is not a full quoted-string grammar and does not implement escape-aware or nested quotes, or validate unmatched quotes.
+- `gettoken(source, token, index, value)` retrieves a token by index and is implemented in terms of `tokenize()`. It has no `mode` parameter, so callers cannot request `token_quoted` through `gettoken()`.
 
 ### Practical example: extract a field from delimiter-separated text
 
@@ -49,7 +49,7 @@ The tokenization API returns token text by value and uses the mutable position a
 Character conversion is platform-dependent. Do not assume the Windows-only `A2W()` / `W2A()` declarations are available in non-Windows builds, and do not treat a successful conversion as a guarantee that every source byte sequence is valid in every code page.
 
 ### Source-level evidence
-`test/testcase/io/string/testcase_string.cpp` tests `split_url()` rather than directly asserting `tokenize()` or `gettoken()`. The header `sdk/io/string/string.hpp` contains examples for tokenization, including `gettoken("key=item1|value1|link1", "=|", 0, value)` and a position-driven `tokenize()` loop. These header examples explain the API shape, but they are not substitutes for a dedicated runtime test of every tokenization mode.
+`test/testcase/io/string/testcase_string.cpp` tests `split_url()` rather than directly asserting `tokenize()` or `gettoken()`. The header `sdk/io/string/string.hpp` contains examples for tokenization, including `gettoken("key=item1|value1|link1", "=|", 0, value)` and a position-driven `tokenize()` loop. These header examples explain the API shape, but they are not substitutes for a dedicated runtime test of every tokenization mode. The same testcase directory contains no direct tests for `A2W()` / `W2A()` or their conversion-error behavior.
 
 To see the shared string helpers in an integration context, follow URL decomposition in `url.cpp`; the URL implementation uses the base regex/stream facilities and shares this directory's public header.
 

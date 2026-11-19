@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -62,7 +62,7 @@ sdk/base
 - `unittest` supplies infrastructure for hotplace's own test programs. Its presence does not mean that every SDK consumer must adopt it as an application testing framework.
 - Root-level headers define shared contracts and conventions: [shared types](types.md), [error codes](error.md), [callbacks](callback.md), [character-set compatibility](charset.md), [inline helpers](inline.md), [control-flow macros](syntax.md), and the abstract [stream interface](stream.md).
 - Root-level [trace controls](trace.md) define event/option identifiers; they are distinct from the [system trace implementation](system/trace.md).
-- The [C++14 entry point](c++14.md) is a narrow wrapper for the isolated compile-time string-obfuscation experiment, not a project-wide change in language baseline.
+- The [C++14 entry point](c++14.md) is a narrow wrapper for the compile-time string-obfuscation facility. Its narrow scope does not mean every SDK target uses C++14; the configured default still varies by toolchain/platform.
 
 ## 3. Behavior Model
 
@@ -86,7 +86,7 @@ Some facilities are ABI- or platform-sensitive. For example, `valist` reconstruc
 
 ### Language baseline
 
-The project's general compatibility target is C++11. Isolated experiments, including compile-time string obfuscation, may use newer language features; those exceptions must not be interpreted as broad C++14-or-later support for the SDK.
+C++11 remains an important compatibility target, but the configured language standard is toolchain/platform-specific. The root `CMakeLists.txt` defaults GNU on UNIX to C++11 and GNU on Windows / MSVC to C++14; the `SET_STDCPP` environment setting can override the configured value. The SDK therefore does not have one uniform default standard across every supported build configuration.
 
 ### Verification boundary
 

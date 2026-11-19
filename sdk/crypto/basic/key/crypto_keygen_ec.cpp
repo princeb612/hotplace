@@ -56,7 +56,8 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc
         .run_pipe([&]() -> int {
             // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
             // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-            return EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);
+            EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);
+            return 1;
         })
 #endif
         .run_pipe([&]() -> return_t {

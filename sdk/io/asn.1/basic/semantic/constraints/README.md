@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -41,7 +41,7 @@ asn1_constraint_evaluator<T>
        `-- string_set                    (string domains)
 ```
 
-The evaluator walks semantic constraint nodes and accumulates the allowed domain into the type-appropriate runtime-set representation. Range and string constraints therefore need not share the same backend representation.
+The evaluator walks semantic constraint nodes and accumulates the allowed domain into the type-appropriate runtime-set representation. Range and string constraints therefore need not share the same backend representation. The enclosing object-validation path performs built-in type checks before constraint evaluation; ENUMERATED membership is a special path that is reached through the enum object's `have_constraints()` override even when no explicit constraint nodes are attached.
 
 
 A typical path is:

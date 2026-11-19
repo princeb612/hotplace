@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -21,9 +21,9 @@ These directories do not define one shared object. They cover three backend conc
 
 ### OpenSSL SDK support
 
-`sdk/openssl_sdk.cpp` owns process-level OpenSSL startup/cleanup and the compatibility path for thread setup on OpenSSL versions older than 1.1. The relevant state is a pair of reference counts protected by critical sections: one for global startup/cleanup and one for legacy thread setup/cleanup. These counts coordinate repeated calls; they are not per-cipher or per-key state.
+`sdk/crypto/basic/sdk/openssl_sdk.cpp` owns process-level OpenSSL startup/cleanup and the compatibility path for thread setup on OpenSSL versions older than 1.1. The relevant state is a pair of reference counts protected by critical sections: one for global startup/cleanup and one for legacy thread setup/cleanup. These counts coordinate repeated calls; they are not per-cipher or per-key state.
 
-The layer also provides BIO-to-`stream_t` copying and shared initialization/debug helpers used by concrete primitive implementations. Most operation classes keep these backend details behind their own interfaces.
+The layer also provides BIO-to-`stream_t` copying and shared initialization/debug helpers used by concrete primitive implementations. Most operation classes keep these backend details behind their own interfaces. The current `read_bio()` loop treats every `BIO_read()` result less than or equal to zero as end-of-input and ignores `stream->write()` results, then returns success; read/write failures are therefore not distinguished from normal completion.
 
 ### PRNG
 
@@ -33,7 +33,7 @@ The layer also provides BIO-to-`stream_t` copying and shared initialization/debu
 |---|---|---|
 | `rand32()`, `rand64()` | Fixed integer width | Integer populated from random bytes |
 | `random(buf, size)` | Caller-owned byte buffer and size | Bytes written into the supplied buffer |
-| `random(binary_t&, size)` | Requested byte count | Resized `binary_t` containing random bytes |
+| `random(binary_t&, size)` | Requested byte count | Resized `binary_t` containing random bytes; size zero returns `do_nothing` |
 | `random(uint32&, mask)` | Integer plus bit mask | Random integer with masked bits |
 | `rand(size, encoding, usetime)` | Requested size, text encoding, optional time prefix | Encoded random bytes, optionally preceded by encoded timestamp bytes |
 | `nonce(size, encoding)`, `token(size, encoding)` | Requested size and text encoding | Encoded string generated through `rand(..., false)` |
@@ -51,7 +51,7 @@ The `rand()` path enforces a minimum random-buffer size of eight bytes. When `us
 | `keycapsule` | KEM encapsulation output sent to the private-key holder; not the shared secret |
 | `sharedsecret` | Derived secret output from encapsulation or decapsulation |
 | `signature` | Signature bytes produced by signing or consumed by verification |
-| `OSSL_LIB_CTX*` | OpenSSL library-context parameter used by the key encode/decode and signature paths |
+| `OSSL_LIB_CTX*` | OpenSSL library-context parameter used by key encode/decode and signature paths; the KEM `encapsule()` / `decapsule()` implementations currently create `EVP_PKEY_CTX` with a null library context and therefore do not honor the supplied context |
 
 The documented ML-KEM parameter table records algorithm-specific public-key and capsule sizes. Hybrid ECDHE-ML-KEM shares combine component data according to the selected TLS group metadata; their ordering is not a universal property of the PQC backend. The higher-level key-exchange layer owns that combined wire layout.
 
@@ -103,7 +103,7 @@ rand(size, encoding, usetime)
 nonce() / token() ───────────────> rand(size, encoding, false)
 ```
 
-The byte-buffer APIs and encoded-string APIs return different representations of random data. Callers should choose the representation required by the protocol and should not mistake an optional timestamp prefix for additional random bytes. The wrapper does not assign protocol-specific nonce uniqueness, token expiry, or storage policy.
+The byte-buffer APIs and encoded-string APIs return different representations of random data. Callers should choose the representation required by the protocol and should not mistake an optional timestamp prefix for additional random bytes. The wrapper does not assign protocol-specific nonce uniqueness, token expiry, or storage policy. More importantly, the current implementation ignores the return value from every `RAND_bytes()` call: `rand32()`/`rand64()` cannot report failure, and the `random()` overloads return success even if the underlying random-byte request fails. Treat a success return from these wrappers as insufficient evidence that `RAND_bytes()` succeeded; the API needs explicit return-code propagation before callers can rely on that signal.
 
 #### Concrete caller path from `testcase_random.cpp`
 
@@ -139,7 +139,7 @@ private EVP_PKEY + message ──> DigestSign path ──> signature bytes
 public EVP_PKEY + message + signature ──> DigestVerify path ──> status
 ```
 
-The encapsulation output has two separate values: the capsule is transmitted to the private-key holder, while the shared secret is consumed by the protocol's key schedule. Decapsulation uses the corresponding private key and capsule to derive the matching secret. The signature path streams message bytes through DigestSign/DigestVerify operations. These backend methods implement cryptographic operations, not the higher-level TLS handshake, COSE message construction or hybrid-share framing.
+The encapsulation output has two separate values: the capsule is transmitted to the private-key holder, while the shared secret is consumed by the protocol's key schedule. Decapsulation uses the corresponding private key and capsule to derive the matching secret. The signature path streams message bytes through DigestSign/DigestVerify operations. In the current `sign()` implementation, the final `EVP_DigestSignFinal()` call is made in a pipeline `walk()` callback and its return value is ignored; the method can report success even if that final signature-output call fails. `verify()` does include `EVP_DigestVerifyFinal()` in the checked pipeline. These backend methods implement cryptographic operations, not the higher-level TLS handshake, COSE message construction or hybrid-share framing.
 
 Availability remains conditional on the linked OpenSSL version, provider configuration, key type and operation. A wrapper or an algorithm name in a reference table does not by itself guarantee that the backend can instantiate the operation.
 
@@ -161,7 +161,7 @@ crypto_keychain::pkey_keygen_byname(algorithm)
   -> free EVP_PKEY objects
 ```
 
-The testcase checks the reconstructed public-key objects and the final shared-secret equality. It logs capsule/secret bytes for inspection, but those logs are not fixed expected values. This is a KEM operation demonstration, not a complete TLS 1.3 handshake or key schedule; TLS still defines the key-share framing and how the shared secret is consumed. On older OpenSSL builds, the testcase reports `not_supported` rather than exercising these operations.
+The testcase checks the reconstructed public-key objects and the final shared-secret equality. It exercises DER and raw public-key encode/decode, but not PEM encoding or the PQC signature methods. It logs capsule/secret bytes for inspection, but those logs are not fixed expected values. This is a KEM operation demonstration, not a complete TLS 1.3 handshake or key schedule; TLS still defines the key-share framing and how the shared secret is consumed. On older OpenSSL builds, the testcase reports `not_supported` rather than exercising these operations.
 
 ## 4. Relationships
 ### 4.1 Related tests and implementation paths

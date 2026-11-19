@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -38,7 +38,7 @@ cbor_object tree
       └── cbor_diagnostic_visitor ──► stream_t
 ```
 
-Each visitor's `visit(cbor_object*)` calls the object's `represent()` method with the selected output target. Concrete object classes determine how their own values and children are represented.
+Each visitor's `visit(cbor_object*)` calls the object's `represent()` method with the selected output target. Concrete object classes determine how their own values and children are represented. The visitor itself does not walk child nodes: the concrete object's `represent()` implementation recursively represents its children. This is a thin output-target adapter around virtual representation methods rather than a per-type visitor overload set.
 
 ## 3. Behavior Model
 
@@ -67,9 +67,11 @@ object.represent(target)
 
 The concise output is a CBOR encoding; diagnostic output is text intended for inspection. They may describe the same logical object, but are not interchangeable wire formats. This visitor interface is distinct from the low-level `cbor_encode` overloads even though both can produce binary output.
 
+**Return-status boundary:** `visit()` returns success after calling the object's `represent()` method, whose signature is `void`; `cbor_object::accept()` is also `void` and discards the visitor's return value. The publisher therefore cannot report failures from visitor representation and normally returns success after parameter validation. Do not treat the visitor/publisher return status as proof that every output operation succeeded.
+
 ### Test interpretation
 
-The RFC-oriented testcase builds values or object trees and uses `cbor_publisher` to obtain both diagnostic and concise output, then compares concise bytes against expected hex. The YAML-vector testcase parses encoded bytes and publishes both forms; it compares bytes first and uses diagnostic text for selected cases where multiple valid floating-point widths represent the same value. These are source-level verification paths; this documentation update did not execute the tests.
+The RFC-oriented testcase builds values or object trees and uses `cbor_publisher` to obtain both diagnostic and concise output, then compares concise bytes against expected hex. The YAML-vector testcase parses encoded bytes and publishes both forms; it compares bytes first and uses diagnostic text for selected cases where multiple valid floating-point widths represent the same value. These are source-level verification paths; this documentation update did not execute the tests. The testcase helpers ignore the `publish()` return statuses; the actual oracles are the expected-byte comparison or the YAML helper's byte-equality/diagnostic-equality fallback. There is no dedicated testcase for visitor error propagation.
 
 ## 4. Relationships
 ### Related source

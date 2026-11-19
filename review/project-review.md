@@ -2,14 +2,16 @@
 
 ## Review Attribution
 
-This review was prepared with the assistance of ChatGPT (GPT-5.6 Luna)
+This review was prepared with the assistance of ChatGPT (GPT-6)
 as an external reviewer of the hotplace project.
 
 The observations and future-direction proposals in this document are
 review findings, not project commitments. The project owner retains
 final responsibility for deciding which recommendations to adopt.
 
-Review date: 2026-10-03
+Review date: 2026-11-18
+
+Source base : Revision 1132
 
 ## 1. Project Identity
 
@@ -88,8 +90,12 @@ which naturally limits parallel development and review capacity.
 
 ### 3.4 Modern Ecosystem Compatibility
 
-Maintaining a C++11 baseline limits direct adoption of some modern C++
-libraries and techniques. This is a deliberate compatibility boundary.
+Maintaining C++11 source compatibility remains a project constraint, but
+the current CMake defaults are toolchain/platform-specific: GNU on UNIX
+uses C++11, while GNU on Windows and MSVC select C++14; `SET_STDCPP` can
+override the configured value. The compatibility target can still limit
+the use of newer language features when portability across supported
+toolchains is required.
 
 ### 3.5 External Validation
 
@@ -100,7 +106,7 @@ independent validation provide a different kind of evidence.
 
 These should not automatically be treated as problems to fix.
 
-- **C++11 as a compatibility boundary**
+- **C++11 source compatibility as a target, with toolchain-specific C++14 configurations**
 - **Minimal external dependencies**
 - **Breadth over specialization**
 - **Experimentation over productization**
@@ -199,27 +205,33 @@ The goal is not to optimize hotplace into a different project.
 The public repository provides an important correction to a simple
 "testing gap" interpretation.
 
-The README documents a broad set of implemented and applied RFCs across
-TLS/DTLS/QUIC, CBOR/COSE/JOSE, HTTP/2/HTTP/3, ASN.1, and other protocol or
-format work. It also records cryptographic work involving published RFC
-test vectors and NIST CAVP-related validation. citeturn0search0
+The public source tree documents a broad range of implementation and
+application areas. The evidence is distributed across the root
+`README.md`, protocol-specific study material, packet/capture notes, and
+component testcase documentation. Examples include `docs/pcapng/README.md`,
+`docs/cose_jose/README.md`, `sdk/net/tls/README.md`, and
+`test/testcase/crypto/advisor/README.md`. These sources show substantial
+RFC/vector-oriented and wire/packet verification activity, but they do not
+constitute a blanket conformance certification for every listed protocol.
 
-Therefore hotplace should **not** be described as lacking conformance or
-component testing in general.
+Therefore hotplace should **not** be described as lacking testing in
+general, while the available evidence should still be scoped carefully.
 
 Current classification:
 
-- **Already Strong:** build/test infrastructure, component tests,
-  RFC/vector-oriented verification, wire/packet-oriented evidence.
-- **Needs Structure / Visibility:** identifying interoperability evidence
-  as an independent evidence layer.
+- **Substantial Existing Evidence:** build/test infrastructure, component
+  tests, RFC/vector-oriented verification, and packet/capture-oriented work.
+- **Needs Structure / Visibility:** a repeatable inventory of independent
+  interoperability evidence and the exact configurations/scenarios covered.
 - **Potential Capability Gap:** dedicated fuzzing/robustness infrastructure
   and a repeatable benchmark layer.
 
-The public-repository search did not expose a clearly separate fuzz-target,
-fuzz-corpus, or benchmark infrastructure. This is evidence about the
-visible repository structure, not proof that no local or experimental work
-exists.
+The Revision 1132 public-repository review did not identify a distinct
+fuzz-target, fuzz-corpus, or fuzzing workflow, nor a separate benchmark/
+regression layer. Some component tests contain large workloads or
+speed-oriented paths, but those are not equivalent to a dedicated benchmark
+framework. This is evidence about the visible public repository structure,
+not proof that no local or experimental work exists.
 
 The next step is therefore not to "add testing" in general, but to make
 existing verification evidence more explicit and selectively add

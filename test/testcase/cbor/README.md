@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
-│ Source basis: Revision 1105                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — testcase procedure, vectors & evidence     │
 └──────────────────────────────────────────────┘
@@ -35,8 +35,8 @@ The vectors include RFC 7049 examples and retained COSE-related examples in the 
 ### 2.2 RFC scalar, text, byte-string, and tag vectors
 
 1. `test_rfc7049_table4_1()` selects helper routines such as `do_test_cbor_uint()`, `do_test_cbor_int()`, `do_test_cbor_float()`, `do_test_cbor_simple()`, and tagged-value helpers.
-2. For `variant`-based values, `do_encode_test()` calls `cbor_encode`, converts the result to Base16, and compares the complete encoded string with the expected value.
-3. For object-model cases, `do_cbor_test()` publishes diagnostic and binary/concise forms, then compares the concise hex representation with the expected bytes.
+2. For `variant`-based values, `do_encode_test()` calls `cbor_encode`, converts the result to Base16, and compares the complete encoded string with the expected value using case-sensitive string equality. It does not check the encoder return status.
+3. For object-model cases, `do_cbor_test()` publishes diagnostic and binary/concise forms, then compares the concise hex representation with the expected bytes using case-insensitive comparison. It ignores both publisher return statuses; diagnostic text is logged but not asserted.
 4. The table covers integer-width boundaries, negative integers and bignums, half/single/double floating-point values (including signed zero, subnormals, infinities and NaN bit patterns), Boolean/simple values, byte/text strings, UTF-8, and selected date/time, base16, encoded-data, and URI tags.
 5. Interpret these as exact-output checks for the listed examples, not as exhaustive numeric conversion tests or an independent cross-implementation interoperability test.
 
@@ -51,8 +51,8 @@ The vectors include RFC 7049 examples and retained COSE-related examples in the 
 
 1. `test_yaml_testvector_cbor()` registers the `RFC 7049` callback and loads `testvector_cbor.yml`.
 2. For each item, read `item`, `cbor`, and `diag`; if `loss` is present, skip that item in this callback.
-3. Pass each eligible item to `do_parse_cbor_routine()`, open a `cbor_reader` context, and parse the encoded input.
-4. On successful parse, publish the decoded object to diagnostic text and binary bytes.
+3. Pass each eligible item to `do_parse_cbor_routine()`, open a `cbor_reader` context, and parse the encoded input. The `open()` status is ignored; the parse status is the only status used to gate the following path.
+4. On successful parse, publish the decoded object to diagnostic text and binary bytes; both publication statuses are ignored. The helper closes the reader context only on this success path, so a parse failure leaves the opened context unclosed.
 5. Compare the published bytes with the decoded input hex. If that comparison fails, compare the diagnostic text with the expected diagnostic expression instead.
 6. Record the result with `_test_case.assert(...)`. The success condition is bytes round-trip **or** diagnostic-text equality, not two independently required assertions. A `loss` vector is skipped and must not be counted as verified by this callback.
 
@@ -72,7 +72,7 @@ testvector:
         loss: boolean        # data-loss encoding; skipped by this callback
 ````
 
-The schema is a field guide, not a statement that every listed item is checked. In particular, `loss` vectors are present in the asset but are not verified by this path.
+The schema is a field guide, not a statement that every listed item is checked. In particular, `loss` vectors are present in the asset but are not verified by this path. The YAML also contains an optional `debug` field on one vector; this callback does not read or act on it.
 
 ### 2.5 Sample decode path
 
@@ -95,7 +95,7 @@ C++ value / variant
   -> _test_case.test(success | mismatch)
 ```
 
-The helper compares the direct encoder's bytes with the literal vector. For helper cases that call `do_encode_test()`, this is a known-answer byte comparison.
+The helper compares the direct encoder's bytes with the literal vector. For helper cases that call `do_encode_test()`, this is a known-answer byte comparison, but it does not check the encoder return status and uses case-sensitive hex comparison.
 
 **2. Object-model publisher vectors — `do_cbor_test()`**
 
@@ -112,7 +112,7 @@ diagnostic string
   -> not compared with an expected diagnostic string
 ```
 
-This is the path used for arrays/maps, tags, indefinite-length objects, chunked strings and large-integer object trees. The expected hex is compared case-insensitively. The diagnostic expression is emitted for inspection, not independently asserted. Note that the scalar helper functions do not all traverse both paths: for example, `do_test_cbor_bool()` uses the direct encoder helper, while `do_test_cbor_simple()` uses the publisher helper.
+This is the path used for arrays/maps, tags, indefinite-length objects, chunked strings and large-integer object trees. The expected hex is compared case-insensitively. Both publisher return statuses are ignored. The diagnostic expression is emitted for inspection, not independently asserted. Note that the scalar helper functions do not all traverse both paths: for example, `do_test_cbor_bool()` uses the direct encoder helper, while `do_test_cbor_simple()` uses the publisher helper.
 
 **3. YAML vector path — `testvector_cbor.cpp`**
 
@@ -154,7 +154,7 @@ This is an inspection tool, not another conformance test.
 The source includes selected scalar encodings, tags, arrays/maps, definite and indefinite-length structures, chunked strings, and integers beyond 64-bit limits. It does not establish full RFC 7049/8949 conformance, exhaustive malformed-input rejection, canonical encoding, or COSE interoperability.
 ### Documentation and verification status
 
-The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with **251 pass, 0 expt, 0 fail, 0 skip, 0 triv** entries for the `cbor` group. The report payload does not independently identify the tested source commit, exact compiler version, build flags, or command line. The documentation source basis is Revision 1105, distinct from that last known test-run context. This documentation update did not rerun the tests.
+The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md): **Revision 1104 · MinGW64/GCC · CTest (conversation-supplied run context)**, with **251 pass, 0 expt, 0 fail, 0 skip, 0 triv** entries for the `cbor` group. The report payload does not independently identify the tested source commit, exact compiler version, build flags, or command line. The documentation source base is Revision 1132, distinct from that last known test-run context. This documentation update did not rerun the tests.
 
 ## 4. Relationships
 

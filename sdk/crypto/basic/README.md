@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -97,19 +97,19 @@ These notes preserve cross-directory inventories, reference examples, and study 
 
 The inventory below records combinations represented in the source-maintained table. It does not guarantee availability in every OpenSSL build/provider.
 
-| Algorithm | CBC | CFB | CFB1 | CFB8 | CTR | ECB | GCM | OFB | Key wrap |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| AES | O | O | O | O | O | O | O | O | O |
-| ARIA | O | O | O | O | O | O | O | O | |
-| BF | O | O | | | | O | | O | |
-| CAMELLIA | O | O | O | O | O | O | | O | |
-| CAST | O | O | | | | O | | O | |
-| DES | O | O | | | | O | | O | |
-| IDEA | O | O | | | | O | | O | |
-| RC2 | O | O | | | | O | | O | |
-| RC5 | O | O | | | | O | | O | |
-| SEED | O | O | | | | O | | O | |
-| SM4 | O | O | | | | O | | O | |
+| Algorithm | CBC | CCM | CFB | CFB1 | CFB8 | CTR | ECB | GCM | OFB | Key wrap |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| AES | O | O | O | O | O | O | O | O | O | O |
+| ARIA | O | O | O | O | O | O | O | O | O | |
+| BF | O | | O | | | | O | | O | |
+| CAMELLIA | O | | O | O | O | O | O | O | O | |
+| CAST | O | | O | | | | O | | O | |
+| DES | O | | O | | | | O | | O | |
+| IDEA | O | | O | | | | O | | O | |
+| RC2 | O | | O | | | | O | | O | |
+| RC5 | O | | O | | | | O | | O | |
+| SEED | O | | O | | | | O | | O | |
+| SM4 | O | | O | | | | O | | O | |
 
 Source-maintained key/IV-size examples (bytes):
 
@@ -127,11 +127,11 @@ Source-maintained key/IV-size examples (bytes):
 | Camellia-256 | 32 | 16 |
 | ChaCha20 | 32 | 12 |
 
-Mode and parameter requirements are algorithm-specific; this table is an orientation aid, not a substitute for the operation's contract. See [`crypt/README.md`](crypt/README.md) for symmetric, AEAD and public-key encryption boundaries.
+RC4 and ChaCha20 are stream-cipher entries in the resource metadata and are not represented by this block-mode matrix. Mode and parameter requirements are algorithm-specific; this table is an orientation aid, not a substitute for the operation's contract. See [`crypt/README.md`](crypt/README.md) for symmetric, AEAD and public-key encryption boundaries.
 
 ### 6.2 Digest, HMAC and CMAC inventory
 
-Digest output lengths and the source-maintained HMAC combinations are listed here for quick comparison. Provider support may differ by build; SHAKE output length, for example, is caller-selected rather than a fixed digest size.
+Digest output lengths and the HMAC digest families represented by the generic interface are listed here for quick comparison. The HMAC column is not a per-digest known-answer-test inventory; runtime support depends on the active provider/build. SHAKE output length, for example, is caller-selected rather than a fixed digest size.
 
 | Digest | Bits | Bytes |
 |---|---:|---:|
@@ -167,7 +167,7 @@ Digest output lengths and the source-maintained HMAC combinations are listed her
 | RIPEMD-160 | O | O |
 | Whirlpool | O | O |
 
-The original CMAC note identifies AES-CBC-MAC as a related source-tested construction. See [`digest/README.md`](digest/README.md) for digest/transcript behavior and [`mac/README.md`](mac/README.md) for HMAC, CMAC, CBC-HMAC and OTP semantics.
+AES-CMAC has its own RFC 4493 source-test path (`testcase_rfc4493.cpp`); CBC-HMAC is a separate construction with TLS and JOSE vector tests. They must not be conflated as one AES-CBC-MAC operation. See [`digest/README.md`](digest/README.md) for digest/transcript behavior and [`mac/README.md`](mac/README.md) for HMAC, CMAC, CBC-HMAC and OTP semantics.
 
 ### 6.3 Elliptic-curve taxonomy
 

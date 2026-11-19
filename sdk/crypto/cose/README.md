@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -217,7 +217,7 @@ process(recv)
     └─ combine operation status and expose body output
 ```
 
-`verify()` delegates to `process()` and derives its boolean result from whether the overall return code is success. Per-layer return codes are collected, so mixed results are not silently treated as full success. Callers should distinguish successful CBOR parsing from successful authentication and check the return code and operation-specific output contract.
+The `decrypt(..., bool& result)` overload currently delegates to `process()` and returns its status without assigning the `result` reference; callers must not interpret that output parameter as a decryption-success indicator. Use the return code and the produced plaintext output instead. `verify()` delegates to `process()` and derives its boolean result from whether the overall return code is success. The current `process()` implementation collects statuses from top-level recipient layers, the body and countersignature layers, then collapses multiple distinct statuses to `failed` (or `not_supported` when that status is present). There is an important nested-recipient limitation: it invokes each second-level recipient before its parent, but does not add that child's status to the result set; the subsequent parent call overwrites the local status. A failure in a nested child can therefore be masked by the parent result. Callers should distinguish successful CBOR parsing from successful authentication and check the return code and operation-specific output contract.
 
 ### Randomness and protected headers
 
@@ -225,9 +225,9 @@ The implementation contains `preprocess_random()` and algorithm/group metadata f
 
 #### IV and Partial IV: generation and receive-side processing
 
-The `iv` and `partial_iv` header parameters participate in nonce construction, but the rule for generating a Partial IV must not be conflated with the receiver's processing of a received Partial IV. The RFC wording is conditional on the Partial IV generation procedure; it does not, by itself, establish that the receiver must repeat that generation operation verbatim.
+The `iv` and `partial_iv` header parameters participate in nonce construction. The RFC 8152 text cited by the implementation describes left-padding the Partial IV and XORing it with the context IV. The current receive-side `docrypt()` implementation left-pads the received Partial IV but combines it with the context IV using bitwise OR (`|=`), despite the adjacent source comment describing XOR. OR and XOR are not generally equivalent, so this is a source-level discrepancy that needs correction or an explicit, specification-backed rationale; the current source does not establish that it is an intentional alternative.
 
-In the receive-side `docrypt()` and `domac()` paths, hotplace combines the received Partial IV with the context IV using bitwise OR (`|=`). This is an intentional implementation choice, not evidence of a specification discrepancy merely because the operator differs from XOR. Describe and assess this code in the context of the RFC's generation-versus-processing distinction; do not label it non-conformant based on the operator alone. The Partial IV is an input to nonce construction, not the final nonce by itself.
+The RFC 8152 C.4.2 testcase supplies a context IV whose final two bytes are zero and a Partial IV `61a7`; for this particular fixture, OR and XOR produce the same bytes. The testcase checks the operation status but does not assert the derived nonce or compare the recovered plaintext with an expected value, so it does not distinguish the two operators. The Partial IV is an input to nonce construction, not the final nonce by itself.
 
 ### Algorithm inventory: what the source currently declares and tests
 

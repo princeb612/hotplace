@@ -1,10 +1,18 @@
 # Developer Notes — ASN.1 Compiler
 
+## Publication
+
+```text
+hotplace source tree
+Source base : Revision 1132
+Developer Notes — design status cross-checked against current source
+```
+
 ## Role
 
 The `sdk/io/asn.1/compiler` directory currently contains the **design/documentation stage of the ASN.1 compiler concept** rather than a completed compiler implementation.
 
-There is no compiler implementation source in this directory at revision 1095. The main artifact is `compiler-flow.md`, which records an `asn1c`-style command-line and C++ source-generation design.
+There is no compiler implementation source in this directory at Revision 1132. The main artifact is `compiler-flow.md`, which records an `asn1c`-style command-line and C++ source-generation design.
 
 ## Intended role
 
@@ -45,7 +53,7 @@ The existing design sketch covers:
 - generated encode/decode and constraint-check interfaces
 - an example `UserProfile.asn1` → C++ model
 
-These are **design notes**, not evidence that the described command-line compiler and generated-code pipeline are already implemented in revision 1095.
+These are **design notes**, not evidence that the described command-line compiler and generated-code pipeline are already implemented in Revision 1132.
 
 ## Relation to the current ASN.1 implementation
 
@@ -83,7 +91,7 @@ The directory should not be documented as though `asn1c` is currently a usable c
 - `sdk/io/parser/`
 - `sdk/io/asn.1/basic/`
 
-There is currently no compiler `.cpp` implementation under `sdk/io/asn.1/compiler/`.
+The Revision 1132 source tree contains only these two Markdown design documents under `sdk/io/asn.1/compiler/`; there is no compiler `.cpp`, executable target, or generated-code implementation there.
 
 ## Related tests and examples
 

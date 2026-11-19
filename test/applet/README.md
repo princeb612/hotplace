@@ -3,7 +3,7 @@
 ```text
 hotplace source-tree documentation
 Edition 1 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 Documentation scope: runnable integration examples
 ```
@@ -49,7 +49,7 @@ The secure server applets select between OpenSSL-backed and trial socket adapter
 
 ## 3. Interoperability
 
-[`netclient`](netclient/README.md) is the project's peer-side client applet. Its source exposes options for TCP, UDP, TLS 1.2, TLS 1.3, DTLS, and QUIC, with a trial option for applicable secure paths. The available option list describes implementation paths; it does not prove that every client/server combination has been exercised.
+[`netclient`](netclient/README.md) is the project's peer-side client applet. Its source exposes options for TCP, UDP, TLS 1.2, TLS 1.3, DTLS, and QUIC, with a trial option for applicable secure paths. The QUIC option currently dispatches to a TODO-only `quic_client()` stub and does not perform a QUIC exchange. The available option list describes parsed modes, not necessarily implemented client paths or exercised client/server combinations.
 
 External peers used by the applet scenarios include OpenSSL command-line tools such as `s_client` and `s_server`, and HTTP clients such as curl and browsers. The strongest retained interoperability evidence is currently associated with `tlsserver`, `httpserver1`, and `httpserver2`; see their per-applet evidence links.
 

@@ -2,15 +2,19 @@
 /**
  * @file   testcase_gpt_psk.cpp
  * @author GPT
- * @desc   TLS 1.3 resumption PSK derivation and binder tests.
+ * @desc   TLS 1.3 PSK ticket derivation, selection, key schedule, and extension tests.
  */
 
 #include <algorithm>
 #include <chrono>
+#include <utility>
 
 #include "testcase_gpt_common.hpp"
 
 static void test_tls13_server_client_ticket_psk_roundtrip() {
+    // Scenario under test: TLS 1.3 server-issued tickets derive identical per-ticket PSKs on the client.
+    // Action: server issues another NewSessionTicket.
+    // Expected: consume the complete server-issued NewSessionTicket.
     _test_case.begin("TLS 1.3 server-issued tickets derive identical per-ticket PSKs on the client");
 
     tls_session server;
@@ -247,6 +251,155 @@ static void test_tls13_server_client_ticket_psk_roundtrip() {
         }
     }
 
+    // Identity zero is backed by a real restored ticket-store entry here.
+    // The server can therefore calculate the ticket's early-data allowance,
+    // but a later full-handshake ServerHello must still reject 0-RTT when it
+    // omits pre_shared_key.
+    {
+        tls_resumption_ticket client_ticket = client_tickets.front();
+        tls_resumption_ticket server_ticket = server_tickets.front();
+        client_ticket.max_early_data_size = 4096;
+        server_ticket.max_early_data_size = 4096;
+
+        auto prepare_resumption_session = [](tls_session& session) {
+            session.set_type(session_type_t::tls);
+            auto& protection = session.get_tls_protection();
+            protection.set_tls_version(tls_13);
+            protection.set_cipher_suite(0x1301);
+            session.get_keyvalue().set(session_tls_version, tls_13);
+            session.update_session_status(session_status_server_finished);
+            session.update_session_status(session_status_client_finished);
+            session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+            session.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+        };
+
+        tls_session early_client;
+        prepare_resumption_session(early_client);
+        early_client.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
+        early_client.store_resumption_ticket(client_ticket);
+        early_client.get_tls_protection().get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
+
+        auto early_client_hello = new tls_handshake_client_hello(&early_client);
+        early_client_hello->add_ciphersuite(0x1301);
+        auto early_versions = new tls_extension_client_supported_versions(early_client_hello);
+        early_versions->add(tls_13);
+        early_client_hello->get_extensions().add(early_versions);
+        auto early_groups = new tls_extension_supported_groups(early_client_hello);
+        early_groups->add("x25519");
+        early_client_hello->get_extensions().add(early_groups);
+        auto early_key_share = new tls_extension_client_key_share(early_client_hello);
+        early_client_hello->get_extensions().add(early_key_share);
+        auto early_tlsadvisor = tls_advisor::get_instance();
+        ret = early_key_share->add(static_cast<tls_group_t>(early_tlsadvisor->valueof_group("x25519")));
+        _test_case.test(ret, __FUNCTION__, "create a DHE share for the store-backed early-data offer");
+        if (errorcode_t::success == ret) {
+            auto early_modes = new tls_extension_psk_key_exchange_modes(early_client_hello);
+            early_modes->add(1);  // psk_dhe_ke
+            early_client_hello->get_extensions().add(early_modes);
+            early_client_hello->get_extensions().add(new tls_extension_early_data(early_client_hello));
+            early_client_hello->get_extensions().add(new tls_extension_client_psk(early_client_hello));
+
+            tls_record_handshake early_client_hello_record(&early_client);
+            early_client_hello_record << early_client_hello;
+            binary_t early_client_hello_wire;
+            ret = early_client_hello_record.write(from_client, early_client_hello_wire);
+            _test_case.test(ret, __FUNCTION__, "serialize ClientHello with a store-backed PSK and early_data offer");
+            if (errorcode_t::success == ret) {
+                // Capture a genuine 0-RTT record before the server's final
+                // ServerHello, then deliver it only after the server declines
+                // the otherwise eligible PSK.
+                binary_t in_flight_early_data_wire;
+                tls_record_application_data in_flight_early_data(&early_client, "pending-early-data");
+                ret = in_flight_early_data.write(from_client, in_flight_early_data_wire);
+                _test_case.test(ret, __FUNCTION__, "write a genuine 0-RTT application-data record before ServerHello");
+                if (errorcode_t::success != ret) {
+                    return;
+                }
+
+                tls_session early_server;
+                prepare_resumption_session(early_server);
+                early_server.get_tls_protection().get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
+                early_server.store_resumption_ticket(server_ticket);
+                early_server.set_early_data_discard_limit(4096);
+
+                tls_records early_client_hello_records;
+                ret = early_client_hello_records.read(&early_server, from_client, early_client_hello_wire);
+                _test_case.test(ret, __FUNCTION__, "validate identity-zero binder against the restored server ticket");
+                if (errorcode_t::success == ret) {
+                    auto& early_server_protection = early_server.get_tls_protection();
+                    auto& early_state = early_server.get_session_info(from_server).get_keyvalue();
+                    _test_case.assert(1 == early_state.get(session_early_data_offered), __FUNCTION__, "record the store-backed early_data offer");
+                    _test_case.assert(4096 == early_state.get(session_early_data_limit), __FUNCTION__,
+                                      "recognize the matching identity-zero ticket's early-data allowance");
+                    _test_case.assert(0 == early_state.get(session_early_data_accepted), __FUNCTION__, "keep early data provisional until EncryptedExtensions");
+
+                    auto early_server_hello = new tls_handshake_server_hello(&early_server);
+                    ret = early_server_hello->set_cipher_suite(0x1301);
+                    _test_case.test(ret, __FUNCTION__, "select TLS_AES_128_GCM_SHA256 for the full handshake");
+                    if (errorcode_t::success == ret) {
+                        auto early_server_versions = new tls_extension_server_supported_versions(early_server_hello);
+                        early_server_versions->set(tls_13);
+                        early_server_hello->get_extensions().add(early_server_versions);
+                        auto early_server_key_share = new tls_extension_server_key_share(early_server_hello);
+                        ret = early_server_key_share->add_keyshare();
+                        _test_case.test(ret, __FUNCTION__, "create the server DHE share for the non-PSK handshake");
+                        if (errorcode_t::success == ret) {
+                            early_server_hello->get_extensions().add(early_server_key_share);
+                            binary_t early_server_hello_wire;
+                            tls_record_handshake early_server_hello_record(&early_server);
+                            early_server_hello_record << early_server_hello;
+                            ret = early_server_hello_record.write(from_server, early_server_hello_wire);
+                            _test_case.test(ret, __FUNCTION__, "write a full-handshake ServerHello despite the valid PSK candidate");
+                            if (errorcode_t::success == ret) {
+                                _test_case.assert(0xffff == early_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                                                  "clear the provisional identity when the valid ticket PSK is declined");
+                                _test_case.assert(tls_flow_t::one_rtt == early_server_protection.get_flow(), __FUNCTION__,
+                                                  "leave zero_rtt after declining the store-backed PSK");
+                                _test_case.assert(0 == early_state.get(session_early_data_accepted), __FUNCTION__,
+                                                  "never accept early data when the final ServerHello omits pre_shared_key");
+                                _test_case.assert(early_server_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                                                  "discard the store-backed PSK before the full-handshake key schedule");
+
+                                // Once ServerHello has selected the full
+                                // handshake, a delayed 0-RTT record must be
+                                // trial-decrypted with handshake keys and
+                                // discarded on authentication failure.
+                                // Keep the completed-session fixture state while constructing and
+                                // processing the handshake. Clear only the server's stale Finished
+                                // flags now, before reading a delayed record on the fresh connection.
+                                early_server.clear_session_status(session_status_client_finished | session_status_server_finished);
+                                tls_records rejected_after_server_hello_records;
+                                return_t rejected_after_server_hello_ret =
+                                    rejected_after_server_hello_records.read(&early_server, from_client, in_flight_early_data_wire);
+                                _test_case.test(rejected_after_server_hello_ret, __FUNCTION__, "discard an in-flight 0-RTT record received after PSK decline");
+                                _test_case.assert(1 == rejected_after_server_hello_records.size(), __FUNCTION__, "consume the delayed rejected 0-RTT record");
+                                if (rejected_after_server_hello_records.size()) {
+                                    auto decoded = static_cast<tls_record_application_data*>(rejected_after_server_hello_records.getat(0));
+                                    _test_case.assert(decoded->get_binary().empty(), __FUNCTION__, "never expose rejected 0-RTT plaintext after ServerHello");
+                                }
+                                _test_case.assert(in_flight_early_data_wire.size() - 5 == early_state.get(session_early_data_discarded), __FUNCTION__,
+                                                  "account the rejected ciphertext against the independent discard budget");
+                                _test_case.assert(0 == early_state.get(session_early_data_accepted), __FUNCTION__,
+                                                  "keep early data rejected after discarding the in-flight record");
+
+                                tls_records early_server_hello_records;
+                                ret = early_server_hello_records.read(&early_client, from_server, early_server_hello_wire);
+                                _test_case.test(ret, __FUNCTION__, "client processes the ServerHello that declines its store-backed ticket");
+                                if (errorcode_t::success == ret) {
+                                    _test_case.assert(tls_flow_t::one_rtt == early_client.get_tls_protection().get_flow(), __FUNCTION__,
+                                                      "client leaves zero_rtt when the server declines the valid ticket");
+                                    _test_case.assert(early_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                                                      "client discards the declined store-backed PSK");
+                                }
+                            }
+                        }
+                    }
+                    // The record owns the ServerHello after operator<<.
+                }
+            }
+        }
+    }
+
     // A zero-lifetime ticket with a different identity is discarded, but
     // must not clear the compatibility metadata for the latest usable ticket.
     tls_handshake_new_session_ticket zero_lifetime_issued(&server);
@@ -282,6 +435,9 @@ static void test_tls13_server_client_ticket_psk_roundtrip() {
 }
 
 static void test_tls13_ticket_nonce_resumption_psk() {
+    // Scenario under test: TLS 1.3 ticket nonce resumption PSK derivation.
+    // Action: derive ticket PSK using first ticket nonce.
+    // Expected: match the RFC 8446 HKDF-Expand-Label ticket PSK known-answer value.
     _test_case.begin("TLS 1.3 ticket nonce resumption PSK derivation");
 
     tls_session session;
@@ -375,1498 +531,75 @@ static void test_tls13_ticket_nonce_resumption_psk() {
     }
 }
 
-static void test_tls13_psk_binder_rfc8448_vector() {
-    _test_case.begin("TLS 1.3 PSK binder SHA-256 and SHA-384 known-answer vectors");
+static void test_tls13_client_suppresses_unusable_initial_psk_offer() {
+    // Scenario under test: TLS 1.3 client suppresses an unusable initial PSK offer.
+    // Action: omit PSK when no cached identity is usable in the initial ClientHello.
+    // Expected: record zero PSK identities when the initial PSK extension is suppressed.
+    _test_case.begin("TLS 1.3 client suppresses an unusable initial PSK offer");
 
-    tls_session session;
-    session.set_type(session_type_t::tls);
-    auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
-    protection.set_cipher_suite(0x1301);
+    const uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    struct test_case {
+        uint16 ticket_suite;
+        uint64 ticket_age_ms;
+        const char* description;
+    };
+    const std::array<test_case, 2> cases = {
+        {{0x1301, 8ULL * 24 * 60 * 60 * 1000, "expired cached ticket"}, {0x1302, 25, "ticket whose hash is not offered by ClientHello"}}};
 
-    const binary_t resumption_psk = base16_decode_rfc("9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
-    const binary_t binder_hash = base16_decode_rfc("63224b2e4573f2d3454ca84b9d009a04f6be9e05711a8396473aefa01e924a14");
-    const binary_t expected_binder = base16_decode_rfc("3add4fb2d8fdf822a0ca3cf7678ef5e88dae990141c5924d57bb6fa31b9e5f9d");
-
-    openssl_digest digest;
-    binary_t empty;
-    binary_t empty_hash;
-    return_t ret = digest.digest("sha256", empty, empty_hash);
-    _test_case.test(ret, __FUNCTION__, "derive the RFC 8448 empty transcript hash");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);
-    protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
-
-    binary_t binder;
-    ret = protection.calc_psk_binder(&session, binder_hash, binder);
-    _test_case.test(ret, __FUNCTION__, "calculate the RFC 8448 resumption PSK binder");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(expected_binder == binder, __FUNCTION__, "match the RFC 8448 PSK binder known-answer value");
-
-    ret = protection.calc_psk(&session, binder_hash, expected_binder);
-    _test_case.test(ret, __FUNCTION__, "validate the RFC 8448 PSK binder with the shared calculation");
-
-    const std::array<size_t, 3> modified_offsets = {0, expected_binder.size() / 2, expected_binder.size() - 1};
-    for (size_t offset : modified_offsets) {
-        binary_t modified_binder = expected_binder;
-        modified_binder[offset] ^= 0x01;
-        ret = protection.calc_psk(&session, binder_hash, modified_binder);
-        _test_case.assert(errorcode_t::mismatch == ret, __FUNCTION__, "reject a modified RFC 8448 PSK binder at every tested offset");
-    }
-    binary_t truncated_binder = expected_binder;
-    truncated_binder.pop_back();
-    ret = protection.calc_psk(&session, binder_hash, truncated_binder);
-    _test_case.assert(errorcode_t::mismatch == ret, __FUNCTION__, "reject a truncated RFC 8448 PSK binder");
-
-    // Independent SHA-384 binder vector. Deliberately leave the cached empty
-    // hash as SHA-256 to ensure binder derivation selects the PSK suite hash.
-    protection.set_cipher_suite(0x1302);
-    protection.get_secrets().assign(tls_secret_t::resumption_early, binary_t(48, 0x44));
-    const binary_t sha384_binder_hash(48, 0x55);
-    const binary_t expected_sha384_binder = base16_decode_rfc("c105b0279bcfb161bd470c73a97a44eeded5a2f34f3c547daa7edb543c09748c0582837e63885ade298b948a3f034307");
-    binary_t sha384_binder;
-    ret = protection.calc_psk_binder(&session, sha384_binder_hash, sha384_binder);
-    _test_case.test(ret, __FUNCTION__, "calculate a SHA-384 resumption PSK binder");
-    if (errorcode_t::success == ret) {
-        _test_case.assert(48 == sha384_binder.size(), __FUNCTION__, "produce a 48-byte SHA-384 binder");
-        _test_case.assert(expected_sha384_binder == sha384_binder, __FUNCTION__, "match the independent SHA-384 binder vector");
-        ret = protection.calc_psk(&session, sha384_binder_hash, expected_sha384_binder);
-        _test_case.test(ret, __FUNCTION__, "validate the SHA-384 binder with the shared calculation");
-    }
-
-    binary_t wrong_sha384_hash(32, 0x55);
-    ret = protection.calc_psk_binder(&session, wrong_sha384_hash, sha384_binder);
-    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject a transcript hash whose length does not match SHA-384");
-    protection.get_secrets().assign(tls_secret_t::resumption_early, binary_t(32, 0x44));
-    ret = protection.calc_psk_binder(&session, sha384_binder_hash, sha384_binder);
-    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject a PSK early secret whose length does not match SHA-384");
-}
-
-static void test_tls13_psk_binder_hrr_transcript() {
-    _test_case.begin("TLS 1.3 ClientHello2 PSK binder transcript after HRR");
-
-    tls_session session;
-    session.set_type(session_type_t::tls);
-    auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
-    protection.set_cipher_suite(0x1301);
-    protection.set_flow(tls_flow_t::hello_retry_request);
-
-    openssl_digest digest;
-    binary_t client_hello1_hash(32, 0x11);
-    binary_t synthetic_message_hash;
-    synthetic_message_hash << uint8(tls_handshake_type_t::message_hash) << uint24_t(32) << client_hello1_hash;
-    const binary_t hello_retry_request = {0x02, 0x00, 0x00, 0x04, 0x03, 0x03, 0xaa, 0xbb};
-    binary_t transcript_prefix = synthetic_message_hash;
-    transcript_prefix.insert(transcript_prefix.end(), hello_retry_request.begin(), hello_retry_request.end());
-
-    return_t ret = protection.reset_transcript_hash(&session);
-    _test_case.test(ret, __FUNCTION__, "reset the transcript before the HRR prefix");
-    ret = protection.update_transcript_hash(&session, transcript_prefix.data(), transcript_prefix.size());
-    _test_case.test(ret, __FUNCTION__, "seed the transcript with message_hash and HelloRetryRequest");
-
-    // This buffer ends immediately before the binders vector length field.
-    const binary_t truncated_client_hello2 = {0x01, 0x00, 0x00, 0x04, 0x03, 0x03, 0xcc, 0xdd};
-    auto tlsadvisor = tls_advisor::get_instance();
-    const tls_cipher_suite_t* suite = tlsadvisor->hintof_cipher_suite(0x1301);
-    if (nullptr == suite) {
-        _test_case.assert(false, __FUNCTION__, "resolve the TLS_AES_128_GCM_SHA256 cipher suite");
-        return;
-    }
-    binary_t actual_binder_hash;
-    ret = protection.calc_context_hash(&session, suite->mac, truncated_client_hello2.data(), truncated_client_hello2.size(), actual_binder_hash);
-    _test_case.test(ret, __FUNCTION__, "calculate ClientHello2 binder hash using the existing HRR transcript");
-
-    binary_t expected_transcript = transcript_prefix;
-    expected_transcript.insert(expected_transcript.end(), truncated_client_hello2.begin(), truncated_client_hello2.end());
-    binary_t expected_binder_hash;
-    ret = digest.digest("sha256", expected_transcript, expected_binder_hash);
-    _test_case.test(ret, __FUNCTION__, "calculate the expected message_hash, HRR, and truncated ClientHello2 digest");
-    _test_case.assert(expected_binder_hash == actual_binder_hash, __FUNCTION__, "include the HRR transcript prefix in the ClientHello2 binder hash");
-
-    // Verify the binder itself against an independent known-answer value for
-    // this synthetic message_hash || HRR || truncated ClientHello2 transcript.
-    const binary_t resumption_psk(32, 0x11);
-    const binary_t expected_binder = base16_decode_rfc("9bf67dcb83f8988a0f1f92a9909855b2bfa508deb36f33e01e758f3cc56b4808");
-    binary_t empty;
-    binary_t empty_hash;
-    ret = digest.digest("sha256", empty, empty_hash);
-    _test_case.test(ret, __FUNCTION__, "derive the empty transcript hash for the resumption binder key");
-    protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);
-    protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
-
-    binary_t actual_binder;
-    ret = protection.calc_psk_binder(&session, actual_binder_hash, actual_binder);
-    _test_case.test(ret, __FUNCTION__, "calculate the ClientHello2 PSK binder after HRR");
-    _test_case.assert(expected_binder == actual_binder, __FUNCTION__, "match the expected ClientHello2 binder after HRR");
-
-    ret = protection.calc_psk(&session, actual_binder_hash, expected_binder);
-    _test_case.test(ret, __FUNCTION__, "validate the ClientHello2 binder after HRR");
-    const std::array<size_t, 3> modified_offsets = {0, expected_binder.size() / 2, expected_binder.size() - 1};
-    for (size_t offset : modified_offsets) {
-        binary_t modified_binder = expected_binder;
-        modified_binder[offset] ^= 0x01;
-        ret = protection.calc_psk(&session, actual_binder_hash, modified_binder);
-        _test_case.assert(errorcode_t::mismatch == ret, __FUNCTION__, "reject a modified ClientHello2 binder at every tested offset");
-    }
-
-    auto transcript = protection.get_transcript_hash();
-    binary_t preserved_transcript_hash;
-    if (transcript) {
-        transcript->digest(preserved_transcript_hash);
-        transcript->release();
-    }
-    binary_t expected_prefix_hash;
-    ret = digest.digest("sha256", transcript_prefix, expected_prefix_hash);
-    _test_case.test(ret, __FUNCTION__, "calculate the expected HRR prefix digest");
-    _test_case.assert(expected_prefix_hash == preserved_transcript_hash, __FUNCTION__, "leave the live transcript unchanged while calculating the binder hash");
-}
-
-static void test_tls13_client_psk_binder_roundtrip() {
-    _test_case.begin("TLS 1.3 client PSK binder serialization and server round-trip");
-
-    constexpr uint32 ticket_age_add = 0x50607080;
-    constexpr uint32 ticket_lifetime = 3600;
-    const binary_t ticket = {0xaa, 0xbb, 0xcc};
-    const binary_t resumption_psk(32, 0x11);
-
-    auto configure_resumption = [&](tls_session& session) {
-        session.set_type(session_type_t::tls);
-        auto& protection = session.get_tls_protection();
+    for (const auto& item : cases) {
+        tls_session client;
+        client.set_type(session_type_t::tls);
+        auto& protection = client.get_tls_protection();
         protection.set_tls_version(tls_13);
         protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
-        session.update_session_status(session_status_server_finished);
-        session.update_session_status(session_status_client_finished);
-        session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        session.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-
-        uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-        auto& ticket_kv = session.get_session_info(from_server).get_keyvalue();
-        ticket_kv.set(session_ticket_lifetime, ticket_lifetime);
-        ticket_kv.set(session_ticket_age_add, ticket_age_add);
-        ticket_kv.set(session_ticket_timestamp, now_ms - 25);
-        protection.get_secrets().assign(tls_secret_t::new_session_ticket, ticket);
-        protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);
-        openssl_digest digest;
-        binary_t empty;
-        binary_t empty_hash;
-        digest.digest("sha256", empty, empty_hash);
-        protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
-    };
-
-    {
-        tls_session missing_modes_client;
-        configure_resumption(missing_modes_client);
-        auto missing_modes_hello = new tls_handshake_client_hello(&missing_modes_client);
-        missing_modes_hello->add_ciphersuite(0x1301);
-        auto missing_modes_version = new tls_extension_client_supported_versions(missing_modes_hello);
-        missing_modes_version->add(tls_13);
-        missing_modes_hello->get_extensions().add(missing_modes_version);
-        missing_modes_hello->get_extensions().add(new tls_extension_client_psk(missing_modes_hello));
-
-        tls_record_handshake missing_modes_record(&missing_modes_client);
-        missing_modes_record << missing_modes_hello;
-        binary_t missing_modes_wire;
-        return_t missing_modes_ret = missing_modes_record.write(from_client, missing_modes_wire);
-        _test_case.assert(errorcode_t::success != missing_modes_ret, __FUNCTION__, "reject a PSK ClientHello without psk_key_exchange_modes");
-        _test_case.assert(missing_modes_wire.empty(), __FUNCTION__, "emit no ClientHello with an incomplete PSK offer");
-    }
-
-    {
-        tls_session non_final_client;
-        configure_resumption(non_final_client);
-        auto non_final_hello = new tls_handshake_client_hello(&non_final_client);
-        non_final_hello->add_ciphersuite(0x1301);
-        auto non_final_modes = new tls_extension_psk_key_exchange_modes(non_final_hello);
-        non_final_modes->add(1);
-        non_final_hello->get_extensions().add(non_final_modes);
-        non_final_hello->get_extensions().add(new tls_extension_client_psk(non_final_hello));
-        auto trailing_version = new tls_extension_client_supported_versions(non_final_hello);
-        trailing_version->add(tls_13);
-        non_final_hello->get_extensions().add(trailing_version);
-
-        tls_record_handshake non_final_record(&non_final_client);
-        non_final_record << non_final_hello;
-        binary_t non_final_wire;
-        return_t non_final_ret = non_final_record.write(from_client, non_final_wire);
-        _test_case.assert(errorcode_t::success != non_final_ret, __FUNCTION__, "reject a ClientHello that places pre_shared_key before another extension");
-        _test_case.assert(non_final_wire.empty(), __FUNCTION__, "emit no ClientHello with a non-final pre_shared_key extension");
-    }
-
-    tls_session client;
-    configure_resumption(client);
-
-    // tls_handshakes owns registered handshake objects and releases them when
-    // the record is destroyed. Allocate the message on the heap accordingly.
-    auto client_hello = new tls_handshake_client_hello(&client);
-    client_hello->add_ciphersuite(0x1301);
-
-    auto supported_versions = new tls_extension_client_supported_versions(client_hello);
-    supported_versions->add(tls_13);
-    client_hello->get_extensions().add(supported_versions);
-
-    auto psk_modes = new tls_extension_psk_key_exchange_modes(client_hello);
-    psk_modes->add(1);  // psk_dhe_ke
-    client_hello->get_extensions().add(psk_modes);
-
-    auto psk = new tls_extension_client_psk(client_hello);
-    client_hello->get_extensions().add(psk);
-
-    return_t ret = errorcode_t::success;
-    tls_record_handshake record(&client);
-    record << client_hello;
-    binary_t wire;
-    ret = record.write(from_client, wire);
-    _test_case.test(ret, __FUNCTION__, "serialize a ClientHello with a computed PSK binder");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    bool binder_nonzero = false;
-    if (wire.size() >= 32) {
-        for (size_t i = wire.size() - 32; i < wire.size(); ++i) {
-            binder_nonzero = binder_nonzero || (0 != wire[i]);
-        }
-    }
-    _test_case.assert(binder_nonzero, __FUNCTION__, "replace the placeholder binder before record serialization");
-
-    // Move the PSK extension ahead of the other ClientHello extensions.
-    // The server must reject this before attempting to validate the binder.
-    size_t extension_block = 5 + 4 + 2 + 32;
-    extension_block += 1 + wire[extension_block];  // legacy_session_id
-    uint16 cipher_suites_size = (static_cast<uint16>(wire[extension_block]) << 8) | wire[extension_block + 1];
-    extension_block += 2 + cipher_suites_size;
-    extension_block += 1 + wire[extension_block];  // legacy_compression_methods
-    extension_block += 2;                          // extensions length
-    size_t psk_offset = extension_block;
-    size_t psk_size = 0;
-    while (psk_offset + 4 <= wire.size()) {
-        uint16 extension_type = (static_cast<uint16>(wire[psk_offset]) << 8) | wire[psk_offset + 1];
-        uint16 extension_size = (static_cast<uint16>(wire[psk_offset + 2]) << 8) | wire[psk_offset + 3];
-        if (static_cast<uint16>(tls_extension_type_t::pre_shared_key) == extension_type) {
-            psk_size = 4 + extension_size;
-            break;
-        }
-        psk_offset += 4 + extension_size;
-    }
-    _test_case.assert((psk_size > 0) && (psk_offset + psk_size == wire.size()), __FUNCTION__, "locate the final pre_shared_key extension in the serialized ClientHello");
-    if ((psk_size > 0) && (psk_offset + psk_size == wire.size())) {
-        binary_t non_final_psk = wire;
-        binary_t psk_extension(non_final_psk.begin() + psk_offset, non_final_psk.end());
-        non_final_psk.erase(non_final_psk.begin() + psk_offset, non_final_psk.end());
-        non_final_psk.insert(non_final_psk.begin() + extension_block, psk_extension.begin(), psk_extension.end());
-
-        tls_session ordering_server;
-        configure_resumption(ordering_server);
-        tls_records ordering_records;
-        ret = ordering_records.read(&ordering_server, from_client, non_final_psk);
-        _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject pre_shared_key when it is not the final ClientHello extension");
-
-        size_t illegal_parameter_count = 0;
-        ordering_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
-        _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report illegal_parameter for a non-final pre_shared_key extension");
-    }
-
-    // Corrupt the PSK identity length so the vector extends beyond the
-    // enclosing extension body. The payload decoder must not silently accept
-    // its default-initialized fields.
-    if ((psk_size > 0) && (psk_offset + psk_size == wire.size())) {
-        binary_t malformed_psk = wire;
-        malformed_psk[psk_offset + 6] = 0xff;
-        malformed_psk[psk_offset + 7] = 0xff;
-        tls_session malformed_server;
-        configure_resumption(malformed_server);
-        tls_records malformed_records;
-        ret = malformed_records.read(&malformed_server, from_client, malformed_psk);
-        _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a PSK identity length that exceeds the extension body");
-    }
-
-    if ((psk_size > 0) && (psk_offset + psk_size == wire.size())) {
-        // A PSK identity must not be empty.
-        binary_t empty_identity = wire;
-        empty_identity[psk_offset + 6] = 0;
-        empty_identity[psk_offset + 7] = 0;
-        tls_session empty_identity_server;
-        configure_resumption(empty_identity_server);
-        tls_records empty_identity_records;
-        ret = empty_identity_records.read(&empty_identity_server, from_client, empty_identity);
-        _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject an empty PSK identity");
-
-        // TLS 1.3 binder entries must contain the complete hash-sized value.
-        uint16 identities_length = (static_cast<uint16>(wire[psk_offset + 4]) << 8) | wire[psk_offset + 5];
-        size_t binders_length_offset = psk_offset + 4 + 2 + identities_length;
-        if (binders_length_offset + 3 <= wire.size()) {
-            binary_t short_binder = wire;
-            short_binder[binders_length_offset + 2] = 31;
-            tls_session short_binder_server;
-            configure_resumption(short_binder_server);
-            tls_records short_binder_records;
-            ret = short_binder_records.read(&short_binder_server, from_client, short_binder);
-            _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a PSK binder shorter than the minimum 32 bytes");
-        }
-    }
-
-    // Remove psk_key_exchange_modes from an otherwise valid, serialized PSK
-    // ClientHello. The server, not just the local ClientHello writer, must
-    // enforce RFC 8446 4.2.9 and abort with missing_extension.
-    if ((psk_size > 0) && (psk_offset + psk_size == wire.size())) {
-        binary_t missing_modes_wire = wire;
-        size_t modes_offset = extension_block;
-        size_t modes_size = 0;
-        while (modes_offset + 4 <= psk_offset) {
-            uint16 extension_type = (static_cast<uint16>(missing_modes_wire[modes_offset]) << 8) | missing_modes_wire[modes_offset + 1];
-            uint16 extension_size = (static_cast<uint16>(missing_modes_wire[modes_offset + 2]) << 8) | missing_modes_wire[modes_offset + 3];
-            if (static_cast<uint16>(tls_extension_type_t::psk_key_exchange_modes) == extension_type) {
-                modes_size = 4 + extension_size;
-                break;
-            }
-            modes_offset += 4 + extension_size;
-        }
-        _test_case.assert(modes_size > 0, __FUNCTION__, "locate psk_key_exchange_modes in the valid ClientHello");
-        if (modes_size > 0) {
-            missing_modes_wire.erase(missing_modes_wire.begin() + modes_offset, missing_modes_wire.begin() + modes_offset + modes_size);
-            test_write_u16(missing_modes_wire, extension_block - 2, static_cast<uint16>(test_read_u16(wire, extension_block - 2) - modes_size));
-            test_write_u24(missing_modes_wire, 6, test_read_u24(wire, 6) - static_cast<uint32>(modes_size));
-            test_write_u16(missing_modes_wire, 3, static_cast<uint16>(test_read_u16(wire, 3) - modes_size));
-
-            tls_session missing_modes_server;
-            configure_resumption(missing_modes_server);
-            tls_records missing_modes_records;
-            ret = missing_modes_records.read(&missing_modes_server, from_client, missing_modes_wire);
-            _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "server aborts a received PSK ClientHello without psk_key_exchange_modes");
-            size_t missing_extension_count = 0;
-            missing_modes_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::missing_extension == desc)) {
-                    ++missing_extension_count;
-                }
-            });
-            _test_case.assert(1 == missing_extension_count, __FUNCTION__, "report missing_extension for a received PSK offer without key-exchange modes");
-        }
-    }
-
-    tls_session server;
-    configure_resumption(server);
-    tls_records records;
-    ret = records.read(&server, from_client, wire);
-    _test_case.test(ret, __FUNCTION__, "server parses and validates the generated ClientHello binder");
-    if (errorcode_t::success == ret) {
-        _test_case.assert(tls_flow_t::zero_rtt == server.get_tls_protection().get_flow(), __FUNCTION__, "accept the matching PSK and enter the resumption flow");
-        _test_case.assert(!server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_binder_hash).empty(), __FUNCTION__,
-                          "retain the validated binder transcript hash");
-        _test_case.assert(1 == server.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__, "record the single identity offered in the ClientHello");
-    }
-
-    // Offer an unknown identity first and the cached ticket second. The
-    // corresponding second binder must be selected and validated.
-    if ((psk_size > 0) && (psk_offset + psk_size == wire.size())) {
-        auto append_u16 = [](binary_t& out, uint16 value) {
-            out.push_back(static_cast<byte_t>(value >> 8));
-            out.push_back(static_cast<byte_t>(value));
-        };
-        auto append_u32 = [](binary_t& out, uint32 value) {
-            out.push_back(static_cast<byte_t>(value >> 24));
-            out.push_back(static_cast<byte_t>(value >> 16));
-            out.push_back(static_cast<byte_t>(value >> 8));
-            out.push_back(static_cast<byte_t>(value));
-        };
-
-        const binary_t unknown_ticket = {0x91, 0x92, 0x93};
-        binary_t identities;
-        append_u16(identities, t_narrow_cast(unknown_ticket.size()));
-        identities.insert(identities.end(), unknown_ticket.begin(), unknown_ticket.end());
-        append_u32(identities, 0);
-        append_u16(identities, t_narrow_cast(ticket.size()));
-        identities.insert(identities.end(), ticket.begin(), ticket.end());
-        append_u32(identities, ticket_age_add + 25);
-
-        binary_t psk_body;
-        append_u16(psk_body, t_narrow_cast(identities.size()));
-        psk_body.insert(psk_body.end(), identities.begin(), identities.end());
-        append_u16(psk_body, 66);  // two SHA-256 binder entries
-        psk_body.push_back(32);
-        psk_body.insert(psk_body.end(), 32, 0);
-        psk_body.push_back(32);
-        psk_body.insert(psk_body.end(), 32, 0);
-
-        binary_t multi_identity_wire(wire.begin(), wire.begin() + psk_offset);
-        multi_identity_wire.insert(multi_identity_wire.end(), {0x00, 0x29, static_cast<byte_t>(psk_body.size() >> 8), static_cast<byte_t>(psk_body.size())});
-        multi_identity_wire.insert(multi_identity_wire.end(), psk_body.begin(), psk_body.end());
-        const size_t delta = multi_identity_wire.size() - wire.size();
-        test_write_u16(multi_identity_wire, psk_offset + 2, t_narrow_cast(psk_body.size()));
-        test_write_u16(multi_identity_wire, extension_block - 2, static_cast<uint16>(test_read_u16(wire, extension_block - 2) + delta));
-        test_write_u24(multi_identity_wire, 6, test_read_u24(wire, 6) + static_cast<uint32>(delta));
-        test_write_u16(multi_identity_wire, 3, static_cast<uint16>(test_read_u16(wire, 3) + delta));
-
-        const size_t binders_length_offset = psk_offset + 4 + 2 + identities.size();
-        tls_session binder_session;
-        configure_resumption(binder_session);
-        auto tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* suite = tlsadvisor->hintof_cipher_suite(0x1301);
-        if (nullptr == suite) {
-            _test_case.assert(false, __FUNCTION__, "resolve cipher suite for the second PSK binder");
-        } else {
-            binary_t binder_hash;
-            ret = binder_session.get_tls_protection().calc_context_hash(&binder_session, suite->mac, multi_identity_wire.data() + 5, binders_length_offset - 5,
-                                                                        binder_hash);
-            _test_case.test(ret, __FUNCTION__, "hash a ClientHello offering multiple PSK identities");
-            if (errorcode_t::success == ret) {
-                binary_t selected_binder;
-                ret = binder_session.get_tls_protection().calc_psk_binder(&binder_session, binder_hash, selected_binder);
-                _test_case.test(ret, __FUNCTION__, "calculate the binder for the second offered PSK identity");
-                if (errorcode_t::success == ret && selected_binder.size() == 32) {
-                    const size_t second_binder_offset = binders_length_offset + 2 + 1 + 32 + 1;
-                    std::copy(selected_binder.begin(), selected_binder.end(), multi_identity_wire.begin() + second_binder_offset);
-
-                    tls_session multi_identity_server;
-                    configure_resumption(multi_identity_server);
-                    tls_records multi_identity_records;
-                    ret = multi_identity_records.read(&multi_identity_server, from_client, multi_identity_wire);
-                    _test_case.test(ret, __FUNCTION__, "select and validate the binder matching the second PSK identity");
-                    if (errorcode_t::success == ret) {
-                        _test_case.assert(tls_flow_t::zero_rtt == multi_identity_server.get_tls_protection().get_flow(), __FUNCTION__,
-                                          "resume when the cached ticket is offered after an unknown identity");
-                        const binary_t& server_hash = multi_identity_server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_binder_hash);
-                        _test_case.assert(!server_hash.empty() && binder_hash == server_hash, __FUNCTION__,
-                                          "retain the transcript hash used to validate the selected second binder");
-                        _test_case.assert(2 == multi_identity_server.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__,
-                                          "record both identities from the multi-identity ClientHello");
-                    }
-
-                    // A duplicated cached identity can carry different ticket ages.
-                    // Skip an expired occurrence and accept a later usable one.
-                    binary_t duplicate_identity_wire = multi_identity_wire;
-                    std::copy(ticket.begin(), ticket.end(), duplicate_identity_wire.begin() + psk_offset + 8);
-                    auto write_u32 = [](binary_t& out, size_t offset, uint32 value) {
-                        out[offset] = static_cast<byte_t>(value >> 24);
-                        out[offset + 1] = static_cast<byte_t>(value >> 16);
-                        out[offset + 2] = static_cast<byte_t>(value >> 8);
-                        out[offset + 3] = static_cast<byte_t>(value);
-                    };
-                    write_u32(duplicate_identity_wire, psk_offset + 11, ticket_age_add + ticket_lifetime * 1000 + 1000);
-                    write_u32(duplicate_identity_wire, psk_offset + 20, ticket_age_add + 25);
-
-                    tls_session duplicate_binder_session;
-                    configure_resumption(duplicate_binder_session);
-                    binary_t duplicate_binder_hash;
-                    ret = duplicate_binder_session.get_tls_protection().calc_context_hash(&duplicate_binder_session, suite->mac, duplicate_identity_wire.data() + 5,
-                                                                                          binders_length_offset - 5, duplicate_binder_hash);
-                    _test_case.test(ret, __FUNCTION__, "hash a ClientHello with duplicate PSK identities and different ages");
-                    if (errorcode_t::success == ret) {
-                        binary_t duplicate_binder;
-                        ret = duplicate_binder_session.get_tls_protection().calc_psk_binder(&duplicate_binder_session, duplicate_binder_hash, duplicate_binder);
-                        _test_case.test(ret, __FUNCTION__, "calculate binders for duplicate PSK identities");
-                        if (errorcode_t::success == ret && duplicate_binder.size() == 32) {
-                            const size_t first_binder_offset = binders_length_offset + 3;
-                            const size_t second_duplicate_binder_offset = first_binder_offset + 33;
-                            std::copy(duplicate_binder.begin(), duplicate_binder.end(), duplicate_identity_wire.begin() + first_binder_offset);
-                            std::copy(duplicate_binder.begin(), duplicate_binder.end(), duplicate_identity_wire.begin() + second_duplicate_binder_offset);
-
-                            tls_session duplicate_identity_server;
-                            configure_resumption(duplicate_identity_server);
-                            tls_records duplicate_identity_records;
-                            ret = duplicate_identity_records.read(&duplicate_identity_server, from_client, duplicate_identity_wire);
-                            _test_case.test(ret, __FUNCTION__, "process duplicate PSK identities when a later occurrence has a valid ticket age");
-                            if (errorcode_t::success == ret) {
-                                _test_case.assert(tls_flow_t::zero_rtt == duplicate_identity_server.get_tls_protection().get_flow(), __FUNCTION__,
-                                                  "skip the expired duplicate and resume with the later valid occurrence");
-                            }
-                        }
-                    }
-
-                    // When duplicate identities are both within lifetime, the first
-                    // eligible occurrence is selected and its corresponding binder
-                    // must be validated; a later valid binder cannot mask it.
-                    const size_t first_binder_offset = binders_length_offset + 3;
-                    const size_t second_duplicate_binder_offset = first_binder_offset + 33;
-                    binary_t first_usable_duplicate_wire = duplicate_identity_wire;
-                    write_u32(first_usable_duplicate_wire, psk_offset + 11, ticket_age_add + 25);
-
-                    tls_session first_usable_duplicate_binder_session;
-                    configure_resumption(first_usable_duplicate_binder_session);
-                    binary_t first_usable_duplicate_hash;
-                    ret = first_usable_duplicate_binder_session.get_tls_protection().calc_context_hash(&first_usable_duplicate_binder_session, suite->mac,
-                                                                                                       first_usable_duplicate_wire.data() + 5, binders_length_offset - 5,
-                                                                                                       first_usable_duplicate_hash);
-                    _test_case.test(ret, __FUNCTION__, "hash duplicate usable PSK identities with the first occurrence eligible");
-                    if (errorcode_t::success == ret) {
-                        binary_t first_usable_duplicate_binder;
-                        ret = first_usable_duplicate_binder_session.get_tls_protection().calc_psk_binder(&first_usable_duplicate_binder_session,
-                                                                                                         first_usable_duplicate_hash, first_usable_duplicate_binder);
-                        _test_case.test(ret, __FUNCTION__, "calculate the binder for duplicate usable PSK identities");
-                        if (errorcode_t::success == ret && first_usable_duplicate_binder.size() == 32) {
-                            std::copy(first_usable_duplicate_binder.begin(), first_usable_duplicate_binder.end(),
-                                      first_usable_duplicate_wire.begin() + first_binder_offset);
-                            std::copy(first_usable_duplicate_binder.begin(), first_usable_duplicate_binder.end(),
-                                      first_usable_duplicate_wire.begin() + second_duplicate_binder_offset);
-                            first_usable_duplicate_wire[first_binder_offset] ^= 0x01;
-
-                            tls_session first_usable_duplicate_server;
-                            configure_resumption(first_usable_duplicate_server);
-                            tls_records first_usable_duplicate_records;
-                            ret = first_usable_duplicate_records.read(&first_usable_duplicate_server, from_client, first_usable_duplicate_wire);
-                            _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject an invalid binder for the first eligible duplicate identity");
-                        }
-                    }
-
-                    // The parser must validate the complete identities vector,
-                    // even when an earlier identity is already eligible.
-                    binary_t malformed_later_identity = multi_identity_wire;
-                    test_write_u16(malformed_later_identity, psk_offset + 15, 0xffff);
-                    tls_session malformed_later_identity_server;
-                    configure_resumption(malformed_later_identity_server);
-                    tls_records malformed_later_identity_records;
-                    ret = malformed_later_identity_records.read(&malformed_later_identity_server, from_client, malformed_later_identity);
-                    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject an out-of-bounds later PSK identity after an eligible identity");
-
-                    // A later identity with an incomplete obfuscated_ticket_age
-                    // must not be accepted by borrowing bytes from the binder vector.
-                    binary_t truncated_later_ticket_age = multi_identity_wire;
-                    test_write_u16(truncated_later_ticket_age, psk_offset + 4, 17);
-                    tls_session truncated_later_ticket_age_server;
-                    configure_resumption(truncated_later_ticket_age_server);
-                    tls_records truncated_later_ticket_age_records;
-                    ret = truncated_later_ticket_age_records.read(&truncated_later_ticket_age_server, from_client, truncated_later_ticket_age);
-                    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a later PSK identity with a truncated ticket age");
-
-                    // Validate every binder entry, including entries after
-                    // the binder corresponding to the selected identity.
-                    binary_t malformed_later_binder = multi_identity_wire;
-                    malformed_later_binder[second_binder_offset - 1] = 31;
-                    tls_session malformed_later_binder_server;
-                    configure_resumption(malformed_later_binder_server);
-                    tls_records malformed_later_binder_records;
-                    ret = malformed_later_binder_records.read(&malformed_later_binder_server, from_client, malformed_later_binder);
-                    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a malformed binder after an otherwise usable PSK identity");
-
-                    // Two identities cannot be paired with only one binder.
-                    binary_t mismatched_binder_count = multi_identity_wire;
-                    test_write_u16(mismatched_binder_count, binders_length_offset, 33);
-                    tls_session mismatched_binder_count_server;
-                    configure_resumption(mismatched_binder_count_server);
-                    tls_records mismatched_binder_count_records;
-                    ret = mismatched_binder_count_records.read(&mismatched_binder_count_server, from_client, mismatched_binder_count);
-                    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a binder vector that does not match the identity vector");
-                } else if (errorcode_t::success == ret) {
-                    _test_case.assert(false, __FUNCTION__, "produce a 32-byte SHA-256 binder for the second identity");
-                }
-            }
-        }
-    }
-
-    // An identity unknown to this server must be ignored rather than treated
-    // as a fatal protocol error; continue with the full-handshake path.
-    tls_session unknown_identity_server;
-    configure_resumption(unknown_identity_server);
-    unknown_identity_server.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, binary_t{0x99, 0x88});
-    tls_records unknown_identity_records;
-    ret = unknown_identity_records.read(&unknown_identity_server, from_client, wire);
-    _test_case.test(ret, __FUNCTION__, "ignore an unknown PSK identity and continue ClientHello processing");
-    if (errorcode_t::success == ret) {
-        _test_case.assert(tls_flow_t::one_rtt == unknown_identity_server.get_tls_protection().get_flow(), __FUNCTION__,
-                          "decline an unknown PSK and select the full-handshake path");
-        _test_case.assert(0 == unknown_identity_server.get_keyvalue().get(session_tls_version), __FUNCTION__,
-                          "clear the previous negotiated TLS version when the PSK identity is unknown");
-    }
-
-    binary_t tampered = wire;
-    tampered.back() ^= 0x01;
-    tls_session rejecting_server;
-    configure_resumption(rejecting_server);
-    tls_records rejecting_records;
-    ret = rejecting_records.read(&rejecting_server, from_client, tampered);
-    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a ClientHello with a modified PSK binder");
-
-    size_t decrypt_error_count = 0;
-    rejecting_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decrypt_error == desc)) {
-            ++decrypt_error_count;
-        }
-    });
-    _test_case.assert(1 == decrypt_error_count, __FUNCTION__, "report decrypt_error for a modified binder");
-}
-
-static void test_tls13_clienthello2_psk_binder_hrr_roundtrip() {
-    _test_case.begin("TLS 1.3 ClientHello1-HRR-ClientHello2 PSK binder integration");
-
-    constexpr uint32 ticket_age_add = 0x10203040;
-    constexpr uint32 ticket_lifetime = 3600;
-    const binary_t ticket = {0x11, 0x22, 0x33};
-    const binary_t resumption_psk(32, 0x22);
-    const binary_t hrr_random = {0xcf, 0x21, 0xad, 0x74, 0xe5, 0x9a, 0x61, 0x11, 0xbe, 0x1d, 0x8c, 0x02, 0x1e, 0x65, 0xb8, 0x91,
-                                 0xc2, 0xa2, 0x11, 0x16, 0x7a, 0xbb, 0x8c, 0x5e, 0x07, 0x9e, 0x09, 0xe2, 0xc8, 0xa8, 0x33, 0x9c};
-
-    auto configure_resumption = [&](tls_session& session) {
-        session.set_type(session_type_t::tls);
-        auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
-        protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
-        session.update_session_status(session_status_server_finished);
-        session.update_session_status(session_status_client_finished);
-        // Model a cached session whose original handshake completed. After
-        // HRR, ServerHello processing uses this flag to restore the resumption
-        // flow instead of treating ClientHello2 as a fresh full handshake.
-        session.get_keyvalue().set(session_handshake_finished, 1);
-        session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        session.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-
-        uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-        auto& ticket_kv = session.get_session_info(from_server).get_keyvalue();
-        ticket_kv.set(session_ticket_lifetime, ticket_lifetime);
-        ticket_kv.set(session_ticket_age_add, ticket_age_add);
-        ticket_kv.set(session_ticket_timestamp, now_ms - 25);
-        ticket_kv.set(session_ticket_max_early_data_size, 4096);
-        protection.get_secrets().assign(tls_secret_t::new_session_ticket, ticket);
-        protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);
-    };
-
-    tls_session client;
-    configure_resumption(client);
-    client.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
-    client.get_session_info(from_server).get_keyvalue().set(session_early_data_limit, 4096);
-
-    // ClientHello1 offers the group but deliberately omits its key share,
-    // forcing the server to select the group through a real HelloRetryRequest.
-    auto client_hello1 = new tls_handshake_client_hello(&client);
-    client_hello1->add_ciphersuite(0x1301);
-
-    auto supported_versions1 = new tls_extension_client_supported_versions(client_hello1);
-    supported_versions1->add(tls_13);
-    client_hello1->get_extensions().add(supported_versions1);
-
-    auto supported_groups1 = new tls_extension_supported_groups(client_hello1);
-    supported_groups1->add("x25519");
-    client_hello1->get_extensions().add(supported_groups1);
-
-    auto psk_modes1 = new tls_extension_psk_key_exchange_modes(client_hello1);
-    psk_modes1->add(1);  // psk_dhe_ke
-    client_hello1->get_extensions().add(psk_modes1);
-
-    client_hello1->get_extensions().add(new tls_extension_early_data(client_hello1));
-
-    auto psk1 = new tls_extension_client_psk(client_hello1);
-    client_hello1->get_extensions().add(psk1);
-
-    tls_record_handshake client_hello1_record(&client);
-    client_hello1_record << client_hello1;
-    binary_t client_hello1_wire;
-    return_t ret = client_hello1_record.write(from_client, client_hello1_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize PSK ClientHello1 without a key share");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(1 == client.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__, "record the PSK identity count from ClientHello1");
-
-    tls_session server;
-    configure_resumption(server);
-    server.set_early_data_discard_limit(32);
-    // ClientHello1 intentionally has no key_share, so the server must
-    // explicitly select an offered group when constructing the HRR.
-    auto tlsadvisor = tls_advisor::get_instance();
-    server.get_keyvalue().set(session_conf_enforce_key_share_group, static_cast<uint16>(tlsadvisor->valueof_group("x25519")));
-    tls_records server_clienthello1_records;
-    ret = server_clienthello1_records.read(&server, from_client, client_hello1_wire);
-    _test_case.test(ret, __FUNCTION__, "server validates the ClientHello1 PSK binder");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(1 == server.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__, "record the PSK identity count received in ClientHello1");
-    _test_case.assert(1 == server.get_session_info(from_server).get_keyvalue().get(session_early_data_offered_initial), __FUNCTION__,
-                      "record the actual ClientHello1 early_data offer on the server");
-    _test_case.assert(1 == server.get_session_info(from_server).get_keyvalue().get(session_early_data_offered), __FUNCTION__,
-                      "retain the current early_data offer while processing ClientHello1");
-
-    // Build and serialize a genuine HRR-form ServerHello. The server key_share
-    // extension emits only selected_group because ClientHello1 had no share.
-    auto server_hello = new tls_handshake_server_hello(&server);
-    server_hello->set_random(hrr_random);
-    ret = server_hello->set_cipher_suite(0x1301);
-    _test_case.test(ret, __FUNCTION__, "select the TLS 1.3 cipher suite for HRR");
-    if (errorcode_t::success != ret) {
-        server_hello->release();
-        return;
-    }
-
-    auto supported_versions2 = new tls_extension_server_supported_versions(server_hello);
-    supported_versions2->set(tls_13);
-    server_hello->get_extensions().add(supported_versions2);
-
-    auto server_key_share = new tls_extension_server_key_share(server_hello);
-    ret = server_key_share->add_keyshare();
-    _test_case.test(ret, __FUNCTION__, "select x25519 for the retry");
-    if (errorcode_t::success != ret) {
-        server_hello->release();
-        return;
-    }
-    server_hello->get_extensions().add(server_key_share);
-
-    tls_record_handshake server_hello_record(&server);
-    server_hello_record << server_hello;
-    binary_t hrr_wire;
-    ret = server_hello_record.write(from_server, hrr_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize HelloRetryRequest from the live ClientHello1 state");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(tls_flow_t::hello_retry_request == server.get_tls_protection().get_flow(), __FUNCTION__,
-                      "server enters the HRR flow after processing ClientHello1");
-
-    tls_records client_hrr_records;
-    ret = client_hrr_records.read(&client, from_server, hrr_wire);
-    _test_case.test(ret, __FUNCTION__, "client processes the actual HelloRetryRequest message");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(tls_flow_t::hello_retry_request == client.get_tls_protection().get_flow(), __FUNCTION__, "client enters the HRR flow after receiving the retry");
-    _test_case.assert(false == client.get_session_info(from_client).apply_protection(), __FUNCTION__,
-                      "disable client-to-server early-data record protection after accepting HRR");
-
-    // The server learned the initial offer from the serialized ClientHello1;
-    // retain that state while skipping records already in flight after HRR.
-    binary_t in_flight_early_data_record{0x17, 0x03, 0x03, 0x00, 0x10};
-    in_flight_early_data_record.insert(in_flight_early_data_record.end(), 16, 0xaa);
-    tls_records early_data_before_clienthello2_records;
-    ret = early_data_before_clienthello2_records.read(&server, from_client, in_flight_early_data_record);
-    _test_case.test(ret, __FUNCTION__, "skip an in-flight ClientHello1 early-data record after HRR and before ClientHello2");
-    _test_case.assert(16 == server.get_session_info(from_server).get_keyvalue().get(session_early_data_discarded), __FUNCTION__,
-                      "count pre-ClientHello2 rejected ciphertext against the configured HRR skip budget");
-
-    // ClientHello2 carries the requested key share and a binder over the
-    // transcript produced by processing the real ClientHello1 and HRR messages.
-    auto client_hello2 = new tls_handshake_client_hello(&client);
-    client_hello2->add_ciphersuite(0x1301);
-
-    auto supported_versions3 = new tls_extension_client_supported_versions(client_hello2);
-    supported_versions3->add(tls_13);
-    client_hello2->get_extensions().add(supported_versions3);
-
-    auto supported_groups2 = new tls_extension_supported_groups(client_hello2);
-    supported_groups2->add("x25519");
-    client_hello2->get_extensions().add(supported_groups2);
-
-    auto client_key_share = new tls_extension_client_key_share(client_hello2);
-    client_hello2->get_extensions().add(client_key_share);
-
-    auto psk_modes2 = new tls_extension_psk_key_exchange_modes(client_hello2);
-    psk_modes2->add(1);
-    client_hello2->get_extensions().add(psk_modes2);
-
-    // Even if the caller attempts to carry early_data into ClientHello2, the
-    // writer must suppress it after HRR.
-    client_hello2->get_extensions().add(new tls_extension_early_data(client_hello2));
-
-    auto psk2 = new tls_extension_client_psk(client_hello2);
-    client_hello2->get_extensions().add(psk2);
-
-    // Probe the HRR-selected group separately so a key-generation failure
-    // is distinguishable from the subsequent ClientHello2 binder serialization.
-    uint16 retry_group = t_narrow_cast(client.get_session_info(from_server).get_keyvalue().get(session_key_share_group));
-    _test_case.assert(static_cast<uint16>(tlsadvisor->valueof_group("x25519")) == retry_group, __FUNCTION__, "retain the HRR-selected x25519 group on the client");
-    ret = client_key_share->add(static_cast<tls_group_t>(retry_group));
-    _test_case.test(ret, __FUNCTION__, "generate the ClientHello2 key share for the HRR-selected group");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    client_key_share->clear();
-
-    tls_record_handshake client_hello2_record(&client);
-    client_hello2_record << client_hello2;
-    binary_t client_hello2_wire;
-    ret = client_hello2_record.write(from_client, client_hello2_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize ClientHello2 with the selected key share and HRR binder");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(1 == client.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__, "refresh the PSK identity count from ClientHello2 after HRR");
-
-    auto prepare_retry_server = [&](tls_session& retry_server, binary_t& retry_wire) -> return_t {
-        configure_resumption(retry_server);
-        retry_server.get_keyvalue().set(session_conf_enforce_key_share_group, static_cast<uint16>(tlsadvisor->valueof_group("x25519")));
-        tls_records initial_clienthello_records;
-        return_t prepare_ret = initial_clienthello_records.read(&retry_server, from_client, client_hello1_wire);
-        if (errorcode_t::success != prepare_ret) {
-            return prepare_ret;
+        client.get_keyvalue().set(session_tls_version, tls_13);
+        client.update_session_status(session_status_server_finished);
+        client.update_session_status(session_status_client_finished);
+        client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+        client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+
+        tls_resumption_ticket ticket;
+        ticket.identity = binary_t{0x51, 0x52, 0x53};
+        ticket.psk = binary_t((0x1302 == item.ticket_suite) ? 48 : 32, 0x5a);
+        ticket.cipher_suite = item.ticket_suite;
+        ticket.lifetime = 3600;
+        ticket.timestamp = now_ms - item.ticket_age_ms;
+        ticket.age_add = 0x10203040;
+        client.store_resumption_ticket(ticket);
+
+        auto hello = new tls_handshake_client_hello(&client);
+        hello->add_ciphersuite(0x1301);
+        auto versions = new tls_extension_client_supported_versions(hello);
+        versions->add(tls_13);
+        hello->get_extensions().add(versions);
+        auto modes = new tls_extension_psk_key_exchange_modes(hello);
+        modes->add(1);  // psk_dhe_ke
+        hello->get_extensions().add(modes);
+        hello->get_extensions().add(new tls_extension_early_data(hello));
+        auto psk = new tls_extension_client_psk(hello);
+        hello->get_extensions().add(psk);
+
+        tls_record_handshake record(&client);
+        record << hello;
+        binary_t wire;
+        return_t ret = record.write(from_client, wire);
+        _test_case.test(ret, __FUNCTION__, item.description);
+        if (errorcode_t::success != ret) {
+            continue;
         }
 
-        auto retry_hello = new tls_handshake_server_hello(&retry_server);
-        retry_hello->set_random(hrr_random);
-        prepare_ret = retry_hello->set_cipher_suite(0x1301);
-        if (errorcode_t::success != prepare_ret) {
-            retry_hello->release();
-            return prepare_ret;
-        }
-        auto retry_versions = new tls_extension_server_supported_versions(retry_hello);
-        retry_versions->set(tls_13);
-        retry_hello->get_extensions().add(retry_versions);
-        auto retry_key_share = new tls_extension_server_key_share(retry_hello);
-        prepare_ret = retry_key_share->add_keyshare();
-        if (errorcode_t::success != prepare_ret) {
-            retry_hello->release();
-            return prepare_ret;
-        }
-        retry_hello->get_extensions().add(retry_key_share);
-        tls_record_handshake retry_record(&retry_server);
-        retry_record << retry_hello;
-        return retry_record.write(from_server, retry_wire);
-    };
-
-    // Keep the fatal skip-budget case isolated: overflow deliberately resets
-    // the handshake status, so it must not run on the live session that will
-    // continue to compose the final post-HRR ServerHello.
-    tls_session over_limit_server;
-    // Configure the discard budget before ClientHello1 is parsed. The TLS
-    // session applies this setting to the per-connection early-data state
-    // during ClientHello processing; setting it after HRR is too late.
-    // The first 16-byte record reaches the exact boundary; the following
-    // one-byte record must exceed it.
-    over_limit_server.set_early_data_discard_limit(16);
-    binary_t over_limit_hrr;
-    ret = prepare_retry_server(over_limit_server, over_limit_hrr);
-    _test_case.test(ret, __FUNCTION__, "prepare an independent server for the post-ClientHello2 early-data skip-limit test");
-    if (errorcode_t::success == ret) {
-        _test_case.assert(1 == over_limit_server.get_session_info(from_server).get_keyvalue().get(session_early_data_offered_initial), __FUNCTION__,
-                          "derive the isolated server's initial early_data state from ClientHello1");
-
-        tls_records over_limit_before_clienthello2_records;
-        ret = over_limit_before_clienthello2_records.read(&over_limit_server, from_client, in_flight_early_data_record);
-        _test_case.test(ret, __FUNCTION__, "consume the first in-flight early-data record on the isolated server");
-        if (errorcode_t::success == ret) {
-            tls_records over_limit_clienthello2_records;
-            ret = over_limit_clienthello2_records.read(&over_limit_server, from_client, client_hello2_wire);
-            _test_case.test(ret, __FUNCTION__, "accept ClientHello2 before testing the isolated skip limit");
-        }
-        if (errorcode_t::success == ret) {
-            binary_t over_limit_early_data_record{0x17, 0x03, 0x03, 0x00, 0x01, 0xaa};
-            tls_records over_limit_after_clienthello2_records;
-            return_t over_limit_ret = over_limit_after_clienthello2_records.read(&over_limit_server, from_client, over_limit_early_data_record);
-            _test_case.assert(errorcode_t::overflow == over_limit_ret, __FUNCTION__, "enforce the same HRR skip budget for records arriving after ClientHello2");
-            size_t hrr_skip_alert_count = 0;
-            over_limit_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-                    ++hrr_skip_alert_count;
-                }
-            });
-            _test_case.assert(1 == hrr_skip_alert_count, __FUNCTION__, "raise one fatal unexpected_message when late HRR early data exceeds the skip budget");
-        }
+        _test_case.assert(psk->is_suppressed(), __FUNCTION__, "omit PSK when no cached identity is usable in the initial ClientHello");
+        _test_case.assert(0 == client.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__,
+                          "record zero PSK identities when the initial PSK extension is suppressed");
+        _test_case.assert(client.get_offered_resumption_tickets().empty(), __FUNCTION__, "do not retain a ticket offer snapshot when no PSK identity was serialized");
+        _test_case.assert(tls_flow_t::one_rtt == protection.get_flow(), __FUNCTION__,
+                          "continue with the full-handshake flow after suppressing the unusable initial PSK offer");
     }
-
-    auto find_clienthello_extension = [](const binary_t& wire, uint16 extension_type, size_t& body_pos, size_t& body_size) -> bool {
-        // tls_record_handshake::write() returns a complete TLS record:
-        // 5-byte record header, 4-byte handshake header, then ClientHello.
-        if (wire.size() < 5 + 4 + 2 + 32 + 1) {
-            return false;
-        }
-        if ((0x16 != wire[0]) || (test_read_u16(wire, 3) != wire.size() - 5) || (0x01 != wire[5])) {
-            return false;
-        }
-        size_t handshake_length = (static_cast<size_t>(wire[6]) << 16) | (static_cast<size_t>(wire[7]) << 8) | wire[8];
-        if (handshake_length != wire.size() - 9) {
-            return false;
-        }
-        size_t pos = 9 + 2 + 32;
-        uint8 session_id_len = wire[pos++];
-        if (session_id_len > wire.size() - pos) {
-            return false;
-        }
-        pos += session_id_len;
-        if (wire.size() - pos < 2) {
-            return false;
-        }
-        uint16 cipher_suites_len = test_read_u16(wire, pos);
-        pos += 2;
-        if (cipher_suites_len > wire.size() - pos) {
-            return false;
-        }
-        pos += cipher_suites_len;
-        if (pos >= wire.size()) {
-            return false;
-        }
-        uint8 compression_len = wire[pos++];
-        if (compression_len > wire.size() - pos) {
-            return false;
-        }
-        pos += compression_len;
-        if (wire.size() - pos < 2) {
-            return false;
-        }
-        uint16 extensions_len = test_read_u16(wire, pos);
-        pos += 2;
-        if ((extensions_len != wire.size() - pos)) {
-            return false;
-        }
-        size_t end = pos + extensions_len;
-        while (pos + 4 <= end) {
-            uint16 type = test_read_u16(wire, pos);
-            uint16 length = test_read_u16(wire, pos + 2);
-            pos += 4;
-            if (length > end - pos) {
-                return false;
-            }
-            if (type == extension_type) {
-                body_pos = pos;
-                body_size = length;
-                return true;
-            }
-            pos += length;
-        }
-        return false;
-    };
-
-    size_t client_hello2_early_data_pos = 0;
-    size_t client_hello2_early_data_size = 0;
-    bool client_hello2_has_early_data = find_clienthello_extension(client_hello2_wire, 0x002a, client_hello2_early_data_pos, client_hello2_early_data_size);
-    _test_case.assert(false == client_hello2_has_early_data, __FUNCTION__, "omit early_data from ClientHello2 after HRR");
-    _test_case.assert(0 == client.get_session_info(from_server).get_keyvalue().get(session_early_data_offered), __FUNCTION__,
-                      "do not mark early data as offered when its ClientHello2 extension is suppressed");
-
-    // ClientHello2 may update ticket ages and binders, and remove PSKs that
-    // are incompatible with the HRR suite. It must not substitute an identity.
-    tls_session changed_identity_server;
-    binary_t changed_identity_hrr;
-    ret = prepare_retry_server(changed_identity_server, changed_identity_hrr);
-    _test_case.test(ret, __FUNCTION__, "prepare an independent server for the ClientHello2 identity consistency check");
-    if (errorcode_t::success == ret) {
-        binary_t changed_identity_clienthello2 = client_hello2_wire;
-        size_t psk_body_pos = 0;
-        size_t psk_body_size = 0;
-        bool found_psk =
-            find_clienthello_extension(changed_identity_clienthello2, static_cast<uint16>(tls_extension_type_t::pre_shared_key), psk_body_pos, psk_body_size);
-        _test_case.assert(found_psk && (psk_body_size >= 8), __FUNCTION__, "locate the ClientHello2 PSK identities vector");
-        if (found_psk && (psk_body_size >= 8)) {
-            uint16 identity_len = test_read_u16(changed_identity_clienthello2, psk_body_pos + 2);
-            _test_case.assert((identity_len > 0) && (psk_body_size >= static_cast<size_t>(identity_len) + 8), __FUNCTION__,
-                              "validate the first ClientHello2 PSK identity boundary");
-            if ((identity_len > 0) && (psk_body_size >= static_cast<size_t>(identity_len) + 8)) {
-                changed_identity_clienthello2[psk_body_pos + 4] ^= 0x80;
-                tls_records changed_identity_records;
-                ret = changed_identity_records.read(&changed_identity_server, from_client, changed_identity_clienthello2);
-                _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a ClientHello2 that substitutes a PSK identity");
-                size_t illegal_parameter_count = 0;
-                changed_identity_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                    if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                        ++illegal_parameter_count;
-                    }
-                });
-                _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report fatal illegal_parameter for a changed ClientHello2 PSK identity");
-            }
-        }
-    }
-
-    // psk_key_exchange_modes is not a permitted ClientHello2 change. Build a
-    // correctly rebound ClientHello2 with a changed mode so the server reaches
-    // the continuity check rather than failing binder verification first.
-    tls_session changed_mode_server;
-    binary_t changed_mode_hrr;
-    ret = prepare_retry_server(changed_mode_server, changed_mode_hrr);
-    _test_case.test(ret, __FUNCTION__, "prepare an independent server for the ClientHello2 PSK mode consistency check");
-    if (errorcode_t::success == ret) {
-        tls_session changed_mode_client;
-        configure_resumption(changed_mode_client);
-        tls_records changed_mode_clienthello1_records;
-        ret = changed_mode_clienthello1_records.read(&changed_mode_client, from_client, client_hello1_wire);
-        _test_case.test(ret, __FUNCTION__, "restore the client state before constructing a changed-mode ClientHello2");
-        if (errorcode_t::success == ret) {
-            tls_records changed_mode_hrr_records;
-            ret = changed_mode_hrr_records.read(&changed_mode_client, from_server, changed_mode_hrr);
-            _test_case.test(ret, __FUNCTION__, "process the matching HRR before constructing a changed-mode ClientHello2");
-        }
-        if (errorcode_t::success == ret) {
-            tls_handshake_client_hello modes_template(&changed_mode_client);
-            tls_extension_psk_key_exchange_modes expected_modes(&modes_template);
-            expected_modes.add(0);  // deliberately change psk_dhe_ke to psk_ke
-            binary_t expected_modes_wire;
-            ret = expected_modes.write(from_client, expected_modes_wire);
-            _test_case.test(ret, __FUNCTION__, "encode the deliberately changed PSK mode offer");
-            if (errorcode_t::success == ret) {
-                // Bypass only the local client-side guard in this negative
-                // server test; the actual ClientHello1 on the wire still
-                // contains psk_dhe_ke.
-                changed_mode_client.get_tls_protection().get_secrets().assign(tls_secret_t::client_hello_psk_modes, expected_modes_wire);
-
-                auto changed_mode_clienthello2 = new tls_handshake_client_hello(&changed_mode_client);
-                changed_mode_clienthello2->add_ciphersuite(0x1301);
-                auto changed_mode_versions = new tls_extension_client_supported_versions(changed_mode_clienthello2);
-                changed_mode_versions->add(tls_13);
-                changed_mode_clienthello2->get_extensions().add(changed_mode_versions);
-                auto changed_mode_groups = new tls_extension_supported_groups(changed_mode_clienthello2);
-                changed_mode_groups->add("x25519");
-                changed_mode_clienthello2->get_extensions().add(changed_mode_groups);
-                auto changed_mode_key_share = new tls_extension_client_key_share(changed_mode_clienthello2);
-                changed_mode_clienthello2->get_extensions().add(changed_mode_key_share);
-                auto changed_mode_modes = new tls_extension_psk_key_exchange_modes(changed_mode_clienthello2);
-                changed_mode_modes->add(0);
-                changed_mode_clienthello2->get_extensions().add(changed_mode_modes);
-                auto changed_mode_psk = new tls_extension_client_psk(changed_mode_clienthello2);
-                changed_mode_clienthello2->get_extensions().add(changed_mode_psk);
-
-                tls_record_handshake changed_mode_record(&changed_mode_client);
-                changed_mode_record << changed_mode_clienthello2;
-                binary_t changed_mode_clienthello2_wire;
-                ret = changed_mode_record.write(from_client, changed_mode_clienthello2_wire);
-                _test_case.test(ret, __FUNCTION__, "serialize ClientHello2 with a recomputed binder and changed PSK mode");
-                if (errorcode_t::success == ret) {
-                    tls_records changed_mode_records;
-                    ret = changed_mode_records.read(&changed_mode_server, from_client, changed_mode_clienthello2_wire);
-                    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject ClientHello2 when psk_key_exchange_modes changes after HRR");
-                    size_t illegal_parameter_count = 0;
-                    changed_mode_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                            ++illegal_parameter_count;
-                        }
-                    });
-                    _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report fatal illegal_parameter for a changed ClientHello2 PSK mode offer");
-                }
-            }
-        }
-    }
-
-    // Rebuild the complete retry exchange in an independent client and ensure
-    // a second HRR is rejected after ClientHello2 has restored the client cursor.
-    tls_session second_hrr_client;
-    configure_resumption(second_hrr_client);
-    tls_records second_hrr_clienthello1_records;
-    ret = second_hrr_clienthello1_records.read(&second_hrr_client, from_client, client_hello1_wire);
-    _test_case.test(ret, __FUNCTION__, "prepare an independent client for the second-HRR rejection test");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    tls_records second_hrr_first_retry_records;
-    ret = second_hrr_first_retry_records.read(&second_hrr_client, from_server, hrr_wire);
-    _test_case.test(ret, __FUNCTION__, "process the first HelloRetryRequest in the independent client");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    tls_records second_hrr_clienthello2_records;
-    ret = second_hrr_clienthello2_records.read(&second_hrr_client, from_client, client_hello2_wire);
-    _test_case.test(ret, __FUNCTION__, "process ClientHello2 before injecting a second HelloRetryRequest");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(tls_handshake_type_t::client_hello == second_hrr_client.get_session_info(from_client).get_status(), __FUNCTION__,
-                      "position the client handshake cursor at ClientHello2 before the second HRR");
-    tls_records second_hrr_records;
-    ret = second_hrr_records.read(&second_hrr_client, from_server, hrr_wire);
-    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a second HelloRetryRequest in the same connection");
-    size_t second_hrr_unexpected_message_count = 0;
-    second_hrr_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-            ++second_hrr_unexpected_message_count;
-        }
-    });
-    _test_case.assert(1 == second_hrr_unexpected_message_count, __FUNCTION__, "report fatal unexpected_message for a second HelloRetryRequest");
-
-    tls_records server_clienthello2_records;
-    ret = server_clienthello2_records.read(&server, from_client, client_hello2_wire);
-    _test_case.test(ret, __FUNCTION__, "server validates ClientHello2 binder against its live HRR transcript");
-    if (errorcode_t::success == ret) {
-        const auto& early_state = server.get_session_info(from_server).get_keyvalue();
-        _test_case.assert(0 == early_state.get(session_early_data_offered), __FUNCTION__, "record that ClientHello2 did not re-offer early_data");
-        _test_case.assert(1 == early_state.get(session_early_data_offered_initial), __FUNCTION__, "retain ClientHello1 early-data state for late in-flight records");
-        _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__, "preserve the pre-ClientHello2 rejected-data skip count");
-        _test_case.assert(32 == early_state.get(session_early_data_discard_limit), __FUNCTION__, "preserve the configured HRR rejected-data skip budget");
-        tls_records early_data_after_clienthello2_records;
-        return_t late_early_data_ret = early_data_after_clienthello2_records.read(&server, from_client, in_flight_early_data_record);
-        _test_case.test(late_early_data_ret, __FUNCTION__, "skip a late ClientHello1 early-data record after ClientHello2");
-        _test_case.assert(1 == early_data_after_clienthello2_records.size(), __FUNCTION__, "consume the late in-flight early-data record");
-        _test_case.assert(32 == early_state.get(session_early_data_discarded), __FUNCTION__, "keep the HRR skip count cumulative across ClientHello2");
-        _test_case.assert(1 == server.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__, "refresh the server's PSK identity count from ClientHello2");
-        _test_case.assert(tls_flow_t::hello_retry_request == server.get_tls_protection().get_flow(), __FUNCTION__,
-                          "preserve the HRR transcript flow after accepting the ClientHello2 PSK");
-        _test_case.assert(0 == server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__, "retain selected_identity zero for the final ServerHello");
-        const binary_t& client_binder_hash = client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_binder_hash);
-        const binary_t& server_binder_hash = server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_binder_hash);
-        _test_case.assert(!client_binder_hash.empty() && client_binder_hash == server_binder_hash, __FUNCTION__,
-                          "client and server derive the same binder transcript hash from the real HRR exchange");
-    }
-
-    // Exercise the final ServerHello while the resumption session marker is
-    // still set. HRR nevertheless forbids 0-RTT, so the final PSK selection
-    // must use the one_rtt flow while retaining the selected PSK early secret.
-    server.get_keyvalue().set(session_handshake_finished, 1);
-    client.get_keyvalue().set(session_handshake_finished, 1);
-
-    // Complete the real HRR path through the production ServerHello composer.
-    // This verifies that the server carries the selected PSK identity from
-    // ClientHello2 into the final ServerHello rather than relying on a
-    // hand-assembled extension vector.
-    tls_handshake* selected_server_hello = nullptr;
-    ret = tls_composer::construct_server_hello(&selected_server_hello, &server, nullptr);
-    _test_case.test(ret, __FUNCTION__, "construct the final post-HRR ServerHello through the TLS composer");
-    if ((errorcode_t::success != ret) || (nullptr == selected_server_hello)) {
-        return;
-    }
-
-    auto selected_server_versions = selected_server_hello->get_extensions().get(tls_extension_type_t::supported_versions);
-    auto selected_server_key_share = selected_server_hello->get_extensions().get(tls_extension_type_t::key_share);
-    auto selected_server_psk = selected_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key);
-    _test_case.assert(nullptr != selected_server_versions, __FUNCTION__, "include supported_versions in the final post-HRR ServerHello");
-    _test_case.assert(nullptr != selected_server_key_share, __FUNCTION__, "include the requested key_share in the final post-HRR ServerHello");
-    _test_case.assert(nullptr != selected_server_psk, __FUNCTION__, "include pre_shared_key after accepting the ClientHello2 PSK");
-    if ((nullptr == selected_server_versions) || (nullptr == selected_server_key_share) || (nullptr == selected_server_psk)) {
-        selected_server_hello->release();
-        return;
-    }
-
-    auto selected_server_psk_extension = static_cast<tls_extension_server_psk*>(selected_server_psk);
-    _test_case.assert(0 == selected_server_psk_extension->get_selected_identity(), __FUNCTION__, "serialize selected_identity zero retained from ClientHello2");
-    binary_t selected_server_hello_wire;
-    ret = selected_server_hello->write(from_server, selected_server_hello_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize the composer-built post-HRR ServerHello");
-    selected_server_hello->release();
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    binary_t server_shared_secret = server.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret);
-    _test_case.assert(!server_shared_secret.empty(), __FUNCTION__, "derive the server-side shared secret from the negotiated ClientHello2 key_share");
-
-    tls_handshake_server_hello selected_server_hello_reader(&client);
-    size_t selected_server_hello_pos = 0;
-    ret = selected_server_hello_reader.read(from_server, selected_server_hello_wire.data(), selected_server_hello_wire.size(), selected_server_hello_pos);
-    _test_case.test(ret, __FUNCTION__, "client accepts the production-composed post-HRR ServerHello selecting identity zero");
-    if (errorcode_t::success == ret) {
-        _test_case.assert(tls_flow_t::one_rtt == server.get_tls_protection().get_flow(), __FUNCTION__,
-                          "keep the post-HRR PSK handshake in one_rtt even when the resumption session marker is set");
-        _test_case.assert(tls_flow_t::one_rtt == client.get_tls_protection().get_flow(), __FUNCTION__, "retain one_rtt flow on the client while a PSK is selected");
-    }
-    if (errorcode_t::success == ret) {
-        _test_case.assert(selected_server_hello_wire.size() == selected_server_hello_pos, __FUNCTION__, "consume the complete post-HRR ServerHello");
-        _test_case.assert(tls_13 == client.get_tls_protection().get_tls_version(), __FUNCTION__, "retain TLS 1.3 after accepting the post-HRR PSK selection");
-        binary_t client_shared_secret = client.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret);
-        _test_case.assert(!client_shared_secret.empty(), __FUNCTION__, "derive the client-side shared secret from the ServerHello key_share");
-        _test_case.assert(server_shared_secret == client_shared_secret, __FUNCTION__, "derive matching DHE shared secrets after HRR PSK resumption");
-        const binary_t& server_early_secret = server.get_tls_protection().get_secrets().get(tls_secret_t::early_secret);
-        const binary_t& server_resumption_early = server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early);
-        const binary_t& client_early_secret = client.get_tls_protection().get_secrets().get(tls_secret_t::early_secret);
-        const binary_t& client_resumption_early = client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early);
-        _test_case.assert(!server_resumption_early.empty() && server_early_secret == server_resumption_early, __FUNCTION__,
-                          "use the selected PSK early secret for the server handshake even when the post-HRR flow is one_rtt");
-        _test_case.assert(!client_resumption_early.empty() && client_early_secret == client_resumption_early, __FUNCTION__,
-                          "use the selected PSK early secret for the client handshake even when the post-HRR flow is one_rtt");
-    }
-
-    // A server may decline PSK resumption in the final ServerHello after
-    // HRR. The client must then use the zero-PSK early secret while preserving
-    // the HRR transcript through ServerHello key-schedule processing.
-    auto remove_server_hello_extension = [](binary_t& wire, uint16 extension_type) -> bool {
-        if ((wire.size() < 44) || (wire[0] != static_cast<byte_t>(tls_handshake_type_t::server_hello))) {
-            return false;
-        }
-        size_t pos = 4 + 2 + 32;
-        uint8 session_id_length = wire[pos++];
-        if (session_id_length > wire.size() - pos) {
-            return false;
-        }
-        pos += session_id_length;
-        if (wire.size() - pos < 5) {
-            return false;
-        }
-        pos += 3;  // cipher_suite and legacy_compression_method
-        uint16 extensions_length = (static_cast<uint16>(wire[pos]) << 8) | wire[pos + 1];
-        size_t extensions_pos = pos + 2;
-        if (extensions_length != wire.size() - extensions_pos) {
-            return false;
-        }
-        size_t cursor = extensions_pos;
-        while (cursor + 4 <= wire.size()) {
-            uint16 type = (static_cast<uint16>(wire[cursor]) << 8) | wire[cursor + 1];
-            uint16 length = (static_cast<uint16>(wire[cursor + 2]) << 8) | wire[cursor + 3];
-            size_t extension_size = 4 + static_cast<size_t>(length);
-            if (extension_size > wire.size() - cursor) {
-                return false;
-            }
-            if (type == extension_type) {
-                wire.erase(wire.begin() + cursor, wire.begin() + cursor + extension_size);
-                uint16 updated_extensions_length = static_cast<uint16>(extensions_length - extension_size);
-                wire[pos] = static_cast<byte_t>(updated_extensions_length >> 8);
-                wire[pos + 1] = static_cast<byte_t>(updated_extensions_length);
-                uint32 handshake_length = t_narrow_cast(wire.size() - 4);
-                wire[1] = static_cast<byte_t>(handshake_length >> 16);
-                wire[2] = static_cast<byte_t>(handshake_length >> 8);
-                wire[3] = static_cast<byte_t>(handshake_length);
-                return true;
-            }
-            cursor += extension_size;
-        }
-        return false;
-    };
-
-    tls_session declined_psk_client;
-    configure_resumption(declined_psk_client);
-    declined_psk_client.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
-    declined_psk_client.get_session_info(from_server).get_keyvalue().set(session_early_data_limit, 4096);
-
-    // Rebuild ClientHello1 and ClientHello2 through the client writers rather
-    // than parsing their wire bytes into a fresh session. Parsing an outbound
-    // ClientHello restores the public key-share bytes, but cannot recreate the
-    // private key generated by the original client for the final DHE step.
-    auto declined_clienthello1 = new tls_handshake_client_hello(&declined_psk_client);
-    declined_clienthello1->add_ciphersuite(0x1301);
-    auto declined_versions1 = new tls_extension_client_supported_versions(declined_clienthello1);
-    declined_versions1->add(tls_13);
-    declined_clienthello1->get_extensions().add(declined_versions1);
-    auto declined_groups1 = new tls_extension_supported_groups(declined_clienthello1);
-    declined_groups1->add("x25519");
-    declined_clienthello1->get_extensions().add(declined_groups1);
-    auto declined_modes1 = new tls_extension_psk_key_exchange_modes(declined_clienthello1);
-    declined_modes1->add(1);
-    declined_clienthello1->get_extensions().add(declined_modes1);
-    declined_clienthello1->get_extensions().add(new tls_extension_early_data(declined_clienthello1));
-    declined_clienthello1->get_extensions().add(new tls_extension_client_psk(declined_clienthello1));
-    tls_record_handshake declined_clienthello1_record(&declined_psk_client);
-    declined_clienthello1_record << declined_clienthello1;
-    binary_t declined_clienthello1_wire;
-    ret = declined_clienthello1_record.write(from_client, declined_clienthello1_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize a separate ClientHello1 for the post-HRR PSK-decline path");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    tls_records declined_hrr_records;
-    ret = declined_hrr_records.read(&declined_psk_client, from_server, hrr_wire);
-    _test_case.test(ret, __FUNCTION__, "process HRR before testing a declined final PSK selection");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    auto declined_clienthello2 = new tls_handshake_client_hello(&declined_psk_client);
-    declined_clienthello2->add_ciphersuite(0x1301);
-    auto declined_versions2 = new tls_extension_client_supported_versions(declined_clienthello2);
-    declined_versions2->add(tls_13);
-    declined_clienthello2->get_extensions().add(declined_versions2);
-    auto declined_groups2 = new tls_extension_supported_groups(declined_clienthello2);
-    declined_groups2->add("x25519");
-    declined_clienthello2->get_extensions().add(declined_groups2);
-    auto declined_key_share2 = new tls_extension_client_key_share(declined_clienthello2);
-    declined_clienthello2->get_extensions().add(declined_key_share2);
-    auto declined_modes2 = new tls_extension_psk_key_exchange_modes(declined_clienthello2);
-    declined_modes2->add(1);
-    declined_clienthello2->get_extensions().add(declined_modes2);
-    declined_clienthello2->get_extensions().add(new tls_extension_client_psk(declined_clienthello2));
-    uint16 declined_retry_group = t_narrow_cast(declined_psk_client.get_session_info(from_server).get_keyvalue().get(session_key_share_group));
-    ret = declined_key_share2->add(static_cast<tls_group_t>(declined_retry_group));
-    _test_case.test(ret, __FUNCTION__, "generate the independent ClientHello2 key share for the PSK-decline path");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    declined_key_share2->clear();
-    tls_record_handshake declined_clienthello2_record(&declined_psk_client);
-    declined_clienthello2_record << declined_clienthello2;
-    binary_t declined_clienthello2_wire;
-    ret = declined_clienthello2_record.write(from_client, declined_clienthello2_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize ClientHello2 with its own private key-share state");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    binary_t declined_server_hello_wire = selected_server_hello_wire;
-    bool removed_selected_psk = remove_server_hello_extension(declined_server_hello_wire, static_cast<uint16>(tls_extension_type_t::pre_shared_key));
-    _test_case.assert(removed_selected_psk, __FUNCTION__, "remove pre_shared_key to model a final ServerHello that declines resumption");
-    if (removed_selected_psk) {
-        tls_handshake_server_hello declined_server_hello_reader(&declined_psk_client);
-        size_t declined_server_hello_pos = 0;
-        ret = declined_server_hello_reader.read(from_server, declined_server_hello_wire.data(), declined_server_hello_wire.size(), declined_server_hello_pos);
-        _test_case.test(ret, __FUNCTION__, "accept a final post-HRR ServerHello that declines PSK resumption");
-        if (errorcode_t::success == ret) {
-            _test_case.assert(tls_flow_t::one_rtt == declined_psk_client.get_tls_protection().get_flow(), __FUNCTION__,
-                              "switch to one_rtt after a post-HRR ServerHello declines PSK");
-            _test_case.assert(0xffff == declined_psk_client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                              "retain the no-selected-identity sentinel after PSK decline");
-            _test_case.assert(declined_psk_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
-                              "discard the offered PSK early secret when the final ServerHello declines resumption");
-            _test_case.assert(false == declined_psk_client.get_tls_protection().get_secrets().get(tls_secret_t::early_secret).empty(), __FUNCTION__,
-                              "derive the zero-PSK early secret for the full handshake after HRR");
-        }
-    }
-
-    // Rebuild the same ClientHello1-HRR-ClientHello2 state in an independent
-    // client session. The successful ServerHello above advances the original
-    // client's handshake cursor to ServerHello, so reusing it would correctly
-    // trigger unexpected_message before selected_identity can be validated.
-    tls_session invalid_selected_client;
-    configure_resumption(invalid_selected_client);
-
-    tls_records invalid_clienthello1_records;
-    ret = invalid_clienthello1_records.read(&invalid_selected_client, from_client, client_hello1_wire);
-    _test_case.test(ret, __FUNCTION__, "replay ClientHello1 for the independent selected_identity test session");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    tls_records invalid_hrr_records;
-    ret = invalid_hrr_records.read(&invalid_selected_client, from_server, hrr_wire);
-    _test_case.test(ret, __FUNCTION__, "replay HelloRetryRequest for the independent selected_identity test session");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    tls_records invalid_clienthello2_records;
-    ret = invalid_clienthello2_records.read(&invalid_selected_client, from_client, client_hello2_wire);
-    _test_case.test(ret, __FUNCTION__, "replay ClientHello2 for the independent selected_identity test session");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    _test_case.assert(tls_handshake_type_t::client_hello == invalid_selected_client.get_session_info(from_client).get_status(), __FUNCTION__,
-                      "keep the peer handshake cursor at ClientHello2 before parsing ServerHello");
-    _test_case.assert(1 == invalid_selected_client.get_keyvalue().get(session_client_psk_identity_count), __FUNCTION__,
-                      "retain the single PSK identity offered in ClientHello2");
-
-    binary_t invalid_selected_server_hello_wire = selected_server_hello_wire;
-    invalid_selected_server_hello_wire.back() = 0x01;
-    tls_handshake_server_hello invalid_selected_server_hello_reader(&invalid_selected_client);
-    size_t invalid_selected_server_hello_pos = 0;
-    ret = invalid_selected_server_hello_reader.read(from_server, invalid_selected_server_hello_wire.data(), invalid_selected_server_hello_wire.size(),
-                                                    invalid_selected_server_hello_pos);
-    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject selected_identity one when the real post-HRR ClientHello2 offered only one identity");
-    size_t selected_identity_alert_count = 0;
-    size_t unexpected_message_alert_count = 0;
-    invalid_selected_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if (tls_alertlevel_t::fatal == level) {
-            if (tls_alertdesc_t::illegal_parameter == desc) {
-                ++selected_identity_alert_count;
-            } else if (tls_alertdesc_t::unexpected_message == desc) {
-                ++unexpected_message_alert_count;
-            }
-        }
-    });
-    _test_case.assert(0 == unexpected_message_alert_count, __FUNCTION__, "do not reject the first post-HRR ServerHello as unexpected_message");
-    _test_case.assert(1 == selected_identity_alert_count, __FUNCTION__, "report fatal illegal_parameter for an out-of-range post-HRR selected_identity");
-
-    binary_t tampered = client_hello2_wire;
-    tampered.back() ^= 0x01;
-    tls_session rejecting_server;
-    configure_resumption(rejecting_server);
-    rejecting_server.get_keyvalue().set(session_conf_enforce_key_share_group, static_cast<uint16>(tlsadvisor->valueof_group("x25519")));
-    tls_records rejecting_clienthello1_records;
-    ret = rejecting_clienthello1_records.read(&rejecting_server, from_client, client_hello1_wire);
-    _test_case.test(ret, __FUNCTION__, "prepare a separate server with the same ClientHello1 transcript");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    // Reproduce the HRR on the rejecting server so its transcript is identical.
-    auto rejecting_server_hello = new tls_handshake_server_hello(&rejecting_server);
-    rejecting_server_hello->set_random(hrr_random);
-    ret = rejecting_server_hello->set_cipher_suite(0x1301);
-    if (errorcode_t::success != ret) {
-        rejecting_server_hello->release();
-        return;
-    }
-    auto rejecting_versions = new tls_extension_server_supported_versions(rejecting_server_hello);
-    rejecting_versions->set(tls_13);
-    rejecting_server_hello->get_extensions().add(rejecting_versions);
-    auto rejecting_key_share = new tls_extension_server_key_share(rejecting_server_hello);
-    ret = rejecting_key_share->add_keyshare();
-    if (errorcode_t::success != ret) {
-        rejecting_server_hello->release();
-        return;
-    }
-    rejecting_server_hello->get_extensions().add(rejecting_key_share);
-    tls_record_handshake rejecting_hrr_record(&rejecting_server);
-    rejecting_hrr_record << rejecting_server_hello;
-    binary_t rejecting_hrr_wire;
-    ret = rejecting_hrr_record.write(from_server, rejecting_hrr_wire);
-    _test_case.test(ret, __FUNCTION__, "recreate HRR before checking a modified ClientHello2 binder");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-
-    tls_records rejecting_clienthello2_records;
-    ret = rejecting_clienthello2_records.read(&rejecting_server, from_client, tampered);
-    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a ClientHello2 with a modified PSK binder");
-
-    size_t decrypt_error_count = 0;
-    rejecting_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decrypt_error == desc)) {
-            ++decrypt_error_count;
-        }
-    });
-    _test_case.assert(1 == decrypt_error_count, __FUNCTION__, "report decrypt_error for a modified ClientHello2 binder");
-}
-
-static void test_tls13_hrr_rejects_psk_with_incompatible_hash() {
-    _test_case.begin("TLS 1.3 HRR does not select a PSK with a different cipher-suite hash");
-
-    tls_session server;
-    server.set_type(session_type_t::tls);
-    auto& protection = server.get_tls_protection();
-    protection.set_tls_version(tls_13);
-    protection.set_cipher_suite(0x1301);  // HRR selected TLS_AES_128_GCM_SHA256
-    protection.set_flow(tls_flow_t::hello_retry_request);
-
-    tls_resumption_ticket sha384_ticket;
-    sha384_ticket.identity = binary_t{0xa1, 0xb2, 0xc3};
-    sha384_ticket.psk = binary_t(48, 0x5a);
-    sha384_ticket.cipher_suite = 0x1302;  // ticket was established with SHA-384
-    sha384_ticket.lifetime = 3600;
-    sha384_ticket.age_add = 0x10203040;
-    sha384_ticket.timestamp =
-        static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) - 25;
-    server.store_resumption_ticket(sha384_ticket);
-
-    tls_handshake_client_hello hello(&server);
-    tls_extension_client_psk psk(&hello);
-
-    // A structurally valid OfferedPsks with one SHA-384-sized binder. The
-    // binder need not be verified: HRR's SHA-256 suite must reject the ticket
-    // before it can become the selected identity.
-    binary_t wire = {
-        0x00, 0x29,                                            // pre_shared_key extension
-        0x00, 0x3e,                                            // extension body length: 62
-        0x00, 0x09,                                            // identities vector length
-        0x00, 0x03, 0xa1, 0xb2, 0xc3, 0x00, 0x00, 0x00, 0x19,  // obfuscated_ticket_age
-        0x00, 0x31,                                            // binders vector length: 49
-        0x30                                                   // binder length: 48
-    };
-    wire.insert(wire.end(), 48, 0x00);
-
-    size_t pos = 0;
-    return_t ret = psk.read(from_client, wire.data(), wire.size(), pos);
-    _test_case.test(ret, __FUNCTION__, "parse a structurally valid SHA-384 PSK offer during a SHA-256 HRR");
-    _test_case.assert(wire.size() == pos, __FUNCTION__, "consume the complete pre_shared_key extension");
-    _test_case.assert(0xffff == server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                      "do not select a SHA-384 ticket after HRR fixed the handshake hash to SHA-256");
-    _test_case.assert(0x1301 == protection.get_cipher_suite(), __FUNCTION__, "preserve the cipher suite selected by HelloRetryRequest");
-
-    // Exercise the compatibility path used by callers that still populate
-    // the legacy singleton ticket fields. Its SHA-384-sized PSK must also be
-    // declined when HRR has fixed the handshake hash to SHA-256.
-    tls_session legacy_server;
-    legacy_server.set_type(session_type_t::tls);
-    auto& legacy_protection = legacy_server.get_tls_protection();
-    legacy_protection.set_tls_version(tls_13);
-    legacy_protection.set_cipher_suite(0x1301);
-    legacy_protection.set_flow(tls_flow_t::hello_retry_request);
-    auto& legacy_secrets = legacy_protection.get_secrets();
-    legacy_secrets.assign(tls_secret_t::new_session_ticket, sha384_ticket.identity);
-    legacy_secrets.assign(tls_secret_t::resumption_early, sha384_ticket.psk);
-    auto& legacy_ticket_kv = legacy_server.get_session_info(from_server).get_keyvalue();
-    legacy_ticket_kv.set(session_ticket_lifetime, sha384_ticket.lifetime);
-    legacy_ticket_kv.set(session_ticket_age_add, sha384_ticket.age_add);
-    legacy_ticket_kv.set(session_ticket_timestamp, sha384_ticket.timestamp);
-
-    tls_handshake_client_hello legacy_hello(&legacy_server);
-    tls_extension_client_psk legacy_psk(&legacy_hello);
-    pos = 0;
-    ret = legacy_psk.read(from_client, wire.data(), wire.size(), pos);
-    _test_case.test(ret, __FUNCTION__, "decline a legacy SHA-384 singleton PSK after SHA-256 HRR");
-    _test_case.assert(0xffff == legacy_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                      "do not select a legacy singleton PSK with an incompatible HRR hash");
-    _test_case.assert(0x1301 == legacy_protection.get_cipher_suite(), __FUNCTION__, "preserve the HRR cipher suite when declining a legacy singleton PSK");
-    _test_case.assert(tls_flow_t::hello_retry_request == legacy_protection.get_flow(), __FUNCTION__,
-                      "retain the HRR transcript flow when declining a legacy singleton PSK");
 }
 
 static void test_tls13_server_rejects_unoffered_psk_mode() {
+    // Scenario under test: TLS 1.3 server does not serialize an unoffered PSK selection.
+    // Expected: do not emit a ServerHello with an invalid PSK selection.
     _test_case.begin("TLS 1.3 server does not serialize an unoffered PSK selection");
 
     auto assert_rejected = [&](uint8 offered_modes, bool include_key_share, uint16 selected_identity, bool include_server_modes_extension, bool hello_retry_request,
@@ -1922,15 +655,756 @@ static void test_tls13_server_rejects_unoffered_psk_mode() {
     assert_rejected(0x01, false, 1, false, false, "reject a server selected_identity outside the ClientHello identity list");
     assert_rejected(0x01, false, 0, true, false, "reject the ClientHello-only psk_key_exchange_modes extension in ServerHello");
     assert_rejected(0x01, false, 0, false, true, "reject a PSK selection in HelloRetryRequest");
+
+    // The server may only select the identity whose binder it actually
+    // validated. An in-range but different identity would make the peer and
+    // server derive the handshake keys from different PSKs.
+    {
+        tls_session mismatched_server;
+        mismatched_server.set_type(session_type_t::tls);
+        auto& protection = mismatched_server.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1301);
+        mismatched_server.update_session_status(session_status_client_hello);
+        mismatched_server.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+
+        auto& kv = mismatched_server.get_keyvalue();
+        kv.set(session_client_psk_identity_count, 2);
+        kv.set(session_client_psk_modes_present, 1);
+        kv.set(session_client_psk_modes, 0x01);           // psk_ke
+        kv.set(session_server_psk_selected_identity, 1);  // binder validated identity one
+
+        auto server_hello = new tls_handshake_server_hello(&mismatched_server);
+        server_hello->set_cipher_suite(0x1301);
+        auto versions = new tls_extension_server_supported_versions(server_hello);
+        versions->set(tls_13);
+        server_hello->get_extensions().add(versions);
+        auto psk = new tls_extension_server_psk(server_hello);
+        psk->set_selected_identity(0);  // in range, but not the validated identity
+        server_hello->get_extensions().add(psk);
+
+        tls_record_handshake record(&mismatched_server);
+        record << server_hello;
+        binary_t wire;
+        return_t ret = record.write(from_server, wire);
+        _test_case.assert(errorcode_t::bad_request == ret, __FUNCTION__, "reject an in-range ServerHello identity different from the validated PSK binder");
+        _test_case.assert(wire.empty(), __FUNCTION__, "do not emit a ServerHello that selects a different PSK than the validated binder");
+    }
+    // The extension is ClientHello-only. Verify the receive-side guard as
+    // well as the server writer checks above: a peer must not send it in
+    // ServerHello, even when no PSK selection is present.
+    {
+        tls_session client;
+        client.set_type(session_type_t::tls);
+        tls_handshake_server_hello server_hello(&client);
+        tls_extension_psk_key_exchange_modes invalid_modes(&server_hello);
+        const binary_t invalid_server_modes_wire{0x00, 0x2d, 0x00, 0x02, 0x01, 0x00};
+        size_t invalid_server_modes_pos = 0;
+        return_t ret = invalid_modes.read(from_server, invalid_server_modes_wire.data(), invalid_server_modes_wire.size(), invalid_server_modes_pos);
+        _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject psk_key_exchange_modes received in ServerHello");
+        size_t illegal_parameter_count = 0;
+        client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
+                ++illegal_parameter_count;
+            }
+        });
+        _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report fatal illegal_parameter for a server-sent psk_key_exchange_modes extension");
+    }
+
+    // The client must independently validate a received ServerHello PSK
+    // selection. Server-side serialization checks cannot protect a client
+    // connected to a non-conforming or malicious peer.
+    auto assert_client_rejects = [&](uint16 selected_identity, uint8 offered_modes, const char* description, bool mismatched_hash) {
+        tls_session client;
+        client.set_type(session_type_t::tls);
+        auto& protection = client.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1301);
+        protection.get_protection_context().add_cipher_suite(0x1301);
+        protection.get_protection_context().add_supported_version(tls_13);
+        client.update_session_status(session_status_client_hello);
+        client.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+
+        const tls_cipher_suite_t* suite = tls_advisor::get_instance()->hintof_cipher_suite(0x1301);
+        const tls_cipher_suite_t* hash_suite = tls_advisor::get_instance()->hintof_cipher_suite(mismatched_hash ? 0x1302 : 0x1301);
+        _test_case.assert(nullptr != suite && nullptr != hash_suite, __FUNCTION__, "resolve the ServerHello and offered PSK hash suites");
+        if (nullptr == suite || nullptr == hash_suite) {
+            return;
+        }
+        auto& kv = client.get_keyvalue();
+        kv.set(session_client_psk_identity_count, 1);
+        kv.set(session_client_psk_modes_present, 1);
+        kv.set(session_client_psk_modes, offered_modes);
+        kv.set(session_client_psk_hash, static_cast<uint16>(hash_suite->mac));
+
+        // ServerHello with supported_versions and pre_shared_key only.
+        // The selected identity is supplied by the peer; no key_share means
+        // the server is claiming psk_ke.
+        binary_t wire = {0x16,
+                         0x03,
+                         0x03,
+                         0x00,
+                         0x38,  // TLS Handshake record, 56-byte payload
+                         0x02,
+                         0x00,
+                         0x00,
+                         0x34,  // ServerHello, 52-byte body
+                         0x03,
+                         0x03,  // legacy_version
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x42,
+                         0x00,  // legacy_session_id_echo
+                         0x13,
+                         0x01,  // TLS_AES_128_GCM_SHA256
+                         0x00,  // legacy_compression_method
+                         0x00,
+                         0x0c,  // extensions length
+                         0x00,
+                         0x2b,
+                         0x00,
+                         0x02,
+                         0x03,
+                         0x04,  // supported_versions = TLS 1.3
+                         0x00,
+                         0x29,
+                         0x00,
+                         0x02,
+                         static_cast<byte_t>(selected_identity >> 8),
+                         static_cast<byte_t>(selected_identity)};
+
+        tls_records records;
+        return_t ret = records.read(&client, from_server, wire);
+        _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, description);
+        size_t illegal_parameter_count = 0;
+        client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
+                ++illegal_parameter_count;
+            }
+        });
+        _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report fatal illegal_parameter for the invalid peer PSK selection");
+        _test_case.assert(0xffff == client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                          "do not commit selected_identity when the ServerHello PSK selection is invalid");
+        _test_case.assert(0xffff == client.get_keyvalue().get(session_server_psk_key_exchange_mode), __FUNCTION__,
+                          "do not commit the PSK key-exchange mode when the ServerHello PSK selection is invalid");
+    };
+
+    assert_client_rejects(0, 0x02, "reject psk_ke when the client offered only psk_dhe_ke", false);
+    assert_client_rejects(1, 0x01, "reject a ServerHello selected_identity outside the client's offered identity vector", false);
+    assert_client_rejects(0, 0x01, "reject a selected PSK whose hash differs from the ServerHello cipher suite", true);
+}
+
+static void test_tls13_server_hello_rejects_unoffered_cipher_suite() {
+    // Scenario under test: TLS 1.3 ServerHello must select a ClientHello-offered cipher suite.
+    // Expected: reject a ServerHello selecting an unoffered TLS 1.3 cipher suite.
+    _test_case.begin("TLS 1.3 ServerHello must select a ClientHello-offered cipher suite");
+
+    {
+        tls_session client;
+        client.set_type(session_type_t::tls);
+        auto& protection = client.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1301);
+        protection.get_protection_context().add_cipher_suite(0x1301);
+        protection.get_protection_context().add_supported_version(tls_13);
+        client.update_session_status(session_status_client_hello);
+        client.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+
+        // ServerHello selects TLS_CHACHA20_POLY1305_SHA256 (0x1303), which
+        // shares SHA-256 with the offered 0x1301 suite but was not offered.
+        // The suite/hash match must not hide the missing offer.
+        binary_t wire = {
+            0x16, 0x03, 0x03, 0x00, 0x32,  // TLS Handshake record, 50-byte payload
+            0x02, 0x00, 0x00, 0x2e,        // ServerHello, 46-byte body
+            0x03, 0x03,                    // legacy_version
+            0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+            0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+            0x00,                               // legacy_session_id_echo
+            0x13, 0x03,                         // unoffered cipher suite
+            0x00,                               // legacy_compression_method
+            0x00, 0x06,                         // extensions length
+            0x00, 0x2b, 0x00, 0x02, 0x03, 0x04  // supported_versions = TLS 1.3
+        };
+
+        tls_records records;
+        return_t ret = records.read(&client, from_server, wire);
+        _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject a ServerHello selecting an unoffered TLS 1.3 cipher suite");
+        size_t illegal_parameter_count = 0;
+        client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
+                ++illegal_parameter_count;
+            }
+        });
+        _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for an unoffered cipher suite");
+    }
+
+    {
+        tls_session server;
+        server.set_type(session_type_t::tls);
+        auto& protection = server.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1303);
+        protection.get_protection_context().add_cipher_suite(0x1301);
+        server.update_session_status(session_status_client_hello);
+        server.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+
+        auto server_hello = new tls_handshake_server_hello(&server);
+        server_hello->set_cipher_suite(0x1303);
+        auto versions = new tls_extension_server_supported_versions(server_hello);
+        versions->set(tls_13);
+        server_hello->get_extensions().add(versions);
+
+        tls_record_handshake record(&server);
+        record << server_hello;
+        binary_t wire;
+        return_t ret = record.write(from_server, wire);
+        _test_case.assert(errorcode_t::bad_request == ret, __FUNCTION__, "refuse to serialize a ServerHello selecting an unoffered cipher suite");
+        _test_case.assert(wire.empty(), __FUNCTION__, "do not emit a ServerHello with an unoffered cipher suite");
+    }
+
+    {
+        tls_session server;
+        server.set_type(session_type_t::tls);
+        auto& protection = server.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1302);  // SHA-384 suite
+        protection.get_protection_context().add_cipher_suite(0x1302);
+        server.update_session_status(session_status_client_hello);
+        server.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+        server.get_keyvalue().set(session_client_psk_identity_count, 1);
+        server.get_keyvalue().set(session_client_psk_modes_present, 1);
+        server.get_keyvalue().set(session_client_psk_modes, 1);  // psk_ke
+        server.get_keyvalue().set(session_server_psk_selected_identity, 0);
+        server.get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0x1301);  // SHA-256 ticket
+
+        auto server_hello = new tls_handshake_server_hello(&server);
+        server_hello->set_cipher_suite(0x1302);
+        auto versions = new tls_extension_server_supported_versions(server_hello);
+        versions->set(tls_13);
+        server_hello->get_extensions().add(versions);
+        auto selected_psk = new tls_extension_server_psk(server_hello);
+        selected_psk->set_selected_identity(0);
+        server_hello->get_extensions().add(selected_psk);
+
+        tls_record_handshake record(&server);
+        record << server_hello;
+        binary_t wire;
+        return_t ret = record.write(from_server, wire);
+        _test_case.assert(errorcode_t::bad_request == ret, __FUNCTION__, "refuse a PSK selection when the ServerHello suite uses a different hash");
+        _test_case.assert(wire.empty(), __FUNCTION__, "do not emit a ServerHello with a PSK hash mismatch");
+    }
+}
+
+static void test_tls13_psk_ke_key_schedule_roundtrip() {
+    // Scenario under test: TLS 1.3 psk_ke selection derives the PSK-only handshake schedule.
+    // Action: restore the client-side TLS 1.3 resumption ticket.
+    // Expected: retain the identity whose binder was validated.
+    _test_case.begin("TLS 1.3 psk_ke selection derives the PSK-only handshake schedule");
+
+    tls_resumption_ticket ticket;
+    ticket.identity = {0xa1, 0xb2, 0xc3};
+    ticket.psk = binary_t(32, 0x5a);
+    ticket.cipher_suite = 0x1303;  // Same SHA-256 hash as the initial suite.
+    ticket.version = static_cast<uint16>(tls_13);
+    ticket.lifetime = 3600;
+    ticket.age_add = 0x10203040;
+    ticket.max_early_data_size = 4096;
+    uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    ticket.timestamp = now_ms - 25;
+
+    auto configure_resumption = [&](tls_session& session) -> return_t {
+        session.set_type(session_type_t::tls);
+        auto& protection = session.get_tls_protection();
+        protection.set_tls_version(tls_13);
+        protection.set_cipher_suite(0x1301);
+        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.update_session_status(session_status_server_finished);
+        session.update_session_status(session_status_client_finished);
+        session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+        session.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+        // Model a restored, fully completed handshake. The Finished
+        // postprocessor sets this session-wide flag in a live session; the
+        // resumption fixture must restore it alongside the per-direction
+        // Finished statuses so ServerHello keeps an eligible 0-RTT flow.
+        session.get_keyvalue().set(session_handshake_finished, 1);
+        openssl_digest digest;
+        binary_t empty;
+        binary_t empty_hash;
+        return_t ret = digest.digest("sha256", empty, empty_hash);
+        if (errorcode_t::success == ret) {
+            protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
+            session.store_resumption_ticket(ticket);
+        }
+        return ret;
+    };
+
+    tls_session client;
+    return_t ret = configure_resumption(client);
+    _test_case.test(ret, __FUNCTION__, "restore the client-side TLS 1.3 resumption ticket");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_session server;
+    ret = configure_resumption(server);
+    _test_case.test(ret, __FUNCTION__, "restore the server-side TLS 1.3 resumption ticket");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    client.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
+    client.get_session_info(from_server).get_keyvalue().set(session_early_data_limit, 1024);
+    auto client_hello = new tls_handshake_client_hello(&client);
+    client_hello->add_ciphersuite(0x1301);
+    client_hello->add_ciphersuite(0x1303);  // Same SHA-256 PSK hash, different AEAD suite.
+    auto versions = new tls_extension_client_supported_versions(client_hello);
+    versions->add(tls_13);
+    client_hello->get_extensions().add(versions);
+    auto modes = new tls_extension_psk_key_exchange_modes(client_hello);
+    modes->add(0);  // psk_ke: no key_share is sent in ServerHello.
+    client_hello->get_extensions().add(modes);
+    client_hello->get_extensions().add(new tls_extension_early_data(client_hello));
+    client_hello->get_extensions().add(new tls_extension_client_psk(client_hello));
+
+    tls_record_handshake client_hello_record(&client);
+    client_hello_record << client_hello;
+    binary_t client_hello_wire;
+    ret = client_hello_record.write(from_client, client_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize a PSK ClientHello that offers only psk_ke and no key_share");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_records server_client_hello_records;
+    ret = server_client_hello_records.read(&server, from_client, client_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "validate the psk_ke-only ClientHello binder on the server");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(0 == server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__, "retain the identity whose binder was validated");
+    _test_case.assert(1 == server.get_keyvalue().get(session_client_psk_modes), __FUNCTION__, "record the client's psk_ke-only mode offer");
+    _test_case.assert(0 != server.get_session_info(from_server).get_keyvalue().get(session_early_data_offered), __FUNCTION__,
+                      "record the early_data offer independently of the PSK binder");
+    _test_case.assert(0 != server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
+                      "retain the ticket's early-data allowance before the server decides whether to accept it");
+
+    auto server_hello = new tls_handshake_server_hello(&server);
+    ret = server_hello->set_cipher_suite(0x1303);
+    _test_case.test(ret, __FUNCTION__, "select the ticket's offered SHA-256 suite after a different provisional suite");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    auto server_versions = new tls_extension_server_supported_versions(server_hello);
+    server_versions->set(tls_13);
+    server_hello->get_extensions().add(server_versions);
+    auto selected_psk = new tls_extension_server_psk(server_hello);
+    selected_psk->set_selected_identity(0);
+    server_hello->get_extensions().add(selected_psk);
+    _test_case.assert(nullptr == server_hello->get_extensions().get(tls_extension_type_t::key_share), __FUNCTION__, "omit key_share when selecting psk_ke");
+
+    tls_record_handshake server_hello_record(&server);
+    server_hello_record << server_hello;
+    binary_t server_hello_wire;
+    ret = server_hello_record.write(from_server, server_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize the psk_ke ServerHello and derive the server handshake keys");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(0 == server.get_keyvalue().get(session_server_psk_key_exchange_mode), __FUNCTION__,
+                      "record psk_ke on the server before calculating the key schedule");
+    _test_case.assert(binary_t(32, 0) == server.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret), __FUNCTION__,
+                      "use Hash.length zero bytes instead of an (EC)DHE shared secret");
+    _test_case.assert(tls_flow_t::zero_rtt == server.get_tls_protection().get_flow(), __FUNCTION__,
+                      "keep the server in the early-data decision phase after selecting the eligible PSK");
+
+    tls_records client_server_hello_records;
+    ret = client_server_hello_records.read(&client, from_server, server_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "accept the psk_ke ServerHello and derive the client handshake keys");
+    if (errorcode_t::success == ret) {
+        auto& client_protection = client.get_tls_protection();
+        auto& server_protection = server.get_tls_protection();
+        _test_case.assert(0x1303 == client_protection.get_cipher_suite(), __FUNCTION__,
+                          "accept the offered ServerHello suite rather than requiring the ticket's original suite");
+        _test_case.assert(0x1303 == server_protection.get_cipher_suite(), __FUNCTION__, "use the negotiated ServerHello suite for the server key schedule");
+        _test_case.assert(0 == client.get_keyvalue().get(session_server_psk_key_exchange_mode), __FUNCTION__, "record psk_ke on the client");
+        _test_case.assert(server_protection.get_secrets().get(tls_secret_t::early_secret) == client_protection.get_secrets().get(tls_secret_t::early_secret),
+                          __FUNCTION__, "derive the same PSK Early Secret on both endpoints");
+        _test_case.assert(server_protection.get_secrets().get(tls_secret_t::shared_secret) == client_protection.get_secrets().get(tls_secret_t::shared_secret),
+                          __FUNCTION__, "derive the same zero DHE input on both endpoints");
+        _test_case.assert(server_protection.get_secrets().get(tls_secret_t::handshake) == client_protection.get_secrets().get(tls_secret_t::handshake), __FUNCTION__,
+                          "derive the same handshake secret on both endpoints");
+        _test_case.assert(server_protection.get_secrets().get(tls_secret_t::c_hs_traffic) == client_protection.get_secrets().get(tls_secret_t::c_hs_traffic),
+                          __FUNCTION__, "derive matching client handshake traffic secrets");
+        _test_case.assert(server_protection.get_secrets().get(tls_secret_t::s_hs_traffic) == client_protection.get_secrets().get(tls_secret_t::s_hs_traffic),
+                          __FUNCTION__, "derive matching server handshake traffic secrets");
+
+        // The server may select the PSK while declining the separate 0-RTT
+        // offer. Omitting early_data from EncryptedExtensions must switch the
+        // record flow to 1-RTT without discarding the selected PSK schedule.
+        const binary_t client_early_secret = client_protection.get_secrets().get(tls_secret_t::early_secret);
+        const binary_t server_early_secret = server_protection.get_secrets().get(tls_secret_t::early_secret);
+        const binary_t client_handshake_secret = client_protection.get_secrets().get(tls_secret_t::handshake);
+        const binary_t server_handshake_secret = server_protection.get_secrets().get(tls_secret_t::handshake);
+        _test_case.assert(0 != client.get_session_info(from_server).get_keyvalue().get(session_early_data_offered), __FUNCTION__,
+                          "record the client's early_data offer independently of PSK selection");
+
+        auto encrypted_extensions = new tls_handshake_encrypted_extensions(&server);
+        // TLS 1.3 carries EncryptedExtensions in a protected
+        // TLSCiphertext record (outer application_data, inner handshake).
+        tls_record_application_data encrypted_extensions_record(&server);
+        encrypted_extensions_record.get_handshakes() << encrypted_extensions;
+        binary_t encrypted_extensions_wire;
+        ret = encrypted_extensions_record.write(from_server, encrypted_extensions_wire);
+        _test_case.test(ret, __FUNCTION__, "serialize EncryptedExtensions without early_data to decline 0-RTT");
+        if (errorcode_t::success == ret) {
+            _test_case.assert(tls_flow_t::one_rtt == server_protection.get_flow(), __FUNCTION__, "switch the server to 1-RTT after declining early data");
+            _test_case.assert(0 == server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
+                              "leave server early_data acceptance unset when the extension is omitted");
+
+            tls_records client_encrypted_extensions_records;
+            ret = client_encrypted_extensions_records.read(&client, from_server, encrypted_extensions_wire);
+            _test_case.test(ret, __FUNCTION__, "process the server's EncryptedExtensions rejection of 0-RTT");
+            if (errorcode_t::success == ret) {
+                _test_case.assert(tls_flow_t::one_rtt == client_protection.get_flow(), __FUNCTION__, "switch the client to 1-RTT after declining early data");
+                _test_case.assert(0 == client.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
+                                  "do not mark early_data accepted when EncryptedExtensions omits it");
+                _test_case.assert(0 == client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                                  "retain the selected PSK identity after rejecting only early data");
+                _test_case.assert(client_early_secret == client_protection.get_secrets().get(tls_secret_t::early_secret), __FUNCTION__,
+                                  "retain the client's PSK Early Secret after rejecting early data");
+                _test_case.assert(server_early_secret == server_protection.get_secrets().get(tls_secret_t::early_secret), __FUNCTION__,
+                                  "retain the server's PSK Early Secret after rejecting early data");
+                _test_case.assert(client_handshake_secret == client_protection.get_secrets().get(tls_secret_t::handshake), __FUNCTION__,
+                                  "retain the client's PSK handshake secret after rejecting early data");
+                _test_case.assert(server_handshake_secret == server_protection.get_secrets().get(tls_secret_t::handshake), __FUNCTION__,
+                                  "retain the server's PSK handshake secret after rejecting early data");
+                _test_case.assert(client_protection.get_secrets().get(tls_secret_t::handshake) == server_protection.get_secrets().get(tls_secret_t::handshake),
+                                  __FUNCTION__, "keep the PSK-derived handshake schedule synchronized after early_data rejection");
+            }
+        }
+    }
+}
+
+static void test_tls13_clienthello_extension_vector_message_boundary() {
+    // Scenario under test: TLS 1.3 ClientHello extension vector stays inside its handshake message.
+    // Expected: reject an extension vector that crosses the ClientHello message boundary.
+    _test_case.begin("TLS 1.3 ClientHello extension vector stays inside its handshake message");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    session.get_tls_protection().set_tls_version(tls_13);
+
+    tls_handshake_client_hello handshake(&session);
+    binary_t wire = {
+        0x01, 0x00, 0x00, 0x2b,  // ClientHello handshake header: 43-byte body
+        0x03, 0x03               // legacy_version
+    };
+    wire.insert(wire.end(), 32, 0x00);  // random
+    wire.insert(wire.end(), {
+                                0x00,                    // legacy_session_id length
+                                0x00, 0x02, 0x13, 0x01,  // cipher_suites
+                                0x01, 0x00,              // legacy_compression_methods
+                                0x00, 0x04               // extension vector claims four bytes outside ClientHello
+                            });
+    // These bytes follow the declared ClientHello message. They resemble an
+    // empty unknown extension and must not be consumed as part of its vector.
+    wire.insert(wire.end(), {0xff, 0xff, 0x00, 0x00});
+
+    size_t pos = 0;
+    return_t ret = handshake.read(from_client, wire.data(), wire.size(), pos);
+    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject an extension vector that crosses the ClientHello message boundary");
+    _test_case.assert(0 == handshake.get_extensions().size(), __FUNCTION__, "do not parse trailing bytes as a ClientHello extension");
+
+    size_t decode_error_count = 0;
+    session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
+            ++decode_error_count;
+        }
+    });
+    _test_case.assert(1 == decode_error_count, __FUNCTION__, "report exactly one fatal decode_error for the malformed ClientHello extension length");
+
+    const std::array<binary_t, 2> truncated_extension_vectors = {
+        binary_t{0xff},
+        binary_t{0xff, 0xff, 0x00, 0x01},
+    };
+    for (const auto& extensions : truncated_extension_vectors) {
+        tls_session truncated_session;
+        truncated_session.set_type(session_type_t::tls);
+        truncated_session.get_tls_protection().set_tls_version(tls_13);
+        tls_handshake_client_hello truncated_handshake(&truncated_session);
+
+        binary_t truncated_wire = {0x01, 0x00, 0x00, 0x00,  // ClientHello header; body length filled below
+                                   0x03, 0x03};
+        truncated_wire.insert(truncated_wire.end(), 32, 0x00);
+        truncated_wire.insert(truncated_wire.end(), {0x00,                    // legacy_session_id length
+                                                     0x00, 0x02, 0x13, 0x01,  // cipher_suites
+                                                     0x01, 0x00,              // legacy_compression_methods
+                                                     static_cast<byte_t>((extensions.size() >> 8) & 0xff), static_cast<byte_t>(extensions.size() & 0xff)});
+        truncated_wire.insert(truncated_wire.end(), extensions.begin(), extensions.end());
+        const uint32 body_length = t_narrow_cast(truncated_wire.size() - 4);
+        truncated_wire[1] = static_cast<byte_t>((body_length >> 16) & 0xff);
+        truncated_wire[2] = static_cast<byte_t>((body_length >> 8) & 0xff);
+        truncated_wire[3] = static_cast<byte_t>(body_length & 0xff);
+
+        size_t truncated_pos = 0;
+        return_t truncated_ret = truncated_handshake.read(from_client, truncated_wire.data(), truncated_wire.size(), truncated_pos);
+        _test_case.assert(errorcode_t::bad_format == truncated_ret, __FUNCTION__, "reject a truncated extension header or body in a complete ClientHello");
+
+        size_t truncated_decode_error_count = 0;
+        truncated_session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
+                ++truncated_decode_error_count;
+            }
+        });
+        _test_case.assert(1 == truncated_decode_error_count, __FUNCTION__, "report exactly one fatal decode_error for a truncated ClientHello extension");
+    }
+}
+
+static void test_tls13_psk_modes_unknown_and_duplicate_values() {
+    // Scenario under test: TLS 1.3 PSK key-exchange-modes ignores unknown values and tolerates duplicates.
+    // Action: parse a non-empty PSK mode vector containing unknown or duplicate values.
+    // Expected: consume the complete PSK mode extension.
+    _test_case.begin("TLS 1.3 PSK key-exchange-modes ignores unknown values and tolerates duplicates");
+
+    const std::array<std::pair<binary_t, uint8>, 3> cases = {{
+        {binary_t{0x00, 0x2d, 0x00, 0x04, 0x03, 0x01, 0xfe, 0x01}, 0x02},
+        {binary_t{0x00, 0x2d, 0x00, 0x03, 0x02, 0x01, 0x01}, 0x02},
+        {binary_t{0x00, 0x2d, 0x00, 0x02, 0x01, 0xfe}, 0x00},
+    }};
+
+    for (const auto& test_case : cases) {
+        tls_session session;
+        session.set_type(session_type_t::tls);
+        tls_handshake_client_hello handshake(&session);
+        tls_extension_psk_key_exchange_modes extension(&handshake);
+        size_t pos = 0;
+        return_t ret = extension.read(from_client, test_case.first.data(), test_case.first.size(), pos);
+        _test_case.test(ret, __FUNCTION__, "parse a non-empty PSK mode vector containing unknown or duplicate values");
+        if (errorcode_t::success == ret) {
+            _test_case.assert(test_case.first.size() == pos, __FUNCTION__, "consume the complete PSK mode extension");
+            _test_case.assert(test_case.second == extension.get_modes(), __FUNCTION__, "retain only the distinct, recognized PSK modes");
+        }
+    }
+}
+
+static void test_tls13_psk_modes_malformed_length_alert() {
+    // Scenario under test: TLS 1.3 PSK key-exchange-modes malformed vector decode_error.
+    // Expected: reject an empty or length-mismatched PSK mode vector.
+    _test_case.begin("TLS 1.3 PSK key-exchange-modes malformed vector decode_error");
+
+    const std::array<binary_t, 2> malformed_extensions = {
+        binary_t{0x00, 0x2d, 0x00, 0x00},
+        binary_t{0x00, 0x2d, 0x00, 0x02, 0x02, 0x01},
+    };
+
+    for (const auto& wire : malformed_extensions) {
+        tls_session session;
+        session.set_type(session_type_t::tls);
+        tls_handshake_client_hello handshake(&session);
+        tls_extension_psk_key_exchange_modes extension(&handshake);
+        size_t pos = 0;
+        return_t ret = extension.read(from_client, wire.data(), wire.size(), pos);
+        _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject an empty or length-mismatched PSK mode vector");
+
+        size_t decode_error_count = 0;
+        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
+                ++decode_error_count;
+            }
+        });
+        _test_case.assert(1 == decode_error_count, __FUNCTION__, "report exactly one fatal decode_error for malformed PSK modes");
+    }
+}
+
+static void test_tls13_psk_extension_message_context() {
+    // Scenario under test: TLS 1.3 pre_shared_key extension message context.
+    // Expected: reject pre_shared_key in EncryptedExtensions.
+    _test_case.begin("TLS 1.3 pre_shared_key extension message context");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    tls_handshake_encrypted_extensions handshake(&session);
+    tls_extension_server_psk extension(&handshake);
+    const binary_t wire = {0x00, 0x29, 0x00, 0x02, 0x00, 0x00};
+    size_t pos = 0;
+    return_t ret = extension.read(from_server, wire.data(), wire.size(), pos);
+    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject pre_shared_key in EncryptedExtensions");
+
+    size_t illegal_parameter_count = 0;
+    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
+            ++illegal_parameter_count;
+        }
+    });
+    _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for pre_shared_key outside ServerHello");
+}
+
+static void test_tls13_server_psk_extension_malformed_length_alert() {
+    // Scenario under test: TLS 1.3 ServerHello PSK selected_identity malformed length alert.
+    // Expected: reject a selected_identity body whose length is not exactly two bytes.
+    _test_case.begin("TLS 1.3 ServerHello PSK selected_identity malformed length alert");
+
+    const std::array<binary_t, 2> malformed_extensions = {
+        binary_t{0x00, 0x29, 0x00, 0x01, 0x00},
+        binary_t{0x00, 0x29, 0x00, 0x03, 0x00, 0x00, 0x00},
+    };
+
+    for (const auto& wire : malformed_extensions) {
+        tls_session session;
+        session.set_type(session_type_t::tls);
+        tls_handshake_server_hello handshake(&session);
+        tls_extension_server_psk extension(&handshake);
+        size_t pos = 0;
+        return_t ret = extension.read(from_server, wire.data(), wire.size(), pos);
+        _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject a selected_identity body whose length is not exactly two bytes");
+
+        size_t decode_error_count = 0;
+        session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
+                ++decode_error_count;
+            }
+        });
+        _test_case.assert(1 == decode_error_count, __FUNCTION__, "report exactly one fatal decode_error for a malformed ServerHello PSK extension");
+    }
+}
+
+static void test_tls13_encrypted_extensions_write_failure_rolls_back_psk_state() {
+    // Scenario under test: EncryptedExtensions serialization fails after early_data was serialized.
+    // Expected: roll back extension-writer side effects without discarding the already-selected PSK schedule.
+    _test_case.begin("TLS 1.3 EncryptedExtensions serialization failure rolls back extension state");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls_13);
+    protection.set_cipher_suite(0x1301);
+    protection.set_flow(tls_flow_t::zero_rtt);
+
+    auto& secrets = protection.get_secrets();
+    const binary_t resumption_early(32, 0x11);
+    secrets.assign(tls_secret_t::resumption_early, resumption_early);
+    const binary_t binder_hash(32, 0x22);
+    const binary_t binder_key(32, 0x33);
+    const binary_t binder_finished_key(32, 0x44);
+    const binary_t binder_finished(32, 0x55);
+    secrets.assign(tls_secret_t::resumption_binder_hash, binder_hash);
+    secrets.assign(tls_secret_t::resumption_binder_key, binder_key);
+    secrets.assign(tls_secret_t::resumption_finished_key, binder_finished_key);
+    secrets.assign(tls_secret_t::resumption_finished, binder_finished);
+    secrets.assign(tls_secret_t::c_e_traffic, binary_t(32, 0x66));
+    secrets.assign(tls_secret_t::e_exp_master, binary_t(32, 0x77));
+    secrets.assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x88));
+    secrets.assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x99));
+    secrets.assign(tls_secret_t::c_hs_traffic, binary_t(32, 0xaa));
+
+    auto& kv = session.get_keyvalue();
+    kv.set(session_server_psk_selected_identity, 0);
+    kv.set(session_server_psk_key_exchange_mode, 1);
+    kv.set(session_server_psk_ticket_cipher_suite, 0x1301);
+
+    tls_resumption_ticket ticket;
+    ticket.identity = {0xa1, 0xb2};
+    ticket.psk = resumption_early;
+    ticket.version = static_cast<uint16>(tls_13);
+    ticket.cipher_suite = 0x1301;
+    ticket.max_early_data_size = 4096;
+    session.set_offered_resumption_tickets({ticket});
+    session.set_early_data_ticket(ticket);
+
+    auto& early_state = session.get_session_info(from_server).get_keyvalue();
+    early_state.set(session_early_data_offered, 1);
+    early_state.set(session_early_data_offered_initial, 1);
+    early_state.set(session_early_data_limit, 1024);
+    early_state.set(session_early_data_accepted, 0);
+    session.get_session_info(from_client).begin_protection();
+    session.update_session_status(session_status_client_hello);
+    session.update_session_status(session_status_server_hello);
+    const uint32 original_session_status = session.get_session_status();
+
+    // Prove the fixture is eligible: the direct early_data writer provisionally
+    // marks acceptance, which the enclosing extension-vector writer must undo
+    // if a later extension fails.
+    tls_handshake_encrypted_extensions early_data_probe(&session);
+    tls_extension_early_data early_data_probe_extension(&early_data_probe);
+    binary_t early_data_probe_wire;
+    return_t ret = early_data_probe_extension.write(from_server, early_data_probe_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize an eligible early_data indication");
+    _test_case.assert(1 == early_state.get(session_early_data_accepted), __FUNCTION__, "observe the provisional early_data acceptance side effect");
+    early_state.set(session_early_data_accepted, 0);
+
+    tls_handshake_encrypted_extensions encrypted_extensions(&session);
+    encrypted_extensions.get_extensions().add(new tls_extension_early_data(&encrypted_extensions));
+    auto invalid_modes = new tls_extension_psk_key_exchange_modes(&encrypted_extensions);
+    invalid_modes->add(1);
+    encrypted_extensions.get_extensions().add(invalid_modes);
+
+    binary_t wire;
+    ret = encrypted_extensions.write(from_server, wire);
+    // This failure is intentional: the following assertion verifies the expected error code.
+    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "return the extension serialization error");
+    _test_case.assert(wire.empty(), __FUNCTION__, "do not emit a partial EncryptedExtensions message");
+
+    _test_case.assert(tls_flow_t::zero_rtt == protection.get_flow(), __FUNCTION__, "preserve the active 0-RTT decision flow for a corrected retry");
+    _test_case.assert(0 == kv.get(session_server_psk_selected_identity), __FUNCTION__, "preserve the selected PSK identity");
+    _test_case.assert(1 == kv.get(session_server_psk_key_exchange_mode), __FUNCTION__, "preserve the selected PSK exchange mode");
+    _test_case.assert(0x1301 == kv.get(session_server_psk_ticket_cipher_suite), __FUNCTION__, "preserve the selected ticket cipher suite");
+    _test_case.assert(resumption_early == secrets.get(tls_secret_t::resumption_early), __FUNCTION__,
+                      "preserve the PSK Early Secret after a retryable local write failure");
+    _test_case.assert(binder_hash == secrets.get(tls_secret_t::resumption_binder_hash), __FUNCTION__, "preserve the binder transcript hash");
+    _test_case.assert(binder_key == secrets.get(tls_secret_t::resumption_binder_key), __FUNCTION__, "preserve the binder key");
+    _test_case.assert(binder_finished_key == secrets.get(tls_secret_t::resumption_finished_key), __FUNCTION__, "preserve the binder Finished key");
+    _test_case.assert(binder_finished == secrets.get(tls_secret_t::resumption_finished), __FUNCTION__, "preserve the binder Finished value");
+    _test_case.assert(false == secrets.get(tls_secret_t::c_hs_traffic).empty(), __FUNCTION__, "preserve the installed client handshake traffic secret");
+
+    _test_case.assert(1 == session.get_offered_resumption_tickets().size(), __FUNCTION__, "preserve the offered-ticket snapshot");
+    _test_case.assert(ticket.identity == session.get_early_data_ticket().identity, __FUNCTION__, "preserve the provisional early-data ticket");
+    _test_case.assert(1 == early_state.get(session_early_data_offered), __FUNCTION__, "preserve the early-data offer state");
+    _test_case.assert(1 == early_state.get(session_early_data_offered_initial), __FUNCTION__, "preserve the initial early-data offer state");
+    _test_case.assert(1024 == early_state.get(session_early_data_limit), __FUNCTION__, "preserve the early-data allowance");
+    _test_case.assert(0 == early_state.get(session_early_data_accepted), __FUNCTION__, "restore the pre-write early_data acceptance value");
+    _test_case.assert(original_session_status == session.get_session_status(), __FUNCTION__, "preserve aggregate handshake status after the local write failure");
 }
 
 void testcase_gpt_psk() {
+    test_tls13_encrypted_extensions_write_failure_rolls_back_psk_state();
+    test_tls13_clienthello_extension_vector_message_boundary();
+    test_tls13_psk_modes_unknown_and_duplicate_values();
+    test_tls13_psk_modes_malformed_length_alert();
+    test_tls13_psk_extension_message_context();
+    test_tls13_server_psk_extension_malformed_length_alert();
     test_tls13_server_rejects_unoffered_psk_mode();
+    test_tls13_server_hello_rejects_unoffered_cipher_suite();
+    test_tls13_psk_ke_key_schedule_roundtrip();
     test_tls13_server_client_ticket_psk_roundtrip();
     test_tls13_ticket_nonce_resumption_psk();
-    test_tls13_psk_binder_rfc8448_vector();
-    test_tls13_psk_binder_hrr_transcript();
-    test_tls13_client_psk_binder_roundtrip();
-    test_tls13_clienthello2_psk_binder_hrr_roundtrip();
-    test_tls13_hrr_rejects_psk_with_incompatible_hash();
+    test_tls13_client_suppresses_unusable_initial_psk_offer();
 }

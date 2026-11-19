@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — visitor responsibilities and selection     │
 └──────────────────────────────────────────────┘

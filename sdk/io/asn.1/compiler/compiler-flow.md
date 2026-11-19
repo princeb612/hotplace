@@ -1,6 +1,8 @@
 # Developer Notes — ASN.1 Compiler (asn1c) Flow Sketch - Gemini
 
 > based on Revision 1083
+>
+> Historical design sketch. Reviewed against Source base : Revision 1132. The command-line, generated C++ source, codec and build-integration flow below is a proposal, not a description of an implemented compiler.
 
 #### 1. CLI Utility (asn1c) Command Option Design
 

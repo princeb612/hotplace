@@ -14,7 +14,7 @@
 
 namespace hotplace {
 
-return_t find_unmatched_ranges(const std::multimap<hotplace::range_t, size_t>& results, std::vector<hotplace::range_t>& unmatched) {
+return_t find_unmatched_ranges(const std::multimap<range_t, size_t>& results, std::vector<range_t>& unmatched) {
     return_t ret = errorcode_t::success;
 
     unmatched.clear();
@@ -26,7 +26,7 @@ return_t find_unmatched_ranges(const std::multimap<hotplace::range_t, size_t>& r
 
     if (start_bound >= end_bound) return errorcode_t::bad_data;
 
-    hotplace::t_range_set<size_t> rs_unmatched;
+    t_range_set<size_t> rs_unmatched;
     rs_unmatched.add(start_bound, end_bound - 1);
 
     for (const auto& pair : results) {
@@ -42,7 +42,7 @@ return_t find_unmatched_ranges(const std::multimap<hotplace::range_t, size_t>& r
     unmatched.reserve(merged_intervals.size());
 
     for (const auto& item : merged_intervals) {
-        hotplace::range_t gap_range;
+        range_t gap_range;
         gap_range.begin = item.begin;
         gap_range.end = item.end + 1;
         unmatched.push_back(gap_range);
@@ -51,7 +51,7 @@ return_t find_unmatched_ranges(const std::multimap<hotplace::range_t, size_t>& r
     return ret;
 }
 
-return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results, std::function<bool(matched_t, hotplace::range_t, size_t)> func) {
+return_t travel_ranges(trigger_t trigger, const std::multimap<range_t, size_t>& results, std::function<bool(matched_t, range_t, size_t)> func) {
     return travel_ranges<decltype(func)>(trigger, results, std::move(func));
 }
 

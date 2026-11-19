@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -135,6 +135,18 @@ caller bytes
 ```
 
 The handshake callback and application `send()` are separate paths: `tls_composer` sends already-constructed handshake bytes through `do_send()`, while the concrete secure socket wraps application bytes into an application-data record. The QUIC client currently selects TLS 1.3 and uses the QUIC packet/session path; it should not be read as TLS records being sent directly over UDP.
+
+#### 3.3.5 Bounded buffering while TLS 1.3 early data is pending
+
+The receive-side `secure_prosumer` has a separate bounded-input path for server-side TLS records arriving from the client after ClientHello has been observed but before EncryptedExtensions resolves the early-data offer. The decision window is based on the recorded `session_early_data_offered` state, `session_status_client_hello`, and the absence of `session_status_encrypted_extensions`; it is not inferred solely from the current traffic-key flow. This matters when a failed PSK identity match has already moved protection processing to 1-RTT while the early-data offer is still awaiting the server's EncryptedExtensions decision.
+
+- The default pending-input byte limit is **1 MiB**.
+- The implementation also caps the pending buffer at **64 TLS records**, each bounded by the 5-byte record header plus the 16-bit record length. A configured limit of zero or a value above that hard ceiling selects the hard ceiling instead.
+- For a coalesced ClientHello plus following records, the input path parses complete TLS records incrementally until the early-data decision becomes known, rather than copying the entire coalesced flight into `_mbs` first.
+- If the pending byte or record limit is exceeded, the pending buffer is cleared, a fatal `internal_error` alert is queued, session status is reset, and the operation returns `overflow`.
+- `set_pending_early_data_buffer_limit()` and `get_pending_early_data_buffer_limit()` expose the configured byte limit on `secure_prosumer`.
+
+`testcase_gpt_early_data.cpp` directly exercises this path: it checks the default 1 MiB limit, a configured byte limit, the 64-record hard ceiling, configured-limit and hard-ceiling overflow, session reset, buffering of a partial in-flight record, and release of the buffered plaintext only after EncryptedExtensions accepts early data. The same test group also covers rejected-record discard and HRR handling. These are explicit assertions for the named cases, not proof that every possible input/limit combination has been tested.
 
 #### 3.3.4 How to read the model
 

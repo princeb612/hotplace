@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -43,7 +43,7 @@ JWS header + payload
 The source includes handling for direct (`dir`) and ECDH-ES cases, where CEK derivation differs from ordinary key wrapping.
 
 ## 3. Behavior Model
-For multi-recipient JSON serialization, recipient-specific key-management results are represented separately from the shared content-encryption result. JWE compression is represented by `jose_deflate` in the context; this is protocol processing, not a replacement for the underlying cryptographic implementation.
+For multi-recipient JWE, recipient-specific key-management results are represented separately from the shared content-encryption result in **general JSON serialization**. The current compact and flattened composers serialize only the first recipient entry. JWE compression is represented by `jose_deflate` in the context; this is protocol processing, not a replacement for the underlying cryptographic implementation.
 
 The combined `json_object_signing_encryption` API exposes signing, verification, encryption and decryption through one JOSE-facing context. The focused signing and encryption classes contain the specific processing logic and composer paths.
 
@@ -68,7 +68,7 @@ The example makes the division of responsibility concrete: the caller supplies a
 ## 4. Relationships
 ### Source-test evidence
 
-`testcase_rfc7515.cpp` exercises sign/verify and checks the RFC 7515 A.1 HS256 compact serialization against a known output, with additional flattened/general JSON forms. `testcase_rfc7516.cpp` covers RFC 7516 examples. `testcase_rfc7520.cpp` exercises JWS and JWE examples, including multiple content-encryption and key-management combinations. The provided report lists 164 successful checks under the RFC 7520 group.
+`testcase_rfc7515.cpp` exercises sign/verify and checks the RFC 7515 A.1 HS256 compact serialization against a known output, with additional flattened/general JSON forms. `testcase_rfc7516.cpp` covers RFC 7516 examples. `testcase_rfc7520.cpp` exercises JWS and JWE examples, including multiple content-encryption and key-management combinations. The checked-in [test report snapshot](../../../test/testcase/test-report-status.md) summarizes 295 categorized checks for the entire JOSE testcase directory; it does not provide an RFC 7520-specific count. That report is associated with a MinGW64/GCC run for source Revision 1104 (the report files do not independently identify the tested commit), so it is historical evidence, not a test result for Revision 1132.
 
 - `jose-object-model.md` documents context and recipient/signature state.
 - `jose-key-and-algorithms.md` documents identifiers and JWK conversion.
@@ -83,3 +83,4 @@ The example makes the division of responsibility concrete: the caller supplies a
 - `test/testcase/jose/testcase_rfc7515.cpp`
 - `test/testcase/jose/testcase_rfc7516.cpp`
 - `test/testcase/jose/testcase_rfc7520.cpp`
+- `test/testcase/test-report-status.md` — historical aggregate report snapshot and provenance limits

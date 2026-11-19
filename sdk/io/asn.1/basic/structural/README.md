@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -19,7 +19,7 @@ This note explains the distinction between a structural view of encoded ASN.1 da
 
 ## 2. Data Model
 
-The weakly typed path starts from encoded TLV bytes. Its structural tree preserves the tag class, tag number, primitive/constructed bit, length, and nested TLV nodes. It can describe the wire layout without knowing the schema-level name or declared type of each value.
+The weakly typed path starts from encoded TLV bytes. `asn1_bytestream::read()` first builds a generic `t_tree<asn1_tlv_t>` containing identifier/tag, TLV offset, value offset and content length. The schema-less `asn1_weakly_typed` path then creates `asn1_primitive_node` / `asn1_constructed_node` structural nodes and infers weakly typed semantic objects from the encoded tags. These structural representations preserve tag class, tag number, primitive/constructed bit, length and nested TLV relationships without requiring schema-level names or declared types. The separate `asn1_strongly_typed` path also uses the bytestream TLV tree, but traverses a supplied schema and fills an `asn1_value`; it does not pass through the `asn1_node` tree.
 
 The strongly typed path starts from an ASN.1 schema and represents declared types, references, tag modes, named fields, and semantic values. That schema provides meaning that cannot always be inferred from the bytes alone.
 
@@ -28,17 +28,23 @@ The strongly typed path starts from an ASN.1 schema and represents declared type
 ### Structural decoding and schema interpretation
 
 ```text
-DER bytes
-   |
-   v
-weakly typed TLV tree
-   |  structure and encoded tags
-   |
-   +------ schema / type definitions ------+
-                                           |
-                                           v
-                                strongly typed ASN.1 objects
-                                   declared meaning and values
+                         DER bytes
+                            |
+                            v
+                    asn1_bytestream
+                            |
+                            | t_tree<asn1_tlv_t>
+                 +----------+-----------+
+                 |                      |
+                 v                      v
+       asn1_weakly_typed       asn1_strongly_typed
+          (schema-less)          + ASN.1 schema
+                 |                      |
+                 v                      v
+         asn1_node tree             asn1_value
+                 |                      |
+                 v                      v
+       inferred semantic objects   schema-bound values
 ```
 
 
@@ -49,20 +55,21 @@ The two views answer different questions:
 - The semantic model describes what the data means under a schema: named types, constructed components, referenced types, and explicit/implicit tagging.
 - `IMPLICIT` tagging replaces the inner type's identifier, while `EXPLICIT` tagging wraps the complete inner TLV. The byte-level examples are collected in [Development Notes](#developer-notes).
 
-Do not treat a structural parse as proof that schema-level constraints, references, or named component semantics have been validated.
+The current `asn1_bytestream` path is definite-length oriented: `asn1_encode::read_length()` rejects the indefinite-length marker. It checks TLV child boundaries and uses the identifier/length readers, but it is not a complete DER conformance validator for primitive contents, schema constraints, references, or named component semantics. Do not treat a structural parse as proof that those checks have been performed.
 
 ## 4. Relationships
 - [ASN.1 node model](../asn1-node.md) — structural nodes and their ownership/traversal contract.
 - [ASN.1 object model](../asn1-object-model.md) — strongly typed semantic objects.
 - [tagging examples in Development Notes](#developer-notes) — DER bytes, TLV trees, and tagged semantic forms.
 - `sdk/io/asn.1/basic/semantic/` — type and value hierarchy.
-- `test/testcase/asn.1/testcase_basic2.cpp` and `testcase_basic3.cpp` — semantic/reference-oriented examples.
+- `test/testcase/asn.1/testvector_der.cpp` — weakly typed DER read, notation/value publication, and full-input-consumption checks; it logs re-encoded bytes but does not assert byte-for-byte equality.
+- `test/testcase/asn.1/testcase_basic3.cpp` — module-aware strongly typed IMPLICIT/EXPLICIT tag decoding and DER re-encoding comparisons. There are no direct tests of the structural node API.
 
 ## 5. References
 - ITU-T X.690 — BER/DER encoding rules for TLV structure and tagged encodings.
 
 ## 6. Developer Notes
-The following byte-level examples are retained here because they illustrate the distinction described above without requiring a separate reference page. They are examples of particular encodings, not a coverage claim.
+The following byte-level examples are retained here because they illustrate the distinction described above without requiring a separate reference page. They are examples of particular encodings, not a coverage claim. The `weakly-typed TLV tree` is the bytestream's offset/length tree; the `weakly-typed AST` is a later semantic projection and is not the same object as `asn1_node`.
 
 ### DER/TLV examples retained from the tagging study
 

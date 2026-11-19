@@ -3,8 +3,9 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Source base : Revision 1132          │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```
@@ -235,7 +236,9 @@ http_server_builder
     http_server
 ```
 
-The builder opens the requested endpoints and selects ALPN according to the enabled HTTP version:
+The builder opens endpoints only when at least one address family (IPv4 or IPv6) is enabled. HTTP/3 startup is nested under `enable_https`: setting `enable_h3(true)` alone does not start an HTTP/3 listener. When the HTTPS and H3 flags are both enabled, the builder selects `service_http3`, uses the configured HTTPS port for the QUIC listener, and selects the `socket_scheme_quic` server socket. The current `server_socket_builder` can construct that QUIC socket only through the trial provider; its OpenSSL QUIC branch is unsupported.
+
+The builder selects ALPN according to the enabled HTTP version:
 
 ```text
 HTTP/3 enabled → h3
@@ -243,7 +246,7 @@ otherwise if HTTP/2 enabled → h2
 otherwise              → http/1.1
 ```
 
-This ALPN selection describes the configured TLS/QUIC endpoint. It does not by itself establish that the corresponding HTTP protocol is connected to the request-consumption path; HTTP/3 remains outside the current `consume()` dispatch flow.
+This ALPN selection describes the configured TLS/QUIC endpoint. It does not by itself establish that the corresponding HTTP protocol is connected to the request-consumption path: `http_server::startup_server()` registers HTTP/1.1 and optional HTTP/2 protocol handlers, and `http_server::consume()` dispatches HTTP/1.1 and HTTP/2 only. HTTP/3 remains outside the current request-consumption flow.
 
 ### Router as the application boundary
 
@@ -533,7 +536,7 @@ This makes packet captures part of the development feedback loop: they can expos
 
 ## Status
 
-The latest explicitly recorded HTTP server implementation checkpoint is Revision 1078 / Release 1.137:
+The latest explicitly recorded HTTP server implementation checkpoint remains Revision 1078 / Release 1.137. The current Revision 1132 source recheck confirms the same HTTP/1.1 and HTTP/2 request paths and the bounded HTTP/3 startup-only boundary:
 
 - HTTP/1.1 server path — implemented and tested.
 - HTTP/2 server path — implemented and tested.

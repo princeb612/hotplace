@@ -1,337 +1,109 @@
 # ASN.1 Loader
 
+> Source base : Revision 1132
+
 ## Context
 
-`asn1_loader` is the entry point for bringing an `.asn1` source file or memory buffer into the ASN.1 processing flow. By Revision 1103 it participates in the parser/publisher/module path: input is parsed and published into module-level ASN.1 information, including IMPORTS/EXPORTS and reference-resolution state.
+`asn1_loader` is the source-input adapter for ASN.1 notation. It accepts an in-memory notation buffer or a file and produces a generic `parse_tree`. It deliberately does not own ASN.1 grammar productions, semantic publication, or the module registry.
 
-The loader is not intended to replace the parser or publisher.
-
-Its role is orchestration:
+The current flow is split across distinct components:
 
 ```text
-.asn1
-  ↓
-loader
-  ↓
-Module
-  ↓
-semantic construction
-  ↓
-asn1_module
+ASN.1 file / memory
+       |
+       v
+  asn1_loader
+       |
+       v
+  asn1_parser
+       |
+       +-- tokens
+       |
+       v
+   parse_tree
+       |
+       v
+ asn1_publisher::build()
+       |
+       v
+asn1_build_resultset
+       |
+       v
+ asn1_module / asn1_modules
+       |
+       v
+search / resolve / is_resolvable
 ```
 
-The parser and semantic construction layers remain separate so that the loader composes them rather than reimplementing them.
+The diagram describes the cooperating implementation path. It does not mean that `asn1_loader` itself constructs or registers the runtime module.
 
-## Target responsibility
+## 1. Loader API and responsibilities
 
-The loader begins at the Module boundary.
+The current public entry points in `sdk/io/asn.1/loader/asn1_loader.hpp` are:
 
-A complete load operation is expected to establish:
+| API | Input | Output / responsibility |
+|---|---|---|
+| `load_file(path, parse_tree*)` | ASN.1 file path | Reads the file, tokenizes through the ASN.1 parser adapter, and creates a parse tree |
+| `load(buffer, size, parse_tree*)` | In-memory ASN.1 notation | Parses the supplied notation into a parse tree |
+| `asn1file_to_tokens(parser, path, tokens)` | Parser adapter and file path | Exposes the file-to-token stage separately |
 
-```text
-Module
-├── module name
-├── module-level tagging policy
-├── assignments
-├── definitions
-├── references
-└── other Module semantic information
-        ↓
-asn1_module
-```
-
-The resulting runtime is an environment in which the Module's schemas can be looked up, resolved, and used for runtime value processing.
-
-## Current state
-
-The Revision 1097 parser-entry step has since been extended by the module workflow. In the current path, `asn1_loader` feeds input through `asn1_parser` and `asn1_publisher`; `asn1_module` stores module definitions and imports/exports, and supports `resolve()` / `is_resolvable()` checks. The loader remains orchestration, not a second parser or publisher.
-
-The current flow is therefore:
-
-```text
-.asn1 file / memory
-    ↓
-asn1_loader
-    ↓
-asn1_parser
-    ↓
-parse_tree
-    ↓
-asn1_publisher   (separate current test step)
-    ↓
-asn1_module
-
-Module extraction, Module metadata, and loader-owned runtime registration remain future stages.
-```
-
-The module-level schema path is provided by `asn1_module::add_schema()`:
-
-```text
-schema text
-    ↓
-parse
-    ↓
-parse_tree
-    ↓
-asn1_publisher
-    ↓
-asn1_object
-    ↓
-add()
-```
-
-The loader will eventually orchestrate this kind of operation at Module scope.
-
-## Why Module is the loader boundary
+The distinction is important:
 
-A single ASN.1 type is not the complete runtime environment.
-
-For example:
-
-```asn1
-PersonModule DEFINITIONS ::= BEGIN
-
-Address ::= SEQUENCE {
-    city VisibleString
-}
-
-Person ::= SEQUENCE {
-    name VisibleString,
-    address Address
-}
-
-Employee ::= Person
-
-END
-```
-
-The loader should treat this as one Module:
-
-```text
-PersonModule
-│
-├── Address
-├── Person
-└── Employee
-```
-
-rather than as three unrelated schema strings.
-
-This matters because definitions can reference one another and because Module-level policies, such as tagging mode, affect the interpretation of contained definitions.
-
-## Module → runtime
-
-The intended construction is:
-
-```text
-                  .asn1
-                    │
-                    ▼
-                 loader
-                    │
-              ┌─────┴──────┐
-              │            │
-        Module metadata   assignments
-              │            │
-       tagging policy     publisher
-              │            │
-              │       semantic objects
-              │            │
-              └─────┬──────┘
-                    ▼
-              asn1_module
-                    │
-          ┌─────────┼─────────┐
-          │         │         │
-       namespace  schema   environment
-          │         │         │
-          └─────────┼─────────┘
-                    ▼
-             resolve/linkage
-```
-
-This is the point at which the runtime becomes a usable Module namespace/environment rather than merely a collection of individually constructed objects.
-
-## Tagging policy
-
-Module-level tagging is one of the first pieces of information the loader must establish.
-
-The Module header can specify:
-
-```text
-EXPLICIT TAGS
-IMPLICIT TAGS
-AUTOMATIC TAGS
-```
-
-The loader should interpret this as Module environment state and configure the resulting `asn1_module` accordingly.
-
-This should remain distinct from explicit tagged-type construction:
-
-```text
-Module tagging policy
-        ≠
-individual tagged type
-```
-
-The first is an environment rule. The second is part of an individual semantic object.
-
-## Schema registration
-
-Once semantic construction produces definitions, the loader must register them into the runtime environment.
-
-Conceptually:
-
-```text
-definition
-    ↓
-asn1_object
-    ↓
-asn1_module::add()
-    ↓
-dictionary
-```
-
-References are not definitions. A reference points to another named definition:
-
-```text
-Person
-  └── address → Address
-```
-
-After registration, the runtime can perform:
-
-```text
-lookup
-  ↓
-resolve
-  ↓
-dependency graph
-  ↓
-linkage
-```
-
-This distinction keeps loader orchestration separate from semantic construction.
-
-## Future loading flow
-
-The intended end-to-end flow is:
-
-```text
-                 .asn1
-                   │
-                   ▼
-              asn1_loader
-                   │
-                   ▼
-                Module
-                   │
-          ┌────────┼────────┐
-          │        │        │
-        name      tags   assignments
-          │        │        │
-          │        │        ▼
-          │        │    parser
-          │        │        ↓
-          │        │    parse_tree
-          │        │        ↓
-          │        │    publisher
-          │        │        ↓
-          │        │  semantic objects
-          │        │        │
-          └────────┴────────┘
-                   │
-                   ▼
-             asn1_module
-                   │
-                   ├── definitions
-                   ├── references
-                   ├── constraints
-                   ├── namespace
-                   └── values
-```
-
-The exact internal orchestration can evolve. The stable architectural contract is that the loader owns the Module boundary while parser and publisher own syntax and semantic construction.
-
-## Study & Verification
-
-Current loader verification should remain intentionally small until the lower-level parser and semantic construction experiments stabilize.
-
-The useful milestones are:
-
-1. Load a `.asn1` buffer.
-2. Identify the Module.
-3. Extract Module-level tagging policy.
-4. Construct semantic definitions through the existing parser/publisher path.
-5. Register definitions in an `asn1_module`.
-6. Verify named lookup.
-7. Verify reference resolution.
-8. Verify linkage for tagged/reference combinations.
-9. Use the resulting runtime for typed encode/decode.
-
-The current parser experiments are therefore not separate from the loader work. They are prerequisites for making these milestones reliable.
-
-## Status
-
-```text
-[x] loader interface exists
-[x] file input entry point exists
-[x] memory input entry point exists
-[x] lower-level runtime schema construction exists
-[x] semantic publisher exists
-[x] integrated ASN.1 grammar / GLR grammar checkpoint
-[~] GLR → semantic construction / runtime integration
-[~] Module semantic model
-[ ] Module extraction in loader
-[ ] Module-level tagging configuration in loader
-[ ] Module → asn1_module construction
-[ ] loader-level reference/linkage orchestration
-[ ] end-to-end .asn1 loader tests
-```
-
-The important current state is:
-
-> **The loader has begun, but the parser/semantic front end is being prepared first.**
-
-Once that front end is sufficiently stable, the loader becomes the layer that turns an `.asn1` Module into a configured `asn1_module` namespace/environment.
-
-## Related topics
-
-```text
-parser
-  ↓
-parse_tree
-  ↓
-asn1_publisher
-  ↓
-semantic object
-  ↓
-asn1_module
-  ↑
-loader
-  ↑
-.asn1 Module
-```
-
-The loader is therefore the beginning of the Module-level runtime phase, not another parser implementation.
-
-
-## Runtime usage after loading
-
-The loader's useful result is not merely a collection of parsed assignments. Its result is an `asn1_module` environment that can be resolved and used for value processing:
-
-```text
-.asn1 Module
-     ↓
-   loader
-     ↓
-asn1_module
-     ↓
-resolve / linkage
-     ↓
-lookup named type
-     ↓
-read / publish
-```
-
-This is why Module metadata and semantic definitions must be established before the runtime is handed to encode/decode operations.
+- `load_file()` and `load()` produce syntax trees, not `asn1_module` objects.
+- Semantic construction is performed by `asn1_publisher::build()`.
+- `asn1_parser::to_result()` is a convenience bridge that obtains the shared publisher from `asn1_advisor` and calls `build()`.
+- `asn1_modules` is the named-module registry; it is not owned by the loader.
+
+For callers that want the complete notation-to-result convenience path, `asn1_parser::parse(notation, result)` combines parsing and publication. Callers that need to inspect the intermediate syntax tree can use the loader/parser tree overloads and invoke the publisher separately.
+
+## 2. Source-level execution paths
+
+### Ordinary module fixtures
+
+`test/testcase/asn.1/loader/testcase_loader.cpp` registers two active procedures through `testcase_loader()`:
+
+1. `test_asn1loader_babystep()` loads `example3.asn1` with `load_file()`, calls the publisher explicitly, checks the resulting module names, looks up the expected module, and inspects selected definitions.
+2. `test_loader()` iterates `example1.asn1` through `example5.asn1`. It exposes file-to-token conversion, parse-tree construction, and publisher result construction as separate stages, then checks expected module names, selected assignments, imports/exports, and `is_resolvable()`.
+
+These tests demonstrate the current file → tokens → parse tree → publisher → module path. They do not establish complete grammar coverage, exhaustive malformed-input recovery, or every possible import/reference dependency combination.
+
+### Parameterized notation
+
+The separate active `testcase_parameterized()` group also uses the loader:
+
+- `test_parameterized2()` calls `asn1_loader::load()` for inline `FRAME` / `MyPacket` notation, then calls `asn1_publisher::build()` and compares the reconstructed module representation.
+- `test_parameterized3()` calls `asn1_loader::load_file()` for `example6.asn1`, then publishes the parse tree and checks the module kind, module name, and reconstructed `Envelope {INTEGER}` representation.
+
+These are bounded parser/loader/publisher integration cases. The broader `example7.asn1` vector remains commented out; the active tests do not prove complete support for every parameterized ASN.1 form.
+
+## 3. Module/runtime boundary
+
+The loader's output is a `parse_tree`. The publisher turns that tree into an `asn1_build_resultset`, whose module names and semantic objects are registered in `asn1_modules`. The resulting `asn1_module` stores module-level information such as definitions, tagging defaults, exports, imports, and references.
+
+The module APIs then provide distinct operations:
+
+- `get()` for local object lookup;
+- `search()` for local and imported-symbol lookup;
+- `resolve()` for reference dependency resolution;
+- `is_resolvable()` for checking whether the selected module/object references can be resolved;
+- `represent()` for regenerating module notation.
+
+This separation keeps source acquisition, syntax parsing, semantic reconstruction, and cross-module resolution independently inspectable.
+
+## 4. Current limitations and evidence boundaries
+
+- A successful `load()` or `load_file()` means that the input reached a parse tree; it does not by itself prove successful semantic publication or reference resolution.
+- A successful publisher result for selected fixtures does not establish complete ASN.1 grammar or semantic conformance.
+- Parameterized parser/loader/publisher integration is active for the inline `FRAME` case and file-based `example6.asn1` case, but the broader `example7.asn1` vector remains in progress.
+- The ASN.1 compiler directory remains a design/documentation artifact; the loader is not a source-to-C++ compiler.
+- The supplied aggregate ASN.1 test report is historical runtime evidence associated with Revision 1104 context. This document's Source base is Revision 1132; no test execution is claimed by this documentation update.
+
+## 5. Related implementation and tests
+
+- [SDK loader implementation notes](../../../../sdk/io/asn.1/loader/asn1_loader.md)
+- [ASN.1 parser adapter](../../../../sdk/io/asn.1/runtime/asn1_parser.md)
+- [ASN.1 publisher](../../../../sdk/io/asn.1/runtime/asn1_publisher.md)
+- [ASN.1 module runtime](../../../../sdk/io/asn.1/runtime/asn1_module.md)
+- [Loader testcase](../../../../test/testcase/asn.1/loader/README.md)
+- [Parameterized testcase source](../../../../test/testcase/asn.1/parameterized/testcase_parameterized.cpp)
+- [ASN.1 runtime testcase](../../../../test/testcase/asn.1/runtime/README.md)

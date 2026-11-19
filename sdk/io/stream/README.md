@@ -4,7 +4,7 @@
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
 │ Edition 1 · Revision 1107                     │
-│ Source basis: Revision 1107                   │
+│ Source base : Revision 1132                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -47,7 +47,7 @@ file_stream (common API)
 
 A `file_stream` owns an open platform file resource and may also own a memory mapping and a platform lock. `close()` is the boundary that releases these resources; mapped access should be treated as valid only while the mapping is active. Ordinary file reads and writes use the stream API, while `data()` is intended for direct access to the mapped view.
 
-`printf()` and `vprintf()` reuse `bufferio` from `sdk/base/stream`, format into bytes, and then write those bytes to the file. This is a concrete example of the division between base stream facilities and OS-backed I/O.
+`printf()` and `vprintf()` reuse `bufferio` from `sdk/base/stream`, format into bytes, and then write those bytes to the file. This is a concrete example of the division between base stream facilities and OS-backed I/O. Locking behavior has a platform difference: Linux maps `flag_exclusive_flock` and `flag_share_flock` to `flock(LOCK_EX/LOCK_SH)`, while the Windows implementation uses `LockFileEx` for `flag_exclusive_flock` and leaves the `flag_share_flock` branch empty. The `share_*` convenience flags therefore do not provide equivalent shared-lock behavior on Windows.
 
 ### Concrete mmap-to-stream sequence from `testcase_filestream.cpp`
 

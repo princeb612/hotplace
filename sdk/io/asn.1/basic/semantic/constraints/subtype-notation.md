@@ -1,4 +1,8 @@
 # Developer Notes — Subtype Notation and Value Sets
+
+> Source base : Revision 1132 (reference-table cross-check only)
+>
+> The matrix below is retained from the external ASN.1 tutorial reference. It is not a hotplace implementation-support matrix; consult `asn1_constraints.md` and the current parser/publisher/test paths for the supported forms in this source revision.
 * https://obj-sys.com/asn1tutorial/node18.html
 
 ````

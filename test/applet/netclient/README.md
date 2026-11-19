@@ -3,7 +3,7 @@
 ```text
 hotplace source tree
 Edition 1 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 Scope: runnable network client applet
 ```
@@ -14,7 +14,7 @@ Scope: runnable network client applet
 
 `netclient` is a configurable client applet for exercising hotplace's TCP, UDP, TLS, and DTLS socket paths against matching server applets. It is an interactive integration tool rather than a self-contained unit test: results depend on a reachable server, selected protocol, backend, certificate configuration, and command-line options.
 
-The source maps the `-P` option to TCP, UDP, TLS, TLS 1.2-only, TLS 1.3-only, DTLS, or QUIC modes. The documented peer matrix focuses on TCP/UDP/TLS/DTLS and HTTP integration; the presence of a `quic` option name alone does not prove complete QUIC client coverage.
+The source maps the `-P` option to TCP, UDP, TLS, TLS 1.2-only, TLS 1.3-only, DTLS, or QUIC modes. The `quic` value is parsed and dispatched to `quic_client()`, but the current `quic_client()` body contains only TODO comments for the QUIC composer and trial client/server sockets; it does not create a QUIC connection, send packets, or perform an HTTP/3 exchange. Treat `-P quic` as a reserved/incomplete option, not a working client mode. The documented peer matrix therefore focuses on TCP/UDP/TLS/DTLS and HTTP integration.
 
 ## 2. Integration Model
 

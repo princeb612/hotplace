@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -121,7 +121,7 @@ A conventional cipher call returns ciphertext but does not necessarily authentic
 
 ### ChaCha20 counter and nonce handling
 
-The helper `openssl_chacha20_iv()` prepends a 32-bit counter in little-endian byte order to supplied nonce bytes. In the RFC 7539 test vectors, the supplied nonce field is 8 bytes, so counter + nonce produces the 12-byte nonce expected by the IETF ChaCha20-Poly1305 path. The helper caps its nonce input at 12 bytes; passing a full 12-byte value therefore produces a 16-byte result. Callers must follow the input convention of the specific call site.
+The helper `openssl_chacha20_iv()` appends a 32-bit counter in little-endian byte order followed by the supplied nonce bytes to the output `binary_t`; it does not clear an existing output buffer, so callers normally pass an empty buffer. In the RFC 7539 test vectors, the supplied nonce field is 8 bytes, so counter + nonce produces the 12-byte nonce expected by the IETF ChaCha20-Poly1305 path. The helper caps its nonce input at 12 bytes; passing a full 12-byte value therefore produces a 16-byte result. Callers must follow the input convention of the specific call site.
 
 This helper represents the counter-plus-nonce layout used by the original ChaCha20 interface/test-vector convention. It must not be confused with the ChaCha20-Poly1305 AEAD API, which passes its nonce to the selected EVP cipher and configures AEAD nonce length separately. IV/nonce layouts are algorithm- and API-specific; they are not interchangeable byte strings.
 
@@ -183,7 +183,7 @@ openssl_crypt::decrypt_internal()
 
 #### Source flow and limitations
 
-1. `ossl_set_cooltime()` and `ossl_set_unitsize()` configure global tuning values in `sdk/openssl_tune.cpp`.
+1. `ossl_set_cooltime()` and `ossl_set_unitsize()` configure global tuning values in `sdk/crypto/basic/sdk/openssl_tune.cpp`.
 2. Encryption and decryption each read the current cooltime when the internal operation reaches the data-processing stage.
 3. If pacing is enabled for the selected mode, the code walks the input by the advisor-reported cipher block size, calls `EVP_CipherUpdate()` repeatedly, and sleeps after the processed-byte accumulator crosses the configured threshold.
 4. Finalization still runs through `EVP_CipherFinal()`; AEAD tag handling remains in the surrounding operation flow. Pacing changes the update schedule, not the cipher or its security properties.
@@ -192,15 +192,15 @@ This is a best-effort pacing mechanism. The threshold is checked after each bloc
 
 #### Existing source-test path
 
-`test/testcase/crypto/crypt/testcase_openssl_crypt.cpp` runs the routine first with `cooltime = 10` ms and `unitsize = 4096`, then with `cooltime = 0` for the speed path. The test reports these as a large-stream/performance condition and a speed condition; it uses a short fixed string and a matrix of algorithms/modes, so it is **not evidence of CPU-load reduction on a genuinely large file**.
+`test/testcase/crypto/crypt/testcase_openssl_crypt.cpp` runs the routine first with `cooltime = 10` ms and `unitsize = 4096`, then with `cooltime = 0` for the speed path. The source comment labels the first run as a large-stream performance check and the second as a speed path. Within each routine, `do_test_crypt_routine()` checks the decrypted length and compares the recovered bytes with the original input. The actual input is a short fixed string exercised across an algorithm/mode matrix, so this is a round-trip correctness/pacing path check, **not evidence of CPU-load reduction on a genuinely large file or a benchmark**.
 
 One detail worth preserving: the second call passes `unitsize = 0`, but `ossl_set_unitsize(0)` returns `invalid_parameter`. Because the test does not check that setter's return value, the prior 4096-byte threshold remains in place. That does not affect the second run's pacing decision because cooltime is set to zero.
 
-The implementation questions identified above are tracked in [`follow-up-workspace/README.md`](../../../../follow-up-workspace/README.md) under **CRYPTO-01**; this document retains the current implementation behavior and limitations.
+
 
 ### Algorithm inventory caveat
 
-The source-maintained cipher/mode inventory in [Cipher](../cipher.md) records combinations represented by the source. It does not guarantee that every algorithm/mode is enabled by every OpenSSL build or provider.
+The source-maintained cipher/mode inventory in [Cryptographic Primitives](../README.md#61-cipher-inventory) records combinations represented by the source. It does not guarantee that every algorithm/mode is enabled by every OpenSSL build or provider.
 
 ### Practical use: build a cipher, round-trip bytes, then release it
 
@@ -246,7 +246,7 @@ if (aead) {
 }
 ```
 
-The important contract is that the tag is a separate output of encryption and an input to decryption, while AAD is supplied to both operations but is not encrypted into the ciphertext. The test exercises round trips for several AES-GCM/CCM scheme identifiers; it does not establish interoperability with another implementation or define a production nonce-generation strategy. The test's fixed key and IV are fixtures and must not be copied into application code.
+The important contract is that the tag is a separate output of encryption and an input to decryption, while AAD is supplied to both operations but is not encrypted into the ciphertext. The testcase calls decrypt and records the operation status, but it does **not** compare the decrypted plaintext with the original input; it is API-path/status coverage, not a byte-for-byte round-trip assertion. It also exercises empty-plaintext calls for the listed GCM/CCM and ChaCha20-Poly1305 schemes. It does not establish interoperability with another implementation or define a production nonce-generation strategy. The test's fixed key and IV are fixtures and must not be copied into application code.
 
 ## 4. Relationships
 - `crypto_advisor` maps `crypto_scheme_t` and names to cipher metadata and OpenSSL methods; metadata does not guarantee provider availability.

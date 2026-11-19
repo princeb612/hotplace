@@ -114,6 +114,14 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         auto tls_version = protection.get_tls_version();
         auto is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
 
+        const size_t body_end = offsetof_body() + get_body_size();
+        if ((body_end > size) || (pos > body_end)) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
+
         crypto_keychain keychain;
 #if defined DEBUG
         uint8 request_context_len = 0;
@@ -130,7 +138,13 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
             pl.set_reference_value(constexpr_certificates, constexpr_certificates_len);
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, body_end, pos);
+            if ((errorcode_t::success != ret) || (pos != body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
 #if defined DEBUG
             request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
@@ -169,7 +183,15 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
         uint16 idx = 0;
         size_t cpos = 0;
-        while (cpos + 3 < certificates_len) {
+        while (cpos < certificates_len) {
+            if (certificates_len - cpos < 3) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                break;
+            }
+
+            const size_t certificate_entry_start = cpos;
             // [0] server certificate                 ex. Issuer: C=US, O=Google Trust Services, CN=WE2
             // [1] intermediate certificate authority ex. Issuer: C=US, O=Google Trust Services LLC, CN=GTS Root R4
             // [2] root certificate authority         ex. Issuer: C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA
@@ -183,7 +205,13 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
 
-            pl.read(certificates.data(), certificates.size(), cpos);
+            ret = pl.read(certificates.data(), certificates.size(), cpos);
+            if ((errorcode_t::success != ret) || (cpos <= certificate_entry_start)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                break;
+            }
 
             binary_t cert;
 
@@ -191,6 +219,12 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             uint32 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
 #endif
             pl.get_binary(constexpr_certificate, cert);
+            if (cert.empty()) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                break;
+            }
 
 #if defined DEBUG
             uint16 extensions_len = 0;
@@ -229,10 +263,27 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
             if (is_tls13 && (false == cert_extensions.empty())) {
                 tls_extensions extensions;
-                extensions.read(this, dir, cert_extensions);
+                ret = extensions.read(this, dir, cert_extensions);
+                if (errorcode_t::success != ret) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
+                    ret = errorcode_t::bad_format;
+                    break;
+                }
             }
 
             idx++;
+        }
+
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
+
+        if (cpos != certificates_len) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
         }
 
 #if defined DEBUG
@@ -302,7 +353,10 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             uint32 certificates_len = 3 /* uint24 */ + certificate_len;  // TLS 1.2
             if (is_tls13) {
                 certificates_len += sizeof(uint16);
-                get_extensions().write(dir, extensions);
+                ret = get_extensions().write(dir, extensions);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
             }
 
             payload pl;
@@ -314,7 +368,10 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
                << new payload_member(uint16(extensions.size()), true, constexpr_certificate_extensions_len, constexpr_group_tls13);  // extensions
 
             pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
-            pl.write(bin);
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             if (is_tls13) {
                 binary_append(bin, extensions);

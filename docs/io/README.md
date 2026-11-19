@@ -1,5 +1,7 @@
 # IO
 
+> Source base : Revision 1132
+
 ## Context
 
 `sdk/io` is the layer where the common foundation from `sdk/base` becomes **structured input/output processing**.
@@ -54,7 +56,7 @@ The current IO layer reflects several major development lines that accumulated o
 - compression/encoding support
 - platform-specific stream and system handling
 
-The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
+The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, HTTP/3, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
 
 The ASN.1 history is easier to follow as a sequence of related steps:
 
@@ -67,8 +69,12 @@ The ASN.1 history is easier to follow as a sequence of related steps:
   - Revision 1102 renames `asn1_runtime`/`asn1_runtime_context` to `asn1_module`/`asn1_module_context` and extends parameterized-assignment grammar.
   - Revision 1103 fixes `TypeAssignment` semantic publication.
   - Revision 1104 renames the module registry to `asn1_modules`, advances binary parsing tables to revision 3, and prototypes parameterized type/value semantic support.
+  - Revisions 1120/1122 add runtime parameterized-type specialization and instantiation work.
+  - Revision 1123 advances publisher reconstruction of parameterized type definitions and formal parameter lists.
+  - Revision 1124 adds the instantiation path: parse-tree visitation carries a subtree state, the publisher collects actual type/value parameters, and the referenced parameterized type is specialized. The parameterized testcase checks reconstruction of a concrete `FRAME` instantiation; the ASN.1 parsing-table format also advances to revision 4.
+  - Revision 1125 adds move-aware specialization overloads and extends OID processing with named ASN.1 arc extraction and dictionary-backed reconstruction of ASN.1-braced notation.
 
-The current `asn1_module::add_schema()` path selects GLR, while LALR remains available for the notation-oriented path and parameterized semantic instantiation remains incomplete.
+The current `asn1_module::add_schema()` path selects GLR, while LALR remains available for the notation-oriented path. Parameterized semantic instantiation is no longer only a prototype: `test/testcase/asn.1/parameterized/testcase_parameterized.cpp` actively runs `test_parameterized2()` and `test_parameterized3()`. The former calls `asn1_loader::load()` for inline `FRAME` / `MyPacket` notation, publishes the parse tree, and compares the reconstructed module representation; the latter calls `asn1_loader::load_file()` for `example6.asn1`, publishes it, and checks the module kind, name, and `Envelope {INTEGER}` reconstruction. This is a bounded integrated path, not evidence of complete support for every ASN.1 parameter form, nesting pattern, or edge case.
 
 Therefore the IO history should be read as several converging processing paths rather than as one subsystem designed at once.
 
@@ -131,7 +137,7 @@ protocol
   = what those fields mean
 ```
 
-This is why the payload layer can be reused by HTTP/2, QUIC, TLS and other binary protocols without becoming a protocol implementation itself.
+This is why the payload layer can be reused by HTTP/2, HTTP/3, QUIC, TLS and other binary protocols without becoming a protocol implementation itself.
 
 ### 3. Constructing structured data
 
@@ -147,7 +153,7 @@ structure
 semantic object
 ```
 
-The important point is that these are different stopping points. A parser can stop at syntax structure, while ASN.1 can continue into a semantic runtime model. Protocol layers such as HTTP/2, TLS, or QUIC then interpret their own wire structures according to protocol rules.
+The important point is that these are different stopping points. A parser can stop at syntax structure, while ASN.1 can continue into a semantic runtime model. Protocol layers such as HTTP/2, HTTP/3, TLS, or QUIC then interpret their own wire structures according to protocol rules.
 
 ## Reading path
 

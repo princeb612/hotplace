@@ -3,7 +3,7 @@
 ```text
 hotplace source tree
 Edition 2 · Revision 1107
-Source basis: Revision 1107
+Source base : Revision 1132
 Documented with GPT-6
 — testcase inputs, procedures & verification
 ```
@@ -12,7 +12,7 @@ Documented with GPT-6
 
 ## 1. What
 
-`test/testcase/tls/` is the TLS/DTLS testcase group. Its entry point, `sample.cpp`, registers tests for TLS 1.2 and TLS 1.3 processing, DTLS construction and fragmentation, selected RFC 8448 handshake traces, pre-master/traffic-secret handling, TLS 1.2 AEAD record protection, ML-KEM encoding, alerts, HelloRetryRequest, and YAML-driven record replay.
+`test/testcase/tls/` is the TLS/DTLS testcase group. Its entry point, `sample.cpp`, registers tests for TLS 1.2 and TLS 1.3 processing, DTLS construction and fragmentation, selected RFC 8448 handshake traces, pre-master/traffic-secret handling, TLS 1.2 AEAD record protection, ML-KEM encoding, alerts, HelloRetryRequest, TLS 1.3 ticket/PSK binder and early-data behavior, and YAML-driven record replay.
 
 This directory is not one end-to-end network interoperability test. Most executable cases drive implementation APIs with constructed or captured record bytes; separate subdirectories preserve packet captures and client/server debug logs from particular experiments.
 
@@ -22,7 +22,7 @@ The YAML-backed path uses the `PCAP SIMPLE` schema:
 - **Processing:** the consumer creates a new `tls_session` for each vector and feeds the listed records through `dump_record`.
 - **Checks:** malformed `protocol` or `dir` values cause an assertion; fatal alerts normally cause a failed testcase, with an explicit exception for `certificate_unknown`. Empty or undecodable record bytes are skipped by the current implementation.
 
-The group also includes tests that do not use YAML, such as constructed handshake flows, explicit secret/transcript-hash comparisons, RFC 8448 traces, and DTLS fragmentation-oriented construction.
+The group also includes tests that do not use YAML, such as constructed handshake flows, explicit secret/transcript-hash comparisons, RFC 8448 traces, TLS 1.3 PSK/ticket/early-data paths, and DTLS fragmentation-oriented construction.
 
 PCAP files and their associated Markdown client/server logs are supporting experiment inventories, not separate CTest targets. The child READMEs are intentionally maintained as inventories of these artifacts. QUIC tests are separate under `test/testcase/quic/`.
 
@@ -61,7 +61,7 @@ Use this map to distinguish a fixed expected-value assertion from a parser/statu
 ### 2.1 Test dispatch and build inputs
 
 1. The testcase entry point in `sample.cpp` initializes the shared testcase harness, logger, command-line options, and OpenSSL support.
-2. In the normal test mode, it runs resource validation; TLS 1.3, TLS 1.2, and DTLS walkthroughs; selected RFC 8448 examples; pre-master-secret processing; TLS 1.2 AEAD and ML-KEM encoding; YAML record replay; HelloRetryRequest and alert cases; and TLS/DTLS record-construction tests.
+2. In the normal test mode, it runs resource validation; TLS 1.3, TLS 1.2, and DTLS walkthroughs; selected RFC 8448 examples; pre-master-secret processing; TLS 1.2 AEAD and ML-KEM encoding; the `testcase_gpt()` group (including PSK, ticket, binder, HRR and early-data cases); YAML record replay; HelloRetryRequest and alert cases; and TLS/DTLS record-construction tests.
 3. The TLS directory's `CMakeLists.txt` collects top-level `.cpp` files into the `tls` testcase target and copies top-level `.yml` files into the build tree's TLS testcase directory.
 4. `testvector_pcap.cpp` opens the copied YAML files by their configured filenames. The ML-KEM TLS 1.3 vector is included only when `OPENSSL_VERSION_NUMBER >= 0x30500000L`.
 5. The PCAP and peer-log files in the version-specific subdirectories document recorded experiments; they are not added as individual CTest targets by this directory's CMake configuration.
@@ -90,7 +90,18 @@ Use this map to distinguish a fixed expected-value assertion from a parser/statu
 
 4. In the ChaCha20-Poly1305 case, the source derives TLS 1.2 key-block values from fixed master-secret and random inputs, compares the client write key and IV with fixed expected bytes, and decrypts captured client/server Finished records against expected plaintext handshake bytes. This is targeted evidence for those exact values and records, not a full-handshake interoperability test.
 
-### 2.5 PCAP SIMPLE YAML vectors
+### 2.5 TLS 1.3 PSK, ticket, and early-data paths
+
+The `sample.cpp` entry point invokes `testcase_gpt()`, which dispatches `testcase_gpt_psk()`, `testcase_gpt_psk_offer()`, and `testcase_gpt_early_data()` in addition to negotiation, certificate, record, session-ticket, and Finished groups.
+
+- `testcase_gpt_psk.cpp` covers server/client ticket PSK derivation, per-ticket binder hashes, fresh-connection binder validation, RFC 8448 binder vectors, HRR transcript binders, ClientHello2 binder round trips, incompatible PSK hashes after HRR, and rejection of unoffered PSK modes.
+- `testcase_gpt_psk_offer.cpp` covers ticket-age/lifetime eligibility, expired-ticket full-handshake fallback, selected_identity encoding and range, multiple-ticket offers, PSK-KE ServerHello, key-exchange-mode requirements, and SNI binding.
+- `testcase_gpt_early_data.cpp` covers EndOfEarlyData prerequisites, identity-zero selection, ticket permission, ALPN/version/cipher compatibility, early-data offer/accept/reject behavior, bounded client early data, rejected-record discard, pending in-flight records until EncryptedExtensions, and buffered-record handling across HRR.
+- The early-data test also checks `secure_prosumer`'s default 1 MiB pending-ciphertext limit, a configured byte limit, the fixed 64-record hard ceiling, configured-limit overflow, hard-ceiling overflow, session reset, and release of buffered plaintext only after the EncryptedExtensions decision.
+
+These are source-level assertions in the registered testcase group. They do not establish that the tests were executed in this documentation audit or that every TLS 1.3 RFC requirement is implemented.
+
+### 2.6 PCAP SIMPLE YAML vectors
 
 The authoritative schema example is kept here because `testvector_pcap.cpp` is the consumer for this format. The following is valid YAML-shaped input; `string` and `hexstring` are explanatory placeholders, not literal values.
 
@@ -125,7 +136,7 @@ Field meanings:
 
 The handler does not enforce a separate full schema contract beyond the checks described above. In particular, an empty decoded record is skipped, and a vector's successful completion is not a byte-for-byte comparison of a full PCAP file against a newly captured network run.
 
-### 2.6 Recorded experiment inventories
+### 2.7 Recorded experiment inventories
 
 The following subdirectories retain their original inventory role: each README maps captures to the corresponding client/server logs and records useful experiment conditions. These are not rewritten as executable testcase procedures.
 
@@ -197,6 +208,18 @@ ClientHello with enforced initial key-share group
 ```
 
 **Assertion strength:** the testcase checks selected session-status bits and the expected flow transition for this constructed scenario. It does not prove every HelloRetryRequest negotiation combination.
+
+#### TLS 1.3 PSK and early-data verification
+
+The PSK/early-data group is registered through `testcase_gpt()` and includes explicit checks beyond a successful parser return:
+
+- Ticket PSKs and binders are compared against fixed expected values or round-trip derivations; HRR and ClientHello2 binder transcript paths are exercised.
+- ServerHello `selected_identity` is checked for wire length, offered-index range, PSK mode/key_share compatibility, and cipher-suite hash compatibility.
+- Early-data acceptance is checked against identity zero and ticket metadata, including the negotiated ALPN/version/cipher suite and the ticket's maximum early-data allowance.
+- Pending early-data records are buffered until EncryptedExtensions, then released only after acceptance; rejected data is discarded under the configured discard budget. HRR-specific buffered-data handling is also exercised.
+- The secure-prosumer tests explicitly exercise the default/configured pending ciphertext byte limits and the fixed record-count-derived hard ceiling, including overflow and session reset.
+
+These assertions cover the listed source scenarios only; they are not a complete TLS 1.3 conformance proof.
 
 #### PCAP SIMPLE vector replay
 

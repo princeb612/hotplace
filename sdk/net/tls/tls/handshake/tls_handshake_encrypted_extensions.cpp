@@ -21,16 +21,77 @@
 namespace hotplace {
 namespace net {
 
+static void rollback_encrypted_extensions_early_data(tls_session* session, tls_flow_t original_flow) {
+    if (nullptr == session) {
+        return;
+    }
+
+    auto& protection = session->get_tls_protection();
+    session->reset_session_status();
+
+    // A failed EncryptedExtensions message terminates the handshake. Retire
+    // provisional PSK/binder and 0-RTT secrets, but preserve handshake traffic
+    // secrets so a fatal alert can still use the installed handshake keys.
+    auto& secrets = protection.get_secrets();
+    secrets.assign(tls_secret_t::resumption_early, binary_t());
+    secrets.erase(tls_secret_t::resumption_binder_hash);
+    secrets.erase(tls_secret_t::resumption_binder_key);
+    secrets.erase(tls_secret_t::resumption_finished_key);
+    secrets.erase(tls_secret_t::resumption_finished);
+    secrets.assign(tls_secret_t::c_e_traffic, binary_t());
+    secrets.assign(tls_secret_t::e_exp_master, binary_t());
+    secrets.assign(tls_secret_t::c_e_traffic_key, binary_t());
+    secrets.assign(tls_secret_t::c_e_traffic_iv, binary_t());
+
+    auto& session_kv = session->get_keyvalue();
+    session_kv.set(session_server_psk_selected_identity, 0xffff);
+    session_kv.set(session_server_psk_key_exchange_mode, 0xffff);
+    session_kv.set(session_server_psk_ticket_cipher_suite, 0);
+    session->set_offered_resumption_tickets(std::vector<tls_resumption_ticket>());
+    session->clear_early_data_ticket();
+    auto& early_data_state = session->get_session_info(from_server).get_keyvalue();
+    early_data_state.set(session_early_data_offered, 0);
+    early_data_state.set(session_early_data_offered_initial, 0);
+    early_data_state.set(session_early_data_limit, 0);
+    early_data_state.set(session_early_data_accepted, 0);
+    auto& client_info = session->get_session_info(from_client);
+    if (tls_flow_t::zero_rtt == original_flow) {
+        // A final ServerHello derives the client handshake traffic secret.
+        // Malformed/out-of-order EncryptedExtensions can arrive before that
+        // point, so zero_rtt alone does not prove that handshake keys exist.
+        const auto& client_handshake_secret = protection.get_secrets().get(tls_secret_t::c_hs_traffic);
+        protection.set_flow(tls_flow_t::one_rtt);
+        if (false == client_handshake_secret.empty()) {
+            // The final ServerHello installed handshake keys; use them for
+            // the fatal alert instead of retaining the obsolete 0-RTT key.
+            client_info.begin_protection();
+            session->reset_recordno(from_client);
+        } else {
+            // No handshake key exists yet (for example, invalid EE after
+            // ClientHello/HRR only). Disable the early-data protection.
+            client_info.reset_protection();
+        }
+    } else if (tls_flow_t::hello_retry_request == original_flow) {
+        // EncryptedExtensions before a final ServerHello is out of order;
+        // HRR has not installed handshake traffic keys, so keep this path
+        // unprotected while terminating the handshake.
+        protection.set_flow(tls_flow_t::one_rtt);
+        client_info.reset_protection();
+    }
+}
+
 tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_handshake_type_t::encrypted_extensions, session) {}
 
 tls_handshake_encrypted_extensions::~tls_handshake_encrypted_extensions() {}
 
 return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
+    tls_flow_t original_flow = tls_flow_t::one_rtt;
     __try2 {
         auto session = get_session();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
+        original_flow = protection.get_flow();
 
         // RFC 8446 4.2.11: if the server accepts early data in EncryptedExtensions,
         // it MUST have selected the first PSK identity offered by the client.
@@ -86,49 +147,75 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
             ret = session->get_secure_prosumer()->resume_pending_records(session, from_client);
         }
     }
-    __finally2 {}
+    __finally2 {
+        if ((from_server == dir) && (errorcode_t::success != ret)) {
+            // Invalid EncryptedExtensions cannot leave 0-RTT active after
+            // the peer has rejected the server's early-data decision.
+            rollback_encrypted_extensions_early_data(get_session(), original_flow);
+        }
+    }
     return ret;
 }
 
 return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
+    tls_flow_t original_flow = tls_flow_t::one_rtt;
     __try2 {
+        auto session = get_session();
+        original_flow = session->get_tls_protection().get_flow();
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         {
-            // RFC 8446 2.  Protocol Overview
-            // EncryptedExtensions:  responses to ClientHello extensions that are
-            //    not required to determine the cryptographic parameters, other than
-            //    those that are specific to individual certificates.
-            //    [Section 4.3.1]
+            // RFC 8446 4.3.1: the extension vector must fit exactly
+            // within this handshake message body.
+            // auto& protection = session->get_tls_protection();
+            const size_t body_end = offsetof_body() + get_body_size();
+            if ((body_end > size) || (pos > body_end) || (body_end - pos < sizeof(uint16))) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
-            // RFC 8446 4.3.1.  Encrypted Extensions
-            // struct {
-            //     Extension extensions<0..2^16-1>;
-            // } EncryptedExtensions;
+            uint16 len = ntoh16(*(uint16*)(stream + pos));
+            pos += sizeof(uint16);
+            if (len != body_end - pos) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
-            // RFC 8446 4.3.1.  Encrypted Extensions
-
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            if (protection.is_kindof_tls()) {
-                uint16 len = ntoh16(*(uint16*)(stream + pos));
-                pos += 2;
-                ret = get_extensions().read(this, dir, stream, pos + sizeof(uint16) + len, pos);
-            } else if (protection.is_kindof_dtls() || (tls_flow_t::zero_rtt == protection.get_flow())) {
-                // DTLS 1.3 ciphertext
-                //
-                pos += 2;  // len
-                ret = get_extensions().read(this, dir, stream, size, pos);
+            ret = get_extensions().read(this, dir, stream, body_end, pos);
+            if (errorcode_t::no_more == ret) {
+                // The EncryptedExtensions body is complete. A short trailing
+                // extension header is malformed wire input, not fragmentation.
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
+            if (pos != body_end) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
             }
 
             session->clear_scheduled_extensions();  // release ALPN
         }
     }
-    __finally2 {}
+    __finally2 {
+        if ((from_server == dir) && (errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
+            rollback_encrypted_extensions_early_data(get_session(), original_flow);
+        }
+    }
     return ret;
 }
 

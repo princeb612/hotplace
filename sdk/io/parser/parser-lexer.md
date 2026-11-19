@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -39,7 +39,7 @@ lexical_analyzer lexer;
 lexical_context context;
 prepare_lexer_asn1(lexer);  // testcase helper: registers the ASN.1 vocabulary
 lexer.get_config().set("handle_comments", 1).set("handle_lvalue_usertype", 1);
-lexer.add_token("::=", token_assign);
+// prepare_lexer_asn1() already registers the ASN.1 assignment token.
 
 const char* source = "Name ::= VisibleString";
 lexer.parse(context, source, strlen(source));
@@ -65,10 +65,10 @@ A token stores its lexical ID and coordinates into the original source.
 
 | Field | Meaning |
 |---|---|
-| Token ID | Vocabulary entry recognized by the lexer |
+| Token ID | Token category/type recognized by the lexer (for example, identifier, assignment, or usertype) |
 | Position / length | Byte range of the lexeme in the source |
 | Line | Source line associated with the token |
-| Token index | Position in the lexical sequence |
+| Lookup index | Vocabulary lookup entry assigned by the lexer; it is not the token's ordinal position in the source |
 
 The token need not own a copy of the lexeme. as_string() materializes text from the source span when required.
 
@@ -87,10 +87,10 @@ lexical_context
        ├─ lexer ID
        ├─ source offset / length
        ├─ line
-       └─ token index
+       └─ vocabulary lookup index
 ```
 
-The token sequence can outlive the immediate scan operation, but token text remains valid only while the referenced source storage remains valid.
+The token sequence can outlive the immediate scan operation, but token text remains valid only while the referenced source storage remains valid. There is also a field-name distinction in the current API: `lexical_context::get(index, desc)` writes the requested sequence position to `desc.index`, while `lexical_context::for_each()` writes the sequence ordinal to `desc.idx` and copies `lexical_token::get_index()` (the vocabulary lookup entry) to `desc.index`. Do not interpret `desc.index` identically across these two access paths.
 
 ### Separate token namespaces
 
@@ -136,7 +136,7 @@ A lexical context represents tokenization, not grammar acceptance. The next stag
 
 ### Source-level evidence
 
-test/testcase/io/parser/testcase_lexer.cpp::test_lexer() feeds a multi-line PersonnelRecord fragment to the lexer. The basic pass asserts 105 tokens; the ASN.1-configured pass registers ::= and --, enables handle_lvalue_usertype, and asserts 93 tokens. test_lexer_hexstring() enables handle_hexstring and compares the actual token-ID sequence for Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String } against an expected sequence.
+test/testcase/io/parser/testcase_lexer.cpp::test_lexer_options() runs ten configuration/input rows and records parse status, token count, and first token type; it does not compare every token in each row. test_lexer() feeds a multi-line PersonnelRecord fragment to the lexer. The basic pass asserts 105 tokens; the ASN.1-configured pass registers ::= and --, enables handle_lvalue_usertype, and asserts 93 tokens, but does not record the lexer return status. test_lexer_hexstring() enables handle_hexstring and compares the actual token-ID sequence for Pkt1Header ::= PACKET-HEADER{ '404B5431'H, IA5String } against an expected sequence; it also does not record the lexer return status.
 
 ## 4. Relationships
 ### Related document

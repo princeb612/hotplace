@@ -37,6 +37,12 @@ namespace net {
 #define KID_TLS_CLIENT_CERTIFICATE_PRIVATE "CC.priv"
 #define KID_TLS_SERVER_CERTIFICATE_PRIVATE "SC.priv"
 
+// Controls whether AEAD decryption failures are reported as TLS alerts.
+enum class decrypt_alert_policy_t {
+    report,
+    suppress,
+};
+
 class HOTPLACE_NET_API protection_context {
    public:
     protection_context();
@@ -267,13 +273,30 @@ class HOTPLACE_NET_API tls_protection {
     // stream include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                      protection_space_t space = protection_space_t::tls);
-    // Trial decryption is used only when rejecting TLS 1.3 early data. Authentication
-    // failure is returned without queuing bad_record_mac; the caller restores the
-    // record sequence number before discarding the rejected record.
-    return_t decrypt_trial(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                           protection_space_t space = protection_space_t::tls);
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad,
                      protection_space_t space = protection_space_t::tls);
+
+    /**
+     * @brief   TLS 1.3 decrypt
+     * @remarks
+     *          application_data
+     *          |   dir       | desc                    | client  | server  | key/iv        |
+     *          | from_server | client session (C <- S) | decrypt | encrypt | server key/iv |
+     *          | from_client | server session (C -> S) | encrypt | decrypt | client key/iv |
+     *
+     *          encrypt(&server_session, record, protected_record);
+     *          decrypt(&client_session, protected_record, record);
+     *
+     *          stream include a tag
+     */
+    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+                          protection_space_t space = protection_space_t::tls, decrypt_alert_policy_t alert_policy = decrypt_alert_policy_t::report);
+    /**
+     * @brief   decrypt
+     * @remarks stream do not include a tag
+     */
+    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+                          const binary_t& tag, protection_space_t space = protection_space_t::tls, decrypt_alert_policy_t alert_policy = decrypt_alert_policy_t::report);
     // stream do not include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
                      const binary_t& tag, protection_space_t space = protection_space_t::tls);
@@ -307,27 +330,6 @@ class HOTPLACE_NET_API tls_protection {
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag,
                           protection_space_t space = protection_space_t::tls);
     return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& iv, binary_t& maced);
-    /**
-     * @brief   TLS 1.3 decrypt
-     * @remarks
-     *          application_data
-     *          |   dir       | desc                    | client  | server  | key/iv        |
-     *          | from_server | client session (C <- S) | decrypt | encrypt | server key/iv |
-     *          | from_client | server session (C -> S) | encrypt | decrypt | client key/iv |
-     *
-     *          encrypt(&server_session, record, protected_record);
-     *          decrypt(&client_session, protected_record, record);
-     *
-     *          stream include a tag
-     */
-    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                          protection_space_t space = protection_space_t::tls, bool suppress_alert = false);
-    /**
-     * @brief   decrypt
-     * @remarks stream do not include a tag
-     */
-    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                          const binary_t& tag, protection_space_t space = protection_space_t::tls, bool suppress_alert = false);
     /**
      * @brief   TLS 1 decrypt
      */

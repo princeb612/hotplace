@@ -144,7 +144,10 @@ return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, 
             payload pl;
             pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms)  //
                << new payload_member(bin_algorithms, constexpr_algorithm);
-            pl.write(bin);
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
     }
     __finally2 {}

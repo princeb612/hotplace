@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -137,7 +137,7 @@ These are separate contracts from ECDSA/DSA/RSA supplied-signature vectors. Do n
 
 ### Documentation and verification status
 
-The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv entries. The shared [Test Report Snapshot](../../test-report-status.md) associates the last known run with Revision 1104 · MinGW64/GCC · CTest based on conversation context; the report itself does not identify the tested source revision or full build configuration. This is historical runtime evidence, separate from the Revision 1106 documentation basis. No runtime tests were executed as part of this documentation update.
+A previously supplied aggregate crypto report snapshot (not tracked as `test/testcase/crypto/report` in this branch) records 4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv entries. The shared [Test Report Snapshot](../../test-report-status.md) associates the last known run with Revision 1104 · MinGW64/GCC · CTest based on conversation context; the snapshot itself does not identify the tested source commit or full build configuration. This is historical runtime evidence, separate from the Source base : Revision 1132. No runtime tests were executed as part of this documentation update.
 
 ## 4. Relationships
 

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -23,7 +23,7 @@ The layer includes:
 - tokenization, URL decomposition, and character conversion;
 - grammar-based lexical and syntactic parsing;
 - CBOR object representation and byte conversion;
-- ASN.1 notation, semantic models, loading/compiler paths, and runtime parsing/encoding.
+- ASN.1 notation, semantic models, loader and runtime parsing/encoding, plus compiler design documentation.
 
 Higher-level modules decide how these facilities are composed for a particular protocol or application. A helper's presence in `sdk/io` does not itself imply protocol-level validation or full conformance to a referenced standard.
 

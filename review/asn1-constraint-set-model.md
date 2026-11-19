@@ -1,6 +1,7 @@
 # ASN.1 Constraint → Set Model
 
-> **Review baseline:** Revision 1097
+> **Review baseline:** Revision 1132
+> **Source base : Revision 1132**
 
 ## Review thesis
 
@@ -50,12 +51,12 @@ The runtime layer selects the representation according to the value type:
                          │
               ┌──────────┴──────────┐
               │                     │
-       T == std::string        other value types
+       T == std::string        integral / floating-point
               │                     │
          string_set          t_range_set<...>
 ```
 
-This is important because string constraints and numeric/range constraints have different natural representations, while their higher-level role is the same: **describe the permitted value domain**.
+This is important because string constraints and numeric/range constraints have different natural representations, while their higher-level role is the same: **describe the permitted value domain**. The current `t_set_runtime<T>` facade is constrained to `std::string`, integral types, and floating-point types; it is not an unrestricted adapter for arbitrary user-defined value types.
 
 ## Relationship to ASN.1 constraints
 
@@ -104,7 +105,7 @@ The model should therefore not be interpreted as a claim that all ASN.1 constrai
 
 ## Current state
 
-At revision 1097, the important result is the established relationship between the ASN.1 constraint evaluator and the reusable set infrastructure. The relevant tests cover the generic set behavior and ASN.1 constraint evaluation separately, making the abstraction boundary visible in the test structure as well.
+At Revision 1132, the relationship remains explicit: `asn1_constraint_evaluator<T>` builds a `t_set_runtime<T>` result set, which selects `string_set` for `std::string` and `t_range_set<t_range_value<T>>` for integral/floating-point domains. The facade exposes membership, range insertion/removal, union, intersection, difference (`erase_from`), inversion (`ALL EXCEPT`), and string-specific `FROM`/regex operations. The generic set tests and ASN.1 constraint tests exercise the two sides separately; the latter covers single values, unions, ranges, intersections, EXCEPT/ALL EXCEPT, SIZE, FROM, and nested constructed values. This is evidence for selected operations, not exhaustive ASN.1 constraint conformance.
 
 ### Related source / documents
 
@@ -122,4 +123,4 @@ At revision 1097, the important result is the established relationship between t
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state around **revision 1097**.
+Reviewed against the hotplace source/documentation state through **Revision 1132**.

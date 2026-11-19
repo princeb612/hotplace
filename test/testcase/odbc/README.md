@@ -3,7 +3,7 @@
 ```text
 hotplace source-tree documentation
 Edition 2 · Revision 1107
-Source basis: Revision 1107
+Source base : Revision 1132
 Documented with GPT-6
 — ODBC testcase scope, execution & evidence
 ```

@@ -5,7 +5,7 @@
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1106                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ — testcase assets and verification           │
 └──────────────────────────────────────────────┘
 ```
@@ -110,7 +110,7 @@ Use this index to trace each protocol family from the executable dispatch to its
 
 The executable entry point is `sample.cpp`; `sample.hpp` declares the testcase functions and shared options. The source dispatches RFC 7515, 7516, 7517, 7518, 7520, 7638 and 8037 groups, followed by AKP signing and JSON-vector processing. `CMakeLists.txt` copies the `*.json`, `*.jwe`, `*.jwk`, `*.jws` and `*.pem` fixtures into the build tree.
 
-The supplied report snapshot also lists **AKP: 18 success**. Interpret this alongside the OpenSSL 3.5+ guard: older OpenSSL builds record `not_supported`, which is not evidence of successful ML-DSA execution.
+The checked-in aggregate report does not break out an AKP subgroup count. The OpenSSL 3.5+ guard is source-level evidence only; older OpenSSL builds record `not_supported`, which is not evidence of successful ML-DSA execution.
 
 ## 3. Evidence
 
@@ -372,13 +372,13 @@ Diagnostics / conditional paths
 
 ### Documentation and verification status
 
-The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md). The associated run context supplied for this project is **Revision 1104 · MinGW64/GCC · CTest**; the report payload does not independently identify the tested source commit or exact build configuration. This differs from the current documentation basis, Revision 1106.
+The latest available aggregate report is indexed in [Test Report Snapshot](../test-report-status.md). The associated run context supplied for this project is **Revision 1104 · MinGW64/GCC · CTest**; the report payload does not independently identify the tested source commit or exact build configuration. This differs from the current documentation source basis, Revision 1132.
 
 | Report group | pass | expt | fail | skip | triv |
 |---|---:|---:|---:|---:|---:|
 | JOSE total | 295 | 0 | 0 | 0 | 2 |
 
-The report records RFC 7515 as `success 34, triv 2`, RFC 7520 as `success 164`, and RFC 8037 as `success 30`. These labels are reproduced without inferring framework semantics. The values are supplied report results, not a test run performed during this documentation update. Preserve the snapshot until a newer report associated with a known source revision is available.
+The checked-in aggregate report provides only the JOSE-directory total shown above; it does not include a verifiable per-RFC or AKP subgroup breakdown. No RFC 7515, RFC 7520, RFC 8037 or AKP-specific counts are asserted here. The aggregate values are supplied report results, not a test run performed during this documentation update. Preserve the snapshot until a newer report associated with a known source revision is available.
 
 ## 4. Relationships
 

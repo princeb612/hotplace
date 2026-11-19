@@ -104,6 +104,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             size_t cursor = pos;
             size_t end = pos + len;
             bool has_handshake = false;
+            bool plaintext_server_hello_seen = false;
             while (cursor < end) {
                 if (end - cursor < tls_handshake_header_size) {
                     ret = errorcode_t::bad_data;
@@ -113,11 +114,20 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
                 uint32 message_size = ((uint32)stream[cursor + 1] << 16) | ((uint32)stream[cursor + 2] << 8) | (uint32)stream[cursor + 3];
                 auto type_allowed = tls13_plaintext_handshake_type_allowed(type);
                 auto phase_allowed = tls13_plaintext_handshake_phase_allowed(session, dir, type);
-                if ((false == type_allowed) || (message_size > end - cursor - tls_handshake_header_size) || (false == phase_allowed)) {
+                // The pre-scan runs before any message is parsed, so every
+                // ServerHello would otherwise be checked against the same
+                // pre-record state. A TLS 1.3 plaintext record cannot contain
+                // a second ServerHello; reject it before partially processing
+                // the first message (and independently of key-schedule setup).
+                bool duplicate_server_hello = (from_server == dir) && (tls_handshake_type_t::server_hello == type) && plaintext_server_hello_seen;
+                if ((false == type_allowed) || (message_size > end - cursor - tls_handshake_header_size) || (false == phase_allowed) || duplicate_server_hello) {
                     session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                     session->reset_session_status();
                     ret = errorcode_t::unexpected;
                     break;
+                }
+                if ((from_server == dir) && (tls_handshake_type_t::server_hello == type)) {
+                    plaintext_server_hello_seen = true;
                 }
                 cursor += tls_handshake_header_size + message_size;
                 has_handshake = true;
@@ -131,11 +141,14 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             }
 
             // Clear protection only while parsing permitted plaintext messages.
-            // Restore it if the existing handshake state machine rejects one.
+            // Restore it if the existing handshake state machine rejects one,
+            // unless the handshake parser deliberately changed the TLS flow as
+            // part of rollback (for example, rejecting ClientHello2 after HRR).
+            auto original_flow = protection.get_flow();
             bool was_protected = protection_state.apply_protection();
             protection_state.reset_protection();
             ret = get_handshakes().read(session, dir, stream, end, pos);
-            if ((errorcode_t::success != ret) && was_protected) {
+            if ((errorcode_t::success != ret) && was_protected && (protection.get_flow() == original_flow)) {
                 protection_state.begin_protection();
             }
         } else if (protection_state.apply_protection()) {

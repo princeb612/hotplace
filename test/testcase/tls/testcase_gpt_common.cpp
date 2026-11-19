@@ -322,6 +322,9 @@ bool test_remove_client_hello_supported_versions(binary_t& bin) {
 }
 
 void test_client_supported_versions_vector(const char* name, uint8 vector_len, const binary_t& versions, bool expect_success) {
+    // Scenario under test: the named test-case variant.
+    // Action: construct ClientHello.
+    // Expected: rewrite supported_versions vector.
     _test_case.begin(name);
 
     tls_session client_session;
@@ -362,6 +365,9 @@ void test_client_supported_versions_vector(const char* name, uint8 vector_len, c
 }
 
 void test_serverhello_unoffered_supported_version() {
+    // Scenario under test: ServerHello selects an unoffered supported_version.
+    // Action: construct TLS 1.2-only ClientHello.
+    // Expected: ClientHello cipher suite list.
     _test_case.begin("ServerHello selects an unoffered supported_version");
 
     tls_session client_session;

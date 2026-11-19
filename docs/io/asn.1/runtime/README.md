@@ -1,5 +1,7 @@
 # ASN.1 Module and Runtime Value Processing
 
+> Source base : Revision 1132
+
 ## Context
 
 In Revision 1102, `asn1_runtime` and `asn1_runtime_context` were renamed to `asn1_module` and `asn1_module_context`. The source directory remains `runtime` because it also contains parser, publisher, and typed-value processing components.
@@ -133,7 +135,7 @@ dictionary / type registry
 
 `add_schema()` also keeps the original schema text associated with the resulting object through the runtime schema map.
 
-This is the current primitive from which future Module-level loading can be built.
+This is a current convenience path: `add_schema()` invokes the parser/publisher route and registers the resulting semantic object in the module dictionary. For a complete module definition with module metadata and imports/exports, the publisher's module handlers build the module result.
 
 ## Structural
 
@@ -217,7 +219,7 @@ A tagged type represents a semantic tag relationship on a particular object. The
 
 The default runtime state is explicit tagging.
 
-Future Module loading should read the Module header and establish this policy before completing Module schema construction.
+The current publisher reads the Module header and stores its tagging policy in the resulting `asn1_module`; individual `asn1_tagged_type` objects continue to represent per-type tag relationships.
 
 ## Runtime values
 
@@ -324,7 +326,7 @@ value processing
 
 An unresolved definition does not invalidate unrelated resolved definitions. The test adds an object containing missing references and verifies that the unresolved object is reported while an already-resolved object remains resolvable.
 
-This is important for the future Module loader: loading and registration can establish the environment first, while resolution provides a separate validation/linkage step over the resulting namespace.
+This is the current division of responsibility: the loader/parser/publisher path constructs and registers module state, while `resolve()` / `is_resolvable()` provide a separate validation/linkage step over the resulting namespace.
 
 ### Weakly typed and strongly typed processing
 
@@ -388,7 +390,7 @@ ASN.1 schema text
  runtime dictionary
 ```
 
-The future Module-level path is:
+The current Module-level path is:
 
 ```text
 ASN.1 Module
@@ -430,11 +432,11 @@ Once definitions are registered, the runtime can:
 - decode weakly typed values,
 - publish notation or DER output.
 
-The `case24_type2` style experiments are especially useful as semantic-construction verification: they manually build the runtime representation that the future parser/publisher/loader pipeline is expected to produce.
+The `case24_type2` style experiments remain useful as direct semantic-construction verification. Separately, the active parser/loader/publisher tests demonstrate selected source-to-module paths; the manual examples do not replace those integration tests.
 
 ## Status
 
-The runtime layer is substantially more complete than the loader layer.
+The runtime module model is the destination for published semantic definitions. The loader is intentionally a thin source-input adapter; parsing and semantic publication are separate components, not missing loader features.
 
 Current:
 
@@ -451,7 +453,7 @@ Current:
 [~] broader Module-level semantics
 ```
 
-The Module-level environment is therefore partly prepared in the runtime itself, but the orchestration that reads a complete `.asn1` Module and constructs this environment is not yet implemented by `asn1_loader`.
+The loader's own `load()` and `load_file()` methods stop at `parse_tree`. Module construction is implemented by `asn1_publisher::build()`, called directly by tests or through `asn1_parser::to_result()`. Therefore the complete path is split across loader, parser, and publisher; it is incorrect to describe module construction as unimplemented.
 
 ## Related topics
 
@@ -473,4 +475,4 @@ asn1_module
      loader
 ```
 
-The loader is the next layer above this runtime environment.
+The loader is the upstream source-input adapter; it supplies notation or a parse tree to the parser/publisher path that constructs this runtime environment.

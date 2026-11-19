@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -56,13 +56,13 @@ Constructors receiving existing OpenSSL objects call `EVP_PKEY_up_ref()` and, wh
 
 The accessors return `const EVP_PKEY*` and `const X509*`, but `const` does not extend lifetime. With `up_ref = false`, a pointer returned by the collection is borrowed and depends on the owner remaining alive. With `up_ref = true`, the caller receives an additional OpenSSL reference and must eventually release it.
 
-**Maintainer note:** in the inspected source, `crypto_key_object::release()` calls `EVP_PKEY_free()` / `X509_free()` without resetting the stored pointers. The destructor calls `release()`, and `crypto_key::clear()` explicitly releases mapped objects before clearing the map. Copy assignment also releases before copying. This warrants a focused ownership/lifetime audit, including repeated release and self-assignment; it is a source-level observation, not a claim that a runtime failure has been reproduced.
+**Current source-level ownership caveats (not runtime-reproduced here):** `crypto_key_object::release()` calls `EVP_PKEY_free()` / `X509_free()` without nulling the stored pointers. `crypto_key::clear()` calls `release()` on every map value and then `_key_map.clear()` destroys those same values, invoking `release()` again. `erase()` destroys the value and then calls `EVP_PKEY_free()` again; `remove_nid()` similarly calls `item.release()` before erasing the value. These paths over-release the references held by the object. `crypto_key_object::operator=(const&)` has no self-assignment guard, so self-assignment releases the current pointer before attempting to up-ref it through `other`. `crypto_key::operator=(const&)` performs map copy assignment and then adds another `EVP_PKEY_up_ref()` / `X509_up_ref()` pass. In addition, `crypto_key::add(..., up_ref=true)` increments references before `emplace()`, whose copy/move path already transfers or acquires the collection reference; the extra reference is not represented by a separate owner. Treat `clear`, `erase`, `remove_nid`, self-copy-assignment, copy assignment, and `up_ref=true` as ownership-sensitive paths requiring correction before relying on them.
 
 ### 2.3 `crypto_key`: collection and selection boundary
 
 `crypto_key` stores `crypto_key_object` values in `_key_map`, keyed by `kid`. Its API covers collection operations such as `add()`, `append()`, `erase()`, `clear()`, `size()`, and `for_each()`, plus selection and access by key identifier, key type, NID, algorithm, usage, or TLS group.
 
-`add()` checks that a key object has a non-null public-key object, that its usage is not `use_unknown`, and that the underlying key type can be recognized. It then inserts using `kid` as the map key. The insertion result from `emplace()` is not checked, so a successful return from `add()` does not prove a new entry was inserted if that identifier already exists. Do not treat its return code as a duplicate-`kid` detector.
+`add()` checks that a key object has a non-null `EVP_PKEY`, that its usage is not `use_unknown`, and that the underlying key type can be recognized. It then inserts using `kid` as the key in `_key_map`, which is a `std::multimap<std::string, crypto_key_object>`. Multiple entries with the same `kid` are therefore permitted; `emplace()` does not act as a duplicate-`kid` filter, and `add()` does not check the insertion result. Callers must use the NID/type/algorithm-aware lookup operations when one `kid` identifies multiple component keys. The current `append(source)` implementation locks `source` but iterates `_key_map` (the destination) instead of `source->_key_map`; it therefore does not append the source collection. It also calls `EVP_PKEY_up_ref()` explicitly before copying each visited destination object, while the `crypto_key_object` copy path acquires its own references to both the key and optional certificate. The extra explicit key reference is not represented by a separate owner. Because it inserts into the same multimap it is iterating, this implementation also needs correction rather than being treated as a safe append operation.
 
 Selection overloads connect protocol-facing identifiers to the stored key material. They include JOSE encryption identifiers (`jwa_t`), JOSE signature identifiers (`jws_t`), COSE algorithm identifiers (`cose_alg_t`), generic signature identifiers, and TLS groups. The algorithm overloads use `crypto_advisor` to map a protocol vocabulary to internal metadata and test the candidate key. Selection also considers usage flags and, for some overloads, key type. Callers should select using the protocol's actual requirements instead of relying on the first key in the collection.
 
@@ -72,7 +72,7 @@ The `up_ref` parameter is an explicit ownership choice. It does not mean the col
 
 `crypto_keychain` is the common interface for importing, exporting, encoding, decoding, and constructing keys. Its `keyflag_t` modes distinguish:
 
-- `key_ownspec`: hotplace/application-defined key input, including JWK- or COSE-oriented parameter input;
+- `key_ownspec`: declared hotplace/application-defined input mode; the current `load_ownspec()` implementation returns success without parsing or adding a key. JWK and COSE key conversion is performed by their format-specific modules, not by this loader;
 - `key_pemfile`: PEM-encoded input;
 - `key_certfile`: certificate input;
 - `key_derfile`: DER-encoded input.
@@ -81,7 +81,9 @@ The mode determines how input is loaded; it does not name a cryptographic algori
 
 The parameter sets differ by family. RSA uses integer components such as `n`, `e`, and optional private/CRT values; DH and DSA use public/private and domain parameters; EC uses curve identity and public/private components; OKP uses raw key material; and octet keys hold symmetric key bytes. Decoding text into bytes and constructing a valid algorithm key are separate operations.
 
-The PEM loader scans for public keys and private keys rather than promising exactly one key per input. The certificate loader parses X.509, extracts its public key, and can retain the certificate alongside that key. The DER path attempts private-key decoding and then certificate decoding with public-key extraction; it is not a general parser for every ASN.1 object. File helpers route mapped file contents through the same buffer-based load path.
+The PEM loader scans for public keys and private keys rather than promising exactly one key per input. However, it ignores the return status from each `cryptokey->add()` and returns its initial success status after the loops; a failed or duplicate insertion can therefore be reported as success. It also forwards the same rvalue `keydesc` inside the public-key loop, so only the first parsed public key is guaranteed to receive the original description; later entries can receive moved-from metadata. The certificate loader parses one X.509 certificate, extracts its public key, and can retain the certificate alongside that key. The DER path attempts private-key decoding and then certificate decoding with public-key extraction; it is not a general parser for every ASN.1 object. File helpers route mapped file contents through the same buffer-based load path.
+
+The output path is narrower than the general format-loading interface: `write()` currently dispatches only `key_pemfile`; `write_pem()` does not use its `flag` parameter; and `write_der()` serializes an `X509` certificate rather than a general `EVP_PKEY` DER key.
 
 ### 2.5 `crypto_keygen`: readable parameters instead of enum-heavy setup
 
@@ -128,7 +130,7 @@ The family-specific functions are not just aliases around one generic constructo
 | ML-KEM | KEM key material plus a separate encapsulation ciphertext (capsule) | OpenSSL 3.5 named-algorithm paths and the PQC encapsulation/decapsulation interface |
 | ML-DSA / SLH-DSA | OpenSSL 3 named post-quantum signature algorithms | Generic OpenSSL 3 by-name generation/encoding paths; not every generic parameter builder supports them |
 
-The last row needs an important qualification. The key-type enums and OpenSSL 3 by-name entry points exist, and `crypto_keygen::build()` recognizes the `kty_mldsa`, `kty_mlkem`, and `kty_slhdsa` cases syntactically. However, those cases are currently empty in that dispatch function. Therefore the ordinary `set(...).build()` parameter route must not be described as constructing ML-DSA, ML-KEM, or SLH-DSA keys. The separate OpenSSL 3 path uses provider/name-based operations such as `EVP_PKEY_CTX_new_from_name()`, `EVP_PKEY_keygen()`, and `EVP_PKEY_fromdata()`; actual availability depends on the OpenSSL version and loaded provider. The advisor's version table marks ML-KEM and the listed hybrid group names as requiring OpenSSL 3.5, but a version gate alone does not establish support for every hotplace API or operation.
+The last row needs an important qualification. The key-type enums and OpenSSL 3 by-name entry points exist, and `crypto_keygen::build()` recognizes the `kty_mldsa`, `kty_mlkem`, and `kty_slhdsa` cases syntactically. However, those cases are currently empty in that dispatch function. Therefore the ordinary `set(...).build()` parameter route must not be described as constructing ML-DSA, ML-KEM, or SLH-DSA keys. The separate OpenSSL 3 path uses provider/name-based operations such as `EVP_PKEY_CTX_new_from_name()`, `EVP_PKEY_keygen()`, and `EVP_PKEY_fromdata()`; actual availability depends on the OpenSSL version and loaded provider. The advisor's version table marks ML-KEM and the listed hybrid group names as requiring OpenSSL 3.5, but a version gate alone does not establish support for every hotplace API or operation. By contrast, `crypto_keygen::gen()` routes through `crypto_keychain::add()`, whose NID dispatch sends `kty_mlkem`, `kty_mldsa`, and `kty_slhdsa` to `add_ossl3()`; that is the no-parameter/provider-backed generation path, subject to OpenSSL/provider availability. Both `gen()` and `build()` return the builder object and do not expose the `add()` result as a status.
 
 ### 2.7 EC point input: compressed versus uncompressed
 
@@ -328,7 +330,7 @@ component metadata (key type, NID, sizes, hybrid flag)
                    shared secret
 ```
 
-For a classical group, `keygen()` creates local key material and `keyshare()` extracts the public component. The convenience `keygen(key, kid, share)` combines those two steps. `exchange()` consumes the peer's encoded share together with local private material. If matching material already exists for the requested identifier and component, the implementation can return `already_exist` instead of generating another key.
+For a classical group, `keygen()` creates local key material and `keyshare()` extracts the public component. The convenience `keygen(key, kid, share)` combines those two steps. `exchange()` consumes the peer's encoded share together with local private material. The current implementation no longer returns `already_exist` for an existing first component: it calls `remove_nid(kid, first.nid)` and then generates that component again (the earlier `already_exist` check is commented out). For a hybrid group, this removal targets only the first component; the second component is not explicitly removed before `add()`. Since `_key_map` is a multimap, repeated hybrid `keygen()` with the same `kid` can leave the old second component in the collection and add another entry for that same `kid`. NID-aware lookup walks the matching `kid` range, so the earlier matching component may be selected rather than the newly generated one. The existing group tests use fresh independent stores and do not cover this repeated-keygen case. `remove_nid()` itself is one of the over-release paths described in the ownership caveats above.
 
 KEM encapsulation is a different exchange shape: the peer's public key produces a capsule and shared secret; the private-key holder uses its private key and that capsule in `decaps()` to derive the corresponding secret. A hybrid group composes multiple component operations, and the group metadata determines each component's byte offset and ordering. The caller passes the resulting shared secret to the protocol's key schedule; this class does not implement the TLS handshake or schedule itself.
 
@@ -340,7 +342,7 @@ OpenSSL reference counting controls object lifetime; it does not erase applicati
 
 ### Practical use: exchange public shares and compare derived secrets
 
-The key-exchange testcase creates independent key stores for two peers. Each side generates a local key pair and a public share, then consumes the other peer's share to derive a secret:
+The following is an illustrative checked two-peer flow, not a verbatim copy of the current testcase. The testcase creates independent key stores for two peers. Each side generates a local key pair and a public share, then consumes the other peer's share to derive a secret:
 
 ```cpp
 return_t exchange_two_peers(tls_group_t group) {
@@ -378,7 +380,7 @@ return_t exchange_two_peers(tls_group_t group) {
 }
 ```
 
-The function parameter makes the negotiated/tested group explicit; each peer gets an independent key store, and every operation status is checked before the derived secrets are compared. The example separates three values that are easy to conflate: each peer's local key object, the public share exchanged over the protocol, and the locally derived shared secret. The testcase compares both secrets; a real protocol must also authenticate the peer and bind the exchange to its handshake transcript. A matching secret alone does not authenticate the peer or establish a secure channel.
+The function parameter makes the negotiated/tested group explicit; each peer gets an independent key store, and this illustrative form checks every operation status before the derived secrets are compared. The current `testcase_keyexchange.cpp` does not assign/check the return value of Bob's `exchange()` call in the classical ECDHE helper, although it does compare the resulting secrets and will detect a mismatch. The example separates three values that are easy to conflate: each peer's local key object, the public share exchanged over the protocol, and the locally derived shared secret. The testcase compares both secrets; a real protocol must also authenticate the peer and bind the exchange to its handshake transcript. A matching secret alone does not authenticate the peer or establish a secure channel.
 
 Source: [testcase_keyexchange.cpp](../../../../test/testcase/crypto/key/testcase_keyexchange.cpp).
 
@@ -407,10 +409,10 @@ This is a concrete example of the distinction between the local key object and t
 ## 4. Relationships
 ### 4.1 Internal implementation boundaries
 
-- `sdk/crypto/basic/crypto_key.hpp` declares `keydesc`, `crypto_key_object`, and `crypto_key`.
-- `sdk/crypto/basic/crypto_keychain.hpp` declares format loading/writing, family-specific construction, and OpenSSL key encoding/decoding entry points. Implementations are split among `crypto_keychain.cpp` and family files such as `crypto_keychain_ec.cpp`, `crypto_keychain_rsa.cpp`, and `crypto_keychain_ossl3.cpp`.
-- `sdk/crypto/basic/crypto_keygen.hpp` declares the parameter builder and generation interface; `crypto_keygen.cpp` handles parameter collection and dispatch, while `crypto_keygen_*` files implement family-specific paths.
-- `sdk/crypto/basic/crypto_keyexchange.hpp` declares group-level exchange operations. `crypto_keyexchange.cpp` coordinates component key generation, share extraction, exchange, encapsulation, and decapsulation.
+- `sdk/crypto/basic/crypto_key.hpp` declares `keydesc`, `crypto_key_object`, and `crypto_key`; the implementations are under `sdk/crypto/basic/key/` in `crypto_key_object.cpp`, `crypto_key.cpp`, and `crypto_key_search.cpp`.
+- `sdk/crypto/basic/crypto_keychain.hpp` declares format loading/writing, family-specific construction, and OpenSSL key encoding/decoding entry points. Implementations are under `sdk/crypto/basic/key/`, including `crypto_keychain.cpp`, `crypto_keychain_ec.cpp`, `crypto_keychain_rsa.cpp`, and `crypto_keychain_ossl3.cpp`.
+- `sdk/crypto/basic/crypto_keygen.hpp` declares the parameter builder and generation interface; `sdk/crypto/basic/key/crypto_keygen.cpp` handles parameter collection and dispatch, while `crypto_keygen_*` files under the same directory implement family-specific paths.
+- `sdk/crypto/basic/crypto_keyexchange.hpp` declares group-level exchange operations. `sdk/crypto/basic/key/crypto_keyexchange.cpp` coordinates component key generation, share extraction, exchange, encapsulation, and decapsulation; `crypto_key_search.cpp` implements key lookup/removal.
 - `sdk/crypto/basic/evp_pkey.hpp` and OpenSSL wrapper types provide lower-level key-type recognition and resource wrappers.
 - `sdk/crypto/advisor/crypto_advisor.hpp` maps algorithm identifiers, NIDs, key types, JOSE/COSE labels, TLS groups, support flags, and component sizes. The advisor provides metadata for dispatch; it does not perform the cryptographic operation.
 - `sdk/crypto/basic/sign/` and `sdk/crypto/basic/kdf/` consume key objects or key material for signature and derivation operations.

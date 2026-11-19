@@ -1,6 +1,7 @@
 # HTTP/3 — Study Boundary & Current State
 
-> Edition 1 · Revision 1090
+> Edition 1 · Revision 1132
+> Source base : Revision 1132
 
 ## Context
 
@@ -27,7 +28,7 @@ HTTP/3
         UDP
 ```
 
-The current source contains an HTTP/3 frame/protocol area, but this document does
+The current source contains an HTTP/3 frame area, but this document does
 **not** describe HTTP/3 as a completed implementation. Its purpose in Edition 1 is
 to preserve the current study boundary and the relationship between HTTP/3, QUIC,
 and QPACK. The HTTP server builder can select a QUIC service and `h3` ALPN, but the
@@ -118,7 +119,7 @@ TLS remains part of QUIC's handshake and key-material path, but HTTP/3 does not 
 ## Structural
 
 The current HTTP/3 source area is organized around frame representation and frame
-construction.
+construction. There is no registered HTTP/3 `network_protocol` or end-to-end request dispatcher in the server path.
 
 ```text
 sdk/net/http/http3/
@@ -236,6 +237,8 @@ HPACK and QPACK one implementation layer.
 - HPACK study: `test/testcase/net/hpack/`
 - QUIC packet/frame study: `sdk/net/tls/quic/`
 - HTTP/3 frame source: `sdk/net/http/http3/`
+- Active capture replay: `test/testcase/quic/testvector_pcap.cpp` + `testvector_pcap_http3.yml` (QUIC packet/stream processing only)
+- Inactive construction walkthrough: `test/testcase/quic/testcase_construct_quic.cpp` (its call is commented out in `sample.cpp`)
 
 The existing HTTP/3 source therefore provides useful implementation material, but
 the available project record does not justify describing the complete HTTP/3
@@ -265,7 +268,7 @@ the QUIC/QPACK implementation areas without overstating project completion.
 
 ## Cross-Topic Verification
 
-HTTP/3 verification must be read as a layered path because the current project does not claim a complete HTTP/3 stack. Existing QUIC capture replay demonstrates the lower boundary, while HTTP/3 frame/QPACK work provides protocol-specific study material.
+HTTP/3 verification must be read as a layered path because the current project does not claim a complete HTTP/3 stack. Existing QUIC capture replay demonstrates the lower transport boundary, while HTTP/3 frame/QPACK source provides protocol-specific study material; the replay handler does not invoke the HTTP/3 frame parser or QPACK decoder.
 
 ```text
 real HTTP/3 traffic
@@ -285,7 +288,7 @@ This is a verification relationship, not a claim of end-to-end HTTP/3 server sup
 
 ## Capture-replay boundary
 
-The HTTP/3 capture-replay material verifies protocol processing around QUIC/TLS packets and stream data. It is a protocol-level verification path, not a statement that the HTTP/3 request path is already integrated into `http_server`.
+The active HTTP/3 capture-vector path is narrower than HTTP/3 frame verification. `testcase_testvector_pcap()` calls `play_yaml_pcap_http3()`, whose handler passes QUIC packet items to `quic_packets::read()` and therefore exercises QUIC packet/CRYPTO/STREAM processing and stream state. It does not call `http3_frame::read()` or QPACK decoding. The separate raw `TLS 1.3` items in that YAML handler currently return `errorcode_t::do_nothing`. This is QUIC replay for a capture containing HTTP/3 traffic, not HTTP/3 frame/QPACK end-to-end verification.
 
 ```text
 HTTP/3 capture
@@ -297,7 +300,7 @@ QUIC / TLS state
 HTTP/3 stream data
 ```
 
-This keeps two questions separate: **can the implementation interpret the observed HTTP/3/QUIC traffic?** and **is that protocol path connected to the server's application request dispatch?** The current study answers the former through replay while the latter remains an integration boundary.
+This keeps two questions separate: **can the implementation parse the captured QUIC packets and maintain the stream data that carried HTTP/3?** and **does it parse HTTP/3 frames/QPACK and connect the result to application request dispatch?** The active replay covers the former QUIC transport boundary only; HTTP/3 frame/QPACK parsing and server dispatch remain unverified integration work.
 
 ## Status
 
@@ -310,6 +313,8 @@ This keeps two questions separate: **can the implementation interpret the observ
 | Complete HTTP/3 stack | Not claimed |
 | HTTP/3 server integration | Not claimed |
 | HTTP/3 end-to-end verification | Not claimed |
+
+The active capture-vector handler processes QUIC packet items through `quic_packets::read()` but does not call `http3_frame::read()` or QPACK decoding. `testcase_construct_quic()` contains an HTTP/3 stream/frame/QPACK construction walkthrough, but its call is commented out in the normal QUIC testcase dispatcher. The separately active QPACK tests are not direct HTTP/3 frame or server tests.
 
 The important status statement for Edition 1 is:
 
@@ -343,7 +348,7 @@ HTTP/3 ──► QPACK
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
 │ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

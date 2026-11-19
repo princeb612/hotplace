@@ -1,18 +1,20 @@
 ## Notes
 
+> Source base : Revision 1132
+
 ![hotplace](hotplace.png)
 
 ### Status
 
 - in progress
   - ASN.1 (reboot)
+  - TLS 1.3 PSK resumption / early data (selected paths implemented; broader RFC review remains)
 - holding
   - QUIC
   - HTTP/3
 - TODO
   - TLS
     - key update
-    - PSK
 
 ### Map
 

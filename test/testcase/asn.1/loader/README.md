@@ -3,7 +3,7 @@
 ~~~text
 hotplace source tree
 Edition 2 · Revision 1106
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 — loader path, module resolution & evidence
 ~~~
@@ -70,11 +70,11 @@ The active testcase_loader() dispatcher calls both test_asn1loader_babystep() an
 - **Explicit comparisons/checks:** expected module names, selected module/symbol lookups and is_resolvable() checks provide assertions beyond successful parsing alone.
 - **Diagnostic output only:** regenerated notation is not compared against a complete expected source string, so it is not a full semantic-equivalence assertion.
 - **Coverage limits:** aggregate test results do not identify which loader subfunction or fixture passed. The tests do not prove complete grammar coverage, all malformed-input recovery behavior, semantic equivalence for every ASN.1 construct, or every dependency-resolution combination.
-- **Separate disabled path:** the parameterized parser → loader → publisher probe in parameterized/testcase_parameterized.cpp remains disabled; ordinary module-loading checks do not establish parameterized integration.
+- **Separate parameterized group:** the ordinary loader dispatcher covers fixtures `example1.asn1` through `example5.asn1`; parameterized integration is tested by the sibling active `testcase_parameterized()` group. Its `test_parameterized2()` and `test_parameterized3()` cases use `asn1_loader::load()` / `load_file()` followed by `asn1_publisher::build()`. The broader `example7.asn1` vector remains commented out.
 
 ### Documentation and verification status
 
-The supplied parent ASN.1 report is aggregate and does not map results to loader functions or independently identify source revision, compiler, build flags, or command line. The last known report context is Revision 1104 · MinGW64/GCC · CTest; this documentation uses source basis Revision 1105. No tests were run during this documentation update.
+The supplied parent ASN.1 report is aggregate and does not map results to loader functions or independently identify source revision, compiler, build flags, or command line. The last known report context is Revision 1104 · MinGW64/GCC · CTest; this documentation uses Source base : Revision 1132. No tests were run during this documentation update.
 
 ## 4. Relationships
 
@@ -93,4 +93,4 @@ The supplied parent ASN.1 report is aggregate and does not map results to loader
 
 ## 6. Developer Notes (for maintainer review)
 
-The former child document retained a historical design note that distinguishes the earlier loader-flow sketch from the current implementation record. That distinction is preserved above. The source history records the first loader/parsing implementation at Revision 1097, import/export and reference-resolution work at Revision 1099, and provider consolidation under asn1_advisor at Revision 1100; these revision notes describe history, not present-day test evidence. Parameterized parser → loader → publisher integration remains a separate disabled probe in the wider suite and should not be inferred from ordinary module-loading checks.
+The former child document retained a historical design note that distinguishes the earlier loader-flow sketch from the current implementation record. That distinction is preserved above. The source history records the first loader/parsing implementation at Revision 1097, import/export and reference-resolution work at Revision 1099, and provider consolidation under asn1_advisor at Revision 1100; these revision notes describe history, not present-day test evidence. Parameterized parser → loader → publisher integration is active for the inline `FRAME` / `MyPacket` case and the file-based `example6.asn1` case in the wider suite. Those are separate tests from this directory's ordinary `example1.asn1`–`example5.asn1` module-loading procedures; `example7.asn1` remains an in-progress vector.

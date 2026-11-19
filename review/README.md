@@ -6,7 +6,7 @@ The documents here are not replacements for the source-tree `README.md` files an
 
 ## Source Baseline
 
-- Source revision: 1125 (incremental review; each document records its own verified coverage)
+- Source revision: 1132 (incremental review; each document records its own verified coverage)
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
@@ -70,7 +70,8 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1125                                │
+│ Revision 1132                                │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
@@ -404,10 +405,10 @@ crypto_advisor   tls_advisor
 
 They intersect at the point where protocol identifiers refer to cryptographic mechanisms.
 
-- **Revision 1124 addendum**
+- **Revision 1132 recheck**
   - Distinguishes TLS resource-table recognition, `tls_flag_support` eligibility, `tls_flag_secure` recommendation, and explicit diagnostic overrides.
   - Cross-checks that policy against RFC 8996, RFC 9852, and RFC 10015.
-  - Does not treat retained legacy cipher-suite identifiers as proof of ordinary negotiability.
+  - Confirms the trial ClientHello composer receives only `tls_flag_support` entries from `tls_advisor::enum_cipher_suites()`; the later `tls_flag_secure` mask bit is redundant and does not advertise secure-only entries.
 
 ---
 
@@ -442,6 +443,118 @@ OpenSSL
 Authenticode is a deliberately narrow verification subsystem.
 
 It uses ASN.1/PKCS#7 as a data-format and protocol concept, but its current implementation path uses OpenSSL's PKCS#7/X.509 APIs rather than hotplace's ASN.1 runtime.
+
+---
+
+### `capability-gap-assessment.md`
+
+**Primary relationship**
+
+```text
+existing verification evidence
+          │
+          ▼
+evidence classification
+          │
+          ├── conformance / vectors
+          ├── component tests
+          ├── packet / capture
+          ├── interoperability
+          ├── fuzzing / robustness
+          └── performance measurement
+```
+
+**Purpose**
+
+A capability assessment framework for distinguishing existing public verification evidence from potential capability gaps. It is not a mandatory roadmap and does not claim that unpublished/local work is absent.
+
+**Current basis**
+
+- Source base : Revision 1132
+- No dedicated public fuzz-target/corpus/workflow or distinct benchmark/regression layer was identified in the reviewed source.
+- Existing test/vector/capture evidence is substantial but is not a blanket conformance certification.
+
+---
+
+### `project-review.md`
+
+**Primary relationship**
+
+```text
+project identity and constraints
+             │
+             ▼
+strengths / limitations / trade-offs
+             │
+             ▼
+defend / strengthen / explore
+```
+
+**Purpose**
+
+A high-level, reviewer-perspective assessment of hotplace as a personal implementation-oriented research project. Its proposals are review findings, not project commitments.
+
+**Current basis**
+
+- Reviewer attribution: ChatGPT (GPT-6)
+- Source base : Revision 1132
+- C++11 remains a compatibility target, while CMake defaults vary by toolchain/platform.
+
+---
+
+### `repository-evidence-audit.md`
+
+**Primary relationship**
+
+```text
+review recommendation
+        │
+        ▼
+public source / test evidence
+        │
+        ▼
+current classification
+        │
+        ▼
+evidence boundary / missing evidence
+```
+
+**Purpose**
+
+Connects review recommendations to repository-visible evidence, including the CTest platform matrix, optional Valgrind paths, protocol vectors/captures, and the boundaries of interoperability, fuzzing, and performance evidence.
+
+**Current basis**
+
+- Reviewer attribution: ChatGPT (GPT-6)
+- Source base : Revision 1132
+- Historical FC4 x64 VM testing is retained as a historical note, not independently evidenced by the current public tree.
+
+---
+
+### `trial-openssl-comparison.md`
+
+**Primary relationship**
+
+```text
+hotplace trial protocol engine
+             │
+             ├── external OpenSSL peer
+             ├── OpenSSL socket adapter
+             └── PCAPNG / key-log / debug trace
+                         │
+                         ▼
+                 comparison evidence
+```
+
+**Purpose**
+
+Explains the comparison boundary between hotplace's trial TLS/DTLS protocol logic, the separate OpenSSL TLS/DTLS socket adapter, and external OpenSSL clients. It distinguishes protocol-engine independence from the shared OpenSSL-backed cryptographic substrate.
+
+**Current basis**
+
+- Reviewer attribution: ChatGPT (GPT-6)
+- Source base : Revision 1132
+- The strongest recorded external comparison is OpenSSL `s_client` against the trial TLS server; other combinations require their own evidence.
 
 ---
 
@@ -647,12 +760,12 @@ The source-tree documentation remains the authoritative local description of a m
 
 ## 7. Revision Discipline
 
-Each review document should identify the source revision it describes.
+Each review document should identify the source revision it describes. The current workspace baseline is taken from the root `version.txt` `VERSION_BUILD` value; `CHANGELOG.md` is corroborating history, not a substitute for that build value. When BUILD advances, the package baseline advances, and each document marker is updated after its relevant claims are re-audited.
 
 For the current review package:
 
 ```text
-Source Baseline: Revision 1124
+Source Baseline: Revision 1132
 ```
 
 When the implementation changes materially:
@@ -673,18 +786,20 @@ In particular, parser production names, ASN.1 loader capabilities, protocol reso
 
 ## 8. Current Review Status
 
-The review package uses Revision 1124 as its overall source baseline. The revision-specific evidence is listed individually:
+The review package uses Revision 1132 as its overall source baseline. All thirteen review documents have now been individually rechecked against Revision 1132; historical implementation milestones remain identified in each document's narrative rather than being mistaken for its current source basis. The revision-specific evidence is listed individually:
 
 - **Revision 1112** — Introduces the SDK API export/import declarations and records the initial MinGW64 shared-build checkpoint.
 - **Revision 1113** — Adds per-module API visibility and related build/Windows portability adjustments.
 - **Revision 1118** — Extends ASN.1 built-in value/type validation and corrects ENUMERATED constraint validation.
 - **Revision 1119** — Completes the related OID validation-path adjustment.
 - **Revision 1120** — Adds runtime parameterized type specialization/instantiation work.
-- **Revision 1122** — Advances the specialization/instantiation implementation and records the associated validation work.
+- **Revision 1122** — Advances the specialization/instantiation implementation and records sanitizer, Valgrind, and Application Verifier checks; it also removes the future/promise behavior from `t_value<T>`, leaving it as an immediate named-value holder.
 - **Revision 1123** — Reconstructs parameterized definitions and formal parameter lists in the loader/publisher path.
 - **Revision 1124** — Adds state-guided actual-argument collection and a tested publisher specialization/representation path.
+- **Revision 1125** — Adds move-aware ASN.1 parameterized specialization and named OID arc/dictionary reconstruction work. This remains the latest ASN.1 implementation milestone identified in the public changelog through BUILD 1132; the ASN.1 study and review documents have been rechecked against the current Revision 1132 source.
+- **Revision 1132** — Publishes and verifies TLS 1.3 PSK binder hash agility, PSK identity/binder and key-exchange-mode validation, and 0-RTT eligibility/acceptance with independent pending/rejected ciphertext bounds. The TLS → DTLS → QUIC development-path review is updated to this source revision.
 
-The ASN.1 parser/runtime review records this progression while keeping the demonstrated testcase boundary explicit. Unrelated review topics retain their earlier individual baselines where these source changes do not materially affect them.
+The ASN.1 parser/runtime review records this progression while keeping the demonstrated testcase boundary explicit. The TLS development-path review records the Revision 1132 PSK/0-RTT checkpoint. All other review topics have also been rechecked against Revision 1132; their original implementation milestones remain historical context.
 
 ```text
 1. Parser evolution
@@ -698,7 +813,7 @@ The ASN.1 parser/runtime review records this progression while keeping the demon
 9. Module linkage and shared-build boundary
 ```
 
-These review axes form the current architecture-review map. The module-linkage/shared-build boundary remains grounded in revisions 1112–1113. The ASN.1 parser/runtime document is updated through Revision 1124 for state-guided parameterized instantiation; the parser-engine, binary-construction, network/session, crypto-advisor, and Authenticode documents retain their earlier individual baselines because the recent changes do not materially alter those review topics.
+These nine review axes form the current architecture-review map. The module-linkage/shared-build boundary's feature origin remains Revisions 1112–1113; the ASN.1 parser/runtime implementation milestone remains Revision 1125. The four supplementary documents (`capability-gap-assessment.md`, `project-review.md`, `repository-evidence-audit.md`, and `trial-openssl-comparison.md`) connect project-wide review conclusions to public repository evidence and comparison boundaries. All thirteen review documents have been individually rechecked at Source base Revision 1132.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
@@ -707,7 +822,7 @@ The next review pass should therefore focus on **cross-referencing and correctio
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1119                                │
+│ Revision 1132                                │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

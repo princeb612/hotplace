@@ -2435,6 +2435,8 @@ Table Generation Success!
 
 ## 15. GLR Implementation in hotplace
 
+> Source base : Revision 1132 (Section 15 implementation observations only; Sections 1–14 remain historical study material and are not re-audited by this marker.)
+
 The earlier sections introduce deterministic LR parsing. GLR retains competing ACTION entries and explores viable alternatives rather than rejecting a conflict at table-construction time. The hotplace implementation has two parts: table generation over LR(0) states, and runtime parsing with a graph-structured stack (GSS). Allowing conflicts in the table does not by itself guarantee correct handling of every ambiguous grammar.
 
 ### 15.1 Deterministic stack vs. graph-structured stack
@@ -2507,7 +2509,7 @@ A reduction can create a head that enables another reduction for the same lookah
 
 For a production `A → β`, the runtime gets the RHS length, calls `stack.pop(head, rhs_len, callback)` to enumerate complete ancestor paths (not destructively pop nodes), uses each path's final node as the state before the reduced RHS, looks up `GOTO(ancestor.state, A)`, then creates and enqueues a reduced head.
 
-After reduction processing, SHIFT creates a node for the destination state and links it to a predecessor head. The token index advances only after a successful shift. If no viable shift remains and no ACCEPT was found, parsing returns a syntax error. When supplied, `parse_tree` receives `on_reduce()` and `on_shift()` callbacks; semantic interpretation remains the higher-level ASN.1 builder's responsibility.
+After reduction processing, SHIFT creates a node for the destination state and links it to a predecessor head. The token index advances only after a successful shift. If no viable shift remains and no ACCEPT was found, parsing returns a syntax error. When supplied, `parse_tree` receives `on_reduce()` and `on_shift()` callbacks; semantic interpretation remains the higher-level ASN.1 builder's responsibility. The current `parse_tree` is one node stack, not a shared packed parse forest, and these callbacks are not tagged with GSS path identity. For GLR input, treat the tree as an event-derived diagnostic representation, not a complete enumeration of competing derivations.
 
 ### 15.4 Implementation boundaries to review
 

@@ -2,7 +2,7 @@
 /**
  * @file   testcase_gpt_record.cpp
  * @author GPT
- * @desc
+ * @desc   TLS and DTLS record framing, protection, size-limit, and AEAD boundary tests.
  */
 
 #include "testcase_gpt_common.hpp"
@@ -14,6 +14,9 @@ static void test_tls13_key_usage_limits() {
     constexpr uint64 ccm_max_plaintext = (1ULL << 35);
     const binary_t plaintext{'x', (byte_t)tls_content_type_t::application_data};
 
+    // Scenario under test: TLS 1.3 per-key AEAD usage limits.
+    // Action: allow the final AES-GCM application record while reserving one alert slot.
+    // Expected: leave an alert record and one additional safety record unused.
     _test_case.begin("TLS 1.3 per-key AEAD usage limits");
 
     {
@@ -238,6 +241,9 @@ static void test_tls13_key_usage_limits() {
 }
 
 static void test_tls13_inner_plaintext_padding_and_content_type() {
+    // Scenario under test: TLS 1.3 TLSInnerPlaintext padding and content type.
+    // Action: accept Application Data with multiple zero padding octets.
+    // Expected: remove all padding and the inner content type.
     _test_case.begin("TLS 1.3 TLSInnerPlaintext padding and content type");
 
     {
@@ -345,6 +351,8 @@ static void test_tls13_inner_plaintext_padding_and_content_type() {
         tls_records records;
         return_t ret = test_read_tls13_inner_plaintext(plaintext, from_client, reader, records);
         _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "%s: reject malformed TLSInnerPlaintext", label);
+        _test_case.assert(1 == reader.get_session_info(from_client).get_recordno(false), __FUNCTION__,
+                          "%s: authenticate the record before rejecting its empty or malformed TLSInnerPlaintext", label);
 
         size_t fatal_alert_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
@@ -371,6 +379,8 @@ static void test_tls13_inner_plaintext_padding_and_content_type() {
 }
 
 static void test_tls_record_size_limits() {
+    // Scenario under test: TLS record plaintext and ciphertext size limits.
+    // Expected: allow TLS 1.3 plaintext header length at 2^14.
     _test_case.begin("TLS record plaintext and ciphertext size limits");
 
     // Inbound TLS 1.3: plaintext records are limited to 2^14; protected records to 2^14+256.
@@ -518,6 +528,8 @@ static void test_tls_record_size_limits() {
 }
 
 static void test_dtls_record_publisher_segment_boundary() {
+    // Scenario under test: DTLS record publisher segment boundary.
+    // Expected: reject a record larger than the datagram segment target.
     _test_case.begin("DTLS record publisher segment boundary");
 
     {
@@ -568,6 +580,8 @@ static void test_dtls_record_publisher_segment_boundary() {
 }
 
 static void test_dtls_record_publisher_pmtu_api() {
+    // Scenario under test: DTLS record publisher PMTU API.
+    // Expected: report legacy DTLS record header expansion before protection.
     _test_case.begin("DTLS record publisher PMTU API");
 
     {
@@ -652,6 +666,8 @@ static void test_dtls_record_publisher_pmtu_api() {
 }
 
 static void test_dtls13_plaintext_content_type_demux() {
+    // Scenario under test: DTLS 1.3 plaintext content-type demultiplexing.
+    // Expected: allow plaintext alert, handshake, and ACK record builders.
     _test_case.begin("DTLS 1.3 plaintext content-type demultiplexing");
 
     const tls_content_type_t allowed[] = {
@@ -732,6 +748,8 @@ static void test_dtls13_plaintext_content_type_demux() {
 }
 
 static void test_dtls13_minimum_ciphertext_sample() {
+    // Scenario under test: DTLS 1.3 minimum ciphertext sample and padding.
+    // Expected: write a short DTLS 1.3 CCM_8 record with required padding.
     _test_case.begin("DTLS 1.3 minimum ciphertext sample and padding");
 
     class dtls13_padding_probe : public dtls13_ciphertext {
@@ -874,6 +892,9 @@ static void test_dtls13_minimum_ciphertext_sample() {
 }
 
 static void test_tls_record_size_limit_extension() {
+    // Scenario under test: TLS record_size_limit extension negotiation and enforcement.
+    // Action: serialize record_size_limit in ClientHello.
+    // Expected: encode extension type and uint16 limit.
     _test_case.begin("TLS record_size_limit extension negotiation and enforcement");
 
     {
@@ -1055,7 +1076,94 @@ static void test_tls_record_size_limit_extension() {
     }
 }
 
+static void test_tls13_rejects_truncated_aead_record_before_tag_extraction() {
+    // Scenario under test: TLS 1.3 rejects truncated AEAD records before extracting the tag.
+    // Expected: return bad_data when the record is shorter than its AEAD tag.
+    _test_case.begin("TLS 1.3 rejects truncated AEAD records before extracting the tag");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls_13);
+    protection.set_cipher_suite(0x1301);
+    protection.set_flow(tls_flow_t::one_rtt);
+    protection.get_secrets().assign(tls_secret_t::handshake_client_key, binary_t(16, 0x41));
+    protection.get_secrets().assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x42));
+
+    // The TLS header declares five body bytes; AES-GCM needs at least a
+    // complete 16-byte authentication tag before decryption can be attempted.
+    const binary_t truncated_record = {0x17, 0x03, 0x03, 0x00, 0x05, 0x70, 0x69, 0x6e, 0x67, 0x17};
+    binary_t plaintext;
+    return_t ret = protection.decrypt_aead(&session, from_client, truncated_record.data(), truncated_record.size(), 0, plaintext, protection_space_t::tls,
+                                           decrypt_alert_policy_t::suppress);
+
+    _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "return bad_data when the record is shorter than its AEAD tag");
+    _test_case.assert(plaintext.empty(), __FUNCTION__, "do not produce plaintext from a truncated record");
+    _test_case.assert(0 == session.get_session_info(from_client).get_recordno(false), __FUNCTION__, "do not consume a record number when tag extraction is impossible");
+    size_t fatal_alert_count = 0;
+    session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if (tls_alertlevel_t::fatal == level) {
+            ++fatal_alert_count;
+        }
+    });
+    _test_case.assert(0 == fatal_alert_count, __FUNCTION__, "do not report an authentication failure before attempting AEAD");
+
+    // An all-zero tag is not an authenticated empty TLSInnerPlaintext. The
+    // record-layer integration test covers a valid tag over an empty plaintext;
+    // this low-level trial-decrypt case remains an authentication failure.
+    // Keep one encrypted byte so this case exercises an ordinary failed
+    // AEAD authentication, independently of the empty-plaintext edge case.
+    binary_t invalid_tag_record = {0x17, 0x03, 0x03, 0x00, 0x11, 0x70};
+    invalid_tag_record.insert(invalid_tag_record.end(), 16, 0);
+    ret = protection.decrypt_aead(&session, from_client, invalid_tag_record.data(), invalid_tag_record.size(), 0, plaintext, protection_space_t::tls,
+                                  decrypt_alert_policy_t::suppress);
+    _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "propagate the AEAD authentication failure for an invalid TLS 1.3 tag");
+    _test_case.assert(plaintext.empty(), __FUNCTION__, "do not expose plaintext when trial authentication fails");
+
+    // The overload that receives AAD separately must validate the trailing tag
+    // before extracting it from the record buffer.
+    binary_t aad = {0x17, 0x03, 0x03, 0x00, 0x05};
+    auto recordno_before_truncated_aad = session.get_session_info(from_client).get_recordno(false);
+    ret = protection.decrypt(&session, from_client, truncated_record.data(), truncated_record.size(), 0, plaintext, aad);
+    _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "reject a record too short for separately supplied AAD and tag");
+    _test_case.assert(recordno_before_truncated_aad == session.get_session_info(from_client).get_recordno(false), __FUNCTION__,
+                      "do not consume a record number when separately supplied AAD leaves no room for the tag");
+
+    // The explicit-AAD/tag overload must reject an inverted range before
+    // forming stream + pos or computing size - pos.
+    binary_t tag(16, 0);
+    ret = protection.decrypt(&session, from_client, truncated_record.data(), 0, 1, plaintext, aad, tag);
+    _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "reject size smaller than pos in the explicit-tag overload");
+}
+
+static void test_tls12_rejects_truncated_aead_explicit_nonce() {
+    // Scenario under test: TLS 1.2 rejects truncated AEAD explicit nonces before reading them.
+    // Expected: reject ciphertext shorter than the TLS 1.2 explicit nonce.
+    _test_case.begin("TLS 1.2 rejects truncated AEAD explicit nonces before reading them");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls_12);
+    protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (supported)
+
+    // TLS 1.2 AES-GCM carries an 8-byte explicit nonce before the encrypted
+    // fragment. The AEAD tag is supplied separately by this overload.
+    binary_t truncated_ciphertext(7, 0x5a);
+    binary_t aad(13, 0);
+    binary_t tag(16, 0);
+    binary_t plaintext;
+    return_t ret = protection.decrypt(&session, from_client, truncated_ciphertext.data(), truncated_ciphertext.size(), 0, plaintext, aad, tag);
+
+    _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "reject ciphertext shorter than the TLS 1.2 explicit nonce");
+    _test_case.assert(plaintext.empty(), __FUNCTION__, "do not produce plaintext from a truncated explicit nonce");
+    _test_case.assert(0 == session.get_session_info(from_client).get_recordno(false), __FUNCTION__,
+                      "do not consume a record number when the explicit nonce is truncated");
+}
+
 void testcase_gpt_record() {
+    test_tls13_rejects_truncated_aead_record_before_tag_extraction();
+    test_tls12_rejects_truncated_aead_explicit_nonce();
     test_tls13_key_usage_limits();
     test_tls13_inner_plaintext_padding_and_content_type();
     test_tls_record_size_limits();

@@ -4,6 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1104                    │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -47,13 +48,15 @@ No claim of algorithmic coverage is inferred from this reference document alone.
 
 ### 4.2 Documentation and verification status
 
-The supplied `test/testcase/crypto/report` records 4,214 pass, 281 expt, 0 fail, 90 skip, and 0 triv entries. The report does not identify the OS, compiler/build configuration, or source revision, and this documentation pass did not execute the tests.
+The referenced `test/testcase/crypto/report` file is not present in the current branch, so these historical totals cannot be verified from the checked-in source tree and are not asserted here. No tests were executed during this documentation pass. The source-basis marker records the revision used to verify the current test-source mapping; it does not update the older checklist state above.
 
 ## 5. Relationships
 
-- Crypto implementation: `sdk/crypto/README.md`
-- Test sources and vector consumers are located in the corresponding sibling testcase directories.
-- Related testcase source: `test/testcase/crypto/sample.cpp`
+- Crypto implementation: [`sdk/crypto/README.md`](../../../sdk/crypto/README.md)
+- Provider adapter: [`sdk/crypto/oqs/README.md`](../../../sdk/crypto/oqs/README.md)
+- Common and provider-backed testcase map: [`pqc/README.md`](pqc/README.md)
+- Build-time source selection and testcase dispatch: `CMakeLists.txt`, `sample.cpp`
+- Provider-backed sources: `pqc/oqs/testcase_oqs_encode.cpp`, `pqc/oqs/testcase_oqs_kem.cpp`, `pqc/oqs/testcase_oqs_dsa.cpp`
 
 
 

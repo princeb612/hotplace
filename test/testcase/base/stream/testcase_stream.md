@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1106                    │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -57,7 +57,7 @@ _test_case.assert(
 
 ## 3. What does the evidence establish?
 ### Source-level evidence
-1. The source-level status below is documented against Revision 1105. Runtime evidence is recorded separately from the supplied CTest-generated report snapshot; the report does not identify the tested source revision or execution environment.
+1. The source-level status below is documented against Revision 1132. Runtime evidence is recorded separately from the supplied CTest-generated report snapshot; the report does not identify the tested source revision or execution environment.
 
 2. Status meanings:
 

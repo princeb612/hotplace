@@ -1,5 +1,7 @@
 # Study Flow — Draft
 
+> Source base : Revision 1132 (historical study/development sequence; not a product roadmap)
+
 ## Why preserve this
 
 The sequence `HTTP/2 → HPACK → QPACK → QUIC → TLS → QUIC → ASN.1` can look arbitrary if it is read only as a dependency graph. It was instead a development and study flow in which each RFC topic exposed a mechanism that required a deeper independent study.

@@ -1,6 +1,8 @@
 # hotplace study
 
-**Edition 1 · Revision 1125**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -138,6 +140,15 @@ These are topic-level implementation changes; they do not alter the study map's 
 substrate but own their own protocol/security-object semantics. Parser owns
 generic syntax processing; ASN.1 owns ASN.1 notation, semantic construction,
 and runtime schema/object meaning.
+
+Revision 1132 extends the documented TLS 1.3 resumption path: PSK binders use
+the hash associated with each offered identity, PSK selection is checked
+against the offered identities and key-exchange modes, and 0-RTT acceptance
+is constrained by the selected ticket and negotiated connection parameters.
+The pending and rejected early-data record paths also have independent
+ciphertext byte and record-count bounds. These statements describe the
+published Revision 1132 source and the registered source-level regression cases.
+This documentation audit inspected those sources but did not execute the test suite.
 
 ### Network and Protocol Processing
 
@@ -461,8 +472,8 @@ this map does not imply that it was developed later.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1124            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

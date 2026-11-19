@@ -171,44 +171,6 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_protection::decrypt_trial(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                       protection_space_t space) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == session || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        size_t header_size = get_header_size();
-        if (size < pos || size - pos < header_size) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-        size_t ciphertext_size = size - pos - header_size;
-        size_t max_ciphertext_size = (session_type_t::tls == session->get_type()) ? tls13_ciphertext_max_size : dtls_legacy_protection_max_size;
-        if (ciphertext_size > max_ciphertext_size) {
-            ret = errorcode_t::exceed;
-            __leave2;
-        }
-        if (!is_kindof_tls13() || tls_advisor::get_instance()->is_kindof_cbc(get_cipher_suite())) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        // The caller is distinguishing rejected early-data records from the
-        // first handshake-key-protected record. Do not queue bad_record_mac
-        // when the trial key does not authenticate this record.
-        ret = decrypt_aead(session, dir, stream, size, pos, plaintext, space, true);
-        if ((errorcode_t::success == ret) && (plaintext.size() > tls13_inner_plaintext_max_size)) {
-            ret = errorcode_t::overflow;
-            session->reset_session_status();
-            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
 return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad,
                                  protection_space_t space) {
     return_t ret = errorcode_t::success;
@@ -229,6 +191,12 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
                     auto aadlen = aad.size();
                     auto tagsize = get_tag_size();
                     binary_t tag;
+
+                    // Validate the AAD and complete tag before extracting the trailing tag.
+                    if ((size < pos) || (size - pos < aadlen) || (0 == tagsize) || (size - pos - aadlen < tagsize)) {
+                        ret = errorcode_t::bad_data;
+                        break;
+                    }
 
                     // ... aad(aadlen) encdata tag(tagsize)
                     //     \_ pos

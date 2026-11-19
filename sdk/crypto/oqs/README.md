@@ -5,7 +5,7 @@
 │ hotplace source tree                          │
 │ Edition 2 · Revision 1107                     │
 │ Documented with GPT-6                         │
-│ Source basis: Revision 1107                   │
+│ Source base : Revision 1132                   │
 │ Documentation scope: implementation navigation│
 └───────────────────────────────────────────────┘
 ```
@@ -17,7 +17,7 @@
 `sdk/crypto/oqs/` is the adapter between OpenSSL 3's provider API and hotplace's post-quantum crypto abstractions. It discovers provider-exposed KEM and signature algorithms and delegates key and operation work; it is not an independent implementation of the algorithms.
 
 ## 2. Data Model
-The main API is `pqc_oqs`, with provider state represented by `oqs_context` in `types.hpp`. The adapter opens an isolated `OSSL_LIB_CTX`, loads the OpenSSL default provider and `oqsprovider`, then queries `OSSL_OP_KEM` and `OSSL_OP_SIGNATURE`.
+The main API is `pqc_oqs`, with provider state represented by `oqs_context` in `types.hpp`. At build time, `SUPPORT_OQS` controls whether the OQS SDK headers/sources are included; the testcase CMake file independently selects OQS testcase sources or dummy implementations. At runtime, the adapter creates an `OSSL_LIB_CTX`, loads the OpenSSL default provider and external `oqsprovider` module, then queries `OSSL_OP_KEM` and `OSSL_OP_SIGNATURE`. The provider module must be installed in an OpenSSL provider search location.
 
 ```text
 OSSL_LIB_CTX
@@ -61,7 +61,9 @@ pqc_oqs::close(context)
   unload providers + free library context
 ```
 
-The algorithm lists are discovered from the provider at runtime. The adapter records whether each name maps to an OpenSSL NID/OID, but the flag is only one capability gate used by the current tests; it does not establish support for every key encoding or higher-level protocol. A successfully opened context owns provider handles and an `OSSL_LIB_CTX`, so close it after the operation sequence. On OpenSSL versions before 3.0, these methods return `not_supported`.
+The algorithm lists are discovered from the provider at runtime. The adapter records whether each name maps through `OBJ_sn2nid()` to an OpenSSL NID/OID, but the flag is only one capability gate used by the current tests; it does not establish support for every key encoding or higher-level protocol. A successfully opened context owns provider handles and an `OSSL_LIB_CTX`, so close it after the operation sequence. On OpenSSL versions before 3.0, these methods return `not_supported`.
+
+**Current `open()` limitations:** the implementation checks whether `oqsprovider` loaded, but does not check the return values from `OSSL_LIB_CTX_new()` or loading the default provider. More seriously, when the output `context` pointer is null, it sets `invalid_parameter` but does not leave the function before later assigning through `*context`; if provider loading succeeds, this invalid call can dereference a null pointer. Callers must pass a valid output pointer; the null-pointer path should be fixed before it is treated as a safe validation path.
 
 The enumeration call's callback is part of the caller contract, not an implicit provider action. This shortened version of the testcase includes its definition:
 
@@ -140,7 +142,7 @@ The adapter delegates key generation and serialization to `crypto_keychain`, and
 
 ### 4.2 Test evidence and source entry points
 
-`testcase_oqs_kem.cpp` checks a key-encapsulation round trip: key generation, public/private key encode/decode, encapsulation, decapsulation, and comparison of the two shared secrets. `testcase_oqs_dsa.cpp` checks signing and verification for OID-registered signature algorithms. See the [PQC testcase README](../../../test/testcase/crypto/pqc/README.md).
+`testcase_oqs_encode.cpp` enumerates OID-registered KEM/signature algorithms and checks PEM/DER public/private and encrypted-private encode/decode statuses; it does not compare the reconstructed key objects. `testcase_oqs_kem.cpp` checks key generation, public/private encoding, public-key decode, encapsulation, decapsulation, and byte-for-byte comparison of the two shared secrets; it does not decode the encoded private key. `testcase_oqs_dsa.cpp` checks key generation, public/private encoding, public-key decode, and sign/verify statuses for OID-registered signature algorithms; it is not a fixed-vector or negative-message test. All three sources are under `test/testcase/crypto/pqc/oqs/`. See the [PQC testcase README](../../../test/testcase/crypto/pqc/README.md).
 
 - OpenSSL 3 provider API documentation
 

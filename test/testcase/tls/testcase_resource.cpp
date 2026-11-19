@@ -10,6 +10,9 @@
  *
  */
 
+#include <cstring>
+#include <utility>
+
 #include "sample.hpp"
 
 static void do_validate_resource_cipher_suite() {

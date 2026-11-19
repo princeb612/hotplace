@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -25,13 +25,13 @@ The source is organized into cooperating layers:
 | Area | Responsibility | Boundary |
 |---|---|---|
 | [`basic/`](basic/README.md) | Cipher/AEAD, digest and transcript-hash primitives, MAC, KDF, key objects and exchange, signatures, PRNG, and common PQC operations | Performs or adapts cryptographic operations; does not define complete protocol flows |
-| [`advisor/`](advisor/README.md) | Algorithm, parameter, OID, backend, TLS, JOSE and COSE metadata lookup | Describes identifiers and lookup relationships; metadata presence alone does not prove backend availability |
+| [`advisor/`](advisor/README.md) | Cryptographic algorithm/parameter/OID/backend metadata, plus cross-domain JOSE/COSE and mapped TLS group/signature information | Describes primitive identifiers and lookup relationships; TLS cipher-suite/version/extension/QUIC resources belong to `sdk/net/tls/advisor`; metadata presence alone does not prove backend availability |
 | [`cose/`](cose/README.md) | COSE message structures and cryptographic processing over CBOR | Owns COSE object/message semantics, not general CBOR encoding |
 | [`jose/`](jose/README.md) | JWS, JWE, JWK and JWA processing over JSON-oriented representations | Owns JOSE serialization and processing, not the underlying primitive implementations |
 | [`authenticode/`](authenticode/README.md) | Windows PE Authenticode verification | Format-specific signature/digest and certificate verification, not a general-purpose PKI framework |
 | [`oqs/`](oqs/README.md) | Optional OpenSSL 3 provider adapter for post-quantum algorithms | Integrates with an external provider; it does not implement the algorithms itself |
 
-Conceptually, `basic` supplies operations and key abstractions; `advisor` supplies lookup metadata; COSE and JOSE compose those facilities into format-specific security objects; Authenticode verifies a PE-specific signed format; and OQS is an optional provider integration path rather than a peer message format.
+Conceptually, `basic` supplies operations and key abstractions; `advisor` supplies lookup metadata; COSE and JOSE compose those facilities into format-specific security objects; Authenticode verifies a PE-specific signed format; and OQS is an optional provider integration path rather than a peer message format. The two advisor layers have separate scopes: `sdk/crypto/advisor` maps cryptographic primitives and cross-domain fields, while `sdk/net/tls/advisor` owns TLS/DTLS/QUIC protocol identifiers such as cipher suites, versions, extensions and QUIC parameters.
 
 ### Compact source map
 

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1125                    │
-│ Source basis: Revision 1125                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -40,7 +40,7 @@ The conversion API uses four data forms:
 
 The dotted parser passes a character buffer, its size, a current scan position, and a delimiter boundary to the string-scanning helper. Each delimited decimal token is converted to `uint32` and inserted into the output vector.
 
-The numeric ASN.1-style overload uses `regex_token()` to extract decimal runs into `oid_t`. The named overload uses `regex_tokens()` with a name/optional-number pattern and creates `oid_elem{arc, name}` entries in `asn1oid_t`. The named overload appends to the supplied vector rather than clearing it; callers that want replacement semantics must clear it first. These helpers extract notation components but do not constitute complete ASN.1 OID syntax or arc-constraint validation.
+The numeric ASN.1-style overload uses `regex_token()` to extract decimal runs into `oid_t`. The named overload uses `regex_tokens()` with a name/optional-number pattern and creates `oid_elem{arc, name}` entries in `asn1oid_t`. The named overload appends to the supplied vector rather than clearing it; callers that want replacement semantics must clear it first. Its regex accepts an optional numeric suffix, but the current builder preserves a label only when the token has an explicit `(number)` suffix; a bare label is emitted as arc `0` with an empty name. These helpers extract notation components but do not constitute complete ASN.1 OID syntax or arc-constraint validation.
 
 The adjacent dictionary stores metadata separately from the node sequence: `oid_metadata` contains a `name` and `description`, while `oid_dictionary` indexes node sequences in a trie. This allows the same OID value to be used independently of its human-readable label.
 
@@ -66,7 +66,7 @@ scan for "." delimiters
                             oid_t vector
 ```
 
-The implementation replaces the caller's previous output by clearing the vector before scanning. It converts the tokens it finds; this helper is not a complete semantic OID validator and does not independently enforce the ASN.1 first-arc/second-arc constraints.
+For non-null input, the implementation replaces the caller's previous output by clearing the vector before scanning. A null input pointer returns before clearing, leaving the caller's previous vector unchanged. It converts the tokens it finds; this helper is not a complete semantic OID validator and does not independently enforce the ASN.1 first-arc/second-arc constraints.
 
 ### ASN.1-braced notation to nodes
 
@@ -117,7 +117,9 @@ dotted text ──► str_to_oid() ──► oid_t ──┐
 node vector ─────────────────────────────┘
 ```
 
-The dictionary can also accept a node vector directly. A successful lookup copies the stored name and description into the caller's `oid_metadata`; an absent or empty node sequence does not produce a successful match. The dictionary lookup is not performed automatically by `str_to_oid()`.
+The dictionary can also accept a node vector directly. A successful lookup copies the stored name and description into the caller's `oid_metadata`; the built-in resource table currently supplies names but no non-empty descriptions. An absent or empty node sequence does not produce a successful match. The dictionary lookup is not performed automatically by `str_to_oid()`.
+
+`oid_dictionary::get_instance()` calls `load()` on every invocation; the current implementation has no one-time-loaded guard. `load()` iterates the curated resource table and allocates/inserts metadata again on each call. Do not describe the accessor as loading the table only once.
 
 ### Failure and coverage boundaries
 
@@ -146,7 +148,7 @@ basic_stream notation;
 bool reconstructed = dict->oid2asn1(oid, notation);
 ```
 
-The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name and description. The testcase asserts that lookup succeeds, but it does not establish that `asn1text_to_oid()` validates all ASN.1 OID notation rules.
+The conversion produces only the numeric arc sequence; the dictionary lookup is a separate operation that supplies the human-readable name (the built-in table's descriptions are empty). The testcase asserts that lookup and dictionary-backed reconstruction succeed for this registered OID. Its `load_oid()` function calls `get_instance()` and then asserts `true` unconditionally; it does not measure loading time or validate a load status. The testcase does not establish that `asn1text_to_oid()` validates all ASN.1 OID notation rules.
 
 Source: `test/testcase/io/basic/testcase_oid.cpp`.
 

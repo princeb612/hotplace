@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -34,7 +34,7 @@ The object owns a `binary_t` buffer and an endian flag. The default is big-endia
 
 ```text
 binary_stream
-   ├── endian policy ──► integer byte conversion
+   ├── endian policy ───► integer byte conversion
    ├── prefix(value) ───► insert at buffer start
    ├── append(value) ───► append at buffer end
    └── get() ───────────► binary_t

@@ -77,12 +77,28 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
          * } Cookie;
          */
 
+        const size_t body_end = offsetof_body() + get_body_size();
+        if ((body_end > size) || (pos > body_end)) {
+            auto session = get_session();
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
+
         payload pl;
         pl << new payload_member(uint16(0), true, constexpr_version)  //
            << new payload_member(uint8(0), constexpr_cookie_len)      //
            << new payload_member(binary_t(), constexpr_cookie);
         pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);
-        pl.read(stream, size, pos);
+        ret = pl.read(stream, body_end, pos);
+        if ((errorcode_t::success != ret) || (pos != body_end)) {
+            auto session = get_session();
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
 
         pl.get_binary(constexpr_cookie, _cookie);
 

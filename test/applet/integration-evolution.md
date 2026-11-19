@@ -3,7 +3,7 @@
 ```text
 hotplace source tree
 Edition 1 · Revision 1108
-Source basis: Revision 1105
+Source base : Revision 1132
 Documented with GPT-6
 Scope: source-level evolution across server applets
 ```

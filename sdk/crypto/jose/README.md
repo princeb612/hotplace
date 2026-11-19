@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -93,7 +93,7 @@ open(context, key)
      clear transient context state
 ```
 
-The combined API is a dispatcher, not the implementation of every operation. String-based entry points resolve JOSE names through advisor metadata and return an invalid-parameter error when the required mapping is absent. The focused classes own the signing or encryption flow. Their operation paths clear transient context state on exit, so callers should not assume the input/output message state remains populated for reuse after a completed call.
+The combined API is a dispatcher, not the implementation of every operation. The single-algorithm string entry points (`sign2` and `encrypt2`) resolve JOSE names through advisor metadata and return `invalid_parameter` when a required mapping is absent. The list-based string overloads behave differently: they silently omit unmapped names before dispatch, so an unknown name is not necessarily reported as `invalid_parameter` (an all-unmapped JWE list can reach the list path with no recipients). The focused classes own the signing or encryption flow. Their operation paths clear transient context state on exit, so callers should not assume the input/output message state remains populated for reuse after a completed call.
 
 ### JWS signing flow
 
@@ -117,7 +117,7 @@ input payload + requested JWS alg/header(s)
  composer emits compact / flattened / general JSON
 ```
 
-For verification, the composer parses the received serialization into protected header, payload, signature and optional key identifier. The implementation reconstructs the signing input and invokes the matching verification operation. For multiple signatures, each signature entry is evaluated separately and the aggregate result is successful only when the required per-signature results succeed. Parsing a well-formed JOSE object is not itself proof of a valid signature.
+For verification, the composer parses the received serialization into protected header, payload, signature and optional key identifier. The implementation reconstructs the signing input and invokes the matching verification operation. For multiple signatures, each signature entry is evaluated separately and the aggregate result is successful only when all parsed signature entries have successful verification results. In serialization, general JWS JSON emits the signature collection; compact and flattened serialization use only the first signature entry. Parsing a well-formed JOSE object is not itself proof of a valid signature.
 
 ### JWE encryption flow
 
@@ -145,11 +145,11 @@ input plaintext + enc + recipient alg list
                  general JSON
 ```
 
-The recipient algorithm (`alg`) determines how a recipient obtains the CEK; the content-encryption algorithm (`enc`) determines how the payload is protected. For multi-recipient JWE, recipient-specific key-management output is attached to each recipient while the content ciphertext, IV and tag are shared. Direct-key and ECDH-ES direct modes do not follow the ordinary encrypted-key wrapping path.
+The recipient algorithm (`alg`) determines how a recipient obtains the CEK; the content-encryption algorithm (`enc`) determines how the payload is protected. For multi-recipient JWE, recipient-specific key-management output is attached to each recipient while the content ciphertext, IV and tag are shared. The current composer emits the full recipient collection only for general JSON serialization; compact and flattened serialization use only the first recipient entry. Direct-key and ECDH-ES direct modes do not follow the ordinary encrypted-key wrapping path.
 
 The overload taking one `jwa_t` runs one selected key-management path, including the direct (`dir`) path. The overload taking a list is a different API path: it removes `dir` and `RSA1_5` from that list before processing the remaining algorithms. Therefore the existence of an enum/resource mapping does not mean that every overload accepts the same algorithm set. The list is also materialized into the `jose_encryption_t::recipients` map keyed by `jwa_t`, so duplicate entries for one algorithm do not represent distinct recipients.
 
-**Observed implementation limits:** the list overload's composer and encryption calls return status values, but the final `compose_encryption()` status is not assigned to the function's return value. The current path can therefore return success even if serialization fails. Also, the in-memory recipient map is keyed only by algorithm, so two distinct recipients using the same `alg` cannot be retained independently. These are implementation constraints, not properties of the JWE format.
+**Observed implementation limits:** the list overload treats `not_supported` from an individual `doencrypt()` call as non-fatal and does not assign the final `compose_encryption()` status to the function's return value. It can therefore report success even when every selected algorithm is unsupported or serialization fails. The in-memory recipient map is keyed only by algorithm, so two distinct recipients using the same `alg` cannot be retained independently. These are implementation constraints, not properties of the JWE format.
 
 ### JWE decryption flow
 
@@ -169,7 +169,7 @@ serialized JWE
        expose plaintext and boolean result
 ```
 
-The decryption implementation parses the serialized message into shared content-encryption state and recipient-specific key-management state, then calls `dodecrypt()` for each recipient entry. The latter resolves a candidate key by recipient-level `kid`, falling back to the shared `kid`, and recovers/derives the CEK before authenticating and decrypting the shared ciphertext. With AES-CBC-HMAC, the MAC check is part of acceptance; with AEAD content encryption, tag verification is part of the decrypt operation. When the parsed `zip` parameter is `DEF`, decompression follows successful content decryption.
+The decryption implementation parses the serialized message into shared content-encryption state and recipient-specific key-management state, then calls `dodecrypt()` for each recipient entry. The current code does not check the return value from `parse_decryption()`. It resolves a candidate key by recipient-level `kid`, falling back to the shared `kid`, and recovers/derives the CEK before authenticating and decrypting the shared ciphertext. The implementation currently requires every parsed recipient attempt to succeed: a failed attempt makes the aggregate result `cipher_failure` even if another recipient attempt succeeds. This is stricter than the usual JWE recipient model, where a recipient processes its own entry. With AES-CBC-HMAC, the MAC check is part of acceptance; with AEAD content encryption, tag verification is part of the decrypt operation. When the parsed `zip` parameter is `DEF`, decompression follows successful content decryption, but the current path does not check the `zlib_inflate()` return status.
 
 ### Algorithm inventory from the current resource tables
 
@@ -185,7 +185,7 @@ The lists below distinguish **metadata/enum mapping** from proven runtime availa
 | Additional signature metadata | RS1 and ES256K appear in the shared signature resource table but have `jws_t::unknown`; they should not be presented as ordinary mapped JWS enum values. ML-DSA-44/65/87 have JWS enum entries and a guarded AKP testcase; current interoperability/registry status is separate from source-level implementation. SLH-DSA variants are present in the shared signature metadata but have `jws_t::unknown`, so that metadata alone does not establish JOSE JWS support. |
 | JWE key management (`alg`) | RSA1_5, RSA-OAEP, RSA-OAEP-256; A128KW/A192KW/A256KW; dir; ECDH-ES and ECDH-ES+A128KW/A192KW/A256KW; A128GCMKW/A192GCMKW/A256GCMKW; PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW |
 | JWE content encryption (`enc`) | A128CBC-HS256, A192CBC-HS384, A256CBC-HS512; A128GCM, A192GCM, A256GCM |
-| JWK key types in the legacy status table | `oct`, RSA, EC (P-256/P-384/P-521), OKP (Ed25519, Ed448, X25519, X448); newer/provider-specific key families need their own source/test evidence. |
+| JWK key types in the legacy status table | `oct`, RSA, EC (P-256/P-384/P-521), OKP (Ed25519, Ed448, X25519, X448); the source also has an `AKP` parser extension for ML-DSA material with an OpenSSL 3.5+ JSON-vector testcase. Treat `AKP` as a project-specific extension, not a standard RFC 7517 `kty`. |
 
 ### Security-sensitive exclusions and legacy entries
 

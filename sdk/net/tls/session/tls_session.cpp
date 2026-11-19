@@ -261,10 +261,14 @@ void tls_session::clear_session_status(uint32 status) {
 
 void tls_session::reset_session_status() {
     _status = 0;
+    _sem.signal();
 
-    // A fatal alert terminates the current connection. Reset the directional
-    // handshake cursors as well, so a replayed/new connection can start with
-    // an initial ClientHello on the reused session object.
+    // A fatal alert terminates the current connection. Reset the TLS flow as
+    // well as the directional handshake cursors, so a replayed/new connection
+    // cannot inherit the previous connection's HelloRetryRequest state.
+    if (tls_flow_t::hello_retry_request == _tls_protection.get_flow()) {
+        _tls_protection.set_flow(tls_flow_t::one_rtt);
+    }
     get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
     get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
 }
@@ -278,6 +282,9 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
         ret = _sem.wait(msec);
 
         if (0 == _status) {
+            if (errorcode_t::success == ret) {
+                ret = errorcode_t::mismatch;
+            }
             break;
         }
 
@@ -294,7 +301,7 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
             }
         }
 
-        if (errorcode_t::timeout == ret) {
+        if (errorcode_t::success != ret) {
             break;
         }
     }

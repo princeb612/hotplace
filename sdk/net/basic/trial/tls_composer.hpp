@@ -15,6 +15,8 @@
 #include <hotplace/sdk/net/basic/trial/types.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls/types.hpp>
+#include <type_traits>
+#include <utility>
 
 namespace hotplace {
 namespace net {
@@ -30,6 +32,12 @@ class HOTPLACE_NET_API tls_composer {
 
     // from_client
     return_t handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func);
+    return_t handshake(tls_direction_t dir, unsigned wto, std::function<return_t(tls_session*, binary_t&)> func);
+    template <typename F>
+    auto handshake(tls_direction_t dir, unsigned wto, F&& func) ->
+        typename std::enable_if<std::is_same<decltype(func(std::declval<tls_session*>(), std::declval<binary_t&>())), return_t>::value, return_t>::type {
+        return handshake(dir, wto, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
+    }
     // from_server
     return_t session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func);
 
@@ -48,8 +56,8 @@ class HOTPLACE_NET_API tls_composer {
     /**
      * TLS handshake
      */
-    return_t do_tls_client_handshake(unsigned wto, std::function<void(tls_session*, binary_t&)> func);
-    return_t do_tls_client_hello(std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_client_handshake(unsigned wto, std::function<return_t(tls_session*, binary_t&)> func);
+    return_t do_tls_client_hello(std::function<return_t(tls_session*, binary_t&)> func);
     return_t do_tls_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func);
     return_t do_tls_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func);
 
@@ -60,7 +68,19 @@ class HOTPLACE_NET_API tls_composer {
      *  generate fragmented DTLS record(s) and then call func (something like sendto)
      */
     return_t do_tls_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_compose(tls_record* record, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func);
     return_t do_tls_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_compose(tls_records* records, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func);
+    template <typename F>
+    auto do_tls_compose(tls_record* record, tls_direction_t dir, F&& func) ->
+        typename std::enable_if<std::is_same<decltype(func(std::declval<tls_session*>(), std::declval<binary_t&>())), return_t>::value, return_t>::type {
+        return do_tls_compose(record, dir, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
+    }
+    template <typename F>
+    auto do_tls_compose(tls_records* records, tls_direction_t dir, F&& func) ->
+        typename std::enable_if<std::is_same<decltype(func(std::declval<tls_session*>(), std::declval<binary_t&>())), return_t>::value, return_t>::type {
+        return do_tls_compose(records, dir, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
+    }
     /**
      * QUIC handshake
      */

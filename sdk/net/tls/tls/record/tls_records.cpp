@@ -69,7 +69,17 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const bina
     return ret;
 }
 
-return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func) {
+return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
+    return write(session, dir, std::function<return_t(tls_session*, binary_t&)>([func](tls_session* session, binary_t& bin) -> return_t {
+                     func(session, bin);
+                     return errorcode_t::success;
+                 }));
+}
+
+return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == func) {
@@ -78,13 +88,15 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
         }
 
         if (session_type_t::dtls == session->get_type()) {
-            // fragmentation
             ret = session->get_dtls_record_publisher().publish(this, dir, func);
         } else {
             binary_t bin;
             auto lambda = [&dir, &bin](tls_record* record) -> return_t { return record->write(dir, bin); };
             ret = for_each(lambda);
-            func(session, bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            ret = func(session, bin);
         }
     }
     __finally2 {}

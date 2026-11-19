@@ -4,7 +4,7 @@
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
 │ Edition 1 · Revision 1124                     │
-│ Source basis: Revision 1124                   │
+│ Source base : Revision 1132                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -29,7 +29,7 @@ The directory contains two related but distinct paths:
 |---|---|---|
 | lexical_analyzer | Token vocabulary, lookup structures and lexical options | Defines source tokenization, not grammar productions. |
 | lexical_context | Source pointer/size and ordered lexical_token objects | Tokens refer to the original source; its storage must remain valid while token text is materialized. |
-| lexical_token | Token ID, source offset, length, line and token index | Lexer IDs are not automatically grammar terminal IDs. |
+| lexical_token | Token ID, source offset, length, line and token-vocabulary lookup index | The lookup index is not the token's ordinal position in the source; lexer token IDs are not automatically grammar terminal IDs. |
 | cfg_grammar | Terminal/non-terminal symbols and production rules | Describes valid token sequences, not source text or semantic values. |
 | ACTION/GOTO tables | Parser states, action entries, transitions and productions | Generated tables can be executed or serialized. |
 | binary_parsing_table | Table representation plus serialization/import operations | File layout and grammar revision are compatibility concerns. |
@@ -143,16 +143,16 @@ cfg_grammar ─► generation ─► ACTION/GOTO table ─► build or import
 1. The consumer registers terminals and productions in cfg_grammar.
 2. Generation computes parser states and ACTION/GOTO entries for the selected engine.
 3. The table can be retained in memory or serialized through binary_parsing_table.
-4. A later process imports the .ptb artifact, validates its structure, integrity and revision compatibility, then reconstructs the table.
-5. Import does not restore lexical configuration, token mapping or semantic builders; these remain consumer responsibilities.
+4. A later process imports the .ptb artifact; the reader checks the fixed header, endian marker, total body size and CRC32, and applies a minimum table-revision check only when the receiving grammar has configured a nonzero revision. It does not validate every block length or symbol reference.
+5. Import does not restore lexical configuration, token mapping or semantic builders; these remain consumer responsibilities. The current ASN.1 import accessors (`import_lalr1_notation_parser()` and `import_glr_parser()`) do not configure a grammar revision before calling `read()`, so their default revision is zero and the table-revision gate imposes no meaningful minimum. The standalone `test_load_parsingtable()` example also uses a default-constructed parser with revision zero.
 
 ### Per-input parse lifecycle
 
 1. The consumer provides tokens in the terminal vocabulary expected by the grammar.
 2. The parser examines its current state and lookahead to choose actions.
 3. SHIFT consumes a token and advances parser state. REDUCE recognizes a production and uses GOTO for the reduced LHS.
-4. LALR maintains one deterministic path. GLR can preserve competing paths through a graph-structured stack.
-5. If a parse_tree is supplied, SHIFT/REDUCE events build a generic syntax tree. The consumer interprets that tree into domain-specific objects.
+4. LALR maintains one deterministic path. GLR maintains multiple active GSS heads and attempts competing paths, but its current shift phase globally deduplicates target states and can omit a distinct predecessor edge; do not assume complete ambiguity preservation.
+5. If a parse_tree is supplied, SHIFT/REDUCE events build a generic syntax tree. It is a single node stack, not a shared packed parse forest; GLR reductions from competing GSS paths are sent to that same stack. The consumer interprets the resulting syntax representation into domain-specific objects.
 
 Lexical errors, table-generation conflicts, .ptb integrity errors, syntax errors and domain-semantic errors belong to different boundaries. A successful syntax parse does not prove ASN.1 type, reference, tag or constraint validity.
 
@@ -171,9 +171,9 @@ asn1_advisor
              test_asn1parser(parser, notation, notation)
 ```
 
-`test_asn1_notation()` asserts that all four parser instances are ready and iterates concrete notation strings, including assignments, tagged types, nested `SEQUENCE`/`CHOICE` forms, and constraints. The separate `test_load_parsingtable()` path reads `asn1notation.ptb` into a `lalr1_parser`, checks the read status, and parses `Type1 ::= VisibleString`. These are useful minimal examples for consumers choosing between runtime table generation and a prebuilt artifact.
+`test_asn1_notation()` asserts that all four parser instances are ready and iterates concrete notation strings, including assignments, tagged types, nested `SEQUENCE`/`CHOICE` forms, and constraints. The separate `test_load_parsingtable()` path reads `asn1notation.ptb` into a default-constructed `lalr1_parser`, records the read status, and then calls the parse helper with `Type1 ::= VisibleString`. The test does not guard that parse call on the read result or separately assert `parser.ready()`; with the default grammar revision of zero, its import does not establish a nonzero minimum-version compatibility check. These are useful minimal examples for consumers choosing between runtime table generation and a prebuilt artifact.
 
-The testcase does not make those paths interchangeable: the imported table still needs the matching lexer/token-to-terminal setup, and the parser's syntax result remains distinct from ASN.1 semantic publication and constraint evaluation.
+The testcase does not make those paths interchangeable: the imported table still needs the matching lexer/token-to-terminal setup, and the parser's syntax result remains distinct from ASN.1 semantic publication and constraint evaluation. The same `testcase_parser()` entry also invokes `test_asn1_parameterized()`, which runs parameterized assignment/type-reference and information-object-class notation through the built GLR parser; those inputs are not part of the four build/import parser instances described above. It also invokes `test_ac_reducer()` over 13 `example*.asn1` files, an Aho-Corasick module-boundary reduction path rather than a CFG parse.
 
 ## 4. Relationships
 - `../basic/` — payload and stream primitives used by table serialization and other I/O operations.

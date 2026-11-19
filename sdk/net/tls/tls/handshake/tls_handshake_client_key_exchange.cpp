@@ -82,6 +82,13 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
 
         {
             auto session = get_session();
+            const size_t body_end = offsetof_body() + get_body_size();
+            if ((body_end > size) || (pos > body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 #if defined DEBUG
             uint8 pubkey_len = 0;
 #endif
@@ -91,7 +98,13 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 pl << new payload_member(uint8(0), constexpr_pubkey_len)  //
                    << new payload_member(binary_t(), constexpr_pubkey);
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-                pl.read(stream, size, pos);
+                ret = pl.read(stream, body_end, pos);
+                if ((errorcode_t::success != ret) || (pos != body_end)) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
+                    ret = errorcode_t::bad_format;
+                    __leave2_trace(ret);
+                }
 
 #if defined DEBUG
                 pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
@@ -165,7 +178,10 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
             payload pl;
             pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)  //
                << new payload_member(pubkey, constexpr_pubkey);
-            pl.write(bin);
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
 
 #if defined DEBUG

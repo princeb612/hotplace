@@ -595,7 +595,11 @@ static bool extract_timestamp_time_from_signer_info(PKCS7_SIGNER_INFO* si, ASN1_
         const unsigned char* p = ASN1_STRING_get0_data(asn1str);
         int len = ASN1_STRING_length(asn1str);
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
         const PKCS7_SIGNER_INFO* inner_si = d2i_PKCS7_SIGNER_INFO(nullptr, &p, len);
+#else
+        PKCS7_SIGNER_INFO* inner_si = d2i_PKCS7_SIGNER_INFO(nullptr, &p, len);
+#endif
         if (nullptr == inner_si) {
             __leave2;
         }

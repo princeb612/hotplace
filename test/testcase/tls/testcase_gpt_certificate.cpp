@@ -2,12 +2,14 @@
 /**
  * @file   testcase_gpt_certificate.cpp
  * @author GPT
- * @desc
+ * @desc   TLS 1.3 CertificateRequest, CertificateVerify, and certificate-authentication policy tests.
  */
 
 #include "testcase_gpt_common.hpp"
 
 static void test_tls13_certificate_verify_signature_policy() {
+    // Scenario under test: TLS 1.3 CertificateVerify signature scheme policy.
+    // Expected: recognize offered scheme.
     _test_case.begin("TLS 1.3 CertificateVerify signature scheme policy");
 
     protection_context context;
@@ -77,6 +79,9 @@ static void test_tls13_certificate_verify_signature_policy() {
 }
 
 static void test_tls13_certificate_verify_signature_failure() {
+    // Scenario under test: TLS 1.3 CertificateVerify invalid signature queues decrypt_error.
+    // Action: create valid CertificateVerify signature.
+    // Expected: generate RSA test key.
     _test_case.begin("TLS 1.3 CertificateVerify invalid signature queues decrypt_error");
 
     EVP_PKEY_CTX* keygen = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
@@ -230,6 +235,9 @@ static void test_tls13_certificate_verify_signature_failure() {
 }
 
 static void test_tls13_certificate_request_signature_algorithms() {
+    // Scenario under test: TLS 1.3 CertificateRequest signature_algorithms context.
+    // Action: serialize CertificateRequest with signature_algorithms.
+    // Expected: preserve ClientHello offer while writing CertificateRequest.
     _test_case.begin("TLS 1.3 CertificateRequest signature_algorithms context");
 
     tls_session writer;
@@ -294,6 +302,8 @@ static void test_tls13_certificate_request_signature_algorithms() {
     _test_case.assert(missing_extension, __FUNCTION__, "queue missing_extension alert");
 
     const auto test_bad_vector = [&](const char* name, const binary_t& extension_body) -> void {
+        // Scenario under test: the named test-case variant.
+        // Expected: reject malformed SignatureSchemeList.
         _test_case.begin(name);
         binary_t body{0x00};  // empty certificate_request_context
         uint16 extensions_len = (uint16)(4 + extension_body.size());
@@ -328,6 +338,8 @@ static void test_tls13_certificate_request_signature_algorithms() {
     test_bad_vector("CertificateRequest truncated SignatureSchemeList", binary_t{0x00, 0x04, 0x08, 0x04});
     test_bad_vector("CertificateRequest trailing SignatureSchemeList bytes", binary_t{0x00, 0x02, 0x08, 0x04, 0x00});
 
+    // Scenario under test: CertificateRequest extension vector declared-length mismatch.
+    // Expected: reject mismatched CertificateRequest extensions length.
     _test_case.begin("CertificateRequest extension vector declared-length mismatch");
     binary_t bad_body{0x00};
     binary_append(bad_body, (uint16)8, hton16);  // declares 8 bytes; only 7 follow
@@ -358,6 +370,9 @@ static void test_tls13_certificate_request_signature_algorithms() {
 }
 
 static void test_tls13_empty_certificate_list_direction_policy() {
+    // Scenario under test: TLS 1.3 empty Certificate list direction policy.
+    // Action: construct CertificateRequest for client authentication.
+    // Expected: reject an empty server Certificate list.
     _test_case.begin("TLS 1.3 empty Certificate list direction policy");
 
     const binary_t empty_certificate_message{(byte_t)tls_handshake_type_t::certificate, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00};
@@ -427,6 +442,9 @@ static void test_tls13_empty_certificate_list_direction_policy() {
 }
 
 static void test_tls13_post_handshake_certificate_request_gate() {
+    // Scenario under test: TLS 1.3 post-handshake CertificateRequest offer gate.
+    // Action: construct a valid main-handshake TLS 1.3 CertificateRequest.
+    // Expected: refuse a post-handshake CertificateRequest when the client did not offer PHA.
     _test_case.begin("TLS 1.3 post-handshake CertificateRequest offer gate");
 
     tls_session request_writer;

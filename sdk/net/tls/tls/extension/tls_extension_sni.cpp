@@ -36,6 +36,8 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 6066 3.  Server Name Indication
+        auto handshake = get_handshake();
+        const bool server_acknowledges_sni = (from_server == dir) && (nullptr != handshake) && (tls_handshake_type_t::encrypted_extensions == handshake->get_type());
 
         // uint16 first_entry_len = 0;
         uint8 type = 0;
@@ -63,7 +65,30 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
                << new payload_member(uint16(0), true, constexpr_hostname_len)  //
                << new payload_member(binary_t(), constexpr_hostname);
             pl.set_reference_value(constexpr_hostname, constexpr_hostname_len);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (server_acknowledges_sni) {
+                if (errorcode_t::no_data == ret) {
+                    // RFC 8446 4.2.2: the server acknowledges SNI with an empty
+                    // extension_data field; payload::read reports no_data for it.
+                    _nametype = 0;
+                    _hostname.clear();
+                    ret = errorcode_t::success;
+                    __leave2;
+                }
+                // A server_name acknowledgment in EncryptedExtensions must be empty.
+                auto session = handshake->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+            if (errorcode_t::success != ret) {
+                auto session = handshake->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             type = pl.t_value_of<uint8>(constexpr_name_type);
             // hostname_len = pl.t_value_of<uint16>(constexpr_hostname_len);

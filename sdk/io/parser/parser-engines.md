@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -43,11 +43,11 @@ Both engines implement the common `parser_t` interface.
 
 ### Shared parser state and table contract
 
-Both engines use the grammar's ACTION/GOTO table and the same parser interface. Preparation (grammar/table build or import) is separate from execution (consuming tokens). ready() indicates that the engine has a usable table; imported() identifies the imported-table path.
+Both engines use the grammar's ACTION/GOTO table and the same parser interface. The LALR ACTION table is a map with one action per state/lookahead key; the GLR ACTION table is a multimap that can retain multiple actions for the same key. LALR table generation reports a conflict instead of branching when competing actions cannot be represented by its single-action table. Preparation (grammar/table build or import) is separate from execution (consuming tokens). `ready()` indicates that the engine has a usable table; `imported()` identifies the imported-table path.
 
 ### GLR: graph-structured stack
 
-The GLR engine uses gss<uint32, parse_treenode*>. A GSS node stores a parser state and an optional syntax-node value; parent links preserve alternative stack histories, and multiple active heads represent concurrent parse paths. Shared ancestors allow paths to merge instead of duplicating every complete stack.
+The GLR engine uses `gss<uint32, parse_treenode*>`. A GSS node stores a parser state and an optional syntax-node value; its parent vector can represent alternative stack histories, and multiple active heads represent concurrent parse paths. The reduction path uses GSS retracing and deduplicates `(goto_state, ancestor)` work. However, the current shift phase deduplicates target states globally across all active heads; when distinct heads select the same target state, later heads are skipped without adding another parent link. The data structure supports shared histories, but this shift path does not preserve every converging predecessor edge.
 
 | Intermediate data | Purpose |
 |---|---|
@@ -60,7 +60,7 @@ The GLR engine uses gss<uint32, parse_treenode*>. A GSS node stores a parser sta
 
 ### Parse-tree event interface
 
-Both engines can report SHIFT and REDUCE events to an optional parse_tree. The parser state and syntax output are distinct: the stack determines which action is legal, while the tree records recognized grammar structure. The tree does not supply ASN.1 semantic validation.
+Both engines can report SHIFT and REDUCE events to an optional `parse_tree`. The parser state and syntax output are distinct: the stack determines which action is legal, while the tree records the events it receives. The GLR engine sends those events into the same `parse_tree` implementation, whose storage is a single node stack; it is not a shared packed parse forest and does not guarantee a complete representation of every ambiguous derivation. The tree does not supply ASN.1 semantic validation.
 
 ## 3. Behavior Model
 
@@ -144,7 +144,7 @@ When a tree is supplied, SHIFT records terminal symbol/value and REDUCE records 
 
 ### Source-level evidence
 
-test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp feeds the same notation vectors to four paths: LALR build, LALR import, GLR build and GLR import. test_load_parsingtable() provides a focused imported-table example. For tree construction, follow test_asn1parser() in test/testcase/io/parser/asn1module.hpp and parse_tree.cpp.
+test_asn1_notation() in test/testcase/io/parser/testcase_parser.cpp feeds the same notation vectors to four paths: LALR build, LALR import, GLR build and GLR import. test_load_parsingtable() provides a focused imported-table example. For tree construction, follow test_asn1parser() in test/testcase/io/parser/asn1module.hpp and parse_tree.cpp. These tests check parser readiness/return status and print tree diagnostics; they do not compare golden parse trees, assert preservation of all GLR alternatives, or exercise the same-target/multiple-head shift convergence case described above.
 
 ## 4. Relationships
 - `parser-generation.md` — constructs the grammar tables consumed by these engines.

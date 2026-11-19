@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -25,7 +25,7 @@ The KDF layer provides several algorithms because “derive key material” cove
 | scrypt | Password, salt, output length, `N`, `r`, `p` | Password-based derivation with memory-hard cost parameters. |
 | Argon2 | Password, salt, optional associated data/secret, variant, iteration/memory/parallelism costs, output length | Memory-hard password hashing/derivation. The current implementation path is conditional on sufficiently new OpenSSL support; source comments specify OpenSSL 3.2 or newer. |
 | AES-CMAC KDF (`ckdf`) | AES algorithm, IKM, salt, info, output length; CMAC-based extract/expand helpers | CMAC-based derivation for uses requiring this construction rather than HMAC-based HKDF. |
-| TLS label derivation | Secret, output length, protocol label, context; TLS 1.3 and DTLS 1.3 label helpers | Encodes protocol-defined label/context structure around HKDF expansion. It is a primitive helper, not a complete TLS key schedule. |
+| TLS label derivation | Secret, output length, protocol label, context; TLS 1.3 and DTLS 1.3 label helpers | Encodes protocol-defined label/context structure around HKDF expansion: TLS 1.3 uses `tls13 `, while DTLS 1.3 uses `dtls13` with no trailing space (RFC 9147 §5.9). It is a primitive helper, not a complete TLS/DTLS key schedule. |
 
 ### Main API grouping
 
@@ -73,7 +73,7 @@ TLS/DTLS secret + label + context + length
        traffic/key-schedule input
 ```
 
-The input model selects the family: password KDFs deliberately impose a configurable guessing cost, while HKDF and the CMAC-based KDF derive purpose-specific material from existing secret input. The TLS/DTLS label helpers are wrappers around HKDF expansion with protocol-defined input encoding; they do not run the handshake or decide which secret belongs at a particular protocol stage.
+The input model selects the family: password KDFs deliberately impose a configurable guessing cost, while HKDF and the CMAC-based KDF derive purpose-specific material from existing secret input. The TLS/DTLS label helpers are wrappers around HKDF expansion with protocol-defined input encoding; TLS 1.3 uses the `tls13 ` prefix and DTLS 1.3 uses `dtls13` without a trailing space. QUIC uses the TLS 1.3 label encoding with QUIC-specific labels. These helpers do not run the handshake or decide which secret belongs at a particular protocol stage.
 
 ### Parameters are part of the derivation contract
 
@@ -168,8 +168,9 @@ This is the key boundary between a generic KDF and protocol state: the helper en
 
 ### Source-test evidence
 
-- `testcase_hkdf.cpp` passes password bytes, salt bytes, the context string `label`, SHA-256 and a 10-byte output length to `openssl_kdf::hmac_kdf`. It compares the result with the fixed hexadecimal expectation `2ac4369f525996f8de13`.
-- `testcase_rfc6070.cpp` covers PBKDF2; `testcase_rfc7914.cpp` covers scrypt; `testcase_rfc9106.cpp` covers Argon2; `testvector_rfc4615.cpp` covers AES-CMAC-related material.
+- `testcase_hkdf.cpp` passes the variable named `password` as HKDF input keying material (IKM), with salt, the context string `label`, SHA-256 and a 10-byte output length. It compares the result with the fixed hexadecimal expectation `2ac4369f525996f8de13` but does not check the KDF return status.
+- `testcase_rfc6070.cpp` covers PBKDF2 and `testcase_rfc7914.cpp` covers scrypt; both are dispatched only with `-s`. `testcase_rfc9106.cpp` covers Argon2 and is dispatched only with `-argon2`; it uses the header defaults of iteration cost 3, parallel cost 4 and memory cost 32 KiB. These optional paths are not run by the default crypto testcase dispatch.
+- `testvector_rfc4615.cpp` covers RFC 4615 AES-CMAC-PRF-128 material and the separate CMAC-KDF/CKDF vectors.
 - These vector/testcase files show source-level coverage, not runtime execution or availability in every build.
 
 ## 5. References
@@ -179,3 +180,4 @@ This is the key boundary between a generic KDF and protocol state: the helper en
 - RFC 7914 — The scrypt Password-Based Key Derivation Function.
 - RFC 9106 — Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications.
 - RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3.
+- RFC 9147 — The Datagram Transport Layer Security (DTLS) Protocol Version 1.3.

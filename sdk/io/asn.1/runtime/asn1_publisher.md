@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1125                    │
-│ Source basis: Revision 1124                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -126,10 +126,11 @@ parse_tree action
 
 - `test/testcase/asn.1/runtime/testcase_publish.cpp::test_publish_babystep()` — staged parse-tree-to-semantic construction.
 - `test/testcase/asn.1/loader/testcase_loader.cpp` — file load, parse tree, publisher invocation, module representation, and imported-symbol resolvability.
-- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp::test_parameterized2()` — parses a parameterized definition and `MyPacket ::= FRAME{ OCTET STRING, 1024 }`, then compares the reconstructed module representation with the expected notation.
+- `test/testcase/asn.1/parameterized/testcase_parameterized.cpp::test_parameterized2()` — loads inline parameterized notation through `asn1_loader::load()`, publishes the parse tree, and compares the reconstructed module representation with the expected notation.
+- `...::test_parameterized3()` — loads `example6.asn1` through `asn1_loader::load_file()`, publishes it, and asserts the module kind, module name, and reconstructed `Envelope {INTEGER}` representation.
 - `test/testcase/asn.1/testcase_basic3.cpp` — additional ASN.1 object-model behavior.
 
-These are source-level verification paths, not a claim that the tests were run during this documentation update. The parameterized testcase demonstrates one integrated type/value actual-argument path; it does not prove all parameter forms, nesting patterns, or edge cases are complete.
+These are source-level verification paths, not a claim that the tests were run during this documentation update. The active parameterized testcase demonstrates these two bounded parser/loader/publisher paths; it does not prove all parameter forms, nesting patterns, or edge cases are complete. The `example7.asn1` vector remains commented out.
 ## 4. Relationships
 - [ASN.1 parser adapter](asn1_parser.md) — provides the syntax tree.
 - [ASN.1 runtime](README.md) — module registry and resulting runtime representation.

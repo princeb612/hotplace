@@ -1,5 +1,7 @@
 # Build
 
+> Source base : Revision 1132
+
 ## Context
 
 hotplace's build system is distributed across shell scripts and CMake files, but the structure has two distinct stages:
@@ -118,14 +120,16 @@ build
 buildscript
 ```
 
-The current active set is:
+The dependency array currently selects the following packages in the Revision 1132 source (`thirdparty/dependency`):
 
 ```text
-OpenSSL 4.0.2
+OpenSSL 4.0.3
 Jansson 2.15.0
 zlib 1.3.2
 yaml-cpp 0.9.0
 ```
+
+This is the declared active selection, not a claim that these packages were freshly built during this documentation audit.
 
 Optional declarations include:
 
@@ -373,32 +377,37 @@ PQC is the clearest example.
 
 ### Optional PQC dependency
 
-The optional path is:
+The source keeps optional declarations for `liboqs` and `oqs-provider`, but they are **not members of the active `dependency` array** in Revision 1132. Consequently, running `thirdparty/make.sh` with its current selection does not build either package.
+
+The project-side switch has a separate, narrower effect:
 
 ```text
 SUPPORT_OQS
     │
-    ├── liboqs
+    ▼
+sdk/crypto/CMakeLists.txt
     │
-    └── oqs-provider
-             │
-             ▼
-          OpenSSL 3.x
+    ▼
+include sdk/crypto/oqs/*.hpp
+and sdk/crypto/oqs/*.cpp
 ```
 
-The dependency build supplies the external implementation/provider. The hotplace crypto layer remains the project's own abstraction and integration boundary.
+The OQS wrapper loads the OpenSSL `oqsprovider` provider at runtime. That provider must therefore be made available in the runtime environment independently; the `SUPPORT_OQS` switch does not activate the optional package declarations in `thirdparty/dependency` or build the provider itself.
 
 Therefore:
 
 ```text
-thirdparty
-    = external implementation supply
+thirdparty/dependency
+    = declares packages and selects which are built
 
-sdk/crypto
-    = hotplace cryptographic abstraction/integration
+SUPPORT_OQS
+    = includes the hotplace OQS integration sources
+
+OpenSSL provider environment
+    = supplies the runtime oqsprovider implementation
 ```
 
-These should not be documented as the same layer.
+These are related but distinct setup steps; enabling the project-side source integration alone does not establish that the external provider is installed or loadable.
 
 ### yaml-cpp as a compatibility example
 
@@ -865,7 +874,7 @@ documents the version metadata change, not a new platform verification run.
 
 ## Status
 
-Build-system structure summarized from the Revision 1112 source baseline; version metadata updated through Revision 1116; shared-build verification status remains at Revision 1114:
+Build-system structure summarized from the Revision 1112 source baseline; version metadata updated through Revision 1116; shared-build verification status remains at Revision 1114; the declared active third-party package selection was rechecked at Revision 1132:
 
 - `thirdparty/make.sh` is the external dependency build entry point.
 - `thirdparty/dependency` defines the active and retained dependency package selections.

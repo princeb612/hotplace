@@ -11,6 +11,9 @@
 #include "testcase_gpt_common.hpp"
 
 static void test_tls13_new_session_ticket_lifetime() {
+    // Scenario under test: TLS 1.3 NewSessionTicket lifetime limit.
+    // Action: read NewSessionTicket lifetime boundary.
+    // Expected: cap cached ticket lifetime at seven days.
     _test_case.begin("TLS 1.3 NewSessionTicket lifetime limit");
 
     const uint32 max_ticket_lifetime = 7 * 24 * 60 * 60;
@@ -269,6 +272,9 @@ static void test_tls13_new_session_ticket_lifetime() {
 }
 
 static void test_tls13_multiple_new_session_tickets_are_cached_independently() {
+    // Scenario under test: TLS 1.3 client caches multiple NewSessionTicket messages independently.
+    // Action: receive the first NewSessionTicket.
+    // Expected: consume the first complete NewSessionTicket.
     _test_case.begin("TLS 1.3 client caches multiple NewSessionTicket messages independently");
 
     tls_session session;
@@ -352,6 +358,9 @@ static void test_tls13_multiple_new_session_tickets_are_cached_independently() {
 }
 
 static void test_tls13_new_session_ticket_nonce_uniqueness() {
+    // Scenario under test: TLS 1.3 NewSessionTicket nonce uniqueness per connection.
+    // Action: serialize another NewSessionTicket on the same connection.
+    // Expected: emit a complete ticket nonce field.
     _test_case.begin("TLS 1.3 NewSessionTicket nonce uniqueness per connection");
 
     tls_session session;
@@ -451,6 +460,8 @@ static void test_tls13_new_session_ticket_nonce_uniqueness() {
 }
 
 static void test_tls13_new_session_ticket_respects_advertised_psk_modes() {
+    // Scenario under test: TLS 1.3 NewSessionTicket respects advertised PSK key-exchange modes.
+    // Expected: decline ticket issuance when no advertised PSK mode is supported.
     _test_case.begin("TLS 1.3 NewSessionTicket respects advertised PSK key-exchange modes");
 
     tls_session session;

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -48,6 +48,8 @@ mac(message)   init → update(chunk)* → finalize
 ```
 
 The builder binds the selected hash and secret key to the higher-level object. A one-shot `mac()` call consumes a complete message; the incremental path retains keyed hash state across `update()` calls until finalization. `openssl_mac` is a separate one-shot helper, while `openssl_hash` is the context-level interface used for stateful backend work.
+
+**Current `crypto_hmac` status limitation:** its constructor ignores the return values from `openssl_hash::open()` and `init()`; `mac()` returns its initialized success value without propagating `init/update/finalize` failures; and the fluent `init/update/finalize` methods also discard backend statuses. `digest(md)` calls `openssl_hash::update(handle, nullptr, 0, md)`, whose current null-input path returns success without writing a digest (the same underlying issue documented for `transcript_hash`). A non-null builder result therefore does not prove a valid backend context, and the no-message `digest()` method should not be relied on until fixed.
 
 ### Concrete caller paths: primitive, facade, and JOSE
 
@@ -93,11 +95,15 @@ supplied time + configured time-step interval
      decimal code
 ```
 
-HOTP's counter and digit count are operation inputs. TOTP first maps the supplied time to a time-step counter and then uses the HOTP mechanism. Verification additionally depends on the caller's accepted counter/time window and replay policy; those policies are not encoded by the primitive itself.
+HOTP's counter and digit count are operation inputs. TOTP first maps the supplied time to a time-step counter and then uses the HOTP mechanism. Verification additionally depends on the caller's accepted counter/time window and replay policy; those policies are not encoded by the primitive itself. In the current implementation, the HOTP context has `_window` / `_window_size` fields and a lock, but the operations do not use them: there is no built-in look-ahead window and automatic counter access is not synchronized. The automatic counter is `uint32`, so it does not cover the full 64-bit RFC 4226 counter range; callers needing a wider counter must use the binary-counter overload. `digit_length == 0` selects 6 digits and values above 9 are capped at 9. TOTP `interval == 0` is converted to a 1-second interval, not the commonly used 30-second interval.
+
+There are also status-propagation defects: `hmac_otp::get(handle, code)` ignores the result of the counter-specific `get()` and returns success after incrementing the counter; `time_otp::get()` ignores the underlying HOTP result and returns success; and `time_otp::verify()` returns success when its internal `get()` fails. These methods should not be described as reliably propagating backend failures.
 
 ### HMAC and CBC-HMAC are different contracts
 
-HMAC authenticates a message with a secret key and hash function. CBC-HMAC combines encryption and authentication with a specified byte layout and ordering; the order is protocol-specific. The [CBC-HMAC developer note](cbc-hmac-survey.md) distinguishes TLS MAC-then-encrypt (MtE), TLS encrypt-then-MAC (EtM), and JOSE's AES-CBC-HMAC construction. Treat it as comparative implementation study material, not a generic construction recipe.
+HMAC authenticates a message with a secret key and hash function. CBC-HMAC combines encryption and authentication with a specified byte layout and ordering; the order is protocol-specific. The [CBC-HMAC developer note](cbc-hmac-survey.md) distinguishes TLS MAC-then-encrypt (MtE), TLS encrypt-then-MAC (EtM), and JOSE's AES-CBC-HMAC construction. In the current API, the combined-tag `encrypt/decrypt` overloads handle the TLS flags and reject `jose_encrypt_then_mac`; JOSE uses the separate-tag overloads, which require that flag and are called by the JOSE JWE path and its vector tests.
+
+The separate-tag JOSE `encrypt()` path currently does not assign/check the return value from `crypt.encrypt()`, then computes the tag and returns the earlier status. The JOSE decrypt path verifies the tag before decrypting, but compares tags with ordinary container equality (`tag != mac`), not a constant-time comparison. The TLS decrypt paths use the same ordinary tag comparison. The CBC-HMAC implementation also uses the `crypto_hmac` fluent API described above, which does not propagate backend errors.
 
 ### Why OTP is separate
 
@@ -118,16 +124,16 @@ HMAC's digest choice is resolved through common hash metadata/backend operations
 
 ### Implementation entry points
 
-- `crypto_hmac.cpp`, `crypto_hmac_builder.cpp`, `openssl_mac.cpp`
-- `crypto_cbc_hmac.cpp`, `hmac_otp.cpp`, `time_otp.cpp`
-- `test/testcase/crypto/hash/`, `test/testcase/crypto/sign/`
+- `sdk/crypto/basic/mac/crypto_hmac.cpp`, `crypto_hmac_builder.cpp`, `openssl_mac.cpp`
+- `sdk/crypto/basic/mac/crypto_cbc_hmac.cpp`, `hmac_otp.cpp`, `time_otp.cpp`
+- `test/testcase/crypto/hash/` (HMAC/CMAC/HOTP/TOTP vectors), `test/testcase/crypto/crypt/` (TLS/JOSE CBC-HMAC vectors), and `test/testcase/crypto/sign/` (HMAC signing/JOSE integration)
 
 ### Source-test evidence
 
-- `testcase_rfc4231.cpp` covers HMAC-SHA vectors.
-- `testcase_rfc4493.cpp` covers AES-CMAC vectors.
-- `testcase_rfc4226.cpp` covers HOTP, and `testcase_rfc6238.cpp` covers TOTP.
-- `testcase_hmac.cpp` exercises the signing/MAC integration path.
+- `test/testcase/crypto/hash/testcase_rfc4231.cpp` covers HMAC-SHA known-answer vectors; `testcase_rfc4493.cpp` covers AES-CMAC known-answer vectors through the `openssl_hash` CMAC context path.
+- `test/testcase/crypto/hash/testcase_rfc4226.cpp` and `testcase_rfc6238.cpp` compare generated HOTP/TOTP codes with RFC vectors. They do not exercise the `verify()` methods, and their per-code `get()` return values are not checked explicitly.
+- `test/testcase/crypto/crypt/testvector_cbc_hmac_tls.cpp` covers TLS MtE/EtM; `testvector_cbc_hmac_jose.cpp` covers the separate-tag JOSE path and checks intermediate/final vector values plus encrypt/decrypt results.
+- `test/testcase/crypto/sign/testcase_hmac.cpp` exercises the `openssl_hash`, `openssl_sign`, and JOSE HS256 integration paths; it does not directly exercise the `crypto_hmac` facade.
 - These are source-level coverage references; they do not claim the tests were executed in the current environment.
 
 ## 5. References
@@ -136,3 +142,6 @@ HMAC's digest choice is resolved through common hash metadata/backend operations
 - RFC 4231 — Identifiers and Test Vectors for HMAC-SHA-224, HMAC-SHA-256, HMAC-SHA-384, and HMAC-SHA-512.
 - RFC 4493 — The AES-CMAC Algorithm.
 - RFC 6238 — TOTP: Time-Based One-Time Password Algorithm.
+- RFC 7366 — Encrypt-then-MAC for TLS and DTLS.
+- RFC 7516 — JSON Web Encryption (JWE).
+- RFC 7518 — JSON Web Algorithms (JWA).

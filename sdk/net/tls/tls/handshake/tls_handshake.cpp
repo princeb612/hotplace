@@ -308,7 +308,10 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 ;
 
                 pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
-                pl.read(stream, size, pos);
+                ret = pl.read(stream, size, pos);
+                if (errorcode_t::success != ret) {
+                    __leave2_trace(ret);
+                }
 
 #if defined DEBUG
                 hstype = (tls_handshake_type_t)pl.t_value_of<uint8>(constexpr_message_type);
@@ -482,7 +485,10 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
 
     // handshakes 1..*
     size_t bin_oldsize = bin.size();
-    pl.write(bin);
+    ret = pl.write(bin);
+    if (errorcode_t::success != ret) {
+        return ret;
+    }
     {
         _range.end = bin.size();
         _size = bin.size() - bin_oldsize + body.size();

@@ -4,7 +4,7 @@
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
 │ Edition 1 · Revision 1107                     │
-│ Source basis: Revision 1107                   │
+│ Source base : Revision 1132                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -67,7 +67,7 @@ This is useful when an HTTP handler needs the path for routing and the query for
 
 ### URL and character conversion boundaries
 
-URL decomposition, percent escaping/unescaping, tokenization, and character conversion are related string utilities but have different contracts. URL tests do not establish the behavior of the platform-specific character-conversion paths; check the relevant implementation selected by the build.
+URL decomposition, percent escaping/unescaping, tokenization, and character conversion are related string utilities but have different contracts. URL tests do not establish the behavior of the platform-specific character-conversion paths; check the relevant implementation selected by the build. The current `test/testcase/io/string` directory contains only `testcase_string.cpp`, whose four cases exercise `split_url()`; they do not directly test `tokenize()` / `gettoken()`, `escape_url()` / `unescape_url()`, or the Windows `A2W()` / `W2A()` conversions.
 
 ## 4. Relationships
 - `sdk/base/string/` — general string helpers; names such as `tokenize`/`gettoken` may look similar, so confirm the namespace and header being used.

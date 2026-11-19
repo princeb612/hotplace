@@ -4,7 +4,7 @@
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
 │ Edition 1 · Revision 1125                     │
-│ Source basis: Revision 1124                   │
+│ Source base : Revision 1132                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -76,9 +76,9 @@ The stages are independently callable. The loader can expose tokens or a parse t
 
 ### Evidence boundaries
 
-Test sources cover distinct but related behaviors: parser handling of assignments and constraints; publisher reconstruction from parse trees; file loading; imported/exported symbol relationships; and focused semantic-object linkage. A grammar test does not prove the corresponding notation becomes a fully linked runtime type. The parameterized testcase provides an integrated parser-to-publisher specialization check for one concrete form, but it does not establish exhaustive parameterized-notation coverage. Revision 1125 adds move-aware specialization overloads for the collected actual-argument values.
+Test sources cover distinct but related behaviors: parser handling of assignments and constraints; publisher reconstruction from parse trees; file loading; imported/exported symbol relationships; and focused semantic-object linkage. A grammar test does not prove the corresponding notation becomes a fully linked runtime type. The parameterized testcase provides two integrated parser-to-publisher examples: an inline `FRAME` template/instantiation (`test_parameterized2()`) and the `GenericContainerModule` `Envelope` / `ActualMessage` module loaded from `example6.asn1` (`test_parameterized3()`). The latter checks the build-result type, module name and reconstructed representation. The `example7.asn1` vector remains commented out as in progress, so these tests do not establish exhaustive parameterized-notation coverage. Revision 1125 adds move-aware specialization overloads for the collected actual-argument values.
 
-Parameterized ASN.1 has progressed beyond grammar productions and direct semantic prototypes. Revision 1124 adds state-guided actual-argument collection in the publisher and a testcase that verifies a concrete type/value instantiation through module representation. This is evidence for the tested path, not a claim that every parameter form or edge case is complete.
+Parameterized ASN.1 has progressed beyond grammar productions and direct semantic prototypes. Revision 1124 adds state-guided actual-argument collection in the publisher and a testcase that verifies the inline `FRAME` type/value instantiation through module representation. The file-based `example6.asn1` testcase separately checks `Envelope {INTEGER}` reconstruction and module registration. This is evidence for these tested paths, not a claim that every parameter form or edge case is complete.
 
 ### Practical use: load and publish a module in separate stages
 

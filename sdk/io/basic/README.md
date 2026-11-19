@@ -4,7 +4,7 @@
 ┌───────────────────────────────────────────────┐
 │ hotplace source tree                          │
 │ Edition 1 · Revision 1125                     │
-│ Source basis: Revision 1125                   │
+│ Source base : Revision 1132                   │
 │ Documented with GPT-6                         │
 │ — source structure, implementation & behavior │
 └───────────────────────────────────────────────┘
@@ -24,7 +24,7 @@ The directory does not attempt to provide one universal serialization model. `pa
 | Component | Main responsibility | Implementation notes |
 |---|---|---|
 | `payload` | Ordered field description used for writing and reading binary messages | Supports named values, groups, references, and specialized `payload_encoded` fields; see [payload.md](payload.md) |
-| `oid` | Dotted decimal / ASN.1-braced text conversion, named-arc extraction, dotted output, and dictionary-backed ASN.1 notation reconstruction | Separate from ASN.1 BER/DER encoding; see [oid.md](oid.md) |
+| `oid` | Dotted decimal / ASN.1-braced text conversion, named-arc extraction, dotted output, and dictionary-backed ASN.1 notation reconstruction | The dictionary is a curated set of OIDs appearing in RFCs, certificates and test vectors, not a complete global registry; separate from ASN.1 BER/DER encoding; see [oid.md](oid.md) |
 | `zlib` | Deflate/inflate wrapper over zlib | Selects zlib-wrapped, raw DEFLATE, or gzip framing; see [zlib.md](zlib.md) |
 | `json` | Parse JSON text or a file into a Jansson `json_t*` | Caller owns the resulting Jansson reference; see [json.md](json.md) |
 | `types.hpp` | Shared declarations/types for this I/O area | Supporting header rather than a separate feature |
@@ -60,6 +60,7 @@ field definitions + field values
 
 OID dotted text ──► numeric token scan ──► oid_t ──► dictionary trie lookup
 ASN.1 braced text ─► decimal token scan ──► oid_t
+                  └► named-arc extraction ─► asn1oid_t
 
 JSON text or file ──► Jansson parser ──► json_t* ──► caller's JSON operations
                                            │

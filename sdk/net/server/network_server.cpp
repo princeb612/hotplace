@@ -824,9 +824,18 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
     network_session* session_object = (network_session*)data_array[2];
     if (multiplexer_event_type_t::mux_read == type) {
         /* consumer_routine (decrease), close_if_not_referenced (delete) */
-        session_object->produce(&context->event_queue, (byte_t*)session_object->wsabuf_read()->buf, transferred);
-        /* asynchronous */
-        session_object->ready_to_read();
+        ret = session_object->produce(&context->event_queue, (byte_t*)session_object->wsabuf_read()->buf, transferred);
+        if (errorcode_t::success == ret) {
+            /* asynchronous */
+            ret = session_object->ready_to_read();
+            if (errorcode_t::success != ret) {
+                return_t read_error = ret;
+                svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
+                ret = read_error;
+            }
+        } else {
+            svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
+        }
     } else if (multiplexer_event_type_t::mux_disconnect == type) {
         svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
     } else if (multiplexer_event_type_t::mux_dgram == type) {
@@ -985,17 +994,34 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         }
 
         /* associate with multiplex object (iocp, epoll) */
-        mplexer.bind(handle->mplexer_handle, event_socket, session_object);
-#if defined _WIN32 || defined _WIN64
-        /* asynchronous */
-        session_object->ready_to_read();
-#endif
+        ret = mplexer.bind(handle->mplexer_handle, event_socket, session_object);
+        if (errorcode_t::success != ret) {
+            return_t bind_error = ret;
+            network_session* failed_session = nullptr;
+            if (errorcode_t::success == handle->session_manager.ready_to_close(event_socket, &failed_session)) {
+                /* bind failed before connect; release without mux_disconnect */
+                failed_session->release();
+            }
+            ret = bind_error;
+            __leave2;
+        }
 
         void* dispatch_data[4] = {
             nullptr,
         };
         dispatch_data[0] = (void*)session_object->socket_info();
-        handle->callback_routine(multiplexer_event_type_t::mux_connect, 4, dispatch_data, nullptr, handle->callback_param);
+        handle->callback_routine(multiplexer_event_type_t::mux_connect, RTL_NUMBER_OF(dispatch_data), dispatch_data, nullptr, handle->callback_param);
+
+#if defined _WIN32 || defined _WIN64
+        /* Register the first read only after mux_connect has been delivered. */
+        ret = session_object->ready_to_read();
+        if (errorcode_t::success != ret) {
+            return_t read_error = ret;
+            session_closed(handle, event_socket);
+            ret = read_error;
+            __leave2;
+        }
+#endif
     }
     __finally2 {}
 

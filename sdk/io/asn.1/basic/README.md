@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -13,7 +13,7 @@
 
 ## 1. Role
 
-`asn.1/basic` contains the ASN.1 type/tag/constraint definitions, semantic and structural node models, parameterized-type support, and visitor interfaces used by the higher-level loader/runtime. The linked study documents preserve notation and encoding details; this directory is the implementation model, not the grammar parser or runtime module registry.
+`asn.1/basic` contains the ASN.1 type/tag/constraint definitions, semantic and structural node models, parameterized-type support, X.690 identifier/length/value encoding helpers, and visitor interfaces used by the higher-level loader/runtime. The linked study documents preserve notation and encoding details; this directory is the implementation model, not the grammar parser or runtime module registry.
 
 ## 2. Data Model
 
@@ -24,6 +24,7 @@
 | Semantic | `asn1_object` hierarchy and semantic type/value classes | Express ASN.1 types, references, tags, constraints, and values |
 | Structural | Structural nodes under `structural/` | Preserve notation-oriented node relationships and TLV-oriented structure |
 | Constraints | Constraint model and evaluator interfaces | Represent subtype/value-set constraints and evaluate them through dedicated machinery |
+| Encoding | `asn1_encode` identifier, length and value helpers | Read/write X.690 TLV identifier/length fields and ASN.1 primitive values |
 | Traversal | Visitors under `visitor/` | Traverse or interpret semantic/structural nodes without making the parser own every operation |
 
 ### Follow the detailed implementation records
@@ -64,7 +65,7 @@ The generic parser produces syntax-level data. ASN.1-specific publisher handlers
 
 Constraint notation is represented in ASN.1 semantic objects, while reusable value-domain operations are provided by the constraint evaluator and set/range utilities. Follow the specific constraint documents when tracing how a subtype expression becomes an evaluable range or set; the existence of a grammar production alone does not imply that every constraint form is fully evaluated.
 
-The test tree includes focused semantic-object, structural, visitor, and constraint cases. Those source assertions should be read as scoped coverage, not as a blanket claim of full X.680 conformance.
+The test tree includes focused semantic-object/linkage, X.690 identifier/length, weakly typed DER decode, and constraint cases. The weakly typed DER path builds structural nodes indirectly, but there are no direct assertions for `asn1_node` child insertion/traversal/clone semantics. Notation/DER visitor behavior is likewise exercised indirectly through object publication; there is no dedicated direct visitor-API testcase in the current ASN.1 test tree. Those source assertions should be read as scoped coverage, not as a blanket claim of full X.680 conformance.
 
 ## 4. Relationships
 - [ASN.1 Runtime](../runtime/README.md) — module definitions, references, and runtime objects.

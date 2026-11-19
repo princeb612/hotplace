@@ -5,7 +5,7 @@
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
 ```

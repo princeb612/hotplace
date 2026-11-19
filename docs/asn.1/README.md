@@ -1,6 +1,8 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1125**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 ## Context
 
@@ -94,7 +96,7 @@ The implementation boundary can be read as a progression from module constructio
 - **Parameterized definition and instantiation**
   - Revision 1123 extends the loader/publisher path to reconstruct parameterized type definitions and their formal parameter lists as semantic objects.
   - Revision 1124 adds the complementary instantiation path: `parse_tree_visitor` can modify a state value at a node and propagate it to descendants; the publisher marks `ParameterizedType` nodes as instantiation contexts, collects type arguments from `SimpleTypeSpec` and value arguments from `ValueElement`, then calls `specialize()` on the referenced parameterized type. Revision 1125 adds rvalue overloads so the collected `asn1_paramvalues` can be moved into the specialized type instead of requiring the const-reference construction path.
-  - The parameterized testcase now parses `FRAME{ OCTET STRING, 1024 }` and checks the resulting module representation. This establishes a concrete parser-to-publisher instantiation path for the tested form, not exhaustive support for every ASN.1 parameterized construct.
+  - The active `test_parameterized2()` path loads inline `FRAME{ OCTET STRING, 1024 }` notation through `asn1_loader::load()` and checks the published module representation. `test_parameterized3()` separately loads `example6.asn1` through `asn1_loader::load_file()` and checks the reconstructed `GenericContainerModule` / `Envelope {INTEGER}` representation. These establish two selected parser/loader/publisher instantiation paths, not exhaustive support for every ASN.1 parameterized construct.
   - Separately, Revision 1124 changes only the `asn1.ptb` binary parsing-table revision from 3 to 4; `asn1notation.ptb` retains revision 3.
 
 ## Conceptual
@@ -349,7 +351,7 @@ A complete reconstruction flow can be viewed as two passes over different repres
         lexical analyzer
                  │
                  ▼
-             LALR parser
+             LALR / GLR parser
                  │
                  ▼
              parse_tree
@@ -452,7 +454,7 @@ The loop verifies structural reconstruction rather than only parser acceptance.
 
 ## Status
 
-At Revision 1119:
+At Revision 1132 (the current `version.txt` build; the latest ASN.1 implementation milestones remain Revisions 1123–1125):
 
 - ASN.1 notation parsing has CFG/LALR infrastructure and a parse-tree representation, with GLR selected for the integrated module/schema path.
 - Parse-tree visitation exposes the shift/reduce sequence used for reconstruction.
@@ -462,6 +464,6 @@ At Revision 1119:
 - The resulting runtime representation is an existing `asn1_object*` model rather than a separate notation-only representation.
 - Revisions 1118–1119 add `asn1_object::validate_type` for built-in value/type checks, including OID syntax validation, and fix ENUMERATED validation in `asn1_constraints::do_validate`. Built-in checks and ASN.1 constraint evaluation are distinct stages; this does not imply full BER/DER coverage.
 - Revision 1083 marks the current constraint-supporting `string_set` operations as part of this completed reconstruction stage.
-- Revisions 1086–1104 extend parser and module processing: broader CFG coverage, parser switching, external parser-table import, GSS-based GLR parsing, loader integration, IMPORTS/EXPORTS, reference resolution, and shared providers under `asn1_advisor`. Revision 1102 renames `asn1_runtime` to `asn1_module` and `asn1_runtime_context` to `asn1_module_context`; Revision 1103 fixes `TypeAssignment` semantic publication. Revision 1104 renames the module registry to `asn1_modules`, advances the binary parsing-table format to revision 3, and prototypes parameterized type/value semantic support. Revisions 1123–1124 add formal-definition reconstruction followed by state-guided actual-argument collection and a tested specialization/representation path. Coverage of other parameterized forms and edge cases remains to be established.
+- Revisions 1086–1104 extend parser and module processing: broader CFG coverage, parser switching, external parser-table import, GSS-based GLR parsing, loader integration, IMPORTS/EXPORTS, reference resolution, and shared providers under `asn1_advisor`. Revision 1102 renames `asn1_runtime` to `asn1_module` and `asn1_runtime_context` to `asn1_module_context`; Revision 1103 fixes `TypeAssignment` semantic publication. Revision 1104 renames the module registry to `asn1_modules`, advances the binary parsing-table format to revision 3, and prototypes parameterized type/value semantic support. Revisions 1123–1124 add formal-definition reconstruction followed by state-guided actual-argument collection; Revision 1125 adds move-aware specialization overloads used by the tested parser/loader/publisher path. Coverage of other parameterized forms and edge cases remains to be established.
 
-The remaining work is to broaden and validate parameterized notation coverage, including additional actual-parameter forms and nested/edge cases, without conflating one tested specialization path with complete ASN.1 language support. Runtime value validation remains a separate concern.
+No later ASN.1 implementation milestone is recorded in the public changelog through Revision 1132; the current status therefore retains the Revision 1125 implementation boundary. The remaining work is to broaden and validate parameterized notation coverage, including additional actual-parameter forms and nested/edge cases, without conflating one tested specialization path with complete ASN.1 language support. Runtime value validation remains a separate concern.

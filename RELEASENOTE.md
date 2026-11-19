@@ -22,7 +22,8 @@
   - [RFC 2617 HTTP Authentication: Basic and Digest Access Authentication](https://datatracker.ietf.org/doc/html/rfc2617)
   - [RFC 7616 HTTP Digest Access Authentication](https://datatracker.ietf.org/doc/html/rfc7616)
   - [RFC 7541 HPACK: Header Compression for HTTP/2](https://datatracker.ietf.org/doc/html/rfc7541)
-  - [RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)](https://datatracker.ietf.org/doc/html/rfc7541)
+  - [RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)](https://datatracker.ietf.org/doc/html/rfc7540)
+  - [RFC 9113 HTTP/2](https://datatracker.ietf.org/doc/html/rfc9113)
 - JOSE
   - [RFC 7515 JSON Web Signature (JWS)](https://datatracker.ietf.org/doc/html/rfc7515)
   - [RFC 7516 JSON Web Encryption (JWE)](https://datatracker.ietf.org/doc/html/rfc7516)

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -108,7 +108,9 @@ The overloads that write to `stream_t*` follow the same initialization, framing,
 
 The buffer/stream wrappers explicitly reject null input pointers, and stream-output overloads also reject a null output stream. They clear the destination before processing, so a failed operation does not preserve the destination's previous contents.
 
-The current implementation's hotplace status is not a detailed mapping of every zlib return code: the loop stops when the return code is no longer `Z_OK`, but the wrapper does not consistently translate zlib initialization or terminal error codes into distinct `return_t` values. Callers should therefore not interpret `success` alone as proof that every malformed compressed stream was fully validated; where correctness is security- or protocol-critical, the surrounding caller must account for the exact input and expected framing.
+The current buffer/stream overloads do not translate zlib return codes into hotplace status at all. `deflateInit2()`, `deflate()`/`inflate()`, and `deflateEnd()`/`inflateEnd()` are called without checking their return values; the hotplace `ret` remains `success` unless the wrapper rejects a null input/output pointer. The loop merely stops when the zlib return is no longer `Z_OK`, so malformed or truncated compressed input can produce a partial/empty output while the wrapper still reports success. Callers must not treat this `success` as proof that the compressed stream was valid or fully consumed.
+
+The `FILE*` helpers are a separate API with `int` zlib-style results. `zlib_inf()` handles `Z_NEED_DICT`, `Z_DATA_ERROR`, and `Z_MEM_ERROR`, and returns `Z_DATA_ERROR` if input ends before `Z_STREAM_END`; `zlib_def()` checks file I/O failures but does not consistently check all `deflate()` return codes before returning `Z_OK`.
 
 ### Concrete consumer path: JWE compressed content
 
@@ -128,7 +130,7 @@ zlib_inflate(zlib_windowbits_t::windowbits_deflate, output, inflated);
 output = inflated;
 ```
 
-The important format decision is `windowbits_deflate`: RFC 7516's `DEF` content-coding uses raw DEFLATE, not a zlib wrapper or gzip stream. Compression is selected by the JOSE layer; this helper only performs the requested framing operation. The production call sites shown here do not check the return value of these two compression calls, so the example describes the current integration path rather than a recommended error-handling template.
+The important format decision is `windowbits_deflate`: RFC 7516's `DEF` content-coding uses raw DEFLATE, not a zlib wrapper or gzip stream. Compression is selected by the JOSE layer; this helper only performs the requested framing operation. The production call sites shown here do not check the return value of these two compression calls. Since the buffer/stream wrappers currently return success even when zlib reports an error, the example describes the current integration path rather than a recommended error-handling template.
 
 Source: `sdk/crypto/jose/json_object_encryption.cpp`.
 

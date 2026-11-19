@@ -1,6 +1,7 @@
 # Hotplace Parser Evolution
 
-> **Review baseline:** Revision 1106
+> **Review baseline:** Revision 1132
+> **Source base : Revision 1132**
 
 ## Review thesis
 
@@ -32,15 +33,15 @@ Early work explored lexer/CFG/LALR(1) parsing and context-aware switching ideas.
 
 The eventual move to GLR changed the architecture more substantially. GLR allowed the broader ASN.1 grammar to be represented without forcing every ambiguity or structural choice into a single deterministic LALR path.
 
-For ASN.1, the distinction between parser paths remains concrete at revision 1102:
+For ASN.1, the distinction between parser paths remains concrete at Revision 1132:
 
 ```text
 LALR(1)
-  └── notation-oriented grammar
-       └── semantic reconstruction
+  └── notation-oriented parser providers
+       └── notation parse / semantic reconstruction
 
 GLR
-  └── broader grammar
+  └── module/schema path (`asn1_module::add_schema`)
        ├── ModuleDefinition
        ├── EXPORTS / IMPORTS
        ├── parameterized assignments
@@ -73,7 +74,7 @@ This separation has a practical consequence: parser behavior depends on both the
 
 ## Production vocabulary becomes semantic vocabulary
 
-The revisions through 1102 preserve the stable production/rule vocabulary while extending the parameterized grammar and module-level semantics.
+The revisions through 1102 established the stable production/rule vocabulary; Revisions 1123–1125 extended the publisher and semantic runtime so selected parameterized definitions can be reconstructed and specialized.
 
 The notation-oriented hierarchy includes:
 
@@ -125,7 +126,7 @@ For ASN.1, the generated resources have different purposes:
 
 ```text
 asn1notation.ptb → notation parsing / semantic construction (table revision 3)
-asn1.ptb         → broader loader grammar (table revision 3)
+asn1.ptb         → broader loader grammar (table revision 4)
 ```
 
 Keeping these roles distinct prevents a large parsing table from being treated as proof of complete ASN.1 language support.
@@ -165,7 +166,7 @@ The resulting system has more moving parts than a parser whose tables are genera
 
 ## Current state
 
-The current state is best understood as three related revision steps:
+The current state includes the historical parser/resource milestones and the later semantic integration:
 
 - **Revision 1102**
   - Changes the ASN.1 parameterized-assignment/type/value grammar and lexer handling.
@@ -175,8 +176,16 @@ The current state is best understood as three related revision steps:
 - **Revision 1104**
   - Adds prototypes for parameterized-type definition/value handling.
   - Advances the binary parsing-table format to revision 3.
+- **Revisions 1120/1122**
+  - Add runtime parameterized-type specialization and instantiation work.
+- **Revision 1123**
+  - Advances publisher reconstruction of parameterized type definitions and formal parameter lists.
+- **Revision 1124**
+  - Adds parse-tree visitor state propagation and collection of actual type/value parameters; advances the ASN.1 parsing-table format to revision 4.
+- **Revision 1125**
+  - Adds move-aware specialization overloads used by the integrated instantiation path.
 
-The parameterized support remains prototypical: grammar recognition, semantic construction, and full instantiation are distinct capabilities. LALR(1)/GLR still serve different grammar scopes, and external `.ptb` resources remain part of parser generation and build integration.
+At Revision 1132, `asn1_module::add_schema()` selects GLR for module/schema construction, while notation-oriented parser providers retain LALR build/import paths. Parameterized semantic instantiation is no longer only a prototype: active `test_parameterized2()` and `test_parameterized3()` paths check selected `FRAME`/MyPacket and module reconstruction. This remains bounded coverage, not complete support for every ASN.1 parameter form. External `.ptb` resources remain part of parser generation and build integration.
 
 ### Related source / documents
 
@@ -191,4 +200,4 @@ The parameterized support remains prototypical: grammar recognition, semantic co
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state through **revision 1106**.
+Reviewed against the hotplace source/documentation state through **revision 1132**.

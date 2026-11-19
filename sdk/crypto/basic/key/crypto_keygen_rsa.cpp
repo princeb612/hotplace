@@ -68,7 +68,7 @@ return_t crypto_keygen::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_
     function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
-        .test_parameter([&]() -> bool { return ((nullptr != cryptokey) && (nid_rsa == nid) && (false == n.empty() && false == e.empty())); })
+        .test_parameter([&]() -> bool { return ((nullptr != cryptokey) && (nid_rsa == nid || nid_rsapss == nid) && (false == n.empty() && false == e.empty())); })
         .run_pipe([&]() -> int {
             rsa = std::move(RSA_ptr(RSA_new()));
             return rsa.get() ? 1 : 0;
@@ -96,7 +96,8 @@ return_t crypto_keygen::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_
         })
         .run_pipe([&]() -> int { return EVP_PKEY_set_type(pkey.get(), nid); })
         .run_pipe([&]() -> int {
-            auto rc = EVP_PKEY_assign_RSA(pkey.get(), rsa.get());
+            // auto rc = EVP_PKEY_assign_RSA(pkey.get(), rsa.get());
+            auto rc = EVP_PKEY_assign(pkey.get(), nid, rsa.get());  // RSA, RSAPSS
             if (rc > 0) {
                 rsa.release();  // pkey own rsa
             }
@@ -274,7 +275,7 @@ return_t crypto_keygen::add_rsapss(crypto_key* cryptokey, uint32 nid, const bina
 
     return pipeline.result_to_return_t();
 #else
-    return errorcode_t::not_supported;
+    return add_rsa(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
 #endif
 }
 

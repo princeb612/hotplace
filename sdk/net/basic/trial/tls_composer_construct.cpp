@@ -362,7 +362,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
 
                     // psk_ke has no (EC)DHE input and MUST NOT carry ServerHello key_share.
                     // A full handshake or psk_dhe_ke continues through the key-share writer.
-                    if (!psk_ke_selected) {
+                    if (false == psk_ke_selected) {
                         hs->get_extensions().add(tls_extension_type_t::key_share, dir, hs, [&](tls_extension* extension) -> return_t {
                             auto keyshare = (tls_extension_server_key_share*)extension;
                             keyshare->clear();

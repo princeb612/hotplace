@@ -45,28 +45,33 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
 tls_composer::~tls_composer() {}
 
 return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
-    return_t ret = errorcode_t::success;
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
     auto session = get_session();
     auto session_type = session->get_type();
-    switch (session_type) {
-        case session_type_t::tls:
-        case session_type_t::dtls: {
-            if (from_client == dir) {
-                ret = do_tls_client_handshake(wto, func);
-            } else if (from_server == dir) {
-                ret = errorcode_t::not_supported;  // session_status_changed
-            }
-        } break;
-        case session_type_t::quic:
-        case session_type_t::quic2: {
-            if (from_client == dir) {
-                ret = do_quic_client_handshake(wto, func);
-            } else if (from_server == dir) {
-                ret = errorcode_t::not_supported;  // session_status_changed
-            }
-        }
+    if ((session_type_t::tls == session_type || session_type_t::dtls == session_type) && (from_client == dir)) {
+        return handshake(dir, wto, std::function<return_t(tls_session*, binary_t&)>([func](tls_session* session, binary_t& bin) -> return_t {
+                             func(session, bin);
+                             return errorcode_t::success;
+                         }));
     }
-    return ret;
+    if ((session_type_t::quic == session_type || session_type_t::quic2 == session_type) && (from_client == dir)) {
+        return do_quic_client_handshake(wto, func);
+    }
+    return errorcode_t::not_supported;
+}
+
+return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<return_t(tls_session*, binary_t&)> func) {
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
+    auto session = get_session();
+    auto session_type = session->get_type();
+    if ((session_type_t::tls != session_type && session_type_t::dtls != session_type) || (from_client != dir)) {
+        return errorcode_t::not_supported;
+    }
+    return do_tls_client_handshake(wto, func);
 }
 
 return_t tls_composer::session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func) {

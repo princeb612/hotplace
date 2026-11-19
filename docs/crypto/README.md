@@ -1,5 +1,7 @@
 # Cryptography — Algorithms, Keys, Operations & Protocol Adapters
 
+> Source base : Revision 1132
+
 ## Context
 
 `sdk/crypto` is the cryptographic foundation used by several higher-level parts of hotplace. It is not itself a protocol such as TLS, JOSE, or COSE. Its role is to turn cryptographic meaning into reusable operations, key representations, algorithm selection, and provider-backed execution.
@@ -25,8 +27,10 @@ The important boundary is therefore:
           │                  │
           └──────────┬───────┘
                      ▼
-               OpenSSL / OQS
+          OpenSSL / optional OQS
 ```
+
+OpenSSL is part of the normal crypto build; OQS is an optional integration. At Revision 1132, root `CMakeLists.txt` defaults `SUPPORT_OQS` to `0`. Setting it to `1` includes the `sdk/crypto/oqs` adapter sources and the real OQS testcase sources. With the default setting, the test build substitutes `test/testcase/crypto/pqc/dummy/dummy.cpp`, whose `testcase_oqs_*` entry points are empty. The optional `liboqs` and `oqs-provider` declarations are not in the active `thirdparty/dependency` array, so the external provider must be prepared separately.
 
 The same primitive can consequently appear in different protocol contexts without making the primitive implementation responsible for the protocol semantics.
 
@@ -342,7 +346,7 @@ PQC
 └── SLH-DSA     digital signature
 ```
 
-The project also has an OQS-provider integration area and OpenSSL PQC integration. This is important because the higher protocols do not need to know how a provider exposes the primitive; they need a key type and an operation with the required semantics.
+The project also has an OQS-provider integration area and OpenSSL PQC integration. The OQS path is opt-in and depends on a separately available runtime provider; `SUPPORT_OQS` only selects the hotplace adapter/test sources. This is important because the higher protocols do not need to know how a provider exposes the primitive; they need a key type and an operation with the required semantics.
 
 ### ML-KEM path
 
@@ -511,7 +515,7 @@ JOSE and COSE RFC examples exercise the same cryptographic operations through di
 
 ### PQC verification
 
-The PQC path has been tested through OQS-provider KEM/DSA support and OpenSSL 3.5-based KEM integration. The TLS-specific tests then validate the same primitives inside a protocol context, including ML-KEM hybrid groups and ML-DSA authentication.
+The PQC path has historical test coverage through OQS-provider KEM/DSA support and OpenSSL 3.5-based KEM integration. The OQS-specific testcase path is selected only when `SUPPORT_OQS=1`; with the Revision 1132 default of `SUPPORT_OQS=0`, the OQS testcase entry points are empty dummy functions. The TLS-specific tests then validate the same primitives inside a protocol context, including ML-KEM hybrid groups and ML-DSA authentication.
 
 The important verification chain is:
 
@@ -531,7 +535,7 @@ A failure at a higher layer therefore does not automatically imply a primitive f
 
 ## Status
 
-At Revision 1105, `sdk/crypto` is a substantial shared cryptographic substrate rather than an isolated algorithm collection. The later ASN.1/parser work does not change this ownership boundary; ASN.1 schema semantics remain outside the crypto layer.
+The Revision 1105 crypto checkpoint established `sdk/crypto` as a substantial shared cryptographic substrate rather than an isolated algorithm collection; the current source structure was rechecked at Revision 1132. The later ASN.1/parser work does not change this ownership boundary; ASN.1 schema semantics remain outside the crypto layer.
 
 Implemented/used areas include:
 
@@ -546,7 +550,7 @@ Implemented/used areas include:
 - COSE signing, MAC, encryption, recipients, keys, and countersignatures, including the Revision 1105 Partial IV fix;
 - Authenticode PE signature verification, including certificate revocation checking through CRL retrieval/cache processing;
 - TLS/DTLS/QUIC cryptographic integration through the higher-level protocol layers;
-- OQS/OpenSSL provider-backed PQC integration.
+- OQS/OpenSSL provider-backed PQC integration. At Revision 1132, OQS adapter/test sources are opt-in through `SUPPORT_OQS`; the external `oqsprovider` is not built by the default third-party dependency selection and must be made available separately.
 
 The most important structural conclusion is that `sdk/crypto` should be read as the **operation and key substrate**, while TLS, JOSE, and COSE remain the owners of their own protocol/security-object semantics.
 

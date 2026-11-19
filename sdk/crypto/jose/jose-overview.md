@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -14,7 +14,7 @@
 
 ## Purpose and status boundary
 
-This is a preserved developer-maintenance note, not a current support guarantee. Its tables record an older status snapshot and have not all been re-audited. The old unchecked checklist is tracked separately from this historical reference. For the current source-based mapping inventory and the distinction between metadata, test coverage and runtime availability, use the [JOSE README](README.md).
+This is a preserved developer-maintenance note, not a current support guarantee. Its tables record an older status snapshot and are intentionally retained as historical context, not revised to mirror the current source. The `Source base : Revision 1132` marker records the revision against which this document's scope and interpretation boundary were checked; it does not re-date the table snapshot, re-test every `O` entry, or guarantee current runtime support. For the current source-based mapping inventory and the distinction between metadata, test coverage and runtime availability, use the [JOSE README](README.md).
 
 ## Historical algorithm-status tables
 The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE key management, JWE content encryption, and JWK key types. Use the focused records for the architectural model: [object model](jose-object-model.md), [JWS/JWE flow](jose-signing-encryption.md), and [JWK/algorithm mapping](jose-key-and-algorithms.md).
@@ -50,15 +50,15 @@ The legacy tables below enumerate status for JWS signature/MAC algorithms, JWE k
 | O | A256KW             | AES Key Wrap with default initial value using 256-bit key | (none) | Recommended    |
 | O | dir                | Direct use of a shared symmetric key as the CEK           | (none) | Recommended    |
 | O | ECDH-ES            | Elliptic Curve Diffie-Hellman Ephemeral Static key agreement using Concat KDF | "epk","apu","apv" | Recommended+ |
-| O | ECDH-ES|A128KW     | ECDH-ES using Concat KDF and CEK wrapped with "A128KW"    | "epk","apu","apv" | Recommended    |
-| O | ECDH-ES|A192KW     | ECDH-ES using Concat KDF and CEK wrapped with "A192KW"    | "epk","apu","apv" | Optional       |
-| O | ECDH-ES|A256KW     | ECDH-ES using Concat KDF and CEK wrapped with "A256KW"    | "epk","apu","apv" | Recommended    |
+| O | ECDH-ES+A128KW     | ECDH-ES using Concat KDF and CEK wrapped with "A128KW"    | "epk","apu","apv" | Recommended    |
+| O | ECDH-ES+A192KW     | ECDH-ES using Concat KDF and CEK wrapped with "A192KW"    | "epk","apu","apv" | Optional       |
+| O | ECDH-ES+A256KW     | ECDH-ES using Concat KDF and CEK wrapped with "A256KW"    | "epk","apu","apv" | Recommended    |
 | O | A128GCMKW          | Key wrapping with AES GCM using 128-bit key               | "iv","tag"        | Optional       |
 | O | A192GCMKW          | Key wrapping with AES GCM using 192-bit key               | "iv","tag"        | Optional       |
 | O | A256GCMKW          | Key wrapping with AES GCM using 256-bit key               | "iv","tag"        | Optional       |
-| O | PBES2-HS256|A128KW | PBES2 with HMAC SHA-256 and "A128KW" wrapping             | "p2s","p2c"       | Optional       |
-| O | PBES2-HS384|A192KW | PBES2 with HMAC SHA-384 and "A192KW" wrapping             | "p2s","p2c"       | Optional       |
-| O | PBES2-HS512|A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping             | "p2s","p2c"       | Optional       |
+| O | PBES2-HS256+A128KW | PBES2 with HMAC SHA-256 and "A128KW" wrapping             | "p2s","p2c"       | Optional       |
+| O | PBES2-HS384+A192KW | PBES2 with HMAC SHA-384 and "A192KW" wrapping             | "p2s","p2c"       | Optional       |
+| O | PBES2-HS512+A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping             | "p2s","p2c"       | Optional       |
 
 ## Cryptographic Algorithms for Content Encryption
 

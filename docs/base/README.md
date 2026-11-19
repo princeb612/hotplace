@@ -1,5 +1,7 @@
 # Base
 
+> Source base : Revision 1132
+
 ## Context
 
 `sdk/base` is the lowest common layer of the hotplace SDK. It does not represent one protocol or one cryptographic function. Its role is to provide the small, reusable mechanisms on which higher SDK layers can build.
@@ -25,7 +27,7 @@ sdk/base
         sdk/net
 ```
 
-The build structure confirms this role: `sdk-io` depends on `sdk-base`, `sdk-crypto` depends on base and io, and `sdk-net` depends on base, io, and crypto.
+The build structure confirms this role: `sdk-io` depends on `sdk-base`, `sdk-crypto` depends on base and io, and `sdk-net` depends on base, io, and crypto. These dependency edges are declared in `sdk/io/CMakeLists.txt`, `sdk/crypto/CMakeLists.txt`, and `sdk/net/CMakeLists.txt`.
 
 Base should therefore be understood as a **foundation of reusable semantics and portability mechanisms**, rather than as a miscellaneous utility directory.
 
@@ -77,7 +79,7 @@ These are semantic groups, not a claim that the source directory layout must exa
 
 The foundation layer provides basic types, controlled standard-library compatibility, and small general-purpose building blocks.
 
-`nostd` is particularly important in hotplace because it is not merely a convenience wrapper around STL. It provides a controlled compatibility boundary for environments where newer C++ facilities cannot be assumed. One example is `t_value<T>`: a deferred typed value backed by cached state and `std::promise`/`std::future`, used by the ASN.1 parameterized-semantic prototype. It is intentionally not exception-sensitive, so it should not be described as a general future abstraction that propagates failures.
+`nostd` is particularly important in hotplace because it is not merely a convenience wrapper around STL. It provides project-local building blocks and a controlled compatibility boundary for environments where newer C++ facilities cannot be assumed. One example is `t_value<T>`: a small named-value wrapper that stores a value and an optional name, with direct value access, assignment, and value-based comparisons. It does not provide deferred evaluation, caching, or promise/future synchronization.
 
 This fits the project's C++11-first portability goal:
 
@@ -238,7 +240,7 @@ The exact source directories are implementation details; the stable architectura
 
 ### Base → IO
 
-The build dependency is:
+The build dependency is declared in `sdk/io/CMakeLists.txt`:
 
 ```text
 sdk-base
@@ -325,21 +327,18 @@ This allows the network layer to concentrate on session, transport, framing, and
 
 ### C++11 / C++14 boundary
 
-The source also contains standard-version-specific facilities.
+The root `CMakeLists.txt` selects the language standard according to the toolchain and target platform. In the current configuration, GNU on UNIX defaults to C++11, while GNU on Windows and MSVC use C++14.
 
-The architectural point is not that C++11 and C++14 are two different SDKs. The intended direction is:
+This is a build-compatibility boundary, not evidence of two separate SDK implementations:
 
 ```text
-same conceptual interface
-          │
-          ├── C++11-compatible implementation
-          │
-          └── C++14 implementation where available
+same source tree
+      │
+      ├── GNU / UNIX   → C++11
+      └── Windows toolchains → C++14
 ```
 
-This matches the broader project goal of keeping a portable interface while allowing implementation techniques to vary with compiler capability.
-
-The exact standard-specific implementation should remain source documentation rather than being elevated into a separate conceptual layer unless the interface contract itself differs.
+The exact compiler and platform selection belongs in build documentation; it should not be elevated into a separate conceptual layer unless the public interface contract itself differs.
 
 ## Flow
 
@@ -465,7 +464,7 @@ This layered verification is important because a base component can be locally c
 
 ## Status
 
-At Revision 1105:
+At Revision 1105 (historical snapshot):
 
 - `sdk/base` is the common dependency root for the higher SDK layers.
 - Its role is broader than a generic utility collection: it provides reusable representation, algorithm, runtime, portability, diagnostics, and verification mechanisms.
@@ -476,6 +475,8 @@ At Revision 1105:
 - `process` provides a base-level external-process execution facility used by higher-level workflows such as Authenticode CRL retrieval; it is execution support, not protocol semantics.
 - `t_value<T>` provides a deferred-value mechanism used by the ASN.1 parameterized-semantic prototype. Its promise/future behavior is deliberately not exception-sensitive and does not imply that parameterized ASN.1 instantiation is complete.
 - The C++11/C++14 distinction is best treated as an implementation/compatibility dimension rather than two unrelated architectural layers.
+
+At Revision 1132, `t_value<T>` is an immediate value holder with an optional name. Revision 1122 removed its future/promise behavior; it does not provide deferred evaluation, caching, or synchronization. The ASN.1 parameterized-semantic prototype uses the name to represent formal-parameter metadata, while actual argument collection and specialization belong to the publisher path.
 
 At this point, a file-by-file inventory of every base utility would add little to the architectural document. Individual facilities should be documented when a higher-level topic needs their specific contract.
 

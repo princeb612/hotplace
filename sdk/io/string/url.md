@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -32,7 +32,7 @@ The `url_info_t` fields and default-port values describe the result contract. Th
 
 ### Percent escaping
 
-`escape_url()` writes escaped output to a `stream_t`; `unescape_url()` decodes percent-escaped byte pairs into a stream. Escaped bytes are represented with hexadecimal digits through the base16 helper.
+`escape_url()` writes output to a `stream_t`; `unescape_url()` decodes percent-escaped byte pairs into a stream. Escaped bytes use uppercase hexadecimal digits through the base16 helper. The current allowlist includes alphanumeric characters, RFC 2396 reserved/mark characters, and the source's `delims` set (`<>#%\"`); those delimiter characters are therefore emitted unchanged despite the comment labelling them excluded. `unescape_url()` does not validate malformed escapes: a lone trailing `%` is skipped; if only one character follows `%`, the current size check still attempts a two-character decode using the terminating NUL as the second character. The return status from decoding a pair is ignored.
 
 ## 3. Behavior Model
 
@@ -41,13 +41,13 @@ The `url_info_t` fields and default-port values describe the result contract. Th
 ```text
 text ──escape_url──> percent-escaped bytes
 text ─unescape_url─> decoded bytes
-URL  ──split_url───> url_info_t fields
+raw URL ──unescape_url──> decoded text ──regex_token──> url_info_t fields
 ```
 
-The output is intended for the specific URL forms consumed by this codebase. The function does not claim to normalize every URI form or validate every rule of current URL standards. In particular, preserve this distinction when documenting `uri` versus `uripath`: the testcase expects `uri` to retain query/fragment text while `uripath` contains only the path.
+`split_url()` first calls `unescape_url()` on the entire input and then applies separate regular expressions for authority, path, query, and fragment. Percent-encoded delimiters can therefore become structural characters before decomposition. The authority pattern requires an initial lowercase letter before `://` and restricts the authority to a narrow character set; path, query, and fragment each have their own restricted character classes. The default ports supplied by the implementation are HTTP 80, HTTPS 443, and FTP 21. A non-null call retains its initial success status even when the expressions do not populate meaningful fields, so empty fields are not a validation error. The output is intended for the specific URL forms consumed by this codebase; it does not normalize every URI form or validate current URL standards. Preserve the distinction between `uri` and `uripath`: the testcase expects `uri` to retain query and fragment text while `uripath` contains only the path.
 
 ### Source-level evidence
-`test/testcase/io/string/testcase_string.cpp` calls `split_url()` on several concrete strings and asserts the fields. For example, for `https://test.com:8443/path/test.script?no=1&category=xfile#file`, it checks `scheme == "https"`, `host == "test.com"`, `port == 8443`, `uripath == "/path/test.script"`, `query == "no=1&category=xfile"`, and `fragment == "file"`.
+`test/testcase/io/string/testcase_string.cpp` calls `split_url()` on several concrete strings and asserts the fields. For example, for `https://test.com:8443/path/test.script?no=1&category=xfile#file`, it checks `scheme == "https"`, `host == "test.com"`, `port == 8443`, `uripath == "/path/test.script"`, `query == "no=1&category=xfile"`, and `fragment == "file"`. The testcase does not call `escape_url()` or `unescape_url()` directly; their behavior above is derived from the implementation source, not a dedicated test assertion.
 
 The same test also covers an HTTPS URL without an explicit port (expected default `443`), a URL with a query but no fragment, and a path with no query. This is direct evidence for the fields asserted, not a claim of exhaustive URL conformance.
 
@@ -55,7 +55,7 @@ The HTTP layer consumes `url_info_t` for URI/request handling, and Authenticode 
 
 ### Concrete consumer path: HTTP request URL
 
-The HTTP client uses `split_url()` to turn a URL string into the connection/request fields. The parsed host and port are used for the request's Host header, while `uri` becomes the HTTP request target:
+The HTTP client uses `split_url()` to turn a URL string into the connection/request fields. The parsed host and port are used for the request's Host header (formatted as `host:port`), while `uri` becomes the HTTP request target:
 
 ```cpp
 #include <hotplace/sdk/io/string/string.hpp>

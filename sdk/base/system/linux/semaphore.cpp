@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <errno.h>
 #include <sys/time.h>
 
 #include <hotplace/sdk/base/system/linux/semaphore.hpp>
@@ -29,7 +30,10 @@ return_t semaphore::wait(unsigned msec) {
     return_t ret = errorcode_t::success;
 
     if ((unsigned)-1 == msec) {
-        sem_wait(&_sem);
+        int rc = sem_wait(&_sem);
+        if (0 != rc) {
+            ret = get_lasterror(errno);
+        }
     } else {
         struct timeval now;
         gettimeofday(&now, nullptr);
@@ -41,10 +45,16 @@ return_t semaphore::wait(unsigned msec) {
         ts.tv_nsec %= 1000000000;
 
         int rc = sem_timedwait(&_sem, &ts);
-        ret = get_lasterror(rc);
-        // if (timeout == ret || ETIMEDOUT == ret) { do something }
-        if (ETIMEDOUT == ret) {
-            ret = errorcode_t::timeout;
+        if (0 != rc) {
+            // POSIX semaphore calls return -1 and report the actual error
+            // through errno. Passing -1 to get_lasterror() misclassifies it
+            // as an EAI error instead of preserving ETIMEDOUT.
+            int error = errno;
+            if (ETIMEDOUT == error) {
+                return errorcode_t::timeout;
+            } else {
+                return get_lasterror(error);
+            }
         }
     }
     return ret;

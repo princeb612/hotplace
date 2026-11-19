@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -61,7 +61,7 @@ The parser obtains ASN.1-specific lexical and grammar providers through `asn1_ad
 
 The GLR grammar includes productions such as `ParameterizedAssignment`, `ParameterizedTypeAssignment`, `ParameterList`, `ParameterizedType`, `ActualParameterList`, and `ActualParameter`. Source examples include `FRAME{TypeParam, INTEGER:maxSize}` and `MyPacket ::= FRAME{ OCTET STRING, 1024 }`.
 
-This establishes grammar coverage, not full parameterized-type semantics. Direct semantic construction/specialization probes exist, while the parser-to-publisher testcase path for parameterized instantiation remains disabled in the source snapshot. Do not infer end-to-end parameter binding and substitution from the productions alone.
+The grammar productions are connected to an active but deliberately bounded parser-to-publisher path. `test_parameterized2()` loads an inline `FRAME {TypeParam, INTEGER:maxSize}` definition and `MyPacket ::= FRAME {OCTET STRING, 1024}`, then asserts the reconstructed module representation. `test_parameterized3()` loads `example6.asn1` and asserts the `GenericContainerModule` definition plus `Envelope {INTEGER}` instantiation. The `example7.asn1` file-based vector remains commented out as in progress, and the direct semantic probes in `test_parameterized1()` / specialization tests cover additional forms without proving every grammar form is integrated. Do not infer complete parameterized ASN.1 support from these selected cases.
 
 ## 3. Behavior Model
 

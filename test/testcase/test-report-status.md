@@ -6,6 +6,7 @@
 hotplace source-tree documentation
 Edition 2 · Revision 1105
 Documentation basis: report snapshot received 2026-10-17
+Source base : Revision 1132 (document cross-check only)
 Tested source revision: not identified by report files
 Documented with GPT-6
 Scope: report summary and provenance limits
@@ -21,7 +22,7 @@ This document summarizes the per-directory `report` files supplied in `testcase-
 - **Archive label:** `revision1105-working` identifies the working snapshot/package context; it must not be used by itself to claim the tests ran against revision 1105.
 - The report files themselves do not embed a verifiable source commit/revision. Therefore the exact tested source revision remains **not independently identified by the report files**.
 - OS/compiler/build details: MinGW64/GCC is the associated run context; exact GCC version, build flags, and CTest command line are **not recorded in the supplied reports**.
-- Current documentation/source-tree bundle revision: 1105. This is distinct from the last test-run association above.
+- Documentation/source-tree bundle revision at the time of this report: 1105. The current repository source base for this document's cross-check is Revision 1132; this does not change or identify the tested source revision.
 - The table below sums the `pass`, `expt`, `fail`, `skip`, and `triv` values from each report's `brief` section. These labels are preserved as emitted by the test harness; `expt` is not reinterpreted here.
 
 ## Per-directory report summary

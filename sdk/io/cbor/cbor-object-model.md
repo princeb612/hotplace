@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -46,12 +46,12 @@ cbor_object
 
 - `cbor_data` accepts common hotplace representations such as integer types, `bignumber`, `binary_t`, strings, floating-point values, and `variant`/`variant_t`.
 - `cbor_array` represents an ordered collection of child objects.
-- `cbor_map` groups entries as `cbor_pair` objects. Each pair retains separate key and value object references.
-- `cbor_bstrings` and `cbor_tstrings` provide string-specific container forms, distinct from a single scalar byte/text string.
+- `cbor_map` groups entries as `cbor_pair` objects. A pair's key slot is specifically `cbor_data*`; its value slot is a `cbor_object*`, so the model cannot represent an array/map object as a map key.
+- `cbor_bstrings` and `cbor_tstrings` provide indefinite-length chunked string containers, distinct from a single scalar byte/text string. Their `size()` reports chunk count, not total byte/character length.
 - `cbor_simple` represents CBOR simple values such as booleans and other simple-value codes.
 - A tag is attached to the object via `tag()`; it is not merely metadata held by the reader after parsing.
 
-The logical object hierarchy is not the same thing as one particular wire layout. Definite and indefinite-length encodings can describe logical arrays, maps, and strings without requiring the consumer to treat each encoded chunk as a separate application value.
+The logical object hierarchy is not the same thing as one particular wire layout. Definite and indefinite-length encodings can describe logical arrays, maps, and strings without requiring the consumer to treat each encoded chunk as a separate application value. The current container APIs support a narrower set of nested values than the full CBOR data model: `cbor_array::join()` accepts data, array, map and simple objects, but not `cbor_bstrings` / `cbor_tstrings`; the key/value `cbor_map::join()` path accepts integer/string `cbor_data` keys and data/array/map/simple values, but not chunked-string values. Direct `cbor_pair` insertion still requires a `cbor_data` key, so arbitrary container-valued CBOR map keys are not representable.
 
 ## 3. Behavior Model
 
@@ -77,7 +77,7 @@ Representation is dispatched through the object's `represent()` implementation. 
 
 ### Lifetime boundary
 
-The base object exposes reference-count operations, and test/sample code commonly releases heap-created roots after publication. The root object's reference count does not by itself describe every external pointer's lifetime; callers must follow the ownership contract of the concrete container and any references they retain.
+The base object exposes reference-count operations, and test/sample code commonly releases heap-created roots after publication. Container insertion stores child pointers but does not itself call `addref()`. The concrete container's `addref()` / `release()` recursively adjusts its children (a map adjusts its pairs, and each pair adjusts its key/value). A caller that retains a child pointer independently beyond the parent tree's lifetime must take its own reference; otherwise releasing the root can release that child. The fluent `add()` helpers also discard the return status from `join()`, so use `join()` directly when unsupported child/key/value types must be detected.
 
 The vector-driven and RFC-oriented test sources contain nested structures and scalar cases that exercise this model. Their presence documents source-level coverage, not a claim that the tests were run during this documentation update.
 

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1106                    │
-│ Source basis: Revision 1106                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -60,7 +60,7 @@ _test_case.assert((true == test), __FUNCTION__, "compare");
 
 ## 3. What does the evidence establish?
 ### Source-level evidence
-1. The source-level status is documented against Revision 1105. Runtime status is recorded separately from the supplied CTest-generated report snapshot; that report does not identify the tested source revision or execution environment.
+1. The source-level status is documented against Revision 1132. Runtime status is recorded separately from the supplied CTest-generated report snapshot; that report does not identify the tested source revision or execution environment.
 
 - **O** — an explicit check supports the stated claim: either an expected-value assertion or a checked operation result, as described in the evidence column.
 - **△** — the operation is exercised or diagnostic output is produced, but the stated content/behavior is not directly compared with an expected value.

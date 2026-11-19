@@ -41,6 +41,12 @@
 
 * details
   * Revision 1132
+    * TLS 1.3 PSK resumption and early-data hardening
+      * generate and verify each PSK binder with the hash associated with its offered ticket
+      * validate PSK identity/binder pairing, selected_identity, offered key-exchange modes, key_share requirements, and selected-suite hash compatibility across HelloRetryRequest / ClientHello2
+      * constrain 0-RTT acceptance to identity zero and the selected ticket's version, cipher suite, ALPN, and early-data allowance
+      * bound pending and rejected early-data ciphertext independently by byte and TLS-record-count limits
+      * add regression cases for ticket age/expiry, multiple identities, binder/HRR transcript handling, early-data acceptance/rejection, buffering, discard, and overflow
   * Revision 1124
     * ASN.1 parameterized type reconstruction
       * include state in parse_tree and parse_tree_visitor to paropagate state to child nodes

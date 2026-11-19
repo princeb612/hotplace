@@ -12,6 +12,7 @@
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_compress_certificate.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
@@ -36,7 +37,14 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
             pl << new payload_member(uint8(0), constexpr_algorithm_len)  //
                << new payload_member(binary_t(), constexpr_algorithm);
             pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                auto session = get_handshake()->get_session();
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             algorithms_len = pl.t_value_of<uint8>(constexpr_algorithm_len) >> 1;
             pl.get_binary(constexpr_algorithm, bin_algorithms);
@@ -79,7 +87,7 @@ return_t tls_extension_compress_certificate::do_write_body(tls_direction_t dir, 
         payload pl;
         pl << new payload_member(uint8(cbsize_algorithms), constexpr_algorithm_len)  //
            << new payload_member(bin_algorithms, constexpr_algorithm);
-        pl.write(bin);
+        ret = pl.write(bin);
     }
     return ret;
 }

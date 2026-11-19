@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -13,7 +13,7 @@
 
 ## 1. Role
 
-The visitor layer provides operations over ASN.1 semantic/structural objects without embedding every traversal or representation operation into the node classes themselves.
+The visitor layer provides operations over ASN.1 semantic objects and constraint nodes without embedding every traversal or representation operation into the semantic classes. It does not traverse the separate `asn1_node` structural TLV tree.
 
 The visitor family includes:
 
@@ -32,19 +32,17 @@ The visitors serve different interpretations of the same ASN.1 model.
 
 ### AST visitor
 
-`asn1_ast_visitor` provides traversal-oriented access to ASN.1 object structures.
+`asn1_ast_visitor` builds a `t_tree<asn1_ast_descriptor>` from semantic ASN.1 object structures. It follows tagged/constructed children and referenced-type definitions, but it does not resolve and traverse reference targets through a module.
 
 ### Notation visitor
 
-`asn1_notation_visitor` converts semantic ASN.1 objects back toward ASN.1 notation-style representation.
+`asn1_notation_visitor` is a thin adapter that calls the object's `represent(stream, value)` method to produce ASN.1 notation-style text. The object representation methods perform the recursive rendering; the visitor itself does not walk children.
 
 This is useful for inspecting or publishing the schema representation.
 
 ### DER visitor
 
-`asn1_der_visitor` drives DER representation/encoding from the ASN.1 object model.
-
-It is one of the links between the semantic model and the binary encoding implementation.
+`asn1_der_visitor` first uses `asn1_visitor` to update linkage across the reachable semantic-object graph, then calls the root object's `represent(binary, value)` method. It is one of the links between the semantic model and the binary encoding implementation, and requires a non-null `asn1_module`.
 
 ### Constraint visitors
 
@@ -107,9 +105,9 @@ ASN.1 text         DER bytes      allowed-value set
                                   value membership
 ```
 
-`asn1_object::publish(stream_t*)` routes to notation representation, while `publish(binary_t*)` routes to DER representation. Constraint evaluation traverses constraint nodes and constructs a runtime allowed-value set; it is neither notation rendering nor byte encoding.
+`asn1_object::publish(stream_t*)` routes to notation representation. The direct `asn1_object::publish(binary_t*)` and `asn1_value::publish(binary_t*)` wrappers currently construct `asn1_der_visitor` with a null module, while `asn1_der_visitor::visit()` unconditionally dereferences that module in its linkage callback; these convenience wrappers are unsafe as written. `asn1_module::publish(binary_t*)` supplies the module pointer and is the module-aware path. All these publish wrappers return `void`, so they do not expose visitor/encoding status. Constraint evaluation traverses constraint nodes and constructs a runtime allowed-value set; it is neither notation rendering nor byte encoding.
 
-The AST visitor provides traversal-oriented access. The constraint notation visitor renders constraint expressions, while the evaluator executes their meaning against the value-domain abstraction. Keeping these paths separate lets the same model support inspection, serialization, and validation without combining those responsibilities into each semantic class.
+The generic `asn1_visitor` calls its callback for the current object, then recursively follows tagged/constructed children and resolves reference targets through the supplied module. It has no visited-set/cycle guard, so recursive schema references can recurse indefinitely. The AST visitor instead records reference names without following reference targets. The constraint notation visitor calls each constraint's `represent()` method; the templated evaluator implements `asn1_constraint_visitor`, accumulates a `t_set_runtime<T>`, and `asn1_constraints::validate()` checks membership in that result. Keeping these paths separate lets the same model support inspection, serialization, and validation without combining those responsibilities into each semantic class.
 
 ### Related tests
 
@@ -118,7 +116,7 @@ The AST visitor provides traversal-oriented access. The constraint notation visi
 - `test/testcase/asn.1/testcase_constraints.cpp`
 - `test/testcase/asn.1/testvector_der.cpp`
 
-These are source-level verification paths; this documentation update did not execute them.
+These tests exercise module/value publication and constraint validation indirectly; there is no dedicated direct testcase for `asn1_visitor`, `asn1_ast_visitor` or `asn1_constraint_notation_visitor`. `testcase_basic1.cpp` calls `schema->publish(binary_t*)` and `testcase_basic2.cpp` calls `value->publish(binary_t*)`; both source calls reach the null-module wrapper described above. `testvector_der.cpp` uses the module-aware `module.publish(binary_t*)` path. This source audit did not execute the tests or establish runtime behavior.
 
 ## 4. Relationships
 ### Related areas

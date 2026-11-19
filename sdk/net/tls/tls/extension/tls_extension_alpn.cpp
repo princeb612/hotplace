@@ -45,7 +45,13 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
             pl << new payload_member(uint16(0), true, constexpr_alpn_len)  //
                << new payload_member(binary_t(0), constexpr_protocol);
             pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
-            pl.read(stream, endpos_extension(), pos);
+            ret = pl.read(stream, endpos_extension(), pos);
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
 #if defined DEBUG
             alpn_len = pl.t_value_of<uint16>(constexpr_alpn_len);
@@ -72,7 +78,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
             _protocols = std::move(protocols);
         }
 
-        if (from_server == dir) {
+        if ((errorcode_t::success == ret) && (from_server == dir)) {
             secrets.assign(tls_secret_t::alpn, _protocols);  // copy
         }
     }
@@ -86,9 +92,9 @@ return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
         payload pl;
         pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len)  //
            << new payload_member(_protocols, constexpr_protocol);                      //
-        pl.write(bin);
+        ret = pl.write(bin);
     }
-    if (from_server == dir) {
+    if ((errorcode_t::success == ret) && (from_server == dir)) {
         get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_secret_t::alpn, _protocols);  // copy
     }
     return ret;

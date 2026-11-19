@@ -11,6 +11,8 @@
 
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
 #include <hotplace/sdk/net/tls/tls_container.hpp>
+#include <type_traits>
+#include <utility>
 
 namespace hotplace {
 namespace net {
@@ -22,6 +24,12 @@ class HOTPLACE_NET_API tls_records {
     return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
     return_t write(tls_session* session, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
+    return_t write(tls_session* session, tls_direction_t dir, std::function<return_t(tls_session*, binary_t& bin)> func);
+    template <typename F>
+    auto write(tls_session* session, tls_direction_t dir, F&& func) ->
+        typename std::enable_if<std::is_same<decltype(func(std::declval<tls_session*>(), std::declval<binary_t&>())), return_t>::value, return_t>::type {
+        return write(session, dir, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
+    }
 
     return_t add(tls_record* record, bool upref = false);
     tls_records& add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr, bool upref = false);

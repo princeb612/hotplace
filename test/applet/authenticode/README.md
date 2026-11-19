@@ -6,7 +6,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -18,7 +18,7 @@ This directory contains a small executable applet for exercising the Authenticod
 
 ## 2. Integration Model
 
-The sample expects a target file path, opens an `authenticode_verifier` context, enables CRL downloading for the sample, registers `trust.crt` as trusted root material, invokes `verify()`, and closes the context. The target file and trust certificate must be available in the runtime environment.
+The sample expects a target file path, opens an `authenticode_verifier` context, enables CRL downloading for the sample, registers `trust.crt` as trusted root material, invokes `verify()` with `authenticode_flag_t::flag_separated`, and closes the context. The target file is supplied with `-i`; `trust.crt` is opened by a relative filename and must be available in the process's current working directory. The PE engine reports `separated() == false`, so this flag does not make the PE plugin a detached-signature implementation.
 
 ### Target executable path examples
 
@@ -67,9 +67,11 @@ target PE file + trust.crt
 
 Implementation entry points:
 
-- `sample.cpp` — command-line setup, verifier/context lifecycle, trust-certificate registration, and result reporting.
+- `sample.cpp` — command-line setup, verifier/context lifecycle, trust-certificate registration, and return-code reporting.
 - `sample.hpp` — applet declarations and included module setup.
-- `CMakeLists.txt` — builds the `authenticode` applet target through the repository's `maketest` helper.
+- `CMakeLists.txt` — builds the `authenticode` applet target through the repository's `makeapplet` helper.
+
+**Sample limitations:** `test1()` does not check the return values from `open()`, `set()` or `add_trusted_rootcert()` before calling `verify()`. It passes a `result` output variable but does not inspect or report it; the testcase records only the `verify()` return code. The top-level `main()` also ignores `test1()`'s direct return value and relies on the testcase report for its process result.
 
 ## 3. Interoperability
 

@@ -1,7 +1,8 @@
 # TLS
 
-> Edition 1 · Revision 1105  
-> Documented with GPT-5.6 Luna — study, reconstruction & review
+> Edition 1 · Revision 1132  
+> Source base : Revision 1132
+> Documented with GPT-6 — study, reconstruction & review
 
 ## Context
 
@@ -82,6 +83,9 @@ The CHANGELOG places TLS development across several distinct study stages.
   - Revisions 953 and 999: TLS 1.3 ML-DSA certificate study and subsequent SLH-DSA study.
   - Revision 994: TLS/HTTP/2/QUIC rollback checkpoint.
   - Revision 1015 onward: renewed DTLS/TLS verification and cross-platform testing.
+- **TLS 1.3 resumption and early-data follow-up**
+  - Revision 1132: PSK binder generation and validation use the hash associated with each identity; PSK identity/binder lists and offered key-exchange modes are checked; and early-data acceptance is tied to identity zero and the selected ticket's connection parameters.
+  - Revision 1132 also bounds pending in-flight early-data ciphertext and rejected early-data ciphertext independently by byte and record-count limits. The ticket's `max_early_data_size` remains a plaintext allowance, not a ciphertext-discard budget.
 
 The chronology shows TLS evolving from protocol understanding into a reusable protocol/cryptographic implementation, then becoming a dependency for QUIC. The current source retains all of those layers.
 
@@ -365,6 +369,19 @@ ClientHello
 
 The result feeds `tls_protection`, which then uses the selected version, cipher suite, hash, and key-exchange material to establish cryptographic state.
 
+For TLS 1.3 resumption, the offered PSK identities and binders form parallel
+ordered vectors. Each binder is calculated with the hash associated with its
+own ticket; the negotiated cipher suite must be hash-compatible with the
+selected identity. A ClientHello that offers `pre_shared_key` also carries
+`psk_key_exchange_modes`. The server may select only an offered mode, and the
+ServerHello key-share shape must agree with that selection: `psk_ke` has no
+key share, while `psk_dhe_ke` uses a compatible share. The client's
+`selected_identity` validation is against the identities actually offered. The
+ClientHello must also carry `psk_key_exchange_modes` before the PSK offer, and
+`pre_shared_key` must be the final ClientHello extension. The writer moves that
+extension to the end; the reader rejects a non-final PSK extension before
+processing its binder.
+
 ### Transcript and key schedule
 
 `tls_protection` owns the bridge between handshake semantics and cryptographic state.
@@ -536,16 +553,22 @@ protected application data
 
 ```text
 ClientHello
- ├── pre_shared_key
  ├── psk_key_exchange_modes
- ├── early_data
- └── optional key_share
+ ├── early_data (when eligible)
+ ├── optional key_share
+ └── pre_shared_key (identities + matching binders; last extension)
         ↓
-resumption / early secret
-        ↓
-0-RTT application data
+server validates identity/binder and offered mode
         ↓
 ServerHello
+ ├── selected_identity
+ └── key_share consistent with selected mode
+        ↓
+identity-specific PSK / early secret
+        ↓
+0-RTT acceptance decision
+ ├── accept only identity zero with matching ticket/connection parameters
+ └── otherwise reject; do not deliver rejected early plaintext
         ↓
 handshake traffic secrets
         ↓
@@ -553,6 +576,12 @@ Finished
         ↓
 1-RTT application data
 ```
+
+The implementation keeps three limits distinct: the ticket's plaintext
+`max_early_data_size`, the pending ciphertext buffer bound while the server
+is deciding, and the rejected-ciphertext discard bound after rejection.
+Pending and discarded ciphertext are bounded independently by bytes and
+record count; HRR preserves the cumulative rejected-record accounting.
 
 ### TLS 1.2
 
@@ -628,6 +657,19 @@ These are useful because they preserve the protocol reasoning separately from th
 
 ### Cryptographic tests
 
+The Revision 1132 follow-up is exercised by focused regression cases in
+`testcase_gpt_psk.cpp`, `testcase_gpt_psk_offer.cpp`, and
+`testcase_gpt_early_data.cpp`. The cases cover mixed SHA-256/SHA-384 ticket
+binders, identity/binder alignment, selected-identity and mode validation,
+0-RTT eligibility and acceptance, and bounded pending/rejected ciphertext
+handling. Duplicate extension types are rejected before a duplicate body can
+change PSK or early-data state.
+
+The user-reported public Release run `ctest -C Release --output-on-failure`
+passed all 12 tests (0 failures), including `test-tls`. This is recorded as
+user-executed verification; it is not a claim that this documentation update
+ran the test suite.
+
 Representative tests include:
 
 - `testcase_pre_master_secret`
@@ -679,7 +721,7 @@ The last branch is intentionally shared with QUIC: TLS supplies handshake semant
 
 ## Status
 
-| Area | Revision 1105 state |
+| Area | Revision 1132 state |
 |---|---|
 | TLS 1.2 protocol / protection | implemented and extensively tested |
 | TLS 1.3 protocol / protection | implemented and extensively tested |
@@ -691,6 +733,10 @@ The last branch is intentionally shared with QUIC: TLS supplies handshake semant
 | DTLS fragmentation / reconstruction | implemented and tested |
 | TLS 1.3 ML-KEM / hybrid key exchange | tested |
 | TLS 1.3 ML-DSA certificate path | tested |
+| PSK binder hash agility (SHA-256 / SHA-384) | implemented and regression-tested |
+| PSK identity/binder alignment and key-exchange-mode validation | implemented and regression-tested |
+| 0-RTT eligibility and selected-ticket acceptance checks | implemented and regression-tested |
+| Pending and rejected 0-RTT ciphertext bounds | implemented and regression-tested |
 | Real TCP/TLS interoperability | tested |
 | HTTP/1.1 / HTTP/2 over TLS | tested |
 | PCAP + SSLKEYLOG replay | implemented and tested |
@@ -698,7 +744,7 @@ The last branch is intentionally shared with QUIC: TLS supplies handshake semant
 | `tls_composer` QUIC integration | remaining integration work exists |
 | `network_server` integration | active adjacent work |
 
-The remaining items should not be read as a lack of TLS protocol implementation. Most of the TLS protocol and cryptographic foundation is already a substantial completed study/implementation area; the open work is primarily at the orchestration and transport-integration boundaries.
+The Revision 1132 entries above are limited to behavior present in the published source and covered by the recorded regression suite. They do not imply that every TLS 1.3 resumption, early-data, or post-handshake requirement has been completed. Most of the TLS protocol and cryptographic foundation is already a substantial completed study/implementation area; the open work is primarily at the orchestration and transport-integration boundaries.
 
 ## Related topics
 
@@ -722,8 +768,8 @@ TLS therefore owns the handshake/security semantics shared with QUIC, while TCP/
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1105            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

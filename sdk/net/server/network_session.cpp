@@ -103,7 +103,12 @@ return_t network_session::ready_to_read() {
         DWORD dwFlags = 0;
         DWORD dwRecvBytes = 0;
 
-        WSARecv(sock, &wsabuf, 1, &dwRecvBytes, &dwFlags, &ov, nullptr);
+        if (SOCKET_ERROR == WSARecv(sock, &wsabuf, 1, &dwRecvBytes, &dwFlags, &ov, nullptr)) {
+            int error = WSAGetLastError();
+            if (WSA_IO_PENDING != error) {
+                ret = error;
+            }
+        }
     } else if (SOCK_DGRAM == type) {
         DWORD flags = 0;
         if (get_server_socket()->support_tls()) {
@@ -159,7 +164,12 @@ return_t network_session::ready_to_read() {
             flags = MSG_PEEK;
         }
         int addrlen = sizeof(sockaddr_storage_t);
-        WSARecvFrom(sock, &wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen, &ov, nullptr);
+        if (SOCKET_ERROR == WSARecvFrom(sock, &wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen, &ov, nullptr)) {
+            int error = WSAGetLastError();
+            if (WSA_IO_PENDING != error) {
+                ret = error;
+            }
+        }
     }
 #endif
     return ret;

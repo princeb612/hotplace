@@ -3,8 +3,8 @@
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
-│ Edition 2 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Edition 2 · Revision 1132                    │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -13,18 +13,18 @@
 
 ## 1. Role
 
-`basic/semantic/builtin` contains concrete implementations for selected ASN.1 built-in primitive types.
+`basic/semantic/builtin` contains concrete implementations for ASN.1 primitive semantic types. The shared declarations in `types.hpp` include BOOLEAN, OCTET STRING, NULL, OBJECT IDENTIFIER, REAL, UTF8String, RELATIVE-OID, NumericString, PrintableString, TeletexString, VideotexString, IA5String, UTCTime, GeneralizedTime, GraphicString, VisibleString, GeneralString, UniversalString, and the internal C-string entity. INTEGER and BIT STRING have dedicated classes in `asn1_integer.*` and `asn1_bitstring.*`; ENUMERATED is implemented separately by `asn1_enum.*`.
 
-The directory currently contains focused implementations such as INTEGER and BIT STRING. They are part of the larger semantic model in `../` rather than a separate encoding/runtime subsystem.
+These classes derive from the common `asn1_builtin_type` / `asn1_type` hierarchy. The directory is part of the larger semantic model in `../`, not a separate parser, DER decoder, or runtime subsystem.
 
 ## 2. Data Model
-The directory contains concrete built-in semantic types such as INTEGER and BIT STRING. They plug into the common `asn1_builtin_type` hierarchy rather than defining a separate parser or encoder pipeline.
+`asn1_builtin_type` stores the entity/name/default-value relationship and provides common notation and binary representation. Its binary writer selects the identifier from the semantic object, delegates value encoding to `asn1_value`, and handles the sequence-of/set-of visitor cases. Type-specific classes primarily select the ASN.1 entity and, where needed, add named-number or named-bit-list behavior. INTEGER, BIT STRING, and ENUMERATED maintain their own name/value mappings.
 
 ## 3. Behavior Model
 A built-in type carries type-specific value/constraint behavior used by the broader semantic model. Its representation should remain consistent with the tag and encoding rule selected by the surrounding ASN.1 type/object path; a primitive class existing in source is not proof that every X.680 built-in type is implemented.
 
 ### Source-level evidence
-The current `test/testcase/asn.1/` and `test/testcase/asn.1/runtime/` suites are the starting points for built-in type behavior. No dedicated per-type testcase inventory is recorded in this README, so coverage for a specific primitive should be confirmed from the concrete testcase functions and assertions.
+`test/testcase/asn.1/testcase_basic1.cpp` contains table-driven primitive value/DER cases, including BOOLEAN, INTEGER, and REAL, plus direct generic built-in-object cases. `testcase_basic2.cpp` exercises semantic construction and selected round trips involving VisibleString, BOOLEAN, REAL, INTEGER, BIT STRING, ENUMERATED, and constructed types. `testcase_basic3.cpp` exercises schema-guided decoding for selected schemas. These are selected test cases: the presence of a concrete class in `types.hpp` does not mean that each primitive has an equivalent dedicated positive/negative test matrix or full X.680/X.690 conformance coverage.
 
 ### Practical example: follow an INTEGER constraint into evaluation
 
@@ -37,7 +37,7 @@ asn1_builder::build(asn1_entity_integer, configure_constraints)
   -> runtime allowed-value set / validation result
 ```
 
-This is a useful way to study the built-in type boundary: the primitive supplies the value domain, while constraint objects describe permitted values and the evaluator interprets those constraints. The testcase demonstrates selected INTEGER/string cases; it is not evidence that every ASN.1 built-in type or X.680 rule is implemented.
+This is a useful way to study the built-in type boundary: the primitive supplies the value domain, while constraint objects describe permitted values and the evaluator interprets those constraints. The testcase demonstrates selected INTEGER and string constraint cases; it is not a per-primitive conformance suite and does not establish that every ASN.1 built-in type or X.680/X.690 rule is implemented.
 
 ## 4. Relationships
 ### Related areas

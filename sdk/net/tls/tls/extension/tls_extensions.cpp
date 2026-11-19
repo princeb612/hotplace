@@ -13,6 +13,7 @@
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extensions.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -40,7 +41,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
         tls_extension_builder builder;
         std::set<uint16> seen_extension_types;
         while (pos < size) {
-            if (pos + 4 > size) {
+            if ((pos > size) || (size - pos < 4)) {
                 ret = errorcode_t::no_more;
                 break;
             }
@@ -134,6 +135,10 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
             auto session = handshake->get_session();
             auto flow = session->get_tls_protection().get_flow();
             const auto& early_state = session->get_session_info(from_server).get_keyvalue();
+            if ((tls_extension_type_t::pre_shared_key == extension->get_type()) && (tls_flow_t::hello_retry_request == flow) &&
+                static_cast<tls_extension_client_psk*>(extension)->is_suppressed()) {
+                return errorcode_t::success;
+            }
             if (((tls_extension_type_t::pre_shared_key == extension->get_type()) && (tls_flow_t::one_rtt == flow)) ||
                 ((tls_extension_type_t::early_data == extension->get_type()) &&
                  ((tls_flow_t::zero_rtt != flow) || (0 == early_state.get(session_early_data_limit)) || (nullptr == get(tls_extension_type_t::pre_shared_key))))) {
@@ -189,7 +194,54 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
         }
         return ret;
     };
-    ret = for_each(lambda);
+    tls_session* write_session = nullptr;
+    uint64 previous_early_data_accepted = 0;
+    uint64 previous_early_data_offered = 0;
+    uint64 previous_early_data_offered_initial = 0;
+    uint64 previous_record_size_limit = 0;
+    binary_t previous_alpn;
+    bool previous_alpn_present = false;
+    bool early_data_state_snapshotted = false;
+    bool encrypted_extensions_state_snapshotted = false;
+    auto write_extension = [&](tls_extension* extension) -> return_t {
+        if (false == early_data_state_snapshotted) {
+            auto handshake = extension ? extension->get_handshake() : nullptr;
+            write_session = handshake ? handshake->get_session() : nullptr;
+            if (write_session) {
+                auto& early_state = write_session->get_session_info(from_server).get_keyvalue();
+                previous_early_data_accepted = early_state.get(session_early_data_accepted);
+                previous_early_data_offered = early_state.get(session_early_data_offered);
+                previous_early_data_offered_initial = early_state.get(session_early_data_offered_initial);
+                early_data_state_snapshotted = true;
+
+                if ((from_server == dir) && (tls_handshake_type_t::encrypted_extensions == handshake->get_type())) {
+                    previous_record_size_limit = write_session->get_session_info(dir).get_keyvalue().get(session_record_size_limit);
+                    previous_alpn_present = (errorcode_t::success == write_session->get_tls_protection().get_secrets().peek(tls_secret_t::alpn, previous_alpn));
+                    encrypted_extensions_state_snapshotted = true;
+                }
+            }
+        }
+        return lambda(extension);
+    };
+    ret = for_each(write_extension);
+    if ((errorcode_t::success != ret) && early_data_state_snapshotted) {
+        // Extension writers may provisionally update session state while
+        // serializing individual extensions. Roll it back if a later writer
+        // prevents the complete extension block from being emitted.
+        auto& early_state = write_session->get_session_info(from_server).get_keyvalue();
+        early_state.set(session_early_data_accepted, previous_early_data_accepted);
+        early_state.set(session_early_data_offered, previous_early_data_offered);
+        early_state.set(session_early_data_offered_initial, previous_early_data_offered_initial);
+        if (encrypted_extensions_state_snapshotted) {
+            write_session->get_session_info(dir).get_keyvalue().set(session_record_size_limit, previous_record_size_limit);
+            auto& secrets = write_session->get_tls_protection().get_secrets();
+            if (previous_alpn_present) {
+                secrets.assign(tls_secret_t::alpn, previous_alpn);
+            } else {
+                secrets.erase(tls_secret_t::alpn);
+            }
+        }
+    }
     return ret;
 }
 

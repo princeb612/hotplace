@@ -1,5 +1,7 @@
 # hotplace
 
+> Source base : Revision 1132
+
 ````
  _   _           _             _
 | | | |   ___   | |_   _ __   | |   __ _    ___    ___
@@ -104,7 +106,6 @@ The goal is not to document everything, but to make the important things underst
   * [RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3](https://datatracker.ietf.org/doc/html/rfc9147)
   * [RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport](https://datatracker.ietf.org/doc/html/rfc9000)
   * [RFC 9001 Using TLS to Secure QUIC](https://datatracker.ietf.org/doc/html/rfc9001)
-  * [RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3](https://datatracker.ietf.org/doc/html/rfc9147)
   * [RFC 9369 QUIC Version 2](https://datatracker.ietf.org/doc/html/rfc9369)
   * ML-KEM Post-Quantum Key Agreement for TLS 1.3
     * [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)

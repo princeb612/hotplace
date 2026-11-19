@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -28,13 +28,14 @@ Describes conversion between encoded CBOR data and the project's object represen
 | `temp.indef` | Tracks open indefinite-length nesting |
 | `temp.parents` | Current container/parent stack used while attaching parsed items |
 | `temp.items` | Pending parsed items used by the construction path |
-| `temp.tag_value`, `temp.tag_flag` | Temporary tag state while the next item is being formed |
+| `temp.tag_value` | Single pending tag value applied to the next item; consecutive tags overwrite it |
+| `temp.tag_flag` | Present in the context structure but not used by the current reader parse path |
 
-The public context is opaque to callers. `open()` allocates it; `close()` clears retained roots and deletes it; `clear()` releases roots and clears the temporary queues.
+The public context is opaque to callers. `open()` allocates it; `close()` clears retained roots and deletes it; `clear()` releases roots and clears the parent/item queues. The current `clear()` does not reset the scalar temporary fields `temp.indef`, `temp.tag_value` or `temp.tag_flag`, so reusing a context after an incomplete parse can carry state into the next parse.
 
 ### Major type and additional information
 
-The first byte is split into the 3-bit major type and 5-bit additional-information field:
+The first byte is split into the 3-bit major type and 5-bit additional-information field. The current reader keeps only one pending `temp.tag_value`; consecutive tag items overwrite that field rather than building a nested tag chain.
 
 | Major type | Meaning |
 |---:|---|
@@ -74,7 +75,7 @@ parse(bytes)
 
 The diagnostic-expression overload converts the supplied hexadecimal text to bytes and then uses the binary parse path. It is therefore a convenience input form for encoded bytes, not a separate diagnostic-notation parser.
 
-The parser has explicit checks for some malformed payload boundaries and returns errors such as invalid parameter or bad format along the parse path. Do not infer from those checks that every truncated argument, malformed UTF-8 string, duplicate map key, or RFC-level semantic constraint is comprehensively validated.
+The parser's explicit input-boundary check is limited mainly to definite byte/text payload lengths, and it occurs after the additional-information argument has already been read. The 1/2/4/8-byte argument reads use direct pointer casts without first checking the remaining input length (and are alignment-sensitive on strict-alignment platforms). The parser does not comprehensively reject reserved additional-information values, incomplete definite containers, odd map key/value counts, unmatched breaks, unterminated indefinite containers, malformed UTF-8, or unsupported map key/value types. It also ignores return statuses from `push()` / `insert()`, so a failed container join can be silently omitted while `parse()` still reports success. Treat this as a source-level decoder with limited checks, not a strict or hardened untrusted-input validator.
 
 ### Binary encode path
 
@@ -93,11 +94,11 @@ select overload / value type
        binary_t
 ```
 
-For negative integers, the CBOR argument is based on `-1 - value`. Integer and length arguments use the shortest width selected by the relevant overload. The encoder also has specialized paths for floating-point representations, tags, and big numbers; do not treat every `variant` type as equivalent to a scalar integer.
+For negative integers, the CBOR argument is based on `-1 - value`. Integer and length arguments use the shortest width selected by the relevant overload. The `float` and `double` overloads call `ieee754_as_small_as_possible()` and select the shortest exact representation supported by the input value: a `float` can be emitted as half or single precision, and a `double` as half, single or double precision. This is not lossy rounding; a narrower width is selected only when the value is exactly representable. Map objects are emitted in their stored list order, with no canonical key sorting. Unsupported `variant_t` types fall through the encoder switch without emitting bytes while the method retains its initial success status. The encoder also has specialized paths for tags and big numbers; do not treat every `variant` type as equivalent to a scalar integer.
 
 ### Publish and compare representations
 
-The vector testcase reads encoded bytes, publishes the resulting value both as diagnostic text and as binary, and compares the published bytes with the original vector. It permits a diagnostic comparison in cases where equivalent floating-point values have distinct legal encodings (for example, Infinity encoded with different float widths).
+The vector testcase reads encoded bytes, publishes the resulting value both as diagnostic text and as binary, and compares the published bytes with the original vector. It permits a diagnostic comparison in cases where equivalent floating-point values have distinct legal encodings (for example, Infinity encoded with different float widths). The reader context can retain multiple top-level roots: binary/stream publication iterates all roots, while `publish(handle, cbor_object**)` returns only the first root and increments that object's reference. `cbor_reader::publish()` also ignores the return status from `cbor_publisher`, and the publisher's visitor dispatch does not propagate visitor return statuses.
 
 ```text
 test vector bytes ─► reader.parse()

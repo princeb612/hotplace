@@ -1,6 +1,8 @@
 # HPACK
 
-Edition 1 · Based on hotplace Revision 1090
+Edition 1 · Based on hotplace Revision 1132
+
+> Source base : Revision 1132
 
 > This document follows the [Document Guide](../guide/document-guide.md).
 
@@ -157,8 +159,9 @@ Current source anchors:
 
 - `sdk/net/http/hpack/`
 - `test/testcase/net/hpack/`
-- Huffman: `sdk/base/encoding/`
-- Huffman tests: `test/testcase/encode/`
+- HPACK Huffman wrapper/fixed RFC table: `sdk/base/encoding/http_huffman_coding.hpp/.cpp`
+- HPACK Huffman known-answer tests: `test/testcase/net/hpack/testcase_huffman.cpp`
+- Generic Huffman and chunked stream tests: `sdk/base/encoding/huffman_coding.hpp`, `test/testcase/encode/testcase_huffman.cpp`
 - HTTP/2: `sdk/net/http/http2/`
 - HTTP/2 tests: `test/testcase/net/http/`
 
@@ -224,12 +227,13 @@ Encoder                         Decoder
 
 ### Huffman
 
-Huffman coding was studied as a separate string-encoding concern.
+HPACK uses the fixed RFC 7541 code table exposed by `http_huffman_coding`, which derives from the generic `huffman_coding` class but does not learn a new table from each header block.
 
 Anchors:
 
-- `sdk/base/encoding/`
-- `test/testcase/encode/`
+- `sdk/base/encoding/http_huffman_coding.hpp/.cpp` — fixed RFC 7541 table and symbol encode/decode.
+- `test/testcase/net/hpack/testcase_huffman.cpp` — RFC 7541 Appendix B known-answer bytes and encode/decode round trips.
+- `sdk/base/encoding/huffman_coding.hpp` and `test/testcase/encode/testcase_huffman.cpp` — generic learned/imported Huffman behavior and stream chunk-boundary checks.
 
 ### RFC 7541
 
@@ -288,8 +292,8 @@ document is synchronized with a newer edition.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Edition 1 · Revision 1132            │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

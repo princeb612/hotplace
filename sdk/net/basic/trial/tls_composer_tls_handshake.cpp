@@ -26,7 +26,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -46,13 +46,16 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
             // if DTLS(HVR), then CH(cookie)
             if (session_type_t::dtls == session_type) {
                 // S->C HVR
-                session->wait_change_session_status(session_status_hello_verify_request, wto);
+                ret = session->wait_change_session_status(session_status_hello_verify_request, wto);
                 session_status = session->get_session_status();
 
                 if (0 == (session_status & session_status_hello_verify_request)) {
-                    ret = errorcode_t::handshake_failure;
+                    if (errorcode_t::success == ret) {
+                        ret = errorcode_t::handshake_failure;
+                    }
                     __leave2_trace(ret);
                 }
+                ret = errorcode_t::success;
 
                 // C->S CH(cookie that server sent)
                 ret = do_tls_client_hello(func);
@@ -62,13 +65,13 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
             }
 
             // S->C SH, check HRR
-            session->wait_change_session_status(session_status_server_hello, wto);
+            ret = session->wait_change_session_status(session_status_server_hello, wto);
 
             session_status = session->get_session_status();
             if (session_status & session_status_server_hello) {
                 ret = errorcode_t::success;
                 break;
-            } else {
+            } else if (errorcode_t::success == ret) {
                 ret = errorcode_t::handshake_failure;
             }
         } while ((tls_flow_t::hello_retry_request == protection.get_flow()) && (--retry));
@@ -89,13 +92,16 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
         if (protection.is_kindof_tls13()) {
             uint32 session_status_prerequisite =
                 session_status_server_hello | session_status_server_cert | session_status_server_cert_verified | session_status_server_finished;
-            session->wait_change_session_status(session_status_prerequisite, wto);
+            ret = session->wait_change_session_status(session_status_prerequisite, wto);
             session_status = session->get_session_status();
 
-            if (0 == (session_status & session_status_prerequisite)) {
-                ret = errorcode_t::handshake_failure;
+            if (session_status_prerequisite != (session_status & session_status_prerequisite)) {
+                if (errorcode_t::success == ret) {
+                    ret = errorcode_t::handshake_failure;
+                }
                 __leave2_trace(ret);
             }
+            ret = errorcode_t::success;
 
             builder.set(dir)
                 .construct()
@@ -111,13 +117,16 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
         } else if (protection.is_kindof_tls12()) {
             uint32 session_status_prerequisite =
                 session_status_server_hello | session_status_server_cert | session_status_server_key_exchange | session_status_server_hello_done;
-            session->wait_change_session_status(session_status_prerequisite, wto);
+            ret = session->wait_change_session_status(session_status_prerequisite, wto);
             session_status = session->get_session_status();
 
-            if (0 == (session_status & session_status_prerequisite)) {
-                ret = errorcode_t::handshake_failure;
+            if (session_status_prerequisite != (session_status & session_status_prerequisite)) {
+                if (errorcode_t::success == ret) {
+                    ret = errorcode_t::handshake_failure;
+                }
                 __leave2_trace(ret);
             }
+            ret = errorcode_t::success;
 
             builder.set(dir)
                 .construct()
@@ -143,19 +152,22 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
         }
 
         // wait FIN
-        session->wait_change_session_status(session_status_finished, wto);
+        ret = session->wait_change_session_status(session_status_finished, wto);
         session_status = session->get_session_status();
 
         if (0 == (session_status_finished & session_status)) {
-            ret = errorcode_t::handshake_failure;
+            if (errorcode_t::success == ret) {
+                ret = errorcode_t::handshake_failure;
+            }
             __leave2_trace(ret);
         }
+        ret = errorcode_t::success;
     }
     __finally2 {}
     return ret;
 }
 
-return_t tls_composer::do_tls_client_hello(std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::do_tls_client_hello(std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     tls_record* record = nullptr;
     tls_direction_t dir = from_client;
@@ -183,7 +195,7 @@ return_t tls_composer::do_tls_client_hello(std::function<void(tls_session*, bina
             return ret;
         });
 
-        do_tls_compose(record, dir, func);
+        ret = do_tls_compose(record, dir, func);
     }
     __finally2 {
         if (record) {
@@ -348,6 +360,16 @@ return_t tls_composer::do_tls_server_handshake_phase2(std::function<void(tls_ses
 }
 
 return_t tls_composer::do_tls_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
+    return do_tls_compose(record, dir, [func](tls_session* session, binary_t& bin) -> return_t {
+        func(session, bin);
+        return errorcode_t::success;
+    });
+}
+
+return_t tls_composer::do_tls_compose(tls_record* record, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == record || nullptr == func) {
@@ -358,12 +380,14 @@ return_t tls_composer::do_tls_compose(tls_record* record, tls_direction_t dir, s
         auto session = get_session();
         auto session_type = session->get_type();
         if (session_type_t::dtls == session_type) {
-            // fragmentation
-            session->get_dtls_record_publisher().publish(record, dir, func);
+            ret = session->get_dtls_record_publisher().publish(record, dir, func);
         } else {
             binary_t bin;
             ret = record->write(dir, bin);
-            func(session, bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            ret = func(session, bin);
         }
     }
     __finally2 {}
@@ -371,6 +395,16 @@ return_t tls_composer::do_tls_compose(tls_record* record, tls_direction_t dir, s
 }
 
 return_t tls_composer::do_tls_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    if (nullptr == func) {
+        return errorcode_t::invalid_parameter;
+    }
+    return do_tls_compose(records, dir, [func](tls_session* session, binary_t& bin) -> return_t {
+        func(session, bin);
+        return errorcode_t::success;
+    });
+}
+
+return_t tls_composer::do_tls_compose(tls_records* records, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == records || nullptr == func) {
@@ -381,10 +415,9 @@ return_t tls_composer::do_tls_compose(tls_records* records, tls_direction_t dir,
         auto session = get_session();
         auto session_type = session->get_type();
         if (session_type_t::dtls == session_type) {
-            // fragmentation
-            session->get_dtls_record_publisher().publish(records, dir, func);
+            ret = session->get_dtls_record_publisher().publish(records, dir, func);
         } else {
-            records->write(session, dir, func);
+            ret = records->write(session, dir, func);
         }
     }
     __finally2 {}

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -53,7 +53,7 @@ The stream type is reported as `stream_type_t::file`.
 
 ### Memory-mapped access lifecycle
 
-Memory mapping is explicit rather than an automatic property of `file_stream`. `begin_mmap()` rejects a closed stream and does nothing when the file is empty or already mapped.
+Memory mapping is explicit rather than an automatic property of `file_stream`. `begin_mmap()` rejects a closed stream and does nothing when already mapped. Empty-file behavior differs by platform: the Linux implementation returns success without creating a mapping when the file size is zero; the Windows implementation has no corresponding zero-size guard and proceeds to `CreateFileMapping`, which can fail for an empty file.
 
 ```text
 open()
@@ -164,7 +164,7 @@ fs.open(filename, mode)
 fs.close()
 ```
 
-`close()` also releases an active mapping and platform-specific file lock.
+`close()` also releases an active mapping and unlocks the file where the platform implementation acquired a lock. Linux releases either shared or exclusive `flock`; Windows unlocks only the exclusive `LockFileEx` path. The Windows `flag_share_flock` branch is empty, so shared locking is not implemented there.
 
 ### Platform implementation
 
@@ -201,7 +201,7 @@ For a writable file, the mapping is created with `PROT_WRITE` and `MAP_SHARED`, 
 - `MapViewOfFile` / `UnmapViewOfFile`
 - `FlushFileBuffers` / `FlushViewOfFile`
 
-The narrow-character `open(const char*, ...)` path converts to a wide string and delegates to the Windows wide-character overload.
+The narrow-character `open(const char*, ...)` path converts to a wide string and delegates to the Windows wide-character overload. The Windows wide-character overload acquires an exclusive lock with `LockFileEx` when requested, but its `flag_share_flock` branch does nothing. The return value from `LockFileEx` is not checked.
 
 ### Current scope
 
@@ -212,6 +212,17 @@ There is currently one substantive concrete implementation in this directory: `f
 If additional concrete stream types are introduced later, they should get their own module records rather than expanding this document indefinitely.
 
 ### Source-level evidence
+
+The platform wrappers expose the same method names, but several operational details are not equivalent:
+
+- **Linux write positioning:** `open()` uses `O_APPEND` whenever `open_write` is selected. Consequently, `seek()` changes the read position but does not make subsequent writes overwrite at that position; writes remain append-oriented. The Windows open path uses ordinary `GENERIC_WRITE` access and does not add an equivalent append flag.
+- **Lock status:** Linux ignores the return value from `flock()`, and Windows ignores the return value from `LockFileEx()`. A successful `open()` result therefore does not prove that a requested lock was acquired.
+- **Read status on Windows:** `ReadFile()` returns a Boolean result, but the current implementation checks `rc == -1`. A failed call returns `FALSE` (zero), so this check does not detect the failure and the wrapper can report success with an unsuccessful/short read. The Windows `begin_mmap()` path also does not check whether `MapViewOfFile()` returned a non-null view; it can leave `_file_data` null while returning the success status from `CreateFileMapping()`.
+- **Formatting status:** both platform implementations call `write()` from `printf()` / `vprintf()` without assigning or checking its return value. A formatting call can therefore report success even when the file write failed.
+- **Flush status:** Linux `flush()` is an unconditional success no-op. Windows also returns success without checking the OS result; on the mapped path it calls `FlushViewOfFile(_file_handle, 0)`, passing the file handle rather than the mapped view address `_file_data`. Do not rely on mapped flush through this wrapper until corrected.
+
+These are source-level observations; they were not reproduced as runtime failures during this documentation audit.
+
 ### Test coverage
 
 `test/testcase/io/stream/testcase_filestream.cpp` currently exercises:

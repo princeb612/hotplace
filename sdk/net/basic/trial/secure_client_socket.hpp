@@ -40,6 +40,7 @@ class HOTPLACE_NET_API secure_client_socket : public client_socket_prosumer {
     virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     virtual return_t do_secure();
     virtual return_t do_shutdown();
+    virtual return_t do_transport_disconnect();
     virtual return_t do_send(binary_t& bin);
 
     tls_session _session;

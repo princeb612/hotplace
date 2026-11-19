@@ -262,7 +262,13 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                 pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(etver));
             };
             pl.set_condition(constexpr_record_version, lambda_check_dtls);
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, size, pos);
+            if (errorcode_t::success != ret) {
+                // Record headers may arrive fragmented across transport reads.
+                // Preserve payload::read()'s incomplete-input result instead
+                // of consuming uninitialized header fields.
+                __leave2;
+            }
 
             content_type = pl.t_value_of<uint8>(constexpr_content_type);
 #if defined DEBUG

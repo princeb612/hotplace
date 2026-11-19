@@ -72,20 +72,6 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
             __leave2_trace(ret);
         }
 
-        if ((from_client == dir) && (tls_handshake_type_t::client_hello == get_handshake()->get_type())) {
-            // Set this while parsing ClientHello, before the final PSK
-            // extension is processed and decides whether identity zero is
-            // eligible for early data.
-            auto& early_state = session->get_session_info(from_server).get_keyvalue();
-            early_state.set(session_early_data_offered, 1);
-            early_state.set(session_early_data_offered_initial, 1);
-            // Initialize the independent ciphertext-discard budget here as
-            // well as in the PSK parser: a malformed offer may omit PSK.
-            early_state.set(session_early_data_discard_limit, session->get_early_data_discard_limit());
-            early_state.set(session_early_data_discarded, 0);
-            early_state.set(session_early_data_discarded_records, 0);
-        }
-
         {
             auto is_nst = (tls_handshake_type_t::new_session_ticket == get_handshake()->get_type());
             if (false == is_nst) {
@@ -93,6 +79,8 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
                 // Do not call payload::read() for an empty structure: its
                 // no_data result is a trivial diagnostic, not a parse failure.
                 if (pos != endpos_extension()) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
                     ret = errorcode_t::bad_format;
                     __leave2_trace(ret);
                 }
@@ -104,14 +92,18 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
                 pl << new payload_member(uint32(0), true, constexpr_max_early_data_size, constexpr_new_session_ticket);
                 pl.set_group(constexpr_new_session_ticket, true);
 
-                ret = pl.read(stream, size, pos);
+                ret = pl.read(stream, endpos_extension(), pos);
                 if (errorcode_t::success != ret) {
                     // NewSessionTicket requires exactly one uint32 value.
                     // A missing or truncated value is malformed wire data.
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
                     ret = errorcode_t::bad_format;
                     __leave2_trace(ret);
                 }
                 if (pos != endpos_extension()) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
                     ret = errorcode_t::bad_format;
                     __leave2_trace(ret);
                 }
@@ -126,6 +118,19 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
                 }
 #endif
             }
+        }
+
+        // Commit the ClientHello offer only after its empty extension body has
+        // been validated. Keep this before the following pre_shared_key
+        // extension is parsed so the server can still account for in-flight
+        // 0-RTT records even when PSK processing later rejects the identity.
+        if ((from_client == dir) && (tls_handshake_type_t::client_hello == handshake->get_type())) {
+            auto& early_state = session->get_session_info(from_server).get_keyvalue();
+            early_state.set(session_early_data_offered, 1);
+            early_state.set(session_early_data_offered_initial, 1);
+            early_state.set(session_early_data_discard_limit, session->get_early_data_discard_limit());
+            early_state.set(session_early_data_discarded, 0);
+            early_state.set(session_early_data_discarded_records, 0);
         }
     }
     __finally2 {}

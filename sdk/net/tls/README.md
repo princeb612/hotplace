@@ -5,7 +5,7 @@
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
 │ Documented with GPT-6                        │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documentation scope: protocol layers         │
 └──────────────────────────────────────────────┘
 ```
@@ -187,6 +187,16 @@ captured TLS record bytes
 ```
 
 The testcase compares the derived client key and IV against fixed expected bytes before attempting decryption. The record includes the TLS record header and encrypted payload/tag, and the direction selects the client-side traffic material. This is a focused known-input record-protection test: it does not exercise negotiation, certificate validation, or a full handshake. In the shown code the decrypt result is checked for success, but the resulting plaintext is not compared against an expected byte sequence, so do not describe this particular assertion as a plaintext known-answer check.
+
+### TLS 1.3 PSK and early-data source evidence
+
+The current source has focused PSK-resumption and early-data test groups in addition to the TLS 1.2 record-protection example above:
+
+- `testcase_gpt_psk.cpp` covers server-issued ticket PSK derivation, restoration of per-ticket records, binder generation/validation, selection of a later offered identity, ticket-nonce PSK derivation, and selected early-data discard behavior.
+- `testcase_gpt_psk_offer.cpp` covers ticket-age eligibility, expired-ticket full-handshake fallback, ServerHello `selected_identity` encoding/range checks, PSK mode/key_share compatibility, selected-suite hash compatibility, and the prohibition on PSK selection in HRR.
+- `testcase_gpt_early_data.cpp` covers EndOfEarlyData prerequisites, early-data offer/accept/reject conditions, identity-zero selection, ticket permission and negotiated ALPN/version checks, HRR filtering, duplicate/invalid extension cases, and the trial `secure_prosumer` pending-ciphertext buffer's default/configured limits, hard 64-record ceiling, overflow/reset, and deferred-record release after EncryptedExtensions.
+
+These files establish source-level test coverage for the named scenarios only. They do not prove that the test executable was run in this documentation audit or that all RFC 8446/RFC 9257 requirements are implemented.
 
 ### Session lifecycle and state boundaries
 

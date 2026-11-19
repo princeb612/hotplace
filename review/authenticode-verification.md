@@ -8,7 +8,8 @@ The scope is deliberately narrow: this is a review of the implementation path us
 
 ## Source Baseline
 
-- Source tree: hotplace revision 1105
+- Source tree: hotplace Revision 1132
+- Source base : Revision 1132
 - Primary area: `sdk/crypto/authenticode/`
 - Practical sample: `test/applet/authenticode/sample.cpp`
 
@@ -235,7 +236,9 @@ local CRL/cache representation
   - Can invoke `wget` through the project's `process` abstraction when retrieval is enabled.
   - Configures `X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL` and adds successfully decoded CRLs to the OpenSSL store before `PKCS7_verify()`.
 
-The sample applet enables CRL retrieval by setting `authenticode_ctrl_t::set_crl = 1`; the source notes that it may be disabled for an air-gapped environment. This is a restored revocation-check path, not proof of a complete revocation policy: retrieval, decoding, freshness, issuer validation, and successful chain revocation checking remain distinct concerns. In particular, the callback does not turn a missing-CRL error into success.
+The sample applet enables CRL retrieval by setting `authenticode_ctrl_t::set_crl = 1`; the source notes that it may be disabled for an air-gapped environment. The context also defaults CRL downloading to enabled. This is a restored revocation-check path, not proof of a complete revocation policy: retrieval, decoding, freshness, issuer validation, and successful chain revocation checking remain distinct concerns. In particular, `verify_callback()` leaves `X509_V_ERR_UNABLE_TO_GET_CRL` as a verification error rather than converting it to success.
+
+The current callback also has a narrow timestamp exception: only `X509_V_ERR_CERT_HAS_EXPIRED` at signer depth zero can be cleared when a PKCS#7 counter-signature `signingTime` falls within that signer's certificate validity interval. This helper does not establish full timestamp-authority chain/token validation, does not apply to every certificate in the chain, and does not configure the whole chain to be validated at the timestamp. It should not be described as general historical certificate validation.
 
 ## 7. Reusing the existing file-I/O boundary
 
@@ -357,9 +360,9 @@ test/applet/authenticode/sample.cpp
                     verify()
 ```
 
-There is no dedicated `test/testcase/crypto/authenticode/` tree in the current source.
+There is no dedicated `test/testcase/crypto/authenticode/` tree in the current source. The PE plugin reports `separated() == false`, and its `find_if_separated()` / `verify_if_separated()` methods return `not_available`. The sample's `flag_separated` argument only enables the verifier's generic fallback if embedded extraction fails and a separated-capable engine is registered; it does not make the PE plugin support sidecar signatures. `load_engines()` currently registers only the PE plugin, while the MSI and Cabinet registrations remain commented out.
 
-That means the applet is currently the most direct executable example of the subsystem.
+That means the applet is currently the most direct executable example of the subsystem, and its flag should not be read as evidence of an implemented PE sidecar-signature path.
 
 ## 12. Architectural relationships
 
@@ -399,16 +402,18 @@ The important distinction is between **direct implementation responsibilities** 
 
 ## 13. Current Status
 
-As of revision 1105:
+As of Revision 1132:
 
 - PE Authenticode verification is the documented implementation scope.
 - The verifier uses a plugin-oriented architecture.
 - PE-specific digest calculation is isolated in `authenticode_plugin_pe`.
 - PKCS#7/X.509 processing uses OpenSSL APIs directly.
 - Trust roots/signers and CRL-related state are handled by the verifier context.
-- Revision 1105 restores CRL retrieval through local/cache paths and optional `wget` execution via `process`, and configures OpenSSL CRL-check flags.
+- The Revision 1105 implementation restores CRL retrieval through context-cache/local-file paths and optional `wget` execution via `process`, and configures OpenSSL CRL-check flags. The path remains conditional on `crl_download` and missing/unusable CRLs are not treated as success.
 - `file_stream` and URL splitting are concrete cross-module dependencies.
 - MSI/Cabinet engine identifiers remain in the source, but are outside the current PE-focused documentation scope.
+- A narrow signer-depth-zero expired-certificate timestamp exception exists; it is not full timestamp-token/chain validation.
+- The PE plugin does not implement separated signatures; `flag_separated` is only a generic fallback option, and the current engine loader registers only PE.
 - There is no dedicated Authenticode testcase directory; the sample applet is the practical executable example.
 - This subsystem should not be described as a general-purpose PKI implementation.
 
@@ -430,7 +435,8 @@ As of revision 1105:
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1105                                │
+│ Revision 1132                                │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

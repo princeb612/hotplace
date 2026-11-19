@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -21,8 +21,8 @@ This directory provides a common `sign` / `verify` interface over several signat
 | Type | Responsibility |
 |---|---|
 | `openssl_sign` | Backend that dispatches by key type and signature category and invokes OpenSSL signing/verification operations. |
-| `crypto_sign` | Common operation object exposing `sign()` and `verify()` for byte streams or `binary_t`, with signature category, digest and RSA-PSS salt-length configuration. |
-| `crypto_sign_builder` | Holds the requested signature category/scheme, digest and any scheme-specific options, then builds the appropriate `crypto_sign` implementation. The selected key and backend availability remain separate inputs/constraints. |
+| `crypto_sign` | Common operation object exposing `sign()` and `verify()` for byte streams or `binary_t`, with signature category, digest and an RSA-PSS salt-length setting (`set_saltlen()` is applied to the built object). |
+| `crypto_sign_builder` | Holds the requested signature category/scheme and digest, then builds the corresponding `crypto_sign` implementation. It does not hold the RSA-PSS salt length; the selected key and runtime backend availability remain separate inputs/constraints. |
 | `crypto_sign_digest` / `crypto_sign_digestsign` | Separate the conventional digest-then-sign path from the backend's combined DigestSign-style path. |
 | Algorithm-specific classes | Implement RSA PKCS#1 v1.5, RSA-PSS, DSA, ECDSA, EdDSA, HMAC, ML-DSA and SLH-DSA behavior. |
 
@@ -66,11 +66,13 @@ caller / protocol identifier
  signature bytes or verification status
 ```
 
-The builder resolves the requested identifier into a primitive configuration; the backend still needs compatible key material and an available implementation. A scheme name in a protocol registry is not proof that the current OpenSSL/provider build can execute it.
+The builder maps a known TLS signature-scheme or JWS identifier to a signature category and digest, then creates the category-specific `crypto_sign` object. The mapping setters are fluent and do not report lookup failure: if `set_tls_sign_scheme()` or `set_scheme()` finds no advisor hint, the builder retains its default `dgst` category and empty digest; `build()` can still return a digest-sign object. Likewise, an unknown digest name leaves the digest unset. A non-null build result therefore does not prove that the requested identifier resolved correctly or that the provider can execute it. The builder also returns null for unsupported categories such as the unimplemented `rsassa_x931`.
+
+The common facade path selects a category-specific class first; that class calls the corresponding `openssl_sign` operation with the supplied key. A separate direct `openssl_sign::sign/verify(signature_t, ...)` API resolves a `signature_t` hint and then dispatches by key type. These are related but distinct paths; the direct dispatcher should not be confused with the common builder path.
 
 Signing and verification must use compatible algorithm parameters and intended public/private key material. Digest-sign and message-sign paths differ in where hashing is performed, so callers must not accidentally hash input twice or assume all algorithms accept pre-hashed input.
 
-For TLS, the selected signature scheme constrains key type and digest/version semantics. For JOSE, the `jws_t` identifier is part of the JWS algorithm contract; this module does not serialize the JWS signing input or produce compact/JSON JOSE messages.
+For TLS, the selected signature scheme constrains key type and digest/version semantics, and the TLS layer performs its own offer/key-compatibility checks before verification. For JOSE, the `jws_t` identifier is part of the JWS algorithm contract; this module does not serialize the JWS signing input or produce compact/JSON JOSE messages.
 
 ### 3.2 Concrete caller path from `testcase_crypto_sign.cpp`
 
@@ -113,60 +115,45 @@ The directory names mix three different dimensions: operation/API path, cryptogr
 | `mldsa` | ML-DSA key (post-quantum public-key signature) | Uses the combined signing path and the algorithm's own parameter set; the hotplace builder enables this category only when compiled against OpenSSL 3.5 or later. | Checks an ML-DSA signature using the matching ML-DSA key and parameter set. |
 | `slhdsa` | SLH-DSA key (post-quantum, hash-based public-key signature) | Uses the combined signing path and the selected SLH-DSA variant. It is also guarded in the builder by the OpenSSL 3.5 version check. | Checks an SLH-DSA signature using the matching variant and key. Its hash-based construction differs from ML-DSA; the two are not interchangeable. |
 
-### 3.4 Verification dispatch: signature algorithm first, key type second
+### 3.4 Direct OpenSSL dispatcher: signature hint, then key type
 
-The primary decision is the requested signature algorithm, not the key type alone. In the source, `sig` is resolved through `hintof_signature(sig)`; the resulting hint supplies both the signature category and digest. Only then does the backend combine that category with the actual key type to choose an operation or reject the request.
+This subsection describes the direct `openssl_sign::sign/verify(signature_t, ...)` overloads, not the `crypto_sign_builder` facade path. The direct backend resolves `sig` through `crypto_advisor::hintof_signature(sig)`; the hint supplies a category and digest, after which the backend combines that category with `ktyof_evp_pkey(pkey)`.
 
 ```text
-signature algorithm: sig
-          |
-          v
-advisor->hintof_signature(sig)
-          |
-          +-- no hint ----------------------> bad_request
-          |
-          v
-    +---------------------+
-    | categoryof(hint)    |
-    | typeof_alg(hint)    |
-    +---------------------+
-          |
-          v
-    category + hash_alg
-          |
-          v
-  key type and scheme compatibility
-          |
-          +-- RSA / RSA-PSS
-          |      |
-          |      +-- rsassa_pkcs15 --> PKCS#1 v1.5
-          |      |
-          |      +-- rsassa_pss ----> PSS
-          |      |                    (digest + salt length)
-          |      |
-          |      +-- unsupported combination
-          |                           --> bad_request
-          |
-          +-- EC  -----------------> ECDSA
-          +-- DSA -----------------> DSA
-          +-- OKP -----------------> EdDSA DigestSign/Verify path
-          |
-          +-- Octet
-          |      +-- dgst ---------> digest-signature path
-          |      +-- hmac ---------> HMAC with shared secret
-          |      +-- unsupported --> bad_request
-          |
-          +-- ML-DSA -------------> ML-DSA helper/path*
-          +-- SLH-DSA ------------> SLH-DSA helper/path*
-          +-- unsupported key/category pair --> bad_request
-
+direct openssl_sign::sign/verify(pkey, signature_t, ...)
+                 |
+                 v
+     advisor->hintof_signature(sig)
+                 |
+                 +-- no hint --------------------> bad_request
+                 |
+                 v
+          category + digest
+                 |
+                 v
+          ktyof_evp_pkey(pkey)
+                 |
+                 +-- RSA / RSA-PSS
+                 |      +-- rsassa_pkcs15 --> PKCS#1 v1.5
+                 |      +-- rsassa_pss -----> PSS
+                 +-- EC  -------------------> ECDSA
+                 +-- DSA -------------------> DSA
+                 +-- OKP -------------------> DigestSign/Verify
+                 +-- Octet
+                 |      +-- dgst -----------> digest operation
+                 |      +-- hmac -----------> HMAC
+                 +-- ML-DSA / SLH-DSA ------> DigestSign/Verify*
+                 +-- unsupported key type --> not_supported
+                 
 * ML-DSA and SLH-DSA dispatch is compile-guarded for OpenSSL 3.5+.
-  They share a helper path in this backend, but are different algorithms.
+  Verification currently routes both through the shared verify_mldsa helper.
 ```
 
-This is a two-dimensional dispatch: **the signature identifier selects the intended scheme and its parameters; the key type determines whether and how that scheme can be executed.** For example, choosing `rsassa_pkcs15` versus `rsassa_pss` selects different RSA signature operations even when the key belongs to the RSA family. Conversely, an RSA-family key does not by itself establish that every RSA scheme is valid for that key: RSA-PSS-restricted key parameters and OpenSSL's key/operation checks still matter. The diagram summarizes the dispatch structure; it does not claim that every pair accepted by a switch statement is cryptographically or protocol-valid.
+This direct API is a two-dimensional dispatch: **the signature identifier selects the intended category/digest; the key type determines which backend operation is attempted.** The common `crypto_sign_builder` route is different: it maps a TLS/JWS identifier to category/digest, builds a category-specific class, and invokes that class's specific `openssl_sign` helper. In both paths, OpenSSL key/operation checks and protocol-level policy still matter.
 
-The same separation matters in TLS. A TLS signature-scheme identifier (such as an RSA-PSS or ECDSA scheme) determines the signature operation and associated digest rules, while the peer's key and negotiated protocol constraints determine whether that scheme is usable. In TLS 1.3, this is distinct from the cipher suite: the cipher suite selects the record-protection algorithms and hash, whereas CertificateVerify uses a signature scheme. Avoid using “cipher suite” as a synonym for the signature algorithm.
+For example, choosing `rsassa_pkcs15` versus `rsassa_pss` selects different RSA signature operations even when the key belongs to the RSA family. An RSA-family key does not by itself establish that every RSA scheme is valid for that key: RSA-PSS-restricted key parameters and OpenSSL's key/operation checks still matter.
+
+In TLS 1.3, the signature scheme is distinct from the cipher suite: the cipher suite selects record-protection algorithms and a hash, whereas CertificateVerify uses a signature scheme. Avoid using “cipher suite” as a synonym for the signature algorithm.
 
 ### 3.5 What is actually different during verification?
 
@@ -182,7 +169,7 @@ The caller must provide the original message bytes expected by the selected path
 
 ### 3.6 OpenSSL 3 support: version and provider matter
 
-The following is an upstream capability guide, not a guarantee that every hotplace build can execute every operation. The concrete hotplace code has its own compile-time gates, and runtime availability also depends on the OpenSSL build, provider configuration, key encoding, and parameters.
+The following is an upstream capability guide, not a guarantee that every hotplace build can execute every operation. The concrete hotplace code has its own compile-time gates, and runtime availability also depends on the OpenSSL build, provider configuration, key encoding, and parameters. In addition, `crypto_sign_builder::build()` returns null for SHA-512/224 and SHA-512/256 digest selections when compiled against OpenSSL versions before 3.0.
 
 | Family/category | Upstream OpenSSL 3 guidance | hotplace source boundary |
 |---|---|---|
@@ -196,7 +183,7 @@ For operational compatibility notes, record the exact OpenSSL minor version and 
 
 ### 3.7 Concrete protocol consumer: TLS CertificateVerify
 
-TLS CertificateVerify uses the negotiated TLS signature scheme to build the primitive signer. The TLS layer constructs the protocol-defined CertificateVerify input; `crypto_sign` performs only the selected signature operation:
+TLS CertificateVerify uses the negotiated TLS signature scheme to build the primitive signer. The TLS layer selects a key-compatible signature scheme and constructs the protocol-defined CertificateVerify input; `crypto_sign` performs only the selected signature operation:
 
 ```cpp
 // Reduced from sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.cpp
@@ -213,7 +200,7 @@ if (sign) {
 }
 ```
 
-This caller makes the protocol/primitive boundary concrete: TLS selects the scheme and constructs the signed message; the common signature layer dispatches by scheme and key type. The corresponding verification path reconstructs the same CertificateVerify input before verifying. A successful primitive signature operation alone does not validate the certificate chain or complete the TLS handshake.
+This caller makes the protocol/primitive boundary concrete: TLS selects the scheme and constructs the signed message; the common signature layer builds the category-specific operation. In TLS 1.3, the verification path also checks that the appropriate signature_algorithms offer exists, requires a client CertificateVerify scheme to appear in the server's CertificateRequest, and checks server schemes for local TLS 1.3 support and certificate-key compatibility before signature verification. An invalid scheme produces a fatal illegal_parameter alert; a failed signature produces a fatal decrypt_error alert. The corresponding verification path reconstructs the same CertificateVerify input before verifying. A successful primitive signature operation alone does not validate the certificate chain or complete the TLS handshake.
 
 ## 4. Relationships
 - `../../advisor/README.md` maps signature names, key types, TLS signature schemes, JOSE identifiers and backend metadata.
@@ -235,8 +222,8 @@ This caller makes the protocol/primitive boundary concrete: TLS selects the sche
 
 - `testcase_crypto_sign.cpp` exercises the common interface.
 - `testcase_rsassa.cpp` and RSA vectors cover RSA signatures; `testcase_ecdsa.cpp` and ECDSA vectors cover ECDSA.
-- `testcase_hmac.cpp` covers HMAC through the signing facade.
-- `testcase_mldsa.cpp` and `testcase_slhdsa.cpp` cover post-quantum signature paths. Availability depends on the build/provider used for those tests.
+- `testcase_hmac.cpp` exercises `openssl_hash` HMAC, direct `openssl_sign` HMAC, and JOSE HS256; it does not directly exercise the `crypto_sign_hmac` class.
+- `testcase_mldsa.cpp` and `testcase_slhdsa.cpp` call the direct `openssl_sign.sign_mldsa/sign_slhdsa` and verify helpers; they do not exercise the common `crypto_sign_builder` classes. Availability depends on the OpenSSL 3.5+ build/provider.
 - The source paths establish coverage targets, not execution in the current environment.
 
 ## 5. References

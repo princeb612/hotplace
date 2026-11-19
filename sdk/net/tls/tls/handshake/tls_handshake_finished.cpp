@@ -61,12 +61,17 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         auto flow = protection.get_flow();
         if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
             if (tls_flow_t::one_rtt == flow) {
-                // RFC 8446 5.  Record Protocol
-                //  The change_cipher_spec record is used only for compatibility purposes.
-                // RFC 8448 3.  Simple 1-RTT Handshake
-
-                // certificate, certificate_verify, finished(server), finished(client)
-                session_status_prerequisite = session_status_server_cert_verified;
+                // RFC 8446 4.4.2 / 4.4.4: Finished follows EncryptedExtensions.
+                // Certificate authentication is absent for a PSK-authenticated
+                // handshake, so require certificate verification only when no
+                // offered PSK identity was selected.
+                uint16 offered_identity_count = session->get_keyvalue().get(session_client_psk_identity_count);
+                uint16 selected_identity = session->get_keyvalue().get(session_server_psk_selected_identity);
+                bool psk_selected = (0 != offered_identity_count) && (selected_identity < offered_identity_count);
+                session_status_prerequisite = session_status_server_hello | session_status_encrypted_extensions;
+                if (false == psk_selected) {
+                    session_status_prerequisite |= session_status_server_cert_verified;
+                }
                 if (from_client == dir) {
                     session_status_prerequisite |= session_status_server_finished;
                 }
@@ -120,11 +125,27 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
         auto& secrets = protection.get_secrets();
 
         {
-            protection.update_transcript_hash(session, stream + hspos, get_size());
+            ret = protection.update_transcript_hash(session, stream + hspos, get_size());
+            if (errorcode_t::success != ret) {
+                // Finished has entered the transcript, but the local handshake
+                // state cannot continue if transcript processing fails.
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                __leave2_trace(ret);
+            }
 
             // from_server : application, exporter related
             // from_client : resumption related
-            protection.calc(session, tls_handshake_type_t::finished, dir);
+            ret = protection.calc(session, tls_handshake_type_t::finished, dir);
+            if (errorcode_t::success != ret) {
+                // Do not leave a reusable session with Finished in the
+                // transcript but without its application/resumption secrets.
+                // The key-schedule helper clears partial outputs; terminate the
+                // handshake so callers cannot continue with this transcript.
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                __leave2_trace(ret);
+            }
 
             secrets.erase(tls_secret_t::client_hello_random);
             secrets.erase(tls_secret_t::server_hello_random);
@@ -172,13 +193,23 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
+        const size_t body_end = offsetof_body() + get_body_size();
+        if ((body_end > size) || (pos > body_end)) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
         auto& protection = session->get_tls_protection();
         auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
         {
-            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
-            if (nullptr == hint_tls_alg) {
+            const uint16 ciphersuite = protection.get_cipher_suite();
+            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(ciphersuite);
+            // Cipher suite 0 is TLS_NULL_WITH_NULL_NULL, not a negotiated
+            // TLS 1.3 cipher suite. Do not treat its registry entry as valid.
+            if ((0 == ciphersuite) || (nullptr == hint_tls_alg)) {
                 ret = errorcode_t::not_supported;
                 __leave2;
             }
@@ -196,7 +227,13 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             payload pl;
             pl << new payload_member(binary_t(), constexpr_verify_data);
             pl.reserve(constexpr_verify_data, dlen);
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, body_end, pos);
+            if ((errorcode_t::success != ret) || (pos != body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             pl.get_binary(constexpr_verify_data, verify_data);
         }
@@ -204,7 +241,10 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         {
             tls_secret_t typeof_secret;
             binary_t maced;
-            protection.calc_finished(dir, hmacalg, dlen, typeof_secret, maced);
+            ret = protection.calc_finished(dir, hmacalg, dlen, typeof_secret, maced);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
 
             verify_data.resize(maced.size());
             if (maced.empty() || (verify_data != maced)) {
@@ -255,9 +295,14 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
         {
-            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
-            if (nullptr == hint_tls_alg) {
-                ret = errorcode_t::success;
+            const uint16 ciphersuite = protection.get_cipher_suite();
+            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(ciphersuite);
+            // Cipher suite 0 is TLS_NULL_WITH_NULL_NULL, not a negotiated
+            // TLS 1.3 cipher suite. Do not treat its registry entry as valid.
+            if ((0 == ciphersuite) || (nullptr == hint_tls_alg)) {
+                // Finished cannot be encoded without a negotiated cipher suite.
+                // Fail before emitting an empty body.
+                ret = errorcode_t::not_supported;
                 __leave2;
             }
             if (tlsadvisor->is_kindof_tls13(tlsversion)) {
@@ -270,12 +315,18 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
         tls_secret_t typeof_secret;
         binary_t verify_data;
-        protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data);
+        ret = protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data);
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
 
         {
             payload pl;
             pl << new payload_member(verify_data, constexpr_verify_data);
-            pl.write(bin);
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
 
 #if defined DEBUG

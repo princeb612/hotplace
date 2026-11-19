@@ -1,6 +1,8 @@
 # QUIC
 
-**Edition 1 · Revision 1090**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 QUIC is a transport protocol built over UDP, but in hotplace it is more useful to understand QUIC as the meeting point of four independently meaningful mechanisms:
 
@@ -668,7 +670,7 @@ This is valuable because it verifies the complete chain rather than testing only
 
 ### Construction tests
 
-`testcase_construct_quic.cpp` and `testcase_construct_1rtt.cpp` exercise construction of packet/frame objects directly.
+`testcase_construct_1rtt.cpp` is dispatched by the normal QUIC testcase entry point and exercises selected 1-RTT packet parsing plus write/read round-trip. `testcase_construct_quic.cpp` contains a broader packet/frame/HTTP/3/QPACK construction walkthrough, but its call is commented out in `sample.cpp`; it is source material, not an active testcase in the normal run.
 
 These complement the RFC vectors:
 
@@ -690,22 +692,24 @@ sslkeylog
 testvector_pcap_http3.yml
 ```
 
-This provides a bridge between real traffic and deterministic replay.
+This provides a bridge between recorded traffic and deterministic QUIC packet replay, but it does not currently verify HTTP/3 frame or QPACK interpretation.
 
-The verification chain is:
+The active handler in `testvector_pcap.cpp` processes item-level `QUIC` records through `quic_packets::read()`, exercising QUIC packet parsing/protection and CRYPTO/STREAM frame processing. Item-level `TLS 1.3` records return `errorcode_t::do_nothing`; the TLS-record parser call is commented out. The handler does not call `http3_frame::read()` or QPACK decoding.
+
+The verification chain is therefore:
 
 ```text
-real HTTP/3 traffic
+recorded HTTP/3 traffic
       ↓
-PCAPNG
+PCAPNG / SSL key log
       ↓
-SSL key log
+YAML packet vector
       ↓
-YAML packet/frame vector
+QUIC packet / CRYPTO / STREAM replay
       ↓
-QUIC/TLS replay
-      ↓
-HTTP/3 interpretation
+QUIC stream state (HTTP/3 bytes)
+      X
+HTTP/3 frame / QPACK interpretation (not performed)
 ```
 
 ## Cross-Topic Verification
@@ -733,14 +737,18 @@ real HTTP/3 traffic
       │        │
       └───┬────┘
           ▼
-      HTTP/3 interpretation
+   QUIC stream state
+          │
+          X  (not decoded)
+          ▼
+ HTTP/3 frame / QPACK
 ```
 
-This makes the verification boundary explicit: QUIC owns packet/frame/stream interpretation, TLS owns the handshake and secrets used by QUIC, and HTTP/3 interprets stream data above QUIC.
+This makes the verification boundary explicit: QUIC owns packet/frame/stream interpretation, TLS owns the handshake and secrets used by QUIC, and HTTP/3 would interpret stream data above QUIC; the active capture replay stops before that HTTP/3 decoding step.
 
 ## Status
 
-| Area | Revision 1090 state |
+| Area | Revision 1132 state |
 |---|---|
 | QUIC packet model | implemented |
 | QUIC frame model | broad implementation |
@@ -753,7 +761,7 @@ This makes the verification boundary explicit: QUIC owns packet/frame/stream int
 | RFC 9000 vectors | present |
 | RFC 9001 vectors | present |
 | RFC 9369 / QUIC v2 | tested |
-| HTTP/3 stream transport path | exercised/tested on the QUIC side |
+| QUIC STREAM processing for HTTP/3 capture | exercised on the QUIC side; HTTP/3 frame/QPACK decode not covered |
 | PCAP/YAML replay | implemented |
 | broader loss/congestion/transport scheduling | separate / evolving area |
 
@@ -802,7 +810,7 @@ This gives the current documentation set a useful vertical path from binary fiel
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
 │ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

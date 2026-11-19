@@ -169,7 +169,9 @@ return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& 
         _flags = pl.t_value_of<uint8>(constexpr_frame_flags);
         _stream_id = pl.t_value_of<uint32>(constexpr_frame_stream_identifier);
 
-        if (_payload_size + pos < size) {
+        // read() receives exactly one frame (the protocol layer separates
+        // coalesced frames). Reject both truncated payloads and trailing bytes.
+        if (_payload_size + pos != size) {
             ret = errorcode_t::bad_data;
             __leave2;
         }

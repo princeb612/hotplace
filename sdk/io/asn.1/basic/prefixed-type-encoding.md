@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -20,7 +20,7 @@ This note connects ASN.1 tagged-type notation with the identifier and length oct
 
 An ASN.1 tag combines a tag class, a primitive/constructed bit, and a tag number. The identifier uses a single octet for tag numbers below 31; larger tag numbers use the high-tag-number form, with base-128 groups and a continuation bit. The tag is followed by a length and the encoded content.
 
-`asn1_tagged_type` stores an `asn1_tag` and the semantic object being tagged. 
+`asn1_tagged_type` stores an `asn1_tag` and the semantic object being tagged. The tag mode may be `IMPLICIT`, `EXPLICIT`, or `AUTOMATIC`; `AUTOMATIC` is resolved through the containing module's tag default, and `asn1_tag::is_implicit(nullptr)` falls back to `EXPLICIT`. 
 
 ```text
 tagged type
@@ -40,9 +40,10 @@ tagged type
 - For `IMPLICIT` tagging, `asn1_tagged_type::update_linkage()` suppresses the inner object's tag so the outer tag replaces it.
 - For `EXPLICIT` tagging, the inner tag remains, producing a wrapper around the inner TLV.
 - The encoder delegates identifier encoding to `asn1_tag` / `asn1_encode`, represents the inner object, and writes the outer length unless the tag is suppressed as part of the enclosing representation.
+- `asn1_der_visitor` performs `update_linkage()` before representation and requires a non-null module to resolve `AUTOMATIC` mode and references. The module-aware `module.publish(name, &bin_der)` path in the example supplies it; the direct object/value binary-publish wrappers pass null and are unsafe in the current implementation.
 - Constructed-bit propagation depends on the tagged object's nested structure and explicit wrappers; the constructed bit is not simply synonymous with the existence of an ASN.1 tag.
 
-The source tests cover low- and high-tag-number identifier forms, including malformed high-tag encodings. The examples in [tagging examples in the structural document](structural/README.md#developer-notes) compare the resulting DER bytes with weakly typed TLV trees and strongly typed semantic representations.
+The source tests cover low- and high-tag-number identifier forms (including 31, 32, 127, 128, 16383 and 16384) and reject selected truncated/non-terminated high-tag sequences. This is focused coverage, not exhaustive DER canonicality or overflow validation: `read_identifier()` does not check `uint64` tag-number overflow or every non-minimal high-tag form. `read_length()` accepts definite short/long forms and rejects the indefinite marker; the separate `indef()` / `end_contents()` helpers only provide write-side indefinite framing. The [tagging examples in the structural document](structural/README.md#developer-notes) are static DER/TLV-tree/weakly-typed-AST illustrations. The strongly typed IMPLICIT/EXPLICIT decode-and-re-encode assertions are in `testcase_basic3.cpp` and use the module-aware `module.publish()` path.
 
 ### Real-code example: compare IMPLICIT replacement with EXPLICIT wrapping
 

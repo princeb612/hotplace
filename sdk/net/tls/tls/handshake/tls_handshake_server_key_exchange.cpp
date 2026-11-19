@@ -88,6 +88,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             auto& protection = session->get_tls_protection();
             auto& secrets = protection.get_secrets();
             auto& tlskey = protection.get_key();
+            const size_t body_end = offsetof_body() + get_body_size();
+            if ((body_end > size) || (pos > body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
             // crypto_advisor *advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -114,7 +121,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                    << new payload_member(binary_t(), constexpr_sig);            //
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
                 pl.set_reference_value(constexpr_sig, constexpr_sig_len);
-                pl.read(stream, size, pos);
+                ret = pl.read(stream, body_end, pos);
+                if ((errorcode_t::success != ret) || (pos != body_end)) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
+                    ret = errorcode_t::bad_format;
+                    __leave2_trace(ret);
+                }
 
                 curve_info = pl.t_value_of<uint8>(constexpr_curve_info);
                 curve = pl.t_value_of<uint16>(constexpr_curve);
@@ -280,7 +293,10 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
            << new payload_member(uint16(sigalg), true, constexpr_signature)    //
            << new payload_member(uint16(sig.size()), true, constexpr_sig_len)  //
            << new payload_member(sig, constexpr_sig);
-        pl.write(bin);
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            return ret;
+        }
     }
 
 #if defined DEBUG

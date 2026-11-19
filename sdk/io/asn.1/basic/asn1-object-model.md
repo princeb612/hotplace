@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -45,7 +45,7 @@ schema object
  └─ represent/encode as DER
 ```
 
-`update_linkage()` is important for constructed/tagged structures because linkage information is propagated through the object hierarchy.
+`update_linkage()` is important for constructed/tagged structures because linkage information is propagated through the object hierarchy. The base `asn1_object::update_linkage()` is a no-op; concrete types such as `asn1_tagged_type` provide the tag-mode and constructed-bit propagation. `set_object()` and `set_tag()` release the previous child, store the supplied raw pointer and set its parent; they do not add a reference to the new child. `addref()` / `release()` recursively adjust the tag, inner object and constraints. Treat attachment as ownership transfer unless the caller explicitly takes another reference or clones the object.
 
 ### Type families
 
@@ -97,7 +97,7 @@ The API distinguishes:
 - `is_reference()`
 - `get_reference()`
 
-This is a key bridge between notation-derived definitions and runtime schema lookup.
+`is_definition()` is true when an inner object exists; `is_reference()` is true when no inner object exists. A reference must be resolved through runtime/module lookup before binary representation: the current `asn1_referenced_type::represent(binary_t*)` returns success without emitting bytes when its inner object is still null. This is a key bridge between notation-derived definitions and runtime schema lookup.
 
 ### Values
 
@@ -111,7 +111,7 @@ asn1_value
     = values associated with that schema
 ```
 
-An `asn1_value` keeps a schema pointer and a multimap of named `variant` values. It can therefore represent named components and repeated values without making the schema object itself the value container.
+An `asn1_value` keeps a schema pointer and a multimap of named `variant` values; `set()` uses `emplace`, so repeated names are retained rather than replacing earlier values. The constructor retains the supplied schema by `addref()`, while `set_schema()` clones the replacement schema. It can therefore represent named components and repeated values without making the schema object itself the value container.
 
 ### Visitors and encoding
 
@@ -120,9 +120,9 @@ The semantic objects are consumed by visitor implementations:
 - AST/semantic traversal
 - ASN.1 notation representation
 - DER encoding
-- constraint evaluation
+- constraint evaluation (through the separate constraint evaluator)
 
-The same object model therefore serves both the human-readable ASN.1 representation and binary encoding paths.
+The same object model therefore serves both the human-readable ASN.1 representation and binary encoding paths. `asn1_object::publish()` and `asn1_value::publish()` are `void` wrappers around visitor calls, so they do not expose visitor/encoding status to the caller.
 
 ## 3. Behavior Model
 
@@ -165,9 +165,9 @@ For referenced types, `define(name, object/entity)` creates a definition and `re
 
 ### Runtime value validation
 
-The schema/value split also defines the validation entry point: `asn1_object` supplies the type model and `asn1_value` supplies named values associated with it. Object-level validation checks the value against the declared ASN.1 entity and its attached constraints. For constructed SEQUENCE/SET values, the validation path recursively visits child components rather than treating the container as an opaque scalar.
+The schema/value split also defines the validation entry point: `asn1_object` supplies the type model and `asn1_value` supplies named values associated with it. Object-level validation checks the value against the declared ASN.1 entity and its attached constraints. For constructed SEQUENCE/SET values, the validation path recursively visits child components when the current node has no attached constraints. If `have_constraints()` is true, `validate_node()` returns the constraint result immediately and does not continue into child traversal or the inner-object chain.
 
-Built-in checks and constraint checks have different jobs. Built-in validation checks the representation expected for an entity (for example, a BOOLEAN value or an ENUMERATED member); constraint evaluation checks restrictions attached to the type. A permissive fallback in one type-dispatch branch should not be read as proof that all semantic checks have happened unless another stage is known to perform them.
+Built-in checks and constraint checks have different jobs. The current `validate_type()` has explicit checks for selected entities (for example, BOOLEAN, INTEGER, REAL, OCTET STRING, BIT STRING, OID and time/string forms). `ENUMERATED`, SEQUENCE/SET, SEQUENCE OF/SET OF and referenced types fall through the default `true` branch; this does not establish ENUMERATED membership or complete type validation. UTCTime/GeneralizedTime use regular-expression shape checks, not full calendar/time validation, and the general string-family cases check the variant string flag rather than character encoding validity. Constraint evaluation checks restrictions attached to the type.
 
 ### Constraints and output operations
 
@@ -180,7 +180,7 @@ Constraints remain attached to the semantic type model. Visitors then perform di
 - `test/testcase/asn.1/testcase_constraints.cpp`
 - `test/testcase/asn.1/runtime/`
 
-These are source-level examples of semantic model behavior; this documentation update did not execute them.
+These are source-level examples of semantic model behavior; object publication exercises notation/DER visitors indirectly, but there is no dedicated direct visitor-API testcase in the current ASN.1 test tree. This documentation update did not execute the tests.
 
 ## 4. Relationships
 ### Runtime relationship

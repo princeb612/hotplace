@@ -1,6 +1,8 @@
 # HTTP/2
 
-**Edition 1 · Revision 1090**
+**Edition 1 · Revision 1132**
+
+> Source base : Revision 1132
 
 [← Document Guide](../guide/document-guide.md) · [Project document map](../README.md) · [HPACK](../hpack/README.md)
 
@@ -316,7 +318,7 @@ owned by this topic.
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
 │ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

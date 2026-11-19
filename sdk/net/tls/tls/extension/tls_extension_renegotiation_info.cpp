@@ -39,7 +39,13 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
         pl << new payload_member(uint8(0), constexpr_renegotiation_info_length)  //
            << new payload_member(binary_t(), constexpr_renegotiation_info);
         pl.set_reference_value(constexpr_renegotiation_info, constexpr_renegotiation_info_length);
-        pl.read(stream, size, pos);
+        ret = pl.read(stream, endpos_extension(), pos);
+        if (errorcode_t::success != ret) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
 
 #if defined DEBUG
         uint8 len = 0;
@@ -122,7 +128,10 @@ return_t tls_extension_renegotiation_info::do_write_body(tls_direction_t dir, bi
         payload pl;
         pl << new payload_member(uint8(renegotiation_info.size()), constexpr_renegotiation_info_length)  //
            << new payload_member(renegotiation_info, constexpr_renegotiation_info);
-        pl.write(bin);
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
     return ret;

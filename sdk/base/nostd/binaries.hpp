@@ -154,6 +154,17 @@ class t_binaries {
     const binary_t& get(T id) { return _map[id].bin; }
 
     /**
+     * @brief   get (const)
+     * @param   T id [in]
+     * @return  const binary_t&; an empty binary when the id is not present
+     */
+    const binary_t& get(T id) const {
+        static const binary_t empty;
+        auto iter = _map.find(id);
+        return (_map.end() != iter) ? iter->second.bin : empty;
+    }
+
+    /**
      * @brief   erase
      * @param   T id [in]
      */

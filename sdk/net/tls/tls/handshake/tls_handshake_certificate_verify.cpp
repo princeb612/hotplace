@@ -240,6 +240,13 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
+        const size_t body_end = offsetof_body() + get_body_size();
+        if ((body_end > size) || (pos > body_end)) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+            session->reset_session_status();
+            ret = errorcode_t::bad_format;
+            __leave2_trace(ret);
+        }
         // tls_protection& protection = session->get_tls_protection();
 
         uint16 scheme = 0;
@@ -253,7 +260,13 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
                << new payload_member(uint16(0), true, constexpr_len)            //
                << new payload_member(binary_t(), constexpr_signature);
             pl.set_reference_value(constexpr_signature, constexpr_len);
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, body_end, pos);
+            if ((errorcode_t::success != ret) || (pos != body_end)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
 
             scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
 #if defined DEBUG
@@ -340,7 +353,10 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         pl << new payload_member(uint16(scheme), true, constexpr_signature_alg)  //
            << new payload_member(uint16(signature.size()), true, constexpr_len)  //
            << new payload_member(signature, constexpr_signature);
-        pl.write(bin);
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
     return ret;

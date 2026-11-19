@@ -58,6 +58,23 @@ void test_http2_frame() {
         do_test_http2_frame(&frame_settings, &frame, "SETTINGS Frame", expect_settings);
     }
 
+    // Malformed SETTINGS payloads must be rejected without reading past the frame.
+    {
+        const char* malformed_settings[] = {
+            "00 00 01 04 00 00 00 00 00 FF",                 // non-ACK payload is not a multiple of six
+            "00 00 06 04 01 00 00 00 00 00 01 00 00 00 00",  // ACK payload must be empty
+            "00 00 06 04 00 00 00 00 00 00 01 00 00 00"      // declared payload is truncated
+        };
+        for (size_t i = 0; i < RTL_NUMBER_OF(malformed_settings); ++i) {
+            binary_t input = base16_decode_rfc(malformed_settings[i]);
+            http2_frame_settings frame;
+            size_t pos = 0;
+            return_t ret = frame.read(input.data(), input.size(), pos);
+            _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "reject malformed SETTINGS payload %zi", i);
+            _test_case.assert(0 == pos, __FUNCTION__, "preserve input position on malformed SETTINGS payload %zi", i);
+        }
+    }
+
     // HEADERS
 
     hpack_stream hp;

@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -81,7 +81,7 @@ These assertions check internal metadata consistency. They do not perform encryp
 
 ### Documentation and verification status
 
-This document describes the Revision 1107 source tree. The testcase source was inspected, but it was **not rerun as part of this documentation update**. No execution result or environment-specific pass status is claimed here.
+This document describes the Revision 1132 source tree. The testcase source was inspected, but it was **not rerun as part of this documentation update**. No execution result or environment-specific pass status is claimed here.
 
 ## 4. Relationships
 

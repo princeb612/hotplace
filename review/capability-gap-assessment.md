@@ -2,10 +2,12 @@
 
 ## Review Attribution
 
-Prepared with the assistance of ChatGPT (GPT-5.6 Luna) as an external
-reviewer of the hotplace project.
+Prepared with the assistance of ChatGPT (GPT-6) as an external reviewer
+of the hotplace project.
 
-Review date: 2026-10-03
+Review date: 2026-11-18
+
+Source base : Revision 1132
 
 This document is an assessment framework, not a mandatory roadmap.
 
@@ -39,9 +41,11 @@ packet/frame, HTTP/2, and HTTP/3/QPACK parsing and decoding.
 A useful first step is to identify high-risk input boundaries and create
 small, reproducible fuzz targets with seed inputs and regression cases.
 
-The public repository search did not expose a distinct fuzz-target,
-fuzz-corpus, or fuzzing workflow. Therefore fuzzing is the clearest
-candidate for a genuinely new verification capability.
+The Revision 1132 public source review did not identify a dedicated
+fuzz-target, fuzz-corpus, or fuzzing workflow. This is a statement about
+the visible public repository structure, not proof that no local or
+experimental fuzzing exists. Fuzzing remains the clearest candidate for a
+new, independently repeatable verification capability.
 
 ## 4. Performance Measurement
 
@@ -54,8 +58,11 @@ behavior.
 The objective should initially be observation and regression detection,
 not aggressive optimization.
 
-No clearly separate benchmark/regression layer was exposed in the public
-repository search, so this remains a lower-priority capability candidate.
+No clearly separate benchmark/regression target or measurement workflow
+was identified in the Revision 1132 public source. Some component tests
+contain large workloads or speed-oriented paths, but those do not by
+themselves form a repeatable benchmark/regression layer. This remains a
+lower-priority capability candidate.
 
 ## 5. API and Component Maturity
 
@@ -97,19 +104,26 @@ If mostly no, it does not automatically belong on the roadmap.
 
 ## 9. Repository Evidence Review
 
-The README's implementation/application matrix provides substantial
-RFC-oriented evidence across many technologies, including cryptographic
-test-vector-related work. citeturn0search0
+The public source tree contains substantial verification material: the root
+`README.md` maps implementation/application areas; protocol and study
+documents point to test vectors and packet/capture replay; and the testcase
+tree includes crypto, TLS/DTLS, ASN.1, parser, and other component tests.
+Examples include `docs/pcapng/README.md`, `docs/cose_jose/README.md`,
+`sdk/net/tls/README.md`, and `test/testcase/crypto/advisor/README.md`.
+These are evidence of existing verification activity, not proof of
+complete RFC conformance or independent interoperability across every
+protocol and implementation.
 
 Therefore:
 
-- **Conformance:** Already Strong
-- **Component Testing:** Already Strong
-- **Wire / Packet Evidence:** Already Strong
-- **Interoperability:** Needs Structure / Visibility
-- **Fuzzing:** Potential Capability Gap
-- **Benchmarking:** Potential Capability Gap, lower priority
+- **Conformance evidence:** Substantial, but not a blanket conformance certification
+- **Component Testing:** Broad source-level coverage is present
+- **Wire / Packet Evidence:** Packet captures and protocol-vector evidence exist; coverage remains protocol- and scenario-specific
+- **Interoperability:** Existing evidence should be inventoried and made repeatable; a comprehensive cross-implementation matrix is not clearly exposed
+- **Fuzzing:** Potential Capability Gap; no dedicated public fuzz-target/corpus/workflow identified
+- **Benchmarking:** Potential Capability Gap, lower priority; no distinct benchmark/regression layer identified
 
 The distinction is important: hotplace already has substantial testing and
 verification activity. The opportunity is to make its evidence model more
-explicit and add independent robustness capabilities selectively.
+explicit, distinguish source tests from executed tests, and add independent
+robustness capabilities selectively.

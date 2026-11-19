@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1114                    │
-│ Source basis: Revision 1114                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -52,7 +52,7 @@ Wire-width helpers are particularly relevant at protocol boundaries, but protoco
 
 Platform-dependent facilities must be reviewed against their actual implementation branches and target environment. Process creation, standard-I/O redirection, synchronization, and time conversion can expose different native APIs and ownership constraints on Windows and POSIX systems.
 
-The Windows type header, `sdk/base/system/windows/types.hpp`, also centralizes MSVC concurrency headers used by the synchronization/future-related code. Revision 1113 fixed an MSVC compile failure involving `pplcancellation_token.h` and `Concurrency::details::_RefCounter`. The relationship to the future/promise work introduced around Revision 1104 is a plausible lead, not a confirmed root-cause statement; the changelog records the fix without claiming more than the evidence establishes.
+The Windows type header, `sdk/base/system/windows/types.hpp`, includes the MSVC Parallel Patterns Library and cancellation-token headers alongside the platform types. Revision 1113 fixed an MSVC concurrency compile failure involving `pplcancellation_token.h` and `Concurrency::details::_RefCounter`; the changelog does not establish a more specific root cause. The separate `t_value<T>` future/promise prototype introduced at Revision 1104 was removed at Revision 1122, so it is historical work and must not be presented as a current deferred-value or synchronization facility.
 
 The numeric modules also have distinct purposes: `bignumber` supplies arbitrary-width integer operations, decimal/rational helpers build higher-level numeric representations, and IEEE-754 helpers concern binary floating-point formats. These should not be collapsed into a single generic “number” abstraction.
 

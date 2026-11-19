@@ -50,6 +50,18 @@ return_t http2_frame_settings::do_read_body(const byte_t* stream, size_t size, s
             __leave2;
         }
 
+        // RFC 9113 6.5: SETTINGS payload consists of six-byte parameters.
+        // An ACK SETTINGS frame has an empty payload.
+        if (get_flags() & h2_flag_ack) {
+            if (0 != get_payload_size()) {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
+        } else if (0 != (get_payload_size() % sizeof(http2_setting_t))) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
         while (pos < size) {
             http2_setting_t* setting = (http2_setting_t*)(stream + pos);
 

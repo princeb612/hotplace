@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace SDK                                 │
 │ Edition 1 · Revision 1105                    │
-│ Source basis: Revision 1105                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — SDK structure, implementation & behavior   │
 └──────────────────────────────────────────────┘
@@ -18,7 +18,7 @@ The `sdk/` tree contains hotplace's reusable C++ library code. It is organized b
 
 The SDK is a set of cooperating modules rather than one mandatory runtime pipeline. Each module has its own data model and behavior; applications and applets compose only the parts they need. The module-level documents describe concrete types, implementation flow, and boundaries in more detail.
 
-The project primarily targets C++11 and older supported toolchains. C++14-specific experiments are isolated rather than defining the baseline for the whole SDK.
+The root `CMakeLists.txt` defaults `SET_STDCPP` to C++11, uses C++11 for GNU on UNIX, and selects C++14 for GNU on Windows and MSVC. The `SET_STDCPP` environment setting can override the configured standard. C++14 is therefore not limited to isolated experiments; the selected standard depends on the toolchain/platform configuration.
 
 ## 2. Data Model
 

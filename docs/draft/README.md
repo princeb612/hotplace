@@ -29,7 +29,7 @@ A draft is therefore allowed to be exploratory. Final topic documents remain con
 ## Current preserved context
 
 - [Study Flow](study-flow.md) — why the project moved through HTTP/2 → HPACK → QPACK → QUIC → TLS → QUIC → ASN.1.
-- [Testcase Context](testcase-context.md) — the common execution/verification/observation model around `cmdarg`, `testcase`, `test_case`, and `logger`.
-- [ASN.1 Parser Boundary](asn1-parser-boundary.md) — current distinction between grammar experimentation, parser-table infrastructure, and semantic/runtime work.
+- [Testcase Context](testcase-context.md) — the common execution/verification/observation model around `t_cmdline_t<T>` / `t_cmdarg_t<T>`, `testcase`, `test_case`, and `logger`.
+- [ASN.1 Parser Boundary](asn1-parser-boundary.md) — current distinction between the LALR notation path, GLR module/schema path, parser-table infrastructure, and bounded semantic/runtime work.
 
 These drafts are preservation records, not final architectural claims. When a point becomes stable enough, move or compress it into the document that owns the concept.

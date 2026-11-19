@@ -6,7 +6,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 2 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & tests   │
 └──────────────────────────────────────────────┘
@@ -43,11 +43,14 @@ The PE checksum and Authenticode image digest are distinct values. The checksum 
 | Context data | Meaning |
 |---|---|
 | `engines` | Engine ID → plugin pointer; `load_engines()` registers the PE implementation for format selection. |
-| `signer`, `trusted_cert` | Signer identifiers and caller-configured trusted certificate file/path entries. These are not the same as certificates embedded in the PKCS#7 container. |
-| `flags`, `gender`, `pkcs7` | Verification mode and temporary/current signed-content state used by the implementation. |
-| `crl_download`, timeout/retry, `crl_path` | Controls and location for optional CRL retrieval. |
+| `signer` | Optional signer allowlist. The current callback compares the signer certificate's subject CN at depth zero; it is not a full distinguished-name or certificate-fingerprint policy. |
+| `trusted_cert` | Caller-supplied certificate file/path pairs. The current `verify_pkcs7()` loads the file component only; the stored path component is currently ignored. These are separate from certificates embedded in PKCS#7. |
+| `flags`, `load_root_cert` | Context fields declared in the structure but not read by the current verifier path. Default OpenSSL trust paths are loaded unconditionally. Per-call `verify()` flags are a separate argument. |
+| `gender`, `pkcs7` | `gender` is set by `set_gen_der` and causes the extracted PKCS#7 payload to be written to `<filename>.der`; `pkcs7` holds the current object for the timestamp callback. |
+| `crl_download`, timeout/retry, `crl_path` | Controls and location for optional CRL retrieval. An empty `crl_path` defaults to the current directory. |
 | `proxy_url`, `proxy_user` | Optional settings passed to the external CRL download command. |
-| `crl_map` | Context-level URI → `X509_CRL*` cache protected by `crl_lock`. |
+| `digicert_path` | Search paths for separated-signature sidecars. The current PE plugin reports `separated() == false` and returns `not_available` from the separated-file methods. |
+| `crl_map` | Context-level URI → `X509_CRL*` cache protected by `crl_lock`; cached entries are reused for the context lifetime without a freshness check in this code path. |
 | `lock`, `crl_lock` | Synchronization for engine/trust configuration and CRL cache state. |
 
 During PKCS#7 verification, a second, local CRL map collects the CRLs available for that verification attempt and supplies them to the temporary OpenSSL `X509_STORE`. The context cache and per-verification map have different lifetimes: the former survives between calls until cleared with the context; the latter is used to assemble one store.
@@ -96,13 +99,13 @@ authenticode_verifier::verify(context, filename, flags, result)
 caller receives return_t and result; close(context)
 ```
 
-The digest comparison is a gate: PKCS#7 signer/trust verification follows only when the signed image digest matches the digest calculated by the selected engine. A successful digest comparison alone is not verification success. Likewise, `result` is a coarse `verify_ok` / `verify_fail` output; inspect the returned error code for the operation's failure category.
+The digest comparison is a gate: PKCS#7 signer/trust verification follows only when the signed image digest matches the digest calculated by the selected engine. A successful digest comparison alone is not verification success. The `result` output is a coarse `verify_ok` / `verify_fail` value only after `verify_pkcs7()` runs. The outer `verify()` initializes it to `0` (`verify_ok`) and does not change it on earlier failures such as file-open, PE extraction, PKCS#7 decode, or digest mismatch. Therefore, on those error paths the return code is authoritative and `result` may misleadingly remain `verify_ok`.
 
 ### 3.2 Engine selection and PE extraction
 
 The verifier opens the target as a `file_stream`, then asks the registered engines whether they recognize it. The PE plugin ensures the stream is open and memory-mapped, checks that enough bytes exist for the DOS header, validates `MZ`, checks the NT-header offset against the stream size, and validates the `PE\0\0` signature. Recognition is not the same as complete structural validation: the later extraction and digest methods perform their own checks.
 
-The PE plugin reads the optional header's security-directory entry to obtain the certificate-table file offset and size. The extracted certificate-table bytes are passed to OpenSSL for PKCS#7 decoding. The certificate table is not interpreted as an RVA-addressed data section; its address is a file offset. The plugin's `separated() == false` means the generic separated-file interface must not be interpreted as detached-signature support for PE.
+The PE plugin reads the optional header's security-directory entry to obtain the certificate-table file offset and size. The extracted certificate-table bytes are passed to OpenSSL for PKCS#7 decoding. The certificate table is not interpreted as an RVA-addressed data section; its address is a file offset. The current extractor reads only the first `WIN_CERTIFICATE` record and accepts revision 2.0 / `WIN_CERT_TYPE_PKCS_SIGNED_DATA`. It derives the payload length from `dwLength` but does not currently validate that `dwLength` is at least the header size or bounded by the security-directory size before subtracting/copying; malformed length handling is therefore an extraction hardening gap. The plugin's `separated() == false` means the generic separated-file interface must not be interpreted as detached-signature support for PE.
 
 ### 3.3 Signed digest reconstruction and comparison
 
@@ -110,13 +113,13 @@ After PKCS#7 decoding, the verifier reads `SpcIndirectDataContent` to obtain the
 
 If the calculated digest does not match the signed digest, the verifier returns a verification failure and does not proceed to signer-chain validation. If it matches, the verifier enters `verify_pkcs7()`. The PE `CheckSum` read/calculate/update APIs are a separate operation and do not replace this cryptographic comparison.
 
-**Implementation detail:** `authenticode_verifier::verify()` calls the selected engine's `digest()` method without checking its returned `return_t`. Therefore, a digest-calculation error is not necessarily propagated as that original error code; the later digest comparison may determine the visible failure instead.
+**Implementation detail:** `authenticode_verifier::verify()` calls the selected engine's `digest()` method without checking its returned `return_t`. The PE plugin's `digest()` checks `hash.open()` but does not propagate the return values from `hash.init()`, `hash.update()` or `hash.finalize()`. A digest-calculation error is therefore not necessarily propagated as its original error code; the later digest comparison may determine the visible failure instead. The current digest routine hashes the file ranges up to the certificate-table offset while omitting the PE checksum field and security-directory entry; it does not hash bytes after that offset.
 
 ### 3.4 PKCS#7 trust and CRL preparation
 
 `verify_pkcs7()` verifies that the decoded object is SignedData, enumerates signer certificates and certificates embedded in the container, and calls `get_crl()` for relevant certificates. When CRL downloading is enabled, `get_crl()` reads each certificate's CRL distribution-point URI, derives a local path, checks the context-level URI cache, and then tries the local file. If no local file is available, the current code can create the directory and invoke `wget` through the project's `process` abstraction using the configured retry, timeout, and proxy options. A downloaded/local file must still decode as `X509_CRL` before it is added to the maps.
 
-The verifier then creates an `X509_STORE`, loads default trust paths and caller-configured trusted certificate files, installs `verify_callback`, sets `X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL`, and adds successfully decoded CRLs before calling `PKCS7_verify()`. Failure to retrieve or decode a needed CRL is not converted into a valid CRL; OpenSSL verification may fail. The implementation's exact callback behavior and signing-time exception are detailed in § 3.5.
+The verifier then creates an `X509_STORE`, loads default trust paths and caller-configured trusted certificate files, installs `verify_callback`, sets `X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL`, and adds successfully decoded CRLs before calling `PKCS7_verify()`. Although `add_trusted_rootcert()` stores both a file and a path, the current store setup loads only the file component; the path component is commented out. The `load_root_cert` context field is not consulted because `X509_STORE_set_default_paths()` is called unconditionally. Failure to retrieve or decode a needed CRL is not converted into a valid CRL; OpenSSL verification may fail. The implementation's exact callback behavior and signing-time exception are detailed in § 3.6. If a signer allowlist is configured, the callback compares the depth-zero signer subject's CN string; it does not compare the complete DN or a certificate fingerprint.
 
 ### 3.5 Context lifetime, results, and failure boundaries
 
@@ -126,7 +129,7 @@ Failure can occur at several distinct boundaries: invalid context/parameters, fi
 
 ### 3.6 Current signing-time exception and CRL path
 
-This subsection records the implementation visible in Revision 1107. It is a source-level behavior map, not a statement that the code implements every Authenticode or PKI validation requirement.
+This subsection records the implementation rechecked against Source base : Revision 1132. It is a source-level behavior map, not a statement that the code implements every Authenticode or PKI validation requirement.
 
 ```text
 authenticode_verifier::verify()

@@ -98,6 +98,11 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        *request = nullptr;
+        if (bufsize < sizeof(http2_frame_header_t)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
 
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
         const uint16 sizeof_preface = 24;
@@ -192,15 +197,17 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
                 } else {
                     http2_frame_settings resp_settings;
 
-                    if (frame->get_flags()) {
-                        resp_settings.set_flags(h2_flag_ack);
-                    } else {
+                    if (false == (frame->get_flags() & h2_flag_ack)) {
                         resp_settings.add(h2_settings_enable_push, push ? 1 : 0)
                             .add(h2_settings_max_concurrent_streams, 100)
                             .add(h2_settings_initial_window_size, 0xa00000);
-                    }
+                        resp_settings.write(bin_resp);
 
-                    resp_settings.write(bin_resp);
+                        // A non-ACK SETTINGS frame must be acknowledged.
+                        http2_frame_settings ack_settings;
+                        ack_settings.set_flags(h2_flag_ack);
+                        ack_settings.write(bin_resp);
+                    }
                 }
             } else if (h2_frame_t::h2_frame_push_promise == type) {
                 http2_frame_push_promise* frame_push_promise = (http2_frame_push_promise*)frame;
@@ -220,16 +227,28 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 
         http2_frame_builder builder;
         auto frame = builder.set(type).set(&_hpack_dyntable).build();
-        if (frame) {
-            frame->read(buf, bufsize, pos_frame);
-            lambda_postread(frame);
-#if defined DEBUG
-            if (istraceable(trace_category_t::trace_category_net)) {
-                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_consume, [&](basic_stream& dbs) -> void { frame->dump(&dbs); });
-            }
-#endif
-            frame->release();
+        if (nullptr == frame) {
+            ret = errorcode_t::bad_data;
+            _flags.erase(stream_id);
+            _headers.erase(stream_id);
+            __leave2;
         }
+
+        ret = frame->read(buf, bufsize, pos_frame);
+        if (errorcode_t::success != ret) {
+            frame->release();
+            _flags.erase(stream_id);
+            _headers.erase(stream_id);
+            __leave2;
+        }
+
+        lambda_postread(frame);
+#if defined DEBUG
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_consume, [&](basic_stream& dbs) -> void { frame->dump(&dbs); });
+        }
+#endif
+        frame->release();
 
         /**
          * if END_HEADERS and END_STREAM is set

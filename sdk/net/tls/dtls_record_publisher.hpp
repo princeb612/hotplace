@@ -16,6 +16,8 @@
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <hotplace/sdk/net/tls/types.hpp>
 #include <queue>
+#include <type_traits>
+#include <utility>
 
 namespace hotplace {
 namespace net {
@@ -111,6 +113,18 @@ class HOTPLACE_NET_API dtls_record_publisher {
     return_t publish(tls_record* record, tls_direction_t dir, std::list<binary_t>& container);
     return_t publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
     return_t publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    return_t publish(tls_record* record, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func);
+    return_t publish(tls_records* records, tls_direction_t dir, std::function<return_t(tls_session*, binary_t&)> func);
+    template <typename F>
+    auto publish(tls_record* record, tls_direction_t dir, F&& func) ->
+        typename std::enable_if<std::is_same<decltype(func(std::declval<tls_session*>(), std::declval<binary_t&>())), return_t>::value, return_t>::type {
+        return publish(record, dir, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
+    }
+    template <typename F>
+    auto publish(tls_records* records, tls_direction_t dir, F&& func) ->
+        typename std::enable_if<std::is_same<decltype(func(std::declval<tls_session*>(), std::declval<binary_t&>())), return_t>::value, return_t>::type {
+        return publish(records, dir, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
+    }
 
     void set_flags(uint32 flags);
     uint32 get_flags() const;

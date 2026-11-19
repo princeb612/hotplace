@@ -241,13 +241,21 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
         auto limit = recpos + get_record_size();
         if (trial_decrypt_rejected_early_data) {
             uint64 record_no = session->get_session_info(dir).get_recordno(false);
-            ret = protection.decrypt_trial(session, dir, stream, limit, recpos, plaintext);
-            if ((errorcode_t::success != ret) && (errorcode_t::overflow != ret)) {
+            ret = protection.decrypt_aead(session, dir, stream, limit, recpos, plaintext, protection_space_t::tls, decrypt_alert_policy_t::suppress);
+            if (errorcode_t::verification_failure == ret) {
+                // Only an authentication failure identifies a late 0-RTT
+                // record. Restore the sequence number before discarding it.
                 session->get_session_info(dir).set_recordno(record_no);
                 ret = discard_rejected_early_data();
                 if (errorcode_t::success == ret) {
                     __leave2;
                 }
+                __leave2_trace(ret);
+            }
+            if ((errorcode_t::success != ret) && (errorcode_t::overflow != ret)) {
+                // Do not disguise malformed input or local crypto failures as
+                // rejected early data.
+                session->get_session_info(dir).set_recordno(record_no);
                 __leave2_trace(ret);
             }
         } else {

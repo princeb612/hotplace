@@ -38,19 +38,32 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
         // } PskKeyExchangeModes;
 
         const size_t limit = endpos_extension();
-        if ((nullptr == stream) || (pos > limit) || (limit > size) || (0 == limit - pos)) {
+        if ((nullptr == stream) || (pos > limit) || (limit > size)) {
             ret = errorcode_t::bad_format;
             __leave2;
         }
 
-        uint8 modes = stream[pos++];
-        if ((0 == modes) || (modes != limit - pos)) {
-            ret = errorcode_t::bad_format;
-            __leave2;
+        binary_t modes;
+        uint8 modes_length = 0;
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_modes) << new payload_member(binary_t(), constexpr_mode);
+            pl.set_reference_value(constexpr_mode, constexpr_modes);
+            ret = pl.read(stream, limit, pos);
+            if (errorcode_t::success != ret) {
+                ret = errorcode_t::bad_format;
+                __leave2;
+            }
+            modes_length = pl.t_value_of<uint8>(constexpr_modes);
+            pl.get_binary(constexpr_mode, modes);
+            if ((0 == modes_length) || (modes_length != modes.size()) || (pos != limit)) {
+                ret = errorcode_t::bad_format;
+                __leave2;
+            }
         }
 
-        for (uint16 i = 0; i < modes; ++i) {
-            add(stream[pos++]);
+        for (const auto& mode : modes) {
+            add(mode);
         }
 
 #if defined DEBUG
@@ -68,6 +81,13 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
 #endif
     }
     __finally2 {}
+    if (errorcode_t::bad_format == ret) {
+        // RFC 8446: malformed PskKeyExchangeModes vectors are decoding
+        // failures and must terminate the handshake with fatal decode_error.
+        auto session = get_handshake()->get_session();
+        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+        session->reset_session_status();
+    }
     return ret;
 }
 

@@ -1,6 +1,8 @@
 # Payload — Protocol Field Layout and Binary Interpretation
 
-**Edition 1 · Based on Revision 1084**
+**Edition 1 · Based on Revision 1132**
+
+> Source base : Revision 1132
 
 ## Context
 
@@ -29,6 +31,7 @@ This makes it a useful point of convergence for otherwise different protocols:
 
 ```text
 HTTP/2 frame ─┐
+HTTP/3 frame ─┤
 TLS record ───┤
 TLS handshake ├──► payload / payload_member ───► bytes
 TLS extension ┤
@@ -149,13 +152,13 @@ Many wire formats use a length field followed by data of that length.
 
 `set_reference_value("data", "length")` expresses this relation without moving the length semantics into `payload::read()` itself.
 
-A multiplier can be applied when the referenced count represents elements rather than bytes:
+The API accepts a multiplier when the referenced count represents elements rather than bytes:
 
 ```text
-count × element_size → field size
+count × element_size → get_space() estimate
 ```
 
-This allows the generic reader to consume layouts whose size is known only after an earlier member has been decoded.
+There is an important source-level limitation in Revision 1132: `payload_member::get_space()` applies the multiplier, but the ordinary binary/string/bignumber read path in `payload_member::doread()` uses the referenced value without multiplying it. The current `payload::read()` path can therefore advance its layout estimate by the multiplied size while extracting only the unmultiplied number of bytes. Do not rely on multiplied reference lengths for reading until that implementation path is corrected; the current direct payload test does not verify this case.
 
 ### Conditional groups describe structural presence
 
@@ -219,7 +222,7 @@ payload_member
             └── write()
 ```
 
-The concrete example in Revision 1084 is `quic_encoded`, which implements QUIC variable-length integer encoding and can also bind that length encoding to associated data.
+The concrete example is `quic_encoded`, which implements QUIC variable-length integer encoding and can also represent a length-prefixed opaque data value.
 
 This is important because QUIC's encoding is not modeled by adding QUIC branches to `payload`. Instead, the protocol-specific representation is injected through the generic encoded interface.
 
@@ -237,7 +240,7 @@ payload
 bytes
 ```
 
-This explains why the same payload mechanism can appear in HTTP/2, TLS, DTLS, and QUIC without making those protocols variants of one implementation. The shared part is the recurring binary-layout problem; the protocol-specific meaning remains outside the generic layer.
+This explains why the same payload mechanism can appear in HTTP/2, HTTP/3, TLS, DTLS, and QUIC without making those protocols variants of one implementation. The shared part is the recurring binary-layout problem; the protocol-specific meaning remains outside the generic layer.
 
 For QUIC in particular, `quic_encoded` is the handoff point where a protocol-specific representation enters the generic layout mechanism:
 
@@ -290,7 +293,7 @@ payload
 
 The ordered list is used for binary traversal. The name map supports relationships and value lookup. Group options control active members. Condition hooks allow an already-read field to affect the remaining layout.
 
-The ownership model is also explicit: insertion through `operator<<` releases the incoming proxy/`unique_ptr`, and `_members` owns the resulting member until `clear()` or destruction.
+The ownership transfer is explicit: insertion through `operator<<` releases the incoming proxy/`unique_ptr`, and `_members` becomes the owner of the resulting member. There is a current lifecycle caveat: `payload::~payload()` calls `clear()`, but `clear()` deletes the member pointers without clearing `_members` or `_members_map`. An explicit `clear()` therefore does not leave a reusable empty object and can leave dangling entries for later access or destruction; do not treat it as a safe reset operation in the current implementation.
 
 ### `payload_encoded`
 
@@ -403,7 +406,7 @@ PADDED flag
     │
     └── enable padding group
 
-Pad Length ─────────────► Padding size
+Pad Length  ─────────────► Padding size
 Data        ─────────────► remaining body
 Padding     ─────────────► referenced size
 ```
@@ -520,10 +523,11 @@ selected-group write
 
 ### Cross-protocol verification surface
 
-The Revision 1084 source shows `payload` in all of the following reader/writer families:
+The Revision 1084 source showed `payload` in the following reader/writer families; Revision 1132 source inspection also confirms its use by HTTP/3 frame readers/writers:
 
 ```text
 sdk/net/http/http2/*
+sdk/net/http/http3/*
 sdk/net/tls/protection/tls_protection_encryption_aead*
 sdk/net/tls/quic/frame/*
 sdk/net/tls/quic/packet/*
@@ -589,7 +593,7 @@ protocol class
   owns protocol meaning and state
 ```
 
-The most significant current constraints visible in the implementation are equally clear: unknown-size inference handles one unresolved active member, and encoded members are expected to be decodable in sequence rather than postponed behind an unresolved field. These are properties of the present layout algorithm, not protocol semantics.
+The most significant current constraints visible in the implementation are equally clear: unknown-size inference handles one unresolved active member, and encoded members are expected to be decodable in sequence rather than postponed behind an unresolved field. Referenced-length multipliers are reflected by the layout-size calculation but are not consistently applied by the ordinary read extraction path. Explicit `clear()` also does not reset the member containers after deleting their entries. These are implementation constraints, not protocol semantics.
 
 The module therefore fits the project as a reusable **protocol payload reader/writer substrate**: small enough to remain generic, but expressive enough to capture the recurring field-layout patterns shared by HTTP/2, TLS/DTLS, and QUIC.
 
@@ -604,7 +608,7 @@ The module therefore fits the project as a reusable **protocol payload reader/wr
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
 │ Edition 1 · Revision 1090            │
-│ Documented with GPT-5.6 Luna         │
+│ Documented with GPT-6                │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

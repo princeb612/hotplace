@@ -217,7 +217,23 @@ static return_t enforce_pending_tls_early_data_limit(tls_session* session, tls_d
     return errorcode_t::success;
 }
 
-secure_prosumer::secure_prosumer() : _producing(false), _resume_pending(false), _pending_early_data_buffer_limit(pending_tls_early_data_default_buffer_limit) {}
+secure_prosumer::secure_prosumer()
+    : _producing(false), _resume_pending(false), _transport_closed(false), _pending_early_data_buffer_limit(pending_tls_early_data_default_buffer_limit) {}
+
+return_t secure_prosumer::notify_transport_closed() {
+    bool notify = false;
+    {
+        critical_section_guard guard(_mlock);
+        if (false == _transport_closed) {
+            _transport_closed = true;
+            notify = true;
+        }
+    }
+    if (true == notify) {
+        return _msem.signal();
+    }
+    return errorcode_t::success;
+}
 
 void secure_prosumer::set_pending_early_data_buffer_limit(uint64 limit) { _pending_early_data_buffer_limit = limit; }
 
@@ -306,9 +322,12 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, con
             // This prevents a coalesced ClientHello + large early-data flight from
             // being copied into _mbs before the pending-data ceiling is known.
             size_t input_pos = 0;
-            while (input_pos < size_data) {
+            while (true) {
                 if (pending_tls_early_data_decision(session, dir)) {
                     size_t remaining = size_data - input_pos;
+                    if (0 == remaining) {
+                        break;
+                    }
                     if (pending_tls_early_data_byte_limit_exceeded(_mbs.size(), remaining, _pending_early_data_buffer_limit)) {
                         abort_pending_tls_early_data(session, dir, _mbs);
                         ret = errorcode_t::overflow;
@@ -349,6 +368,9 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, con
                     continue;
                 }
 
+                if (input_pos >= size_data) {
+                    break;
+                }
                 size_t remaining = size_data - input_pos;
                 size_t needed = target_size - _mbs.size();
                 size_t chunk = (needed < remaining) ? needed : remaining;
@@ -359,9 +381,9 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, con
                 input_pos += chunk;
             }
 
-            if ((errorcode_t::success == ret) && (input_pos == size_data) && (false == pending_tls_early_data_decision(session, dir))) {
-                ret = do_produce(session, dir, addr, addrlen);
-            }
+            // Complete records are dispatched inside the loop. Any bytes left
+            // in _mbs are an incomplete trailing record; keep them until the
+            // next input fragment arrives instead of parsing a partial body.
             __leave2;
         }
 
@@ -499,6 +521,30 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
             __leave2;
         }
 
+        bool transport_closed = false;
+        {
+            critical_section_guard guard(_mlock);
+            transport_closed = _transport_closed;
+        }
+        if (true == transport_closed) {
+            pos = size;
+            ret = errorcode_t::disconnect;
+            __leave2;
+        }
+
+        // A fatal alert terminates the TLS connection. Do not parse another
+        // record from this input or accept records from later input calls.
+        if (session->has_alert(dir, tls_alertlevel_t::fatal)) {
+            pos = size;
+            return_t notify_ret = notify_transport_closed();
+            if (errorcode_t::success == notify_ret) {
+                ret = errorcode_t::handshake_failure;
+            } else {
+                ret = notify_ret;
+            }
+            __leave2;
+        }
+
         tls_record_builder builder;
 
         while ((errorcode_t::success == ret) && (pos < size)) {
@@ -526,6 +572,17 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
             auto record = builder.set(session).set(content_type).build();
             if (record) {
                 ret = record->read(dir, stream, size, pos);
+                if ((errorcode_t::success == ret) && session->has_alert(dir, tls_alertlevel_t::fatal)) {
+                    // A received fatal alert makes the transport terminal:
+                    // wake application readers and discard coalesced records.
+                    pos = size;
+                    return_t notify_ret = notify_transport_closed();
+                    if (errorcode_t::success == notify_ret) {
+                        ret = errorcode_t::handshake_failure;
+                    } else {
+                        ret = notify_ret;
+                    }
+                }
                 if (errorcode_t::success == ret) {
                     if (tls_content_type_t::application_data == content_type) {
                         tls_record_application_data* appdata = (tls_record_application_data*)record;
@@ -537,10 +594,24 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
                                 memcpy(&item.addr, addr, *addrlen);
                             }
 
-                            critical_section_guard guard(_mlock);
-                            _mq.push(std::move(item));
-
-                            _msem.signal();
+                            bool transport_closed = false;
+                            {
+                                critical_section_guard guard(_mlock);
+                                if (true == _transport_closed) {
+                                    transport_closed = true;
+                                } else {
+                                    _mq.push(std::move(item));
+                                }
+                            }
+                            if (true == transport_closed) {
+                                // A concurrent close may win after the entry
+                                // check. Never enqueue plaintext after terminal
+                                // state has been published.
+                                pos = size;
+                                ret = errorcode_t::disconnect;
+                            } else {
+                                _msem.signal();
+                            }
                         }
                     }
                 }
@@ -562,8 +633,22 @@ return_t secure_prosumer::consume(int sock_type, uint32 wto, char* ptr_data, siz
 
         *cbread = 0;
 
+        bool terminal = false;
+        {
+            critical_section_guard guard(_mlock);
+            terminal = _mq.empty() && _transport_closed;
+        }
+        if (true == terminal) {
+            ret = errorcode_t::disconnect;
+            __leave2;
+        }
+
         ret = _msem.wait(wto);
         if (errorcode_t::success != ret) {
+            critical_section_guard guard(_mlock);
+            if (_mq.empty() && _transport_closed) {
+                ret = errorcode_t::disconnect;
+            }
             __leave2;
         }
 
@@ -578,11 +663,15 @@ return_t secure_prosumer::consume(int sock_type, uint32 wto, char* ptr_data, siz
             }
 
             auto datasize = item.buffer.size();
-            if (datasize >= size_data) {
+            if (datasize > size_data) {
                 memcpy(ptr_data, item.buffer.data(), size_data);
                 item.buffer.cut(0, size_data);
 
                 *cbread = size_data;
+                ret = _msem.signal();
+                if (errorcode_t::success == ret) {
+                    ret = errorcode_t::more_data;
+                }
             } else {
                 memcpy(ptr_data, item.buffer.data(), datasize);
 
@@ -600,9 +689,11 @@ return_t secure_prosumer::consume(int sock_type, uint32 wto, char* ptr_data, siz
                 }
             }
 #endif
-            if (false == _mq.empty()) {
+            if ((errorcode_t::success == ret) && (false == _mq.empty())) {
                 ret = errorcode_t::more_data;
             }
+        } else if (true == _transport_closed) {
+            ret = errorcode_t::disconnect;
         } else {
             ret = errorcode_t::empty;
         }

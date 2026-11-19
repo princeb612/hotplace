@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <errno.h>
+
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
@@ -17,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-client_socket_prosumer::client_socket_prosumer() : client_socket(), _fd(INVALID_SOCKET), _mphandle(nullptr), _thread(nullptr) {}
+client_socket_prosumer::client_socket_prosumer() : client_socket(), _remote_transport_closed(false), _fd(INVALID_SOCKET), _mphandle(nullptr), _thread(nullptr) {}
 
 client_socket_prosumer::~client_socket_prosumer() { close(); }
 
@@ -41,11 +43,20 @@ return_t client_socket_prosumer::open(sockaddr_storage_t* sa, const char* addres
 
         if (SOCK_DGRAM == type) {
             memcpy(&_sa, sa, sizeof(sockaddr_storage_t));
-            start_consumer();
+            ret = start_consumer();
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
             ret = do_handshake();
         }
     }
-    __finally2 {}
+    __finally2 {
+        // A failed datagram handshake or consumer startup must not leave the
+        // socket (or a partially initialized consumer) attached to this object.
+        if ((errorcode_t::success != ret) && (INVALID_SOCKET != _fd)) {
+            close();
+        }
+    }
     return ret;
 }
 
@@ -72,25 +83,50 @@ return_t client_socket_prosumer::connect(const char* address, uint16 port, uint3
             __leave2;
         }
 
-        start_consumer();
+        ret = start_consumer();
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         ret = do_handshake();
         if (errorcode_t::success != ret) {
             __leave2;
         }
     }
-    __finally2 {}
+    __finally2 {
+        // Do not retain a connected socket or consumer after a failed
+        // handshake. Preserve the original connect/handshake error.
+        if ((errorcode_t::success != ret) && (INVALID_SOCKET != _fd)) {
+            close();
+        }
+    }
     return ret;
 }
 
 return_t client_socket_prosumer::close() {
     return_t ret = errorcode_t::success;
+    return_t test = errorcode_t::success;
     __try2 {
-        ret = do_shutdown();
+        // Wake blocked readers before waiting for graceful TLS shutdown.
+        test = do_transport_disconnect();
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
 
-        stop_consumer();
+        test = do_shutdown();
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
 
-        ret = do_close();
+        test = stop_consumer();
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
+
+        test = do_close();
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
     }
     __finally2 {}
     return ret;
@@ -193,51 +229,113 @@ socket_t client_socket_prosumer::get_socket() const { return _fd; }
 
 return_t client_socket_prosumer::start_consumer() {
     return_t ret = errorcode_t::success;
+    bool bound = false;
+    bool started = false;
+#if defined __linux__
+    multiplexer_epoll mplexer;
+#elif defined _WIN32 || defined _WIN64
+    multiplexer_iocp mplexer;
+#endif
     __try2 {
         if (nullptr != _mphandle) {
             __leave2;
         }
+        if (INVALID_SOCKET == _fd) {
+            ret = errorcode_t::not_open;
+            __leave2;
+        }
 
-#if defined __linux__
-        multiplexer_epoll mplexer;
-#elif defined _WIN32 || defined _WIN64
-        multiplexer_iocp mplexer;
-#endif
+        _remote_transport_closed.store(false);
 
-        mplexer.open(&_mphandle, 5);
-        mplexer.bind(_mphandle, (handle_t)_fd, &_mplexer_key);
+        ret = mplexer.open(&_mphandle, 5);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = mplexer.bind(_mphandle, (handle_t)_fd, &_mplexer_key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        bound = true;
 
         _thread = new thread(producer_thread, this);
-        _thread->start();
+        if (nullptr == _thread) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
 
-        async_read();
+        ret = _thread->start();
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        started = true;
+
+        ret = async_read();
     }
     __finally2 {}
+
+    if (errorcode_t::success != ret) {
+        // Roll back only resources acquired by this invocation.
+        if (true == started) {
+            mplexer.event_loop_break_concurrent(_mphandle, 1);
+            _thread->join();
+        }
+        if (nullptr != _thread) {
+            delete _thread;
+            _thread = nullptr;
+        }
+        if (nullptr != _mphandle) {
+            if (true == bound) {
+                mplexer.unbind(_mphandle, (handle_t)_fd, &_mplexer_key);
+            }
+            mplexer.close(_mphandle);
+            _mphandle = nullptr;
+        }
+    }
 
     return ret;
 }
 
 return_t client_socket_prosumer::stop_consumer() {
     return_t ret = errorcode_t::success;
+    return_t test = errorcode_t::success;
+#if defined __linux__
+    multiplexer_epoll mplexer;
+#elif defined _WIN32 || defined _WIN64
+    multiplexer_iocp mplexer;
+#endif
     __try2 {
         if (nullptr == _mphandle) {
+            if (nullptr != _thread) {
+                delete _thread;
+                _thread = nullptr;
+            }
             __leave2;
         }
 
-#if defined __linux__
-        multiplexer_epoll mplexer;
-#elif defined _WIN32 || defined _WIN64
-        multiplexer_iocp mplexer;
-#endif
+        test = mplexer.unbind(_mphandle, (handle_t)_fd, &_mplexer_key);
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
 
-        mplexer.unbind(_mphandle, (handle_t)_fd, nullptr);
-        mplexer.event_loop_break_concurrent(_mphandle, 1);
+        test = mplexer.event_loop_break_concurrent(_mphandle, 1);
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
 
-        _thread->join();
-        delete _thread;
-        _thread = nullptr;
+        if (nullptr != _thread) {
+            test = _thread->join();
+            if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+                ret = test;
+            }
+            delete _thread;
+            _thread = nullptr;
+        }
 
-        mplexer.close(_mphandle);
+        test = mplexer.close(_mphandle);
+        if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+            ret = test;
+        }
         _mphandle = nullptr;
     }
     __finally2 {}
@@ -269,6 +367,7 @@ return_t client_socket_prosumer::consumer_routine(uint32 type, uint32 data_count
 
 return_t client_socket_prosumer::do_consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
+    return_t rearm_status = errorcode_t::success;
     __try2 {
         if (mux_read == type) {
             socket_buffer_t item;
@@ -276,22 +375,43 @@ return_t client_socket_prosumer::do_consumer_routine(uint32 type, uint32 data_co
             int sock = (int)(long)data_array[1];
             auto& netbuf = _mplexer_key.buffer;
             int rc = recv(sock, netbuf.buffer, netbuf.buflen, 0);
-            if (rc <= 0) {
+            if (rc < 0) {
+                int error = errno;
+                if ((EINTR == error) || (EAGAIN == error) || (EWOULDBLOCK == error)) {
+                    // epoll is level-triggered; a transient read condition can be retried.
+                    __leave2;
+                }
+                ret = get_lasterror(rc);
+                do_remote_transport_disconnect();
                 __leave2;
-            } else {
-                enqueue(item, netbuf.buffer, rc);
             }
+            if (0 == rc) {
+                do_remote_transport_disconnect();
+                __leave2;
+            }
+            enqueue(item, netbuf.buffer, rc);
 #elif defined _WIN32 || defined _WIN64
             uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
             mplexer_key_t* netbuf = (mplexer_key_t*)data_array[2];
+            if (0 == bytes_transfered) {
+                do_remote_transport_disconnect();
+                __leave2;
+            }
             enqueue(item, netbuf->buffer.wsabuf.buf, bytes_transfered);
-            async_read();
+            rearm_status = async_read();
+            if (errorcode_t::success != rearm_status) {
+                do_remote_transport_disconnect();
+            }
 #endif
             if (false == support_tls()) {
                 _rsem.signal();
             }
 
-            do_secure();
+            // Process bytes from this completion even if posting the next read failed.
+            ret = do_secure();
+            if ((errorcode_t::success == ret) && (errorcode_t::success != rearm_status)) {
+                ret = rearm_status;
+            }
         } else if (mux_dgram == type) {
             socket_buffer_t item;
 #if defined __linux__
@@ -310,14 +430,22 @@ return_t client_socket_prosumer::do_consumer_routine(uint32 type, uint32 data_co
             auto& netbuf = mpkey->buffer;
             memcpy(&item.addr, &mpkey->addr, sizeof(sockaddr_storage_t));
             enqueue(item, netbuf.wsabuf.buf, bytes_transfered);
-            async_read();
+            rearm_status = async_read();
+            if (errorcode_t::success != rearm_status) {
+                do_remote_transport_disconnect();
+            }
 #endif
             if (false == support_tls()) {
                 _rsem.signal();
             }
 
-            do_secure();
+            // Process bytes from this completion even if posting the next read failed.
+            ret = do_secure();
+            if ((errorcode_t::success == ret) && (errorcode_t::success != rearm_status)) {
+                ret = rearm_status;
+            }
         } else if (mux_disconnect == type) {
+            do_remote_transport_disconnect();
             __leave2;
         }
     }
@@ -342,7 +470,8 @@ void client_socket_prosumer::enqueue(socket_buffer_t& item, const char* buf, siz
 #endif
 }
 
-void client_socket_prosumer::async_read() {
+return_t client_socket_prosumer::async_read() {
+    return_t ret = errorcode_t::success;
 #if defined _WIN32 || defined _WIN64
     auto& netbuf = _mplexer_key.buffer;
     netbuf.init();
@@ -350,14 +479,25 @@ void client_socket_prosumer::async_read() {
     auto type = socket_type();
 
     DWORD flags = 0;
+    int rc = 0;
     if (SOCK_STREAM == type) {
-        WSARecv(_fd, &netbuf.wsabuf, 1, nullptr, &flags, &netbuf.overlapped, nullptr);
+        rc = WSARecv(_fd, &netbuf.wsabuf, 1, nullptr, &flags, &netbuf.overlapped, nullptr);
     } else if (SOCK_DGRAM == type) {
         auto& netaddr = _mplexer_key.addr;
         int addrlen = sizeof(sockaddr_storage_t);
-        WSARecvFrom(_fd, &netbuf.wsabuf, 1, nullptr, &flags, (sockaddr*)&netaddr, &addrlen, &netbuf.overlapped, nullptr);
+        rc = WSARecvFrom(_fd, &netbuf.wsabuf, 1, nullptr, &flags, (sockaddr*)&netaddr, &addrlen, &netbuf.overlapped, nullptr);
+    } else {
+        ret = errorcode_t::bad_request;
+    }
+
+    if ((errorcode_t::success == ret) && (SOCKET_ERROR == rc)) {
+        int error = WSAGetLastError();
+        if (WSA_IO_PENDING != error) {
+            ret = get_lasterror(rc);
+        }
     }
 #endif
+    return ret;
 }
 
 return_t client_socket_prosumer::do_consume(basic_stream& stream, sockaddr_storage_t& addr) {
@@ -454,6 +594,15 @@ return_t client_socket_prosumer::do_shutdown() {
     __finally2 {}
     return ret;
 }
+
+return_t client_socket_prosumer::do_transport_disconnect() { return errorcode_t::success; }
+
+return_t client_socket_prosumer::do_remote_transport_disconnect() {
+    _remote_transport_closed.store(true);
+    return do_transport_disconnect();
+}
+
+bool client_socket_prosumer::is_remote_transport_closed() const { return _remote_transport_closed.load(); }
 
 return_t client_socket_prosumer::do_close() {
     return_t ret = errorcode_t::success;

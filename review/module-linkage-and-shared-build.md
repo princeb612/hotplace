@@ -2,7 +2,8 @@
 
 ## Source Baseline
 
-- Source revision: 1113
+- Source revision: 1132
+- Source base : Revision 1132
 
 ## 1. Review Perspective
 
@@ -32,6 +33,8 @@ This is a cross-cutting review topic because the contract spans root build selec
 ```
 
 For a static build, the modules' symbols are resolved through the static link arrangement. For a shared build, each module must also express which declarations it exports and which declarations it consumes from another module. The build configuration and the public API declarations therefore form one contract rather than two independent implementation details.
+
+At Revision 1132, the root defaults are `SUPPORT_STATIC=1` and `SUPPORT_SHARED=0`. The root `MODULE_LIB_TYPE` selection checks `SUPPORT_STATIC` first; selecting the shared-only dependency path therefore requires `SUPPORT_STATIC=0` together with `SUPPORT_SHARED=1`. If both are enabled, both library targets can be generated, but the root dependency selector still chooses the static type for its shared dependency variable.
 
 The central relationship is:
 
@@ -74,6 +77,8 @@ The export/import mechanism differs by toolchain. Windows and MinGW use platform
 ```
 
 These are different mechanisms serving the same architectural purpose: preserve the public boundary while allowing implementation symbols to remain appropriately scoped. This is why a shared-build change must be considered across module declarations and build definitions, rather than as a single linker flag.
+
+At Revision 1132, `sdk/base/types.hpp` implements this split: Windows/MinGW use `__declspec(dllexport/dllimport)` selected by `HOTPLACE_*_SHARED`; GCC uses `visibility("default")` for the public API macros under `SUPPORT_SHARED`. Each module's shared target defines its own `HOTPLACE_BASE_SHARED`, `HOTPLACE_IO_SHARED`, `HOTPLACE_CRYPTO_SHARED`, or `HOTPLACE_NET_SHARED` marker. The GNU link path also uses `sdk/version.script` to export the `hotplace::*` namespace and selected type metadata while keeping other symbols local.
 
 ## 5. Revision Evidence and Its Limits
 
@@ -118,7 +123,7 @@ These paths are included to anchor the review to the implementation; this docume
 
 ## 8. Current Assessment
 
-Revisions 1112–1113 establish a meaningful architecture checkpoint: module symbol visibility is now an explicit part of the shared-build arrangement, and MinGW64 has a recorded shared-build test.
+Revisions 1112–1113 establish the historical architecture checkpoint: module symbol visibility became an explicit part of the shared-build arrangement, and MinGW64 has a recorded shared-build test. A Revision 1132 source recheck confirms that the same per-module export/import contract remains in place; the root default is still static-only, and no additional shared-build execution is claimed here.
 
 The next useful evidence would be additional build results from other supported compiler/platform combinations, especially where their symbol-export conventions differ. Until then, the accurate statement is that the shared-build boundary has been implemented and tested in a specific configuration—not that all shared builds are universally verified.
 
@@ -126,4 +131,4 @@ The next useful evidence would be additional build results from other supported 
 
 **GPT Review**
 
-Reviewed against the hotplace source/documentation state through **revision 1113**.
+Reviewed against the hotplace source/documentation state through **revision 1132**; the recorded MinGW64 execution evidence remains Revision 1112.

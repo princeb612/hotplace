@@ -4,7 +4,7 @@
 ┌──────────────────────────────────────────────┐
 │ hotplace source tree                         │
 │ Edition 1 · Revision 1107                    │
-│ Source basis: Revision 1107                  │
+│ Source base : Revision 1132                  │
 │ Documented with GPT-6                        │
 │ — source structure, implementation & behavior│
 └──────────────────────────────────────────────┘
@@ -85,7 +85,7 @@ This recursive behavior is specific to composite types such as `cbor_map` that i
 ## 4. Relationships
 
 - `sdk/base/nostd/set.hpp` — `t_set_runtime` uses a shared-instance handle for its concrete set object.
-- `sdk/base/nostd/value.hpp` — a separate deferred-value abstraction; it uses future/promise state rather than this ownership counter.
+- `sdk/base/nostd/value.hpp` — a separate immediate value/name holder; Revision 1122 removed its former future/promise behavior. It is not an ownership counter or deferred-value abstraction.
 - `sdk/io/cbor/cbor_map.hpp/.cpp` — concrete composite ownership: map-level `addref()` / `release()` propagate to stored pairs and nested members.
 - `test/testcase/base/system/testcase_shared.cpp` — explicit reference release and move/ownership lifetime checks, including single destruction at the end of ownership.
 - `sdk/io/cbor/cbor_map.hpp` — includes the nested-map ownership example; `cbor_map.cpp` implements member-wise reference propagation.
