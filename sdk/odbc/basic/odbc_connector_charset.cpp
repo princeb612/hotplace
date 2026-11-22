@@ -39,7 +39,7 @@ return_t odbc_connector::connect(odbc_query** dbquery, LPCTSTR connection_string
 
         // Allocate connection handle
         ret_sql = ::SQLAllocHandle(SQL_HANDLE_DBC, _env_handle, &dbc_handle);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             __leave2;
         }
 
@@ -58,7 +58,7 @@ return_t odbc_connector::connect(odbc_query** dbquery, LPCTSTR connection_string
         ret_sql =
             ::SQLDriverConnect(dbc_handle, nullptr, reinterpret_cast<SQLTCHAR*>(const_cast<LPTSTR>(connection_string)), SQL_NTS,
                                reinterpret_cast<SQLTCHAR*>(out_connection_string), RTL_NUMBER_OF(out_connection_string), &out_connection_string_len, SQL_DRIVER_NOPROMPT);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             odbc_diagnose::get_instance()->diagnose(SQL_HANDLE_DBC, dbc_handle);
             __leave2;
         }
@@ -68,7 +68,7 @@ return_t odbc_connector::connect(odbc_query** dbquery, LPCTSTR connection_string
         *dbquery = query;
     }
     __finally2 {
-        if (SQL_FAILED(ret_sql)) {
+        if (false == SQL_SUCCEEDED(ret_sql)) {
             if (SQL_NULL_HDBC != dbc_handle) {
                 ::SQLFreeHandle(SQL_HANDLE_DBC, dbc_handle);
                 dbc_handle = SQL_NULL_HDBC;

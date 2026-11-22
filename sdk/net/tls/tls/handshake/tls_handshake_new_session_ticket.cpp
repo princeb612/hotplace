@@ -19,6 +19,7 @@
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
+#include <limits>
 
 namespace hotplace {
 namespace net {
@@ -43,6 +44,13 @@ return_t tls_handshake_new_session_ticket::do_preprocess(tls_direction_t dir) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
+        auto session = get_session();
+        if (session->get_tls_protection().is_kindof_tls12() && (0 != (session->get_session_status() & session_status_server_finished))) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
+        }
     }
     __finally2 {}
     return ret;
@@ -54,8 +62,41 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, t
         auto session = get_session();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         protection.update_transcript_hash(session, stream + hspos, get_size());
+
+        // Retain the TLS 1.2 state associated with a ticket only after its
+        // complete NewSessionTicket handshake message has been serialized.
+        // A 48-byte master_secret is required for RFC 5077 resumption.
+        if ((tls_io_operation_t::write == opdir) && (from_server == dir) && protection.is_kindof_tls12()) {
+            const binary_t& identity = secrets.get(tls_secret_t::new_session_ticket);
+            const binary_t& master_secret = secrets.get(tls_secret_t::master);
+            if ((false == identity.empty()) && (48 == master_secret.size())) {
+                tls12_resumption_ticket ticket;
+                ticket.identity = identity;
+                ticket.master_secret = master_secret;
+                ticket.server_name = session->get_client_server_name();
+                ticket.alpn = secrets.get(tls_secret_t::alpn);
+                ticket.lifetime = session->get_session_info(from_server).get_keyvalue().get(session_ticket_lifetime);
+                ticket.timestamp =
+                    static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+                ticket.version = static_cast<uint16>(protection.get_tls_version());
+                ticket.cipher_suite = protection.get_cipher_suite();
+                const auto& session_values = session->get_keyvalue();
+                ticket.extended_master_secret = (0 != session_values.get(session_extended_master_secret));
+                ticket.encrypt_then_mac = (0 != session_values.get(session_encrypt_then_mac));
+
+                session->stage_tls12_resumption_ticket(ticket);
+                // The existing full-handshake writer is permitted only after
+                // Client Finished. Confirm immediately in that case. Once the
+                // abbreviated-handshake path is enabled, its ticket remains
+                // pending until the peer's Client Finished is verified.
+                if (0 != (session->get_session_status() & session_status_client_finished)) {
+                    session->confirm_tls12_resumption_ticket(ticket.identity);
+                }
+            }
+        }
     }
     __finally2 {}
     return ret;
@@ -82,10 +123,22 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             __leave2_trace(ret);
         }
 
-        // TLS 1.2 (including DTLS 1.2) uses the RFC 5077 ticket
-        // format. It has no ticket_nonce, ticket_age_add, or extensions.
-        // Keep this legacy path separate from the TLS 1.3 RFC 8446 format.
+        // TLS 1.2 (including DTLS 1.2) uses the RFC 5077 ticket format.
+        // In a full handshake, the client receives it after Client Finished;
+        // in an abbreviated handshake, it may arrive after ServerHello and
+        // before Server Finished. In both cases, keep it pending until the
+        // server Finished has been authenticated.
         if (false == protection.is_kindof_tls13()) {
+            uint32 status = session->get_session_status();
+            bool abbreviated_renewal =
+                protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) && (0 != (status & session_status_server_hello));
+            if ((0 != (status & session_status_server_finished)) || ((0 == (status & session_status_client_finished)) && (false == abbreviated_renewal))) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+
             uint32 lifetime_hint = 0;
             binary_t session_ticket;
 
@@ -106,14 +159,14 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
 
             auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             auto& kv = session->get_session_info(from_server).get_keyvalue();
-            kv.set(session_ticket_lifetime, lifetime_hint);
-            kv.set(session_ticket_age_add, 0);
-            kv.set(session_ticket_timestamp, static_cast<uint64>(now_ms));
+            kv.set(session_ticket_pending_lifetime, lifetime_hint);
+            kv.set(session_ticket_pending_timestamp, static_cast<uint64>(now_ms));
+            kv.set(session_ticket_pending, 1);
 
-            // TLS 1.2 tickets are opaque RFC 5077 state, not TLS 1.3
-            // resumption PSKs. Retain the legacy ticket view without trying
-            // to derive a TLS 1.3 resumption secret from it.
-            secrets.assign(tls_secret_t::new_session_ticket, std::move(session_ticket));
+            // RFC 5077 sends NewSessionTicket before the server's Finished.
+            // Keep the opaque ticket and its metadata pending until that
+            // Finished has been authenticated by tls_handshake_finished.
+            secrets.assign(tls_secret_t::new_session_ticket_pending, std::move(session_ticket));
             __leave2;
         }
 
@@ -265,6 +318,43 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
+
+        // RFC 5077 §3.3: TLS 1.2 NewSessionTicket contains only
+        // ticket_lifetime_hint followed by an opaque, uint16-length ticket.
+        // Keep this serializer separate from the RFC 8446 TLS 1.3 format.
+        if (false == protection.is_kindof_tls13()) {
+            if (from_server != dir) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+            // In a full handshake, RFC 5077 ticket issuance follows the
+            // client's Finished. In an abbreviated handshake, the server may
+            // send a replacement ticket after ServerHello and before its own
+            // Finished; the pending ticket is confirmed only after Client Finished.
+            uint32 status = session->get_session_status();
+            bool abbreviated_renewal = protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) &&
+                                       (0 != (status & session_status_server_hello)) && (0 == (status & session_status_server_finished));
+            if ((0 == (status & session_status_client_finished)) && (false == abbreviated_renewal)) {
+                ret = errorcode_t::bad_request;
+                __leave2;
+            }
+
+            const auto& kv = session->get_session_info(from_server).get_keyvalue();
+            uint32 ticket_lifetime_hint = kv.get(session_ticket_lifetime);
+            const binary_t& session_ticket = secrets.get(tls_secret_t::new_session_ticket);
+            if (session_ticket.size() > std::numeric_limits<uint16>::max()) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+
+            payload pl;
+            pl << new payload_member(uint32(ticket_lifetime_hint), true, "ticket lifetime hint")
+               << new payload_member(uint16(session_ticket.size()), true, "session ticket len") << new payload_member(session_ticket, "session ticket");
+            pl.set_reference_value("session ticket", "session ticket len");
+            ret = pl.write(bin);
+            __leave2;
+        }
+
         // RFC 8446 4.2.9: do not issue a ticket when the client explicitly
         // advertised no PSK key-exchange mode supported by this implementation.
         const auto& session_values = session->get_keyvalue();
@@ -278,6 +368,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         binary_t ticket_nonce;
         binary_t session_ticket;
         binary_t ticket_extensions;
+        uint32 max_early_data_size = 0;
 
         {
             ticket_lifetime = 3 * 60 * 60;  // seconds as a 32-bit unsigned integer, MUST NOT use any value greater than 7 days.
@@ -315,6 +406,18 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
                 __leave2;
             }
         }
+        // Serialize ticket-specific extensions before publishing the ticket.
+        // The same early-data allowance is retained in the server-side ticket
+        // record so later PSK selection enforces the value sent to the client.
+        ret = get_extensions().write(dir, ticket_extensions);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        auto early_data = static_cast<tls_extension_early_data*>(get_extensions().get(tls_extension_type_t::early_data));
+        if (nullptr != early_data) {
+            max_early_data_size = early_data->get_max_early_data_size();
+        }
+
         binary_t ticket_psk;
         ret = protection.calc_resumption_ticket_psk(ticket_nonce, ticket_psk);
         if (errorcode_t::success != ret) {
@@ -349,6 +452,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         issued_ticket.version = static_cast<uint16>(protection.get_tls_version());
         issued_ticket.cipher_suite = protection.get_cipher_suite();
         issued_ticket.alpn = secrets.get(tls_secret_t::alpn);
+        issued_ticket.max_early_data_size = max_early_data_size;
         session->store_resumption_ticket(issued_ticket);
 
         // Publish the compatibility metadata only after the per-ticket PSK
@@ -357,6 +461,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         kv.set(session_ticket_lifetime, ticket_lifetime);
         kv.set(session_ticket_age_add, ticket_age_add);
         kv.set(session_ticket_timestamp, issued_ticket.timestamp);
+        kv.set(session_ticket_max_early_data_size, max_early_data_size);
 
         secrets.assign(tls_secret_t::new_session_ticket, std::move(session_ticket));
     }

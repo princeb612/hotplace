@@ -23,6 +23,7 @@
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_session_ticket.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
@@ -105,6 +106,15 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        if (false == protection.is_kindof_tls13()) {
+            // A fresh TLS 1.2 handshake/renegotiation must not activate a
+            // ticket left pending by an earlier handshake that did not finish.
+            protection.get_secrets().erase(tls_secret_t::new_session_ticket_pending);
+            auto& pending_ticket_state = session->get_session_info(from_server).get_keyvalue();
+            pending_ticket_state.set(session_ticket_pending, 0);
+            pending_ticket_state.set(session_ticket_pending_lifetime, 0);
+            pending_ticket_state.set(session_ticket_pending_timestamp, 0);
+        }
         // RFC 8446 4.2.11: bind cached PSKs to the SNI used by this ClientHello.
         binary_t client_server_name;
         auto ext_sni = get_extensions().get(tls_extension_type_t::server_name);
@@ -113,6 +123,14 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             client_server_name.assign(hostname.begin(), hostname.end());
         }
         session->set_client_server_name(client_server_name);
+        protection.get_secrets().erase(tls_secret_t::tls12_resumption_alpn);
+        session->get_keyvalue().set(session_tls12_ticket_candidate, 0);
+        session->get_keyvalue().set(session_tls12_ticket_resumed, 0);
+        session->get_keyvalue().set(session_tls12_ticket_cipher_suite, 0);
+        session->get_keyvalue().set(session_tls12_ticket_identity_present, 0);
+        session->get_keyvalue().set(session_tls12_ticket_ems, 0);
+        session->get_keyvalue().set(session_tls12_ticket_etm, 0);
+        session->get_keyvalue().set(session_tls12_ticket_acknowledged, 0);
         session->get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
         session->get_keyvalue().set(session_server_psk_key_exchange_mode, 0xffff);
         session->get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0);
@@ -247,7 +265,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                         ticket_within_lifetime = true;
 
                         const tls_cipher_suite_t* ticket_suite = tls_advisor::get_instance()->hintof_cipher_suite(ticket.cipher_suite);
-                        if ((false == psk_extension_configured) || (nullptr == ticket_suite) || (tls_13 != ticket_suite->spec)) {
+                        if ((false == psk_extension_configured) || (nullptr == ticket_suite) || (tls1_3 != ticket_suite->spec)) {
                             continue;
                         }
                         auto crypto_advisor_instance = crypto_advisor::get_instance();
@@ -265,11 +283,11 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                         }
                         if (after_hrr) {
                             const tls_cipher_suite_t* retry_suite = tls_advisor::get_instance()->hintof_cipher_suite(protection.get_cipher_suite());
-                            ticket_hash_compatible = (nullptr != retry_suite) && (tls_13 == retry_suite->spec) && (retry_suite->mac == ticket_suite->mac);
+                            ticket_hash_compatible = (nullptr != retry_suite) && (tls1_3 == retry_suite->spec) && (retry_suite->mac == ticket_suite->mac);
                         } else {
                             for (const auto& offered_suite_code : _cipher_suites) {
                                 const tls_cipher_suite_t* offered_suite = tls_advisor::get_instance()->hintof_cipher_suite(offered_suite_code);
-                                if (offered_suite && (tls_13 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
+                                if (offered_suite && (tls1_3 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
                                     ticket_hash_compatible = true;
                                     break;
                                 }
@@ -280,7 +298,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                             // still be offered by this ClientHello, and the
                             // ticket must advertise a nonzero data allowance.
                             bool ticket_alpn_compatible = ticket_alpn_is_offered(offered_alpn, ticket.alpn);
-                            bool ticket_version_compatible = (static_cast<uint16>(tls_13) == ticket.version);
+                            bool ticket_version_compatible = (static_cast<uint16>(tls1_3) == ticket.version);
                             first_ticket_early_data_limit = (ticket_alpn_compatible && ticket_version_compatible) ? ticket.max_early_data_size : 0;
                             break;
                         }
@@ -308,7 +326,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
                     // Compatibility for sessions that have not yet populated the ticket collection.
                     const tls_cipher_suite_t* ticket_suite = tls_advisor::get_instance()->hintof_cipher_suite(protection.get_cipher_suite());
-                    if (psk_extension_configured && ticket_within_lifetime && ticket_suite && (tls_13 == ticket_suite->spec)) {
+                    if (psk_extension_configured && ticket_within_lifetime && ticket_suite && (tls1_3 == ticket_suite->spec)) {
                         auto crypto_advisor_instance = crypto_advisor::get_instance();
                         const hint_digest_t* ticket_hash = crypto_advisor_instance->hintof_digest(ticket_suite->mac);
                         if (ticket_hash && (resumption_psk.size() == ticket_hash->digest_size)) {
@@ -321,7 +339,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                         if (ticket_hash && (resumption_psk.size() == ticket_hash->digest_size)) {
                             for (const auto& offered_suite_code : _cipher_suites) {
                                 const tls_cipher_suite_t* offered_suite = tls_advisor::get_instance()->hintof_cipher_suite(offered_suite_code);
-                                if (offered_suite && (tls_13 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
+                                if (offered_suite && (tls1_3 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
                                     ticket_hash_compatible = true;
                                     break;
                                 }
@@ -439,6 +457,101 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
         auto& secrets = protection.get_secrets();
         auto tlsadvisor = tls_advisor::get_instance();
         auto session_status = session->get_session_status();
+
+        // RFC 5077: remember whether this TLS 1.2 ClientHello offered
+        // SessionTicket. The server uses this exact offer to decide whether
+        // it may acknowledge ticket issuance in ServerHello.
+        if ((from_client == dir) && (false == protection.is_kindof_tls13())) {
+            auto ext_session_ticket = static_cast<tls_extension_session_ticket*>(get_extensions().get(tls_extension_type_t::session_ticket));
+            session->get_keyvalue().set(session_client_session_ticket_offered, (nullptr != ext_session_ticket) ? 1 : 0);
+            session->get_keyvalue().set(session_client_session_ticket_offer_observed, 1);
+
+            if (tls_io_operation_t::read == opdir) {
+                auto ext_sni = static_cast<tls_extension_sni*>(get_extensions().get(tls_extension_type_t::server_name));
+                binary_t server_name;
+                if (ext_sni && (0 == ext_sni->get_nametype())) {
+                    const auto& hostname = ext_sni->get_hostname();
+                    server_name.assign(hostname.begin(), hostname.end());
+                }
+                session->set_client_server_name(server_name);
+
+                bool identity_present = (ext_session_ticket && (false == ext_session_ticket->get_ticket().empty()));
+                session->get_keyvalue().set(session_tls12_ticket_identity_present, identity_present ? 1 : 0);
+                session->get_keyvalue().set(session_tls12_ticket_candidate, 0);
+                session->get_keyvalue().set(session_tls12_ticket_cipher_suite, 0);
+
+                if (identity_present) {
+                    const binary_t& identity = ext_session_ticket->get_ticket();
+                    tls12_resumption_ticket ticket;
+                    bool found = session->find_tls12_resumption_ticket(identity, ticket);
+                    uint64 now_ms =
+                        static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+                    auto ext_alpn = static_cast<tls_extension_alpn*>(get_extensions().get(tls_extension_type_t::application_layer_protocol_negotiation));
+                    const binary_t offered_alpn = ext_alpn ? ext_alpn->get_protocols() : binary_t();
+                    bool alpn_compatible = false;
+                    if (ticket.alpn.empty()) {
+                        alpn_compatible = offered_alpn.empty();
+                    } else if ((ticket.alpn.size() >= 2) && (static_cast<size_t>(ticket.alpn[0]) + 1 == ticket.alpn.size())) {
+                        size_t alpn_pos = 0;
+                        while (alpn_pos < offered_alpn.size()) {
+                            uint8 protocol_size = offered_alpn[alpn_pos++];
+                            if ((0 == protocol_size) || (protocol_size > offered_alpn.size() - alpn_pos)) {
+                                break;
+                            }
+                            if ((ticket.alpn.size() == static_cast<size_t>(protocol_size) + 1) &&
+                                std::equal(ticket.alpn.begin() + 1, ticket.alpn.end(), offered_alpn.begin() + alpn_pos)) {
+                                alpn_compatible = true;
+                                break;
+                            }
+                            alpn_pos += protocol_size;
+                        }
+                    }
+
+                    bool cipher_suite_offered = (std::find(_cipher_suites.begin(), _cipher_suites.end(), ticket.cipher_suite) != _cipher_suites.end());
+                    auto supported_versions = static_cast<tls_extension_client_supported_versions*>(get_extensions().get(tls_extension_type_t::supported_versions));
+                    bool tls12_only_offer = true;
+                    if (supported_versions) {
+                        for (const auto version : supported_versions->get_versions()) {
+                            if (tls1_3 == version) {
+                                tls12_only_offer = false;
+                                break;
+                            }
+                        }
+                    }
+                    const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket.cipher_suite);
+                    bool ems_offered = (nullptr != get_extensions().get(tls_extension_type_t::extended_master_secret));
+                    bool etm_offered = (nullptr != get_extensions().get(tls_extension_type_t::encrypt_then_mac));
+                    bool ticket_time_valid = (ticket.lifetime > 0) && (ticket.timestamp > 0) && (ticket.timestamp <= now_ms) &&
+                                             (now_ms - ticket.timestamp <= static_cast<uint64>(ticket.lifetime) * 1000);
+                    if (found && (false == ticket_time_valid)) {
+                        session->remove_tls12_resumption_ticket(identity);
+                    }
+                    bool ticket_state_valid = found && (false == ticket.identity.empty()) && (ticket.master_secret.size() == 48) &&
+                                              (static_cast<uint16>(tls1_2) == ticket.version) && ticket_time_valid;
+                    if (ticket_state_valid && (false == ems_offered)) {
+                        // RFC 7627 §5.3 requires aborting when an EMS session is resumed without EMS.
+                        // Apply the RFC's SHOULD-abort recommendation to non-EMS-to-non-EMS resumption too.
+                        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+                        session->reset_session_status();
+                        ret = errorcode_t::handshake_failure;
+                        __leave2_trace(ret);
+                    }
+
+                    bool ticket_valid = ticket_state_valid && (false == protection.get_secrets().get(tls_secret_t::session_id).empty()) &&
+                                        (ticket.server_name == server_name) && alpn_compatible && cipher_suite_offered && (nullptr != ticket_suite) &&
+                                        (tls1_2 == ticket_suite->spec) && (ticket.extended_master_secret == ems_offered) &&
+                                        ((false == tlsadvisor->is_kindof_cbc(ticket.cipher_suite)) || (ticket.encrypt_then_mac == etm_offered)) && tls12_only_offer;
+                    if (ticket_valid) {
+                        protection.get_secrets().assign(tls_secret_t::master, ticket.master_secret);
+                        protection.get_secrets().assign(tls_secret_t::tls12_resumption_alpn, ticket.alpn);
+                        session->get_keyvalue().set(session_tls12_ticket_candidate, 1);
+                        session->get_keyvalue().set(session_tls12_ticket_cipher_suite, ticket.cipher_suite);
+                        session->get_keyvalue().set(session_tls12_ticket_ems, ticket.extended_master_secret ? 1 : 0);
+                        session->get_keyvalue().set(session_tls12_ticket_etm, ticket.encrypt_then_mac ? 1 : 0);
+                    }
+                }
+            }
+        }
 
         // RFC 8446 4.2.6: post_handshake_auth is an empty ClientHello extension.
         auto ext_post_handshake_auth = get_extensions().get(tls_extension_type_t::post_handshake_auth);
@@ -587,7 +700,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
 
                     uint16 ticket_cipher_suite = legacy_singleton ? previous_cipher_suite : offered_tickets[i].cipher_suite;
                     const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
-                    if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec)) {
+                    if ((nullptr == ticket_suite) || (tls1_3 != ticket_suite->spec)) {
                         ret = errorcode_t::not_supported;
                         break;
                     }
@@ -1061,6 +1174,12 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             pl.get_binary(constexpr_random, random);
             // session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
             pl.get_binary(constexpr_session_id, session_id);
+            if (session_id.size() > 32) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                session->reset_session_status();
+                ret = errorcode_t::bad_format;
+                __leave2_trace(ret);
+            }
             pl.get_binary(constexpr_cookie, cookie);
             cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
             pl.get_binary(constexpr_cipher_suite, cipher_suites);
@@ -1183,6 +1302,136 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
+
+        // RFC 5246 / RFC 8446: legacy_session_id is limited to 32 bytes.
+        if (_session_id.size() > 32) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // RFC 5077: offer one cached TLS 1.2 ticket only when this
+        // ClientHello is constrained to TLS 1.2. TLS 1.3 resumption uses PSK.
+        bool tls12_only_offer = true;
+        auto supported_versions_offer = static_cast<tls_extension_client_supported_versions*>(get_extensions().get(tls_extension_type_t::supported_versions));
+        if (supported_versions_offer) {
+            for (const auto version : supported_versions_offer->get_versions()) {
+                if (tls1_3 == version) {
+                    tls12_only_offer = false;
+                    break;
+                }
+            }
+        }
+        if ((false == protection.is_kindof_tls13()) && tls12_only_offer && (tls_flow_t::one_rtt == protection.get_flow())) {
+            auto supported_versions = static_cast<tls_extension_client_supported_versions*>(get_extensions().get(tls_extension_type_t::supported_versions));
+            bool offers_tls13 = false;
+            if (supported_versions) {
+                for (const auto version : supported_versions->get_versions()) {
+                    offers_tls13 = offers_tls13 || (tls1_3 == version);
+                }
+            }
+            if (false == offers_tls13) {
+                auto ticket_extension = static_cast<tls_extension_session_ticket*>(get_extensions().get(tls_extension_type_t::session_ticket));
+                binary_t requested_identity = ticket_extension ? ticket_extension->get_ticket() : binary_t();
+                auto alpn_extension = static_cast<tls_extension_alpn*>(get_extensions().get(tls_extension_type_t::application_layer_protocol_negotiation));
+                binary_t offered_alpn = alpn_extension ? alpn_extension->get_protocols() : binary_t();
+                bool offered_ems = (nullptr != get_extensions().get(tls_extension_type_t::extended_master_secret));
+                bool offered_etm = (nullptr != get_extensions().get(tls_extension_type_t::encrypt_then_mac));
+                uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+
+                auto ticket_alpn_is_offered = [](const binary_t& offered, const binary_t& selected) -> bool {
+                    if (selected.empty()) {
+                        return offered.empty();
+                    }
+                    if ((selected.size() < 2) || (static_cast<size_t>(selected[0]) + 1 != selected.size())) {
+                        return false;
+                    }
+                    size_t pos = 0;
+                    while (pos < offered.size()) {
+                        uint8 protocol_size = offered[pos++];
+                        if ((0 == protocol_size) || (protocol_size > offered.size() - pos)) {
+                            return false;
+                        }
+                        if ((selected.size() == static_cast<size_t>(protocol_size) + 1) && std::equal(selected.begin() + 1, selected.end(), offered.begin() + pos)) {
+                            return true;
+                        }
+                        pos += protocol_size;
+                    }
+                    return false;
+                };
+
+                std::vector<tls12_resumption_ticket> cached_tickets = session->get_tls12_resumption_tickets();
+                const tls12_resumption_ticket* selected_ticket = nullptr;
+                for (const auto& ticket : cached_tickets) {
+                    if ((false == requested_identity.empty()) && (ticket.identity != requested_identity)) {
+                        continue;
+                    }
+                    if ((ticket.identity.empty()) || (ticket.identity.size() > 0xffff) || (ticket.master_secret.size() != 48) ||
+                        (static_cast<uint16>(tls1_2) != ticket.version) || (0 == ticket.lifetime) || (0 == ticket.timestamp) || (ticket.timestamp > now_ms) ||
+                        (now_ms - ticket.timestamp > static_cast<uint64>(ticket.lifetime) * 1000) || (ticket.server_name != session->get_client_server_name()) ||
+                        (false == ticket.extended_master_secret) || (ticket.extended_master_secret != offered_ems) ||
+                        (tlsadvisor->is_kindof_cbc(ticket.cipher_suite) && (ticket.encrypt_then_mac != offered_etm)) ||
+                        (false == ticket_alpn_is_offered(offered_alpn, ticket.alpn))) {
+                        continue;
+                    }
+
+                    const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket.cipher_suite);
+                    if ((nullptr == ticket_suite) || (tls1_2 != ticket_suite->spec) ||
+                        (std::find(_cipher_suites.begin(), _cipher_suites.end(), ticket.cipher_suite) == _cipher_suites.end())) {
+                        continue;
+                    }
+                    selected_ticket = &ticket;
+                    break;
+                }
+
+                if (selected_ticket) {
+                    if (nullptr == ticket_extension) {
+                        get_extensions().add(tls_extension_type_t::session_ticket, dir, this, nullptr);
+                        ticket_extension = static_cast<tls_extension_session_ticket*>(get_extensions().get(tls_extension_type_t::session_ticket));
+                    }
+                    if (ticket_extension) {
+                        ticket_extension->set_ticket(selected_ticket->identity);
+                        secrets.assign(tls_secret_t::master, selected_ticket->master_secret);
+                        secrets.assign(tls_secret_t::tls12_resumption_alpn, selected_ticket->alpn);
+                        session->get_keyvalue().set(session_tls12_ticket_candidate, 1);
+                        session->get_keyvalue().set(session_tls12_ticket_cipher_suite, selected_ticket->cipher_suite);
+                        session->get_keyvalue().set(session_tls12_ticket_identity_present, 1);
+                        session->get_keyvalue().set(session_tls12_ticket_ems, selected_ticket->extended_master_secret ? 1 : 0);
+                        session->get_keyvalue().set(session_tls12_ticket_etm, selected_ticket->encrypt_then_mac ? 1 : 0);
+
+                        // RFC 5077 §3.4 lets the client identify successful
+                        // ticket resumption by the echoed non-empty Session ID.
+                        if (_session_id.empty()) {
+                            openssl_prng prng;
+                            prng.random(_session_id, 32);
+                        }
+                        secrets.assign(tls_secret_t::session_id, _session_id);
+                    }
+                } else {
+                    session->get_keyvalue().set(session_tls12_ticket_candidate, 0);
+                    session->get_keyvalue().set(session_tls12_ticket_cipher_suite, 0);
+                    session->get_keyvalue().set(session_tls12_ticket_identity_present, requested_identity.empty() ? 0 : 1);
+
+                    // A first-time client (or one whose cached ticket expired)
+                    // requests a ticket by sending an empty SessionTicket
+                    // extension when its application enabled ticket storage.
+                    if ((nullptr == ticket_extension) && (0 != session->get_keyvalue().get(session_client_session_ticket_offer_enabled))) {
+                        get_extensions().add(tls_extension_type_t::session_ticket, dir, this, nullptr);
+                    }
+                }
+            }
+        } else if ((false == protection.is_kindof_tls13()) && (false == tls12_only_offer) && (tls_flow_t::one_rtt == protection.get_flow())) {
+            // A TLS 1.2 ticket identity must not be offered in a mixed-version
+            // ClientHello. Clear a preconfigured identity as well as avoiding
+            // selection from the TLS 1.2 cache.
+            auto ticket_extension = static_cast<tls_extension_session_ticket*>(get_extensions().get(tls_extension_type_t::session_ticket));
+            if (ticket_extension) {
+                ticket_extension->set_ticket(binary_t());
+            } else if (0 != session->get_keyvalue().get(session_client_session_ticket_offer_enabled)) {
+                // An empty extension still requests a fresh ticket if TLS 1.2
+                // is ultimately negotiated.
+                get_extensions().add(tls_extension_type_t::session_ticket, dir, this, nullptr);
+            }
+        }
 
         auto ext_psk_offer = get_extensions().get(tls_extension_type_t::pre_shared_key);
         // tls_extensions::write omits PSK and early_data when preprocessing

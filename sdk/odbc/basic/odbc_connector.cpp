@@ -104,18 +104,18 @@ return_t odbc_connector::odbc_startup() {
         ret_sql = ::SQLSetEnvAttr(SQL_NULL_HENV, SQL_ATTR_CONNECTION_POOLING, (SQLPOINTER)SQL_CP_ONE_PER_DRIVER, 0);
 
         ret_sql = ::SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HENV, &_env_handle);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             __leave2;
         }
 
         // Set the ODBC version environment attribute
         ret_sql = ::SQLSetEnvAttr(_env_handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, SQL_IS_INTEGER);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             __leave2;
         }
     }
     __finally2 {
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             if (SQL_NULL_HANDLE != _env_handle) {
                 odbc_diagnose::get_instance()->diagnose(SQL_HANDLE_ENV, (void*)_env_handle);
 

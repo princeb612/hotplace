@@ -20,7 +20,7 @@ namespace hotplace {
 namespace net {
 
 tls_protection::tls_protection()
-    : _session(nullptr), _flow(tls_flow_t::one_rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+    : _session(nullptr), _flow(tls_flow_t::one_rtt), _ciphersuite(0), _version(tls1_0), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -51,15 +51,15 @@ void tls_protection::set_cipher_suite(uint16 ciphersuite) {
 
 tls_version_t tls_protection::get_lagacy_version() {
     auto type = _session->get_type();
-    tls_version_t version = tls_version_t::tls_12;
+    tls_version_t version = tls_version_t::tls1_2;
     switch (type) {
         case session_type_t::tls:
         case session_type_t::quic:
         case session_type_t::quic2:
-            version = tls_version_t::tls_12;
+            version = tls_version_t::tls1_2;
             break;
         case session_type_t::dtls:
-            version = tls_version_t::dtls_12;
+            version = tls_version_t::dtls1_2;
             break;
     }
     return version;
@@ -102,7 +102,7 @@ size_t tls_protection::get_header_size() {
 protection_context& tls_protection::get_protection_context() { return _handshake_context; }
 
 return_t tls_protection::negotiate(tls_session* session, uint16& ciphersuite, tls_version_t& tlsversion) {
-    return session->get_tls_protection().get_protection_context().negotiate(session, tls_version_t::tls_10, tls_version_t::tls_13, ciphersuite, tlsversion);
+    return session->get_tls_protection().get_protection_context().negotiate(session, tls_version_t::tls1_0, tls_version_t::tls1_3, ciphersuite, tlsversion);
 }
 
 return_t tls_protection::negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& ciphersuite, tls_version_t& tlsversion) {

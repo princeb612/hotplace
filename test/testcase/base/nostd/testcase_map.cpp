@@ -8,7 +8,95 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/test/testcase/base/sample.hpp>
+
+typedef t_key_value<uint16, uint16> keyvalue_hook_test_t;
+
+struct keyvalue_hook_capture_t {
+    const keyvalue_hook_test_t* target;
+    int count;
+    int callback_invocations;
+    keyvalue_hook_test_t::hook_operation_t operation;
+    bool before_exists;
+    uint16 before_value;
+    bool after_exists;
+    uint16 after_value;
+
+    keyvalue_hook_capture_t()
+        : target(nullptr),
+          count(0),
+          callback_invocations(0),
+          operation(keyvalue_hook_test_t::hook_operation_t::get),
+          before_exists(false),
+          before_value(0),
+          after_exists(false),
+          after_value(0) {}
+};
+
+static void keyvalue_hook_capture(const keyvalue_hook_test_t::hook_event_t& event, void* parameter) {
+    keyvalue_hook_capture_t* capture = static_cast<keyvalue_hook_capture_t*>(parameter);
+    if (nullptr == capture) {
+        return;
+    }
+    ++capture->callback_invocations;
+
+    if ((capture->target != event.owner) || (0x2006 != event.key)) {
+        return;
+    }
+
+    ++capture->count;
+    capture->operation = event.operation;
+    capture->before_exists = event.before_exists;
+    capture->before_value = (nullptr != event.before_value) ? *event.before_value : 0;
+    capture->after_exists = event.after_exists;
+    capture->after_value = (nullptr != event.after_value) ? *event.after_value : 0;
+}
+
+void test_keyvalue_hook() {
+    _test_case.begin("t_key_value filtered observation hook");
+
+    keyvalue_hook_test_t target;
+    keyvalue_hook_test_t source;
+    keyvalue_hook_capture_t capture;
+    capture.target = &target;
+    target.set_hook(keyvalue_hook_capture, &capture);
+
+    source.set(0x2006, 99);
+    _test_case.assert(0 == capture.callback_invocations, __FUNCTION__, "hook is isolated from other instances");
+
+    target.set(0x2007, 9);
+    _test_case.assert(0 == capture.count, __FUNCTION__, "ignore an unselected key id");
+
+    target.set(0x2006, 1);
+    _test_case.assert((1 == capture.count) && (keyvalue_hook_test_t::hook_operation_t::set == capture.operation) && (false == capture.before_exists) &&
+                          capture.after_exists && (1 == capture.after_value),
+                      __FUNCTION__, "observe set for the selected key");
+
+    uint16 value = target.get(0x2006);
+    _test_case.assert(
+        (1 == value) && (2 == capture.count) && (keyvalue_hook_test_t::hook_operation_t::get == capture.operation) && capture.after_exists && (1 == capture.after_value),
+        __FUNCTION__, "observe get for the selected key");
+
+    source.set(0x2006, 0);
+    target = source;
+    _test_case.assert((3 == capture.count) && (keyvalue_hook_test_t::hook_operation_t::assign == capture.operation) && capture.before_exists &&
+                          (1 == capture.before_value) && capture.after_exists && (0 == capture.after_value),
+                      __FUNCTION__, "observe per-key replacement during assignment");
+
+    source.set(0x2006, 2);
+    target.copyfrom(&source);
+    _test_case.assert((4 == capture.count) && (keyvalue_hook_test_t::hook_operation_t::copyfrom == capture.operation) && capture.before_exists &&
+                          (0 == capture.before_value) && capture.after_exists && (2 == capture.after_value),
+                      __FUNCTION__, "observe per-key replacement during copyfrom");
+
+    target.remove(0x2006);
+    _test_case.assert((5 == capture.count) && (keyvalue_hook_test_t::hook_operation_t::remove == capture.operation) && capture.before_exists &&
+                          (2 == capture.before_value) && (false == capture.after_exists),
+                      __FUNCTION__, "observe removal for the selected key");
+
+    target.clear_hook();
+}
 
 void test_maphint() {
     _test_case.begin("maphint");
@@ -170,4 +258,5 @@ void test_mapinsert() {
 void testcase_map() {
     test_maphint();
     test_mapinsert();
+    test_keyvalue_hook();
 }

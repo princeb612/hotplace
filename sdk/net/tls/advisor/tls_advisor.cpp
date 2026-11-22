@@ -385,14 +385,14 @@ std::string tls_advisor::nameof_protection_space(protection_space_t code) {
 bool tls_advisor::is_kindof_tls13(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
-    ret = (hint && hint->spec == tls_13);
+    ret = (hint && hint->spec == tls1_3);
     return ret;
 }
 
 bool tls_advisor::is_kindof_tls12(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
-    ret = (hint && hint->spec == tls_12);
+    ret = (hint && hint->spec == tls1_2);
     return ret;
 }
 
@@ -425,14 +425,14 @@ bool tls_advisor::is_kindof(tls_version_t lhs, tls_version_t rhs) {
 bool tls_advisor::is_specof_tls13_or_later(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
-    ret = (hint && hint->spec >= tls_13);
+    ret = (hint && hint->spec >= tls1_3);
     return ret;
 }
 
 bool tls_advisor::is_specof_tls12_or_later(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
-    ret = (hint && hint->spec >= tls_12);
+    ret = (hint && hint->spec >= tls1_2);
     return ret;
 }
 

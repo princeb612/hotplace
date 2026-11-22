@@ -27,6 +27,7 @@ class HOTPLACE_NET_API tls_extension_early_data : public tls_extension {
     virtual ~tls_extension_early_data();
 
     uint32 get_max_early_data_size() const;
+    void set_max_early_data_size(uint32 value);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

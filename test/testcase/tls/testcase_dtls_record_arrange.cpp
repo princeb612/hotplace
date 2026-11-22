@@ -266,4 +266,60 @@ void testcase_dtls_record_arrange() {
         arrange.consume((sockaddr*)&addr, addrlen, epoch, seq, packet);
         _test_case.assert((1 == epoch) && (0 == seq), __FUNCTION__, "expect epoch 1 seq 0");
     }
+
+    // Isolate validation and out-of-order arrival cases with another peer.
+    struct sockaddr_in addr_test;
+    memset(&addr_test, 0, sizeof(addr_test));
+    addr_test.sin_family = AF_INET;
+    addr_test.sin_port = htons(81);
+    inet_pton(AF_INET, "127.0.0.1", &addr_test.sin_addr);
+
+    const char* seq0_hex = "16 fe fd 00 00 00 00 00 00 00 00 00 00";
+    const char* seq1_hex = "16 fe fd 00 00 00 00 00 00 00 01 00 00";
+    binary_t seq0 = base16_decode_rfc(seq0_hex);
+    binary_t seq1 = base16_decode_rfc(seq1_hex);
+
+    ret = arrange.consume((sockaddr*)&addr_test, addrlen, epoch, seq, packet);
+    _test_case.assert(errorcode_t::empty == ret, __FUNCTION__, "empty peer queue");
+    _test_case.assert((0 == epoch) && (0 == seq) && packet.empty(), __FUNCTION__, "empty consume resets outputs");
+
+    ret = arrange.produce(nullptr, addrlen, seq0.data(), seq0.size());
+    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "produce rejects null address");
+    ret = arrange.produce((sockaddr*)&addr_test, addrlen, nullptr, seq0.size());
+    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "produce rejects null stream");
+    ret = arrange.produce((sockaddr*)&addr_test, addrlen, seq0.data(), 1);
+    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "produce rejects short header");
+
+    binary_t invalid_version = base16_decode_rfc("16 03 03 00 00 00 00 00 00 00 00 00 00");
+    ret = arrange.produce((sockaddr*)&addr_test, addrlen, invalid_version.data(), invalid_version.size());
+    _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "produce rejects non-DTLS version");
+
+    binary_t invalid_length = base16_decode_rfc("16 fe fd 00 00 00 00 00 00 00 00 00 01");
+    ret = arrange.produce((sockaddr*)&addr_test, addrlen, invalid_length.data(), invalid_length.size());
+    _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "produce rejects truncated record payload");
+
+    ret = arrange.produce((sockaddr*)&addr_test, addrlen, seq1.data(), seq1.size());
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "produce accepts later sequence");
+    ret = arrange.consume((sockaddr*)&addr_test, addrlen, epoch, seq, packet);
+    _test_case.assert(errorcode_t::not_ready == ret, __FUNCTION__, "later sequence waits for missing packet");
+
+    ret = arrange.produce((sockaddr*)&addr_test, addrlen, seq0.data(), seq0.size());
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "produce accepts missing sequence");
+    ret = arrange.consume((sockaddr*)&addr_test, addrlen, epoch, seq, packet);
+    _test_case.assert((errorcode_t::success == ret) && (0 == epoch) && (0 == seq), __FUNCTION__, "consume missing sequence first");
+    ret = arrange.consume((sockaddr*)&addr_test, addrlen, epoch, seq, packet);
+    _test_case.assert((errorcode_t::success == ret) && (0 == epoch) && (1 == seq), __FUNCTION__, "consume buffered sequence next");
+    ret = arrange.consume((sockaddr*)&addr_test, addrlen, epoch, seq, packet);
+    _test_case.assert(errorcode_t::empty == ret, __FUNCTION__, "queue empty after ordered delivery");
+
+    // Verify tls_records::read propagates a malformed DTLS record instead of
+    // silently accepting the datagram.
+    {
+        tls_session parse_session(session_type_t::dtls);
+        tls_records records;
+        binary_t truncated_record = base16_decode_rfc("16 fe fd 00 00 00 00 00 00 00 00 00 02 41");
+        ret = records.read(&parse_session, from_server, truncated_record);
+        _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "read propagates truncated DTLS record body");
+        _test_case.assert(records.empty(), __FUNCTION__, "do not retain a record whose body is truncated");
+    }
 }

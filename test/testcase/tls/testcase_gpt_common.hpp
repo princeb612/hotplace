@@ -8,7 +8,69 @@
 #ifndef __HOTPLACE_TEST_TESTCASE_TLS_TESTCASEGPTCOMMON__
 #define __HOTPLACE_TEST_TESTCASE_TLS_TESTCASEGPTCOMMON__
 
+#include <set>
+
 #include "sample.hpp"
+
+inline size_t test_collect_fatal_alerts(tls_session& session, tls_direction_t dir, std::set<tls_alertdesc_t>& alerts) {
+    size_t count = 0;
+    alerts.clear();
+    session.get_alert(dir, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if (tls_alertlevel_t::fatal == level) {
+            ++count;
+            alerts.insert(desc);
+        }
+    });
+    return count;
+}
+
+struct test_tls_client_hello_view {
+    size_t record_length;
+    size_t record_end;
+    size_t handshake_length;
+    size_t handshake_end;
+    size_t extensions_length_offset;
+    size_t extensions_length;
+    size_t extensions_begin;
+    size_t extensions_end;
+};
+
+bool test_parse_client_hello_view(const binary_t& message, test_tls_client_hello_view& view);
+bool test_find_client_hello_extension(const binary_t& message, uint16 extension_type, size_t& body_pos, size_t& body_size);
+void test_append_u16(binary_t& bin, uint16 value);
+void test_append_u32(binary_t& bin, uint32 value);
+void test_write_u32(binary_t& bin, size_t pos, uint32 value);
+
+struct test_tls_extension_view {
+    size_t extensions_length_offset;
+    size_t extensions_length;
+    size_t extension_length_offset;
+    size_t extension_length;
+    size_t body_offset;
+    size_t end_offset;
+};
+
+bool test_find_tls_extension(const binary_t& message, size_t extensions_length_offset, size_t message_end, uint16 extension_type, test_tls_extension_view& view);
+
+inline size_t test_count_fatal_alert(tls_session& session, tls_direction_t dir, tls_alertdesc_t expected) {
+    size_t count = 0;
+    session.get_alert(dir, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
+        if ((tls_alertlevel_t::fatal == level) && (expected == desc)) {
+            ++count;
+        }
+    });
+    return count;
+}
+
+inline size_t test_count_fatal_alerts(tls_session& session, tls_direction_t dir) {
+    size_t count = 0;
+    session.get_alert(dir, [&](tls_alertlevel_t level, tls_alertdesc_t) {
+        if (tls_alertlevel_t::fatal == level) {
+            ++count;
+        }
+    });
+    return count;
+}
 
 class testable_tls_handshake_certificate_verify : public tls_handshake_certificate_verify {
    public:

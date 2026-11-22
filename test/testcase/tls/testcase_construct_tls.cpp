@@ -93,7 +93,7 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
             __leave2;
         }
 
-        if (tls_13 == session->get_tls_protection().get_tls_version()) {
+        if (tls1_3 == session->get_tls_protection().get_tls_version()) {
             if (session->get_session_info(dir).apply_protection()) {
                 tls_record_builder builder;
                 auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
@@ -159,7 +159,7 @@ static return_t do_test_construct_server_key_exchange(tls_session* session, tls_
             __leave2;
         }
 
-        if (tls_12 == session->get_tls_protection().get_tls_version()) {
+        if (tls1_2 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
@@ -184,7 +184,7 @@ static return_t do_test_construct_server_hello_done(tls_session* session, tls_di
             __leave2;
         }
 
-        if (tls_12 == session->get_tls_protection().get_tls_version()) {
+        if (tls1_2 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
@@ -209,7 +209,7 @@ static return_t do_test_construct_client_key_exchange(tls_session* session, tls_
             __leave2;
         }
 
-        if (tls_12 == session->get_tls_protection().get_tls_version()) {
+        if (tls1_2 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
@@ -234,7 +234,7 @@ static return_t do_test_construct_certificate_verify(tls_session* session, tls_d
             __leave2;
         }
 
-        if (tls_13 == session->get_tls_protection().get_tls_version()) {
+        if (tls1_3 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
@@ -491,7 +491,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
             _test_case.assert(svr_tlsversion == cli_tlsversion, __FUNCTION__, "TLS version %04x", svr_tlsversion);
         }
 
-        if (tls_13 == tlsversion) {
+        if (tls1_3 == tlsversion) {
             // S -> C CCS
             binary_t bin_server_change_cipher_spec;
             do_test_construct_server_change_cipher_spec(&server_session, from_server, bin_server_change_cipher_spec, "construct change_cipher_spec");
@@ -556,7 +556,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-        } else if (tls_12 == tlsversion) {
+        } else if (tls1_2 == tlsversion) {
             // S -> C SC
             binary_t bin_certificate;
             do_test_construct_certificate(&server_session, from_server, bin_certificate, "construct certificate");
@@ -699,43 +699,43 @@ void test_construct_tls() {
     TLS_OPTION testvector[] = {
         // tested
 
-        {tls_13, "TLS_AES_128_CCM_8_SHA256"},
-        {tls_13, "TLS_AES_128_CCM_SHA256"},
-        {tls_13, "TLS_AES_128_GCM_SHA256"},
-        {tls_13, "TLS_AES_256_GCM_SHA384"},
-        {tls_13, "TLS_CHACHA20_POLY1305_SHA256"},
+        {tls1_3, "TLS_AES_128_CCM_8_SHA256"},
+        {tls1_3, "TLS_AES_128_CCM_SHA256"},
+        {tls1_3, "TLS_AES_128_GCM_SHA256"},
+        {tls1_3, "TLS_AES_256_GCM_SHA384"},
+        {tls1_3, "TLS_CHACHA20_POLY1305_SHA256"},
 
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
 
         // TLS 1.2, httpserver1, curl
         // SSLKEYLOGFILE=sslkeylog curl -s https://localhost:9000/ -v --tlsv1.2 --tls-max 1.2 --http1.1 -k --ciphers TLS_ECDHE_ECDSA_WITH_AES_256_CCM
 
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
 
 #if 1
         // no test vector (feat. s_server and s_client)
         // so the actual authenticity cannot be verified...
 
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
 #endif
     };
 
@@ -755,11 +755,11 @@ void test_construct_tls() {
         }
 
 #if 0
-        test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP256r1tls13" : "brainpoolP512r1");
-        test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP384r1tls13" : "brainpoolP384r1");
-        test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP512r1tls13" : "brainpoolP256r1");
+        test_construct_tls_routine(item, (tls1_3 == item.version) ? "brainpoolP256r1tls13" : "brainpoolP512r1");
+        test_construct_tls_routine(item, (tls1_3 == item.version) ? "brainpoolP384r1tls13" : "brainpoolP384r1");
+        test_construct_tls_routine(item, (tls1_3 == item.version) ? "brainpoolP512r1tls13" : "brainpoolP256r1");
 #else
-        if (tls_12 == item.version) {
+        if (tls1_2 == item.version) {
             test_construct_tls_routine(item, "brainpoolP512r1");
             test_construct_tls_routine(item, "brainpoolP384r1");
             test_construct_tls_routine(item, "brainpoolP256r1");
@@ -774,8 +774,8 @@ void test_construct_tls() {
 void test_construct_tls13_mlkem() {
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     TLS_OPTION testvector[] = {
-        {tls_13, "TLS_AES_128_CCM_8_SHA256"}, {tls_13, "TLS_AES_128_CCM_SHA256"},       {tls_13, "TLS_AES_128_GCM_SHA256"},
-        {tls_13, "TLS_AES_256_GCM_SHA384"},   {tls_13, "TLS_CHACHA20_POLY1305_SHA256"},
+        {tls1_3, "TLS_AES_128_CCM_8_SHA256"}, {tls1_3, "TLS_AES_128_CCM_SHA256"},       {tls1_3, "TLS_AES_128_GCM_SHA256"},
+        {tls1_3, "TLS_AES_256_GCM_SHA384"},   {tls1_3, "TLS_CHACHA20_POLY1305_SHA256"},
     };
 
     auto tlsadvisor = tls_advisor::get_instance();

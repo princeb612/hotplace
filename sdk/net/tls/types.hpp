@@ -169,14 +169,14 @@ union tls_content_t {
 enum tls_version_t : uint16 {
     unknown = 0,       // internal
     draft = 1,         // internal
-    tls_13 = 0x0304,   // RFC 8446
-    tls_12 = 0x0303,   // RFC 5246
-    tls_11 = 0x0302,   // RFC 4346
-    tls_10 = 0x0301,   // RFC 2246
-    dtls_13 = 0xfefc,  // RFC 6347
-    dtls_12 = 0xfefd,  // RFC 9147
-    dtls_11 = 0xfefe,
-    dtls_10 = 0xfeff,
+    tls1_3 = 0x0304,   // RFC 8446
+    tls1_2 = 0x0303,   // RFC 5246
+    tls1_1 = 0x0302,   // RFC 4346
+    tls1_0 = 0x0301,   // RFC 2246
+    dtls1_3 = 0xfefc,  // RFC 6347
+    dtls1_2 = 0xfefd,  // RFC 9147
+    dtls1_1 = 0xfefe,
+    dtls1_0 = 0xfeff,
 };
 
 /* RFC 8446 4.  Handshake Protocol */
@@ -496,11 +496,13 @@ enum class tls_secret_t : uint16 {
     nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),
     hello_retry_request_transcript_prefix = (TLS_SECRET_USERCONTEXT | 0x10),  // RFC 9846: synthetic message_hash + HRR               //
     alpn = (TLS_SECRET_USERCONTEXT | 0x11),                                   //
+    tls12_resumption_alpn = (TLS_SECRET_USERCONTEXT | 0x38),                  // RFC 5077: ALPN bound to a cached TLS 1.2 ticket
     client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),                      //
     server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),                      //
     segment = (TLS_SECRET_USERCONTEXT | 0x1a),                                //
     fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                               // DTLS Handshake, QUIC FRAME CRYPTO
     new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),                     // RFC 8446 4.6.1. ticket
+    new_session_ticket_pending = (TLS_SECRET_USERCONTEXT | 0x1e),             // RFC 5077: pending until server Finished is authenticated
     resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x21),                  // CH 0-RTT
     resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x22),                // CH 0-RTT
     resumption_finished = (TLS_SECRET_USERCONTEXT | 0x23),                    // CH 0-RTT

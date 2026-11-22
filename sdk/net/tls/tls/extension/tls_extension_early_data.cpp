@@ -33,6 +33,8 @@ tls_extension_early_data::~tls_extension_early_data() {}
 
 uint32 tls_extension_early_data::get_max_early_data_size() const { return _max_early_data_size; }
 
+void tls_extension_early_data::set_max_early_data_size(uint32 value) { _max_early_data_size = value; }
+
 return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -147,6 +149,13 @@ return_t tls_extension_early_data::do_write_body(tls_direction_t dir, binary_t& 
                          ((tls_handshake_type_t::new_session_ticket == handshake->get_type()) && (from_server == dir));
     if (false == valid_context) {
         return errorcode_t::invalid_parameter;
+    }
+
+    // NewSessionTicket carries the per-ticket uint32 allowance; the other
+    // two contexts use the empty EarlyDataIndication structure.
+    if (tls_handshake_type_t::new_session_ticket == handshake->get_type()) {
+        binary_append(bin, _max_early_data_size, hton32);
+        return errorcode_t::success;
     }
 
     // RFC 8446 §4.2.10: a client MUST NOT include early_data in ClientHello2.

@@ -415,11 +415,11 @@ void testcase_construct_dtls13() {
     const OPTION& option = _cmdline->value();
 
     TLS_OPTION testvector[] = {
-        {tls_version_t::dtls_13, "TLS_AES_128_CCM_8_SHA256"},      //
-        {tls_version_t::dtls_13, "TLS_AES_128_CCM_SHA256"},        //
-        {tls_version_t::dtls_13, "TLS_AES_128_GCM_SHA256"},        //
-        {tls_version_t::dtls_13, "TLS_AES_256_GCM_SHA384"},        //
-        {tls_version_t::dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},  //
+        {tls_version_t::dtls1_3, "TLS_AES_128_CCM_8_SHA256"},      //
+        {tls_version_t::dtls1_3, "TLS_AES_128_CCM_SHA256"},        //
+        {tls_version_t::dtls1_3, "TLS_AES_128_GCM_SHA256"},        //
+        {tls_version_t::dtls1_3, "TLS_AES_256_GCM_SHA384"},        //
+        {tls_version_t::dtls1_3, "TLS_CHACHA20_POLY1305_SHA256"},  //
     };
 
     auto tlsadvisor = tls_advisor::get_instance();

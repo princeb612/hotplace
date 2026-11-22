@@ -29,11 +29,11 @@ static return_t validate_change_cipher_spec_phase(tls_session* session, tls_dire
 
     auto& protection = session->get_tls_protection();
     auto negotiated_version = (tls_version_t)session->get_keyvalue().get(session_tls_version);
-    bool tls13 = protection.is_kindof_tls13() || (tls_13 == negotiated_version) || (dtls_13 == negotiated_version);
+    bool tls13 = protection.is_kindof_tls13() || (tls1_3 == negotiated_version) || (dtls1_3 == negotiated_version);
     if ((false == tls13) && (tls_version_t{} == negotiated_version)) {
         auto& context = protection.get_protection_context();
         context.for_each_supported_versions([&tls13](tls_version_t version, bool* stop) -> void {
-            if ((tls_13 == version) || (dtls_13 == version)) {
+            if ((tls1_3 == version) || (dtls1_3 == version)) {
                 tls13 = true;
                 *stop = true;
             }
@@ -48,15 +48,20 @@ static return_t validate_change_cipher_spec_phase(tls_session* session, tls_dire
             return errorcode_t::unexpected;
         }
 
-        // Match the TLS 1.2 Finished prerequisites: the client may switch
-        // after ServerKeyExchange and ClientKeyExchange; the server switches
-        // only after the client's Finished. Each endpoint must send CCS
-        // before its own Finished.
+        // Full TLS 1.2 handshakes switch the server after Client Finished.
+        // RFC 5077 abbreviated handshakes switch the server first and the
+        // client only after Server Finished. Each endpoint sends CCS before
+        // its own Finished.
         uint32 status = session->get_session_status();
         uint32 prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
         bool sender_is_client = (from_client == dir);
+        bool abbreviated = protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed));
         if (false == sender_is_client) {
-            prerequisite |= session_status_client_finished;
+            if (false == abbreviated) {
+                prerequisite |= session_status_client_finished;
+            }
+        } else if (abbreviated) {
+            prerequisite |= session_status_server_finished;
         }
         uint32 sender_finished = sender_is_client ? session_status_client_finished : session_status_server_finished;
         if ((prerequisite != (prerequisite & status)) || (0 != (status & sender_finished))) {
@@ -86,14 +91,14 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
         auto& protection = session->get_tls_protection();
         auto negotiated_version = (tls_version_t)session->get_keyvalue().get(session_tls_version);
         bool negotiated = (tls_version_t{} != negotiated_version);
-        bool tls13 = protection.is_kindof_tls13() || (tls_13 == negotiated_version) || (dtls_13 == negotiated_version);
+        bool tls13 = protection.is_kindof_tls13() || (tls1_3 == negotiated_version) || (dtls1_3 == negotiated_version);
         if ((false == negotiated) && (false == tls13)) {
             // Before ServerHello, a TLS 1.3 offer may be followed by a
             // compatibility CCS. Do not infer the negotiated version from the
             // ClientHello offer once ServerHello has selected a version.
             auto& context = protection.get_protection_context();
             context.for_each_supported_versions([&tls13](tls_version_t version, bool* stop) -> void {
-                if ((tls_13 == version) || (dtls_13 == version)) {
+                if ((tls1_3 == version) || (dtls1_3 == version)) {
                     tls13 = true;
                     *stop = true;
                 }

@@ -7,18 +7,13 @@
 
 #include "testcase_gpt_common.hpp"
 
-static void test_tls13_key_usage_limits() {
+static void test_tls13_aes_gcm_key_usage_boundaries(const char* function_name) {
+    // Scenario under test: TLS 1.3 AES-GCM per-key record and plaintext-byte limits.
+    // Action: exercise the AES-128-GCM record ceiling, AES-128-GCM byte ceiling, and AES-256-GCM record ceiling.
+    // Expected: reserve the fatal-alert margin and reject application records beyond the configured usage boundary.
     constexpr uint64 aes_max_records = 23726566ULL;
     constexpr uint64 aes_max_plaintext = 388736063996ULL;
-    constexpr uint64 ccm_max_records = (1ULL << 21);
-    constexpr uint64 ccm_max_plaintext = (1ULL << 35);
     const binary_t plaintext{'x', (byte_t)tls_content_type_t::application_data};
-
-    // Scenario under test: TLS 1.3 per-key AEAD usage limits.
-    // Action: allow the final AES-GCM application record while reserving one alert slot.
-    // Expected: leave an alert record and one additional safety record unused.
-    _test_case.begin("TLS 1.3 per-key AEAD usage limits");
-
     {
         tls_session writer;
         tls_session reader;
@@ -30,49 +25,44 @@ static void test_tls13_key_usage_limits() {
         test_tls13_inner_plaintext_writer record(&writer);
         binary_t wire;
         return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-        _test_case.test(ret, __FUNCTION__, "allow the final AES-GCM application record while reserving one alert slot");
+        _test_case.test(ret, function_name, "allow the final AES-GCM application record while reserving one alert slot");
         if (errorcode_t::success == ret) {
             uint64 writer_recordno = writer.get_recordno(from_client);
-            _test_case.assert((aes_max_records - 2) == writer_recordno, __FUNCTION__, "leave an alert record and one additional safety record unused");
+            _test_case.assert((aes_max_records - 2) == writer_recordno, function_name, "leave an alert record and one additional safety record unused");
             auto& writer_usage = writer.get_session_info(from_client).get_keyvalue();
             uint64 writer_usage_bytes = writer_usage.get(session_tls13_key_usage_bytes);
-            _test_case.assert(plaintext.size() == writer_usage_bytes, __FUNCTION__, "account the complete TLSInnerPlaintext bytes encrypted under the key");
+            _test_case.assert(plaintext.size() == writer_usage_bytes, function_name, "account the complete TLSInnerPlaintext bytes encrypted under the key");
 
             tls_records records;
             ret = records.read(&reader, from_client, wire);
-            _test_case.test(ret, __FUNCTION__, "receiver accepts a valid record at the sender's usage boundary");
+            _test_case.test(ret, function_name, "receiver accepts a valid record at the sender's usage boundary");
             uint64 reader_recordno = reader.get_recordno(from_client);
-            _test_case.assert((aes_max_records - 2) == reader_recordno, __FUNCTION__, "receiver advances its sequence without enforcing sender usage limits");
+            _test_case.assert((aes_max_records - 2) == reader_recordno, function_name, "receiver advances its sequence without enforcing sender usage limits");
 
             test_tls13_inner_plaintext_writer blocked(&writer);
             binary_t blocked_wire;
             ret = blocked.write_inner_plaintext(from_client, plaintext, blocked_wire);
-            _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), __FUNCTION__, "do not emit a record beyond the AES-GCM usage limit");
+            _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), function_name, "do not emit a record beyond the AES-GCM usage limit");
             writer_recordno = writer.get_recordno(from_client);
-            _test_case.assert((aes_max_records - 2) == writer_recordno, __FUNCTION__, "do not advance the record number after limit rejection");
+            _test_case.assert((aes_max_records - 2) == writer_recordno, function_name, "do not advance the record number after limit rejection");
 
             test_tls13_inner_plaintext_writer blocked_again(&writer);
             binary_t blocked_again_wire;
             ret = blocked_again.write_inner_plaintext(from_client, plaintext, blocked_again_wire);
-            _test_case.assert(errorcode_t::exceed == ret && blocked_again_wire.empty(), __FUNCTION__, "keep the exhausted key from encrypting additional data");
+            _test_case.assert(errorcode_t::exceed == ret && blocked_again_wire.empty(), function_name, "keep the exhausted key from encrypting additional data");
 
-            size_t fatal_count = 0;
-            writer.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-                    ++fatal_count;
-                }
-            });
-            _test_case.assert(1 == fatal_count, __FUNCTION__, "queue one fatal internal_error when the key usage limit is reached");
+            size_t fatal_count = test_count_fatal_alert(writer, from_client, tls_alertdesc_t::internal_error);
+            _test_case.assert(1 == fatal_count, function_name, "queue one fatal internal_error when the key usage limit is reached");
             uint32 writer_status = writer.get_session_status();
-            _test_case.assert((session_status_server_hello & writer_status) != 0, __FUNCTION__, "preserve handshake state so the queued fatal alert can be sent");
+            _test_case.assert((session_status_server_hello & writer_status) != 0, function_name, "preserve handshake state so the queued fatal alert can be sent");
 
             const binary_t alert_plaintext{2, (byte_t)tls_alertdesc_t::internal_error, (byte_t)tls_content_type_t::alert};
             test_tls13_inner_plaintext_writer alert_record(&writer);
             binary_t alert_wire;
             ret = alert_record.write_inner_plaintext(from_client, alert_plaintext, alert_wire);
-            _test_case.test(ret, __FUNCTION__, "allow the reserved fatal Alert record while staying below the ceiling");
+            _test_case.test(ret, function_name, "allow the reserved fatal Alert record while staying below the ceiling");
             writer_recordno = writer.get_recordno(from_client);
-            _test_case.assert((aes_max_records - 1) == writer_recordno, __FUNCTION__, "send the fatal Alert while remaining strictly below the record ceiling");
+            _test_case.assert((aes_max_records - 1) == writer_recordno, function_name, "send the fatal Alert while remaining strictly below the record ceiling");
         }
     }
 
@@ -85,24 +75,24 @@ static void test_tls13_key_usage_limits() {
         test_tls13_inner_plaintext_writer record(&writer);
         binary_t wire;
         return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-        _test_case.test(ret, __FUNCTION__, "allow plaintext usage up to the reserved fatal-alert boundary");
+        _test_case.test(ret, function_name, "allow plaintext usage up to the reserved fatal-alert boundary");
         uint64 usage_bytes = usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert((aes_max_plaintext - 6) == usage_bytes, __FUNCTION__, "leave the fatal-alert reserve and a further safety margin");
+        _test_case.assert((aes_max_plaintext - 6) == usage_bytes, function_name, "leave the fatal-alert reserve and a further safety margin");
 
         test_tls13_inner_plaintext_writer blocked(&writer);
         binary_t blocked_wire;
         ret = blocked.write_inner_plaintext(from_client, plaintext, blocked_wire);
-        _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), __FUNCTION__, "reject the byte-limit crossing before encryption");
+        _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), function_name, "reject the byte-limit crossing before encryption");
         usage_bytes = usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert((aes_max_plaintext - 6) == usage_bytes, __FUNCTION__, "do not account plaintext from a rejected encryption attempt");
+        _test_case.assert((aes_max_plaintext - 6) == usage_bytes, function_name, "do not account plaintext from a rejected encryption attempt");
 
         const binary_t alert_plaintext{2, (byte_t)tls_alertdesc_t::internal_error, (byte_t)tls_content_type_t::alert};
         test_tls13_inner_plaintext_writer alert_record(&writer);
         binary_t alert_wire;
         ret = alert_record.write_inner_plaintext(from_client, alert_plaintext, alert_wire);
-        _test_case.test(ret, __FUNCTION__, "allow the fatal Alert to consume the reserved plaintext bytes");
+        _test_case.test(ret, function_name, "allow the fatal Alert to consume the reserved plaintext bytes");
         usage_bytes = usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert((aes_max_plaintext - 3) == usage_bytes, __FUNCTION__, "send the fatal Alert while remaining below the plaintext ceiling");
+        _test_case.assert((aes_max_plaintext - 3) == usage_bytes, function_name, "send the fatal Alert while remaining below the plaintext ceiling");
     }
 
     {
@@ -114,9 +104,18 @@ static void test_tls13_key_usage_limits() {
         test_tls13_inner_plaintext_writer record(&writer);
         binary_t wire;
         return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-        _test_case.assert(errorcode_t::exceed == ret && wire.empty(), __FUNCTION__, "refuse AES-256-GCM encryption at its per-key record boundary");
+        _test_case.assert(errorcode_t::exceed == ret && wire.empty(), function_name, "refuse AES-256-GCM encryption at its per-key record boundary");
     }
+}
 
+static void test_tls13_ccm_and_aes256_key_usage_boundaries(const char* function_name) {
+    // Scenario under test: TLS 1.3 AES-CCM and AES-256-GCM per-key usage limits.
+    // Action: exercise record-count and plaintext-byte ceilings for both AEAD families.
+    // Expected: reject the first record or byte beyond each cipher suite's usage budget.
+    constexpr uint64 aes_max_plaintext = 388736063996ULL;
+    constexpr uint64 ccm_max_records = (1ULL << 21);
+    constexpr uint64 ccm_max_plaintext = (1ULL << 35);
+    const binary_t plaintext{'x', (byte_t)tls_content_type_t::application_data};
     {
         const uint16 ccm_suites[] = {0x1304, 0x1305};
         for (size_t i = 0; i < 2; ++i) {
@@ -128,7 +127,7 @@ static void test_tls13_key_usage_limits() {
             test_tls13_inner_plaintext_writer record(&writer);
             binary_t wire;
             return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-            _test_case.assert(errorcode_t::exceed == ret && wire.empty(), __FUNCTION__, "refuse AES-CCM encryption at its per-key record boundary");
+            _test_case.assert(errorcode_t::exceed == ret && wire.empty(), function_name, "refuse AES-CCM encryption at its per-key record boundary");
         }
     }
 
@@ -142,14 +141,14 @@ static void test_tls13_key_usage_limits() {
         test_tls13_inner_plaintext_writer record(&writer);
         binary_t wire;
         return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-        _test_case.test(ret, __FUNCTION__, "allow AES-256-GCM plaintext usage up to its reserved-alert boundary");
+        _test_case.test(ret, function_name, "allow AES-256-GCM plaintext usage up to its reserved-alert boundary");
         uint64 usage_bytes = usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert((aes_max_plaintext - 6) == usage_bytes, __FUNCTION__, "apply the AES-256-GCM per-key plaintext-byte ceiling");
+        _test_case.assert((aes_max_plaintext - 6) == usage_bytes, function_name, "apply the AES-256-GCM per-key plaintext-byte ceiling");
 
         test_tls13_inner_plaintext_writer blocked(&writer);
         binary_t blocked_wire;
         ret = blocked.write_inner_plaintext(from_client, plaintext, blocked_wire);
-        _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), __FUNCTION__, "do not encrypt beyond the AES-256-GCM byte limit");
+        _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), function_name, "do not encrypt beyond the AES-256-GCM byte limit");
     }
 
     {
@@ -164,17 +163,24 @@ static void test_tls13_key_usage_limits() {
             test_tls13_inner_plaintext_writer record(&writer);
             binary_t wire;
             return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-            _test_case.test(ret, __FUNCTION__, "allow AES-CCM plaintext usage up to its reserved-alert boundary");
+            _test_case.test(ret, function_name, "allow AES-CCM plaintext usage up to its reserved-alert boundary");
             uint64 usage_bytes = usage.get(session_tls13_key_usage_bytes);
-            _test_case.assert((ccm_max_plaintext - 6) == usage_bytes, __FUNCTION__, "apply the AES-CCM per-key plaintext-byte ceiling");
+            _test_case.assert((ccm_max_plaintext - 6) == usage_bytes, function_name, "apply the AES-CCM per-key plaintext-byte ceiling");
 
             test_tls13_inner_plaintext_writer blocked(&writer);
             binary_t blocked_wire;
             ret = blocked.write_inner_plaintext(from_client, plaintext, blocked_wire);
-            _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), __FUNCTION__, "do not encrypt beyond the AES-CCM byte limit");
+            _test_case.assert(errorcode_t::exceed == ret && blocked_wire.empty(), function_name, "do not encrypt beyond the AES-CCM byte limit");
         }
     }
+}
 
+static void test_tls13_chacha_early_data_and_directional_usage_limits(const char* function_name) {
+    // Scenario under test: TLS 1.3 ChaCha20, early-data, and directional key-usage limits.
+    // Action: test sequence exhaustion, non-updatable 0-RTT exhaustion, and key-change counter resets.
+    // Expected: reserve the fatal-alert margin, require closure for exhausted early-data keys, and reset only the changed direction.
+    constexpr uint64 aes_max_records = 23726566ULL;
+    const binary_t plaintext{'x', (byte_t)tls_content_type_t::application_data};
     {
         tls_session writer;
         test_configure_tls13_inner_plaintext_session(writer);
@@ -184,15 +190,15 @@ static void test_tls13_key_usage_limits() {
         test_tls13_inner_plaintext_writer record(&writer);
         binary_t wire;
         return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-        _test_case.assert(errorcode_t::exceed == ret && wire.empty(), __FUNCTION__, "refuse application encryption before the 64-bit record sequence wraps");
+        _test_case.assert(errorcode_t::exceed == ret && wire.empty(), function_name, "refuse application encryption before the 64-bit record sequence wraps");
 
         const binary_t alert_plaintext{2, (byte_t)tls_alertdesc_t::internal_error, (byte_t)tls_content_type_t::alert};
         test_tls13_inner_plaintext_writer alert_record(&writer);
         binary_t alert_wire;
         ret = alert_record.write_inner_plaintext(from_client, alert_plaintext, alert_wire);
-        _test_case.test(ret, __FUNCTION__, "allow the reserved ChaCha20-Poly1305 Alert sequence without approaching wrap");
+        _test_case.test(ret, function_name, "allow the reserved ChaCha20-Poly1305 Alert sequence without approaching wrap");
         uint64 writer_recordno = writer.get_recordno(from_client);
-        _test_case.assert((~static_cast<uint64>(0)) - 1 == writer_recordno, __FUNCTION__, "stop before the ChaCha20 sequence reaches its terminal value");
+        _test_case.assert((~static_cast<uint64>(0)) - 1 == writer_recordno, function_name, "stop before the ChaCha20 sequence reaches its terminal value");
     }
 
     {
@@ -213,13 +219,13 @@ static void test_tls13_key_usage_limits() {
         test_tls13_inner_plaintext_writer record(&writer);
         binary_t wire;
         return_t ret = record.write_inner_plaintext(from_client, plaintext, wire);
-        _test_case.assert(errorcode_t::exceed == ret && wire.empty(), __FUNCTION__, "do not rely on KeyUpdate for non-updatable early data");
+        _test_case.assert(errorcode_t::exceed == ret && wire.empty(), function_name, "do not rely on KeyUpdate for non-updatable early data");
 
         const binary_t alert_plaintext{2, (byte_t)tls_alertdesc_t::internal_error, (byte_t)tls_content_type_t::alert};
         test_tls13_inner_plaintext_writer alert_record(&writer);
         binary_t alert_wire;
         ret = alert_record.write_inner_plaintext(from_client, alert_plaintext, alert_wire);
-        _test_case.assert(errorcode_t::exceed == ret && alert_wire.empty(), __FUNCTION__, "require transport closure when early-data key usage is exhausted");
+        _test_case.assert(errorcode_t::exceed == ret && alert_wire.empty(), function_name, "require transport closure when early-data key usage is exhausted");
     }
 
     {
@@ -232,12 +238,23 @@ static void test_tls13_key_usage_limits() {
         session.reset_recordno(from_client);
         uint64 reset_client_usage_bytes = client_usage.get(session_tls13_key_usage_bytes);
         uint64 unchanged_server_usage_bytes = server_usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert(0 == reset_client_usage_bytes, __FUNCTION__, "reset byte accounting for the direction whose traffic key changed");
-        _test_case.assert(77 == unchanged_server_usage_bytes, __FUNCTION__, "preserve the opposite direction's independent key usage counter");
+        _test_case.assert(0 == reset_client_usage_bytes, function_name, "reset byte accounting for the direction whose traffic key changed");
+        _test_case.assert(77 == unchanged_server_usage_bytes, function_name, "preserve the opposite direction's independent key usage counter");
         session.reset_recordno(from_server);
         uint64 reset_server_usage_bytes = server_usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert(0 == reset_server_usage_bytes, __FUNCTION__, "reset byte accounting when the opposite directional key changes");
+        _test_case.assert(0 == reset_server_usage_bytes, function_name, "reset byte accounting when the opposite directional key changes");
     }
+}
+
+static void test_tls13_key_usage_limits() {
+    // Scenario under test: TLS 1.3 per-key AEAD usage limits.
+    // Action: check AES-GCM, AES-CCM, ChaCha20, early-data, and directional reset boundaries.
+    // Expected: enforce record and plaintext-byte ceilings while preserving the fatal-alert reserve.
+    _test_case.begin("TLS 1.3 per-key AEAD usage limits");
+
+    test_tls13_aes_gcm_key_usage_boundaries(__FUNCTION__);
+    test_tls13_ccm_and_aes256_key_usage_boundaries(__FUNCTION__);
+    test_tls13_chacha_early_data_and_directional_usage_limits(__FUNCTION__);
 }
 
 static void test_tls13_inner_plaintext_padding_and_content_type() {
@@ -316,7 +333,7 @@ static void test_tls13_inner_plaintext_padding_and_content_type() {
 
     {
         tls_session handshake_writer;
-        handshake_writer.get_tls_protection().set_tls_version(tls_13);
+        handshake_writer.get_tls_protection().set_tls_version(tls1_3);
         tls_handshake_certificate_request request(&handshake_writer);
         auto algorithms = new tls_extension_signature_algorithms(&request);
         algorithms->add(tls_sigscheme_t::rsa_pss_rsae_sha256);
@@ -351,17 +368,12 @@ static void test_tls13_inner_plaintext_padding_and_content_type() {
         tls_records records;
         return_t ret = test_read_tls13_inner_plaintext(plaintext, from_client, reader, records);
         _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "%s: reject malformed TLSInnerPlaintext", label);
-        _test_case.assert(1 == reader.get_session_info(from_client).get_recordno(false), __FUNCTION__,
-                          "%s: authenticate the record before rejecting its empty or malformed TLSInnerPlaintext", label);
+        uint64 recordno_after_read = reader.get_session_info(from_client).get_recordno(false);
+        _test_case.assert(1 == recordno_after_read, __FUNCTION__, "%s: authenticate the record before rejecting its empty or malformed TLSInnerPlaintext", label);
 
         size_t fatal_alert_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_alert_count;
-                fatal_alerts.insert(desc);
-            }
-        });
+        fatal_alert_count = test_collect_fatal_alerts(reader, from_client, fatal_alerts);
         _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{expected_alert}, __FUNCTION__, "%s: queue exactly one expected fatal alert",
                           label);
         _test_case.assert(0 == reader.get_session_status(), __FUNCTION__, "%s: reset session state", label);
@@ -379,6 +391,7 @@ static void test_tls13_inner_plaintext_padding_and_content_type() {
 }
 
 static void test_tls_record_size_limits() {
+    // Action: Action: construct TLS records at and beyond the plaintext and ciphertext size ceilings.
     // Scenario under test: TLS record plaintext and ciphertext size limits.
     // Expected: allow TLS 1.3 plaintext header length at 2^14.
     _test_case.begin("TLS record plaintext and ciphertext size limits");
@@ -386,23 +399,18 @@ static void test_tls_record_size_limits() {
     // Inbound TLS 1.3: plaintext records are limited to 2^14; protected records to 2^14+256.
     {
         tls_session session;
-        return_t ret = test_read_tls_record_header_size(tls_13, false, 16384, session);
+        return_t ret = test_read_tls_record_header_size(tls1_3, false, 16384, session);
         _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "allow TLS 1.3 plaintext header length at 2^14");
-        ret = test_read_tls_record_header_size(tls_13, false, 16385, session);
+        ret = test_read_tls_record_header_size(tls1_3, false, 16385, session);
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject TLS 1.3 plaintext fragment above 2^14");
     }
     {
         tls_session session;
-        return_t ret = test_read_tls_record_header_size(tls_13, true, 16640, session);
+        return_t ret = test_read_tls_record_header_size(tls1_3, true, 16640, session);
         _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "allow TLS 1.3 ciphertext header length at 2^14+256");
-        ret = test_read_tls_record_header_size(tls_13, true, 16641, session);
+        ret = test_read_tls_record_header_size(tls1_3, true, 16641, session);
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject TLS 1.3 ciphertext fragment above 2^14+256");
-        size_t fatal_alert_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level && tls_alertdesc_t::record_overflow == desc) {
-                ++fatal_alert_count;
-            }
-        });
+        size_t fatal_alert_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::record_overflow);
         _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue one fatal record_overflow alert");
     }
 
@@ -411,62 +419,64 @@ static void test_tls_record_size_limits() {
     {
         tls_session session;
         tls_records records;
-        return_t ret = test_read_tls_record_fragment_size(tls_13, true, 16641, session, records);
+        return_t ret = test_read_tls_record_fragment_size(tls1_3, true, 16641, session, records);
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject oversized TLS 1.3 ciphertext through tls_records::read");
         _test_case.assert(0 == records.size(), __FUNCTION__, "do not publish a record rejected by the receive path");
 
-        size_t fatal_alert_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level && tls_alertdesc_t::record_overflow == desc) {
-                ++fatal_alert_count;
-            }
-        });
+        size_t fatal_alert_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::record_overflow);
         _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue one fatal record_overflow alert through the receive path");
     }
 
     // Inbound TLS 1.2 retains its 2^14 plaintext and 2^14+2048 ciphertext limits.
     {
         tls_session session;
-        return_t ret = test_read_tls_record_header_size(tls_12, false, 16384, session);
+        return_t ret = test_read_tls_record_header_size(tls1_2, false, 16384, session);
         _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "allow TLS 1.2 plaintext header length at 2^14");
-        ret = test_read_tls_record_header_size(tls_12, false, 16385, session);
+        ret = test_read_tls_record_header_size(tls1_2, false, 16385, session);
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject TLS 1.2 plaintext fragment above 2^14");
     }
     {
         tls_session session;
-        return_t ret = test_read_tls_record_header_size(tls_12, true, 18432, session);
+        return_t ret = test_read_tls_record_header_size(tls1_2, true, 18432, session);
         _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "allow TLS 1.2 ciphertext header length at 2^14+2048");
-        ret = test_read_tls_record_header_size(tls_12, true, 18433, session);
+        ret = test_read_tls_record_header_size(tls1_2, true, 18433, session);
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject TLS 1.2 ciphertext fragment above 2^14+2048");
     }
 
     // Exercise the normal do_write_header() path as well as the raw header helper.
     // A size-validation error must be returned to the caller, not silently discarded.
-    _test_case.assert(errorcode_t::success == test_write_tls_record_header_path(tls_13, 16384), __FUNCTION__,
-                      "propagate TLS 1.3 plaintext boundary through record writer");
-    _test_case.assert(errorcode_t::exceed == test_write_tls_record_header_path(tls_13, 16385), __FUNCTION__,
-                      "propagate TLS 1.3 plaintext size rejection through record writer");
-    _test_case.assert(errorcode_t::success == test_write_tls_record_header_path(tls_12, 16384), __FUNCTION__,
-                      "propagate TLS 1.2 plaintext boundary through record writer");
-    _test_case.assert(errorcode_t::exceed == test_write_tls_record_header_path(tls_12, 16385), __FUNCTION__,
-                      "propagate TLS 1.2 plaintext size rejection through record writer");
+    return_t write_ret = test_write_tls_record_header_path(tls1_3, 16384);
+    _test_case.assert(errorcode_t::success == write_ret, __FUNCTION__, "propagate TLS 1.3 plaintext boundary through record writer");
+    write_ret = test_write_tls_record_header_path(tls1_3, 16385);
+    _test_case.assert(errorcode_t::exceed == write_ret, __FUNCTION__, "propagate TLS 1.3 plaintext size rejection through record writer");
+    write_ret = test_write_tls_record_header_path(tls1_2, 16384);
+    _test_case.assert(errorcode_t::success == write_ret, __FUNCTION__, "propagate TLS 1.2 plaintext boundary through record writer");
+    write_ret = test_write_tls_record_header_path(tls1_2, 16385);
+    _test_case.assert(errorcode_t::exceed == write_ret, __FUNCTION__, "propagate TLS 1.2 plaintext size rejection through record writer");
 
     // Outbound record serialization uses the matching negotiated-version and protection-state limit.
-    _test_case.assert(errorcode_t::success == test_write_tls_record_fragment_size(tls_13, false, 16384), __FUNCTION__, "write TLS 1.3 plaintext fragment at 2^14");
-    _test_case.assert(errorcode_t::exceed == test_write_tls_record_fragment_size(tls_13, false, 16385), __FUNCTION__, "reject TLS 1.3 plaintext fragment above 2^14");
-    _test_case.assert(errorcode_t::success == test_write_tls_record_fragment_size(tls_13, true, 16640), __FUNCTION__, "write TLS 1.3 ciphertext fragment at 2^14+256");
-    _test_case.assert(errorcode_t::exceed == test_write_tls_record_fragment_size(tls_13, true, 16641), __FUNCTION__, "reject TLS 1.3 ciphertext fragment above 2^14+256");
+    write_ret = test_write_tls_record_fragment_size(tls1_3, false, 16384);
+    _test_case.assert(errorcode_t::success == write_ret, __FUNCTION__, "write TLS 1.3 plaintext fragment at 2^14");
+    write_ret = test_write_tls_record_fragment_size(tls1_3, false, 16385);
+    _test_case.assert(errorcode_t::exceed == write_ret, __FUNCTION__, "reject TLS 1.3 plaintext fragment above 2^14");
+    write_ret = test_write_tls_record_fragment_size(tls1_3, true, 16640);
+    _test_case.assert(errorcode_t::success == write_ret, __FUNCTION__, "write TLS 1.3 ciphertext fragment at 2^14+256");
+    write_ret = test_write_tls_record_fragment_size(tls1_3, true, 16641);
+    _test_case.assert(errorcode_t::exceed == write_ret, __FUNCTION__, "reject TLS 1.3 ciphertext fragment above 2^14+256");
 
-    _test_case.assert(errorcode_t::success == test_write_tls_record_fragment_size(tls_12, false, 16384), __FUNCTION__, "write TLS 1.2 plaintext fragment at 2^14");
-    _test_case.assert(errorcode_t::exceed == test_write_tls_record_fragment_size(tls_12, false, 16385), __FUNCTION__, "reject TLS 1.2 plaintext fragment above 2^14");
-    _test_case.assert(errorcode_t::success == test_write_tls_record_fragment_size(tls_12, true, 18432), __FUNCTION__, "write TLS 1.2 ciphertext fragment at 2^14+2048");
-    _test_case.assert(errorcode_t::exceed == test_write_tls_record_fragment_size(tls_12, true, 18433), __FUNCTION__,
-                      "reject TLS 1.2 ciphertext fragment above 2^14+2048");
+    write_ret = test_write_tls_record_fragment_size(tls1_2, false, 16384);
+    _test_case.assert(errorcode_t::success == write_ret, __FUNCTION__, "write TLS 1.2 plaintext fragment at 2^14");
+    write_ret = test_write_tls_record_fragment_size(tls1_2, false, 16385);
+    _test_case.assert(errorcode_t::exceed == write_ret, __FUNCTION__, "reject TLS 1.2 plaintext fragment above 2^14");
+    write_ret = test_write_tls_record_fragment_size(tls1_2, true, 18432);
+    _test_case.assert(errorcode_t::success == write_ret, __FUNCTION__, "write TLS 1.2 ciphertext fragment at 2^14+2048");
+    write_ret = test_write_tls_record_fragment_size(tls1_2, true, 18433);
+    _test_case.assert(errorcode_t::exceed == write_ret, __FUNCTION__, "reject TLS 1.2 ciphertext fragment above 2^14+2048");
 
     // DTLS 1.2 uses the same negotiated plaintext limit; oversized inbound records may be rejected with record_overflow.
     {
         tls_session session(session_type_t::dtls);
-        session.get_tls_protection().set_tls_version(tls_version_t::dtls_12);
+        session.get_tls_protection().set_tls_version(tls_version_t::dtls1_2);
         session.get_session_info(from_client).begin_protection();
         session.get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 64);
         test_tls_record_size_probe record(&session);
@@ -474,10 +484,7 @@ static void test_tls_record_size_limits() {
         _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "accept DTLS 1.2 plaintext at negotiated receive limit");
         ret = record.validate_plaintext_size(from_client, 65);
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject DTLS 1.2 plaintext above negotiated receive limit");
-        size_t overflow_alert_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::record_overflow == desc)) ++overflow_alert_count;
-        });
+        size_t overflow_alert_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::record_overflow);
         _test_case.assert(1 == overflow_alert_count, __FUNCTION__, "queue fatal record_overflow for oversized DTLS 1.2 plaintext");
     }
 
@@ -489,7 +496,7 @@ static void test_tls_record_size_limits() {
             return_t write_inner(tls_direction_t dir, const binary_t& plaintext, binary_t& record) { return do_write_header(dir, record, plaintext); }
         };
         tls_session session(session_type_t::dtls);
-        session.get_tls_protection().set_tls_version(tls_version_t::dtls_13);
+        session.get_tls_protection().set_tls_version(tls_version_t::dtls1_3);
         session.get_session_info(from_client).begin_protection();
         session.get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 64);
         dtls13_size_probe record(&session);
@@ -502,7 +509,7 @@ static void test_tls_record_size_limits() {
     // TLS 1.2 has no record compression path in this implementation, so its encryption input is TLSPlaintext.
     {
         tls_session session;
-        session.get_tls_protection().set_tls_version(tls_12);
+        session.get_tls_protection().set_tls_version(tls1_2);
         binary_t plaintext(16385, 0x01);
         binary_t ciphertext;
         binary_t additional;
@@ -528,6 +535,7 @@ static void test_tls_record_size_limits() {
 }
 
 static void test_dtls_record_publisher_segment_boundary() {
+    // Action: Action: publish DTLS records around the configured datagram segment boundary.
     // Scenario under test: DTLS record publisher segment boundary.
     // Expected: reject a record larger than the datagram segment target.
     _test_case.begin("DTLS record publisher segment boundary");
@@ -580,6 +588,7 @@ static void test_dtls_record_publisher_segment_boundary() {
 }
 
 static void test_dtls_record_publisher_pmtu_api() {
+    // Action: Action: query PMTU and record-header expansion before and after protection.
     // Scenario under test: DTLS record publisher PMTU API.
     // Expected: report legacy DTLS record header expansion before protection.
     _test_case.begin("DTLS record publisher PMTU API");
@@ -602,7 +611,7 @@ static void test_dtls_record_publisher_pmtu_api() {
     {
         tls_session session(session_type_t::dtls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_version_t::dtls_12);
+        protection.set_tls_version(tls_version_t::dtls1_2);
         protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         session.get_session_info(from_client).begin_protection();
 
@@ -614,7 +623,7 @@ static void test_dtls_record_publisher_pmtu_api() {
     {
         tls_session session(session_type_t::dtls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_version_t::dtls_12);
+        protection.set_tls_version(tls_version_t::dtls1_2);
         protection.set_cipher_suite(0xcca8);  // TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
         session.get_session_info(from_client).begin_protection();
 
@@ -626,7 +635,7 @@ static void test_dtls_record_publisher_pmtu_api() {
     {
         tls_session session(session_type_t::dtls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_version_t::dtls_13);
+        protection.set_tls_version(tls_version_t::dtls1_3);
         protection.set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256
         session.get_session_info(from_client).begin_protection();
 
@@ -637,7 +646,7 @@ static void test_dtls_record_publisher_pmtu_api() {
     {
         tls_session session(session_type_t::dtls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_version_t::dtls_13);
+        protection.set_tls_version(tls_version_t::dtls1_3);
         protection.set_cipher_suite(0x1305);  // TLS_AES_128_CCM_8_SHA256
         session.get_session_info(from_client).begin_protection();
 
@@ -651,7 +660,7 @@ static void test_dtls_record_publisher_pmtu_api() {
     {
         tls_session session(session_type_t::dtls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_version_t::dtls_12);
+        protection.set_tls_version(tls_version_t::dtls1_2);
         protection.set_cipher_suite(0xc013);  // TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
         session.get_session_info(from_client).begin_protection();
 
@@ -666,6 +675,7 @@ static void test_dtls_record_publisher_pmtu_api() {
 }
 
 static void test_dtls13_plaintext_content_type_demux() {
+    // Action: Action: create DTLS 1.3 plaintext records for each permitted content type and invalid types.
     // Scenario under test: DTLS 1.3 plaintext content-type demultiplexing.
     // Expected: allow plaintext alert, handshake, and ACK record builders.
     _test_case.begin("DTLS 1.3 plaintext content-type demultiplexing");
@@ -676,7 +686,7 @@ static void test_dtls13_plaintext_content_type_demux() {
         tls_content_type_t::ack,
     };
     tls_session session(session_type_t::dtls);
-    session.get_tls_protection().set_tls_version(tls_version_t::dtls_13);
+    session.get_tls_protection().set_tls_version(tls_version_t::dtls1_3);
 
     for (auto type : allowed) {
         tls_record_builder builder;
@@ -706,7 +716,7 @@ static void test_dtls13_plaintext_content_type_demux() {
 
     {
         tls_session legacy_session(session_type_t::dtls);
-        legacy_session.get_tls_protection().set_tls_version(tls_version_t::dtls_12);
+        legacy_session.get_tls_protection().set_tls_version(tls_version_t::dtls1_2);
         tls_record_builder builder;
         auto record = builder.set(&legacy_session).set(static_cast<tls_content_type_t>(0x20)).build();
         _test_case.assert((nullptr != record) && (nullptr == dynamic_cast<dtls13_ciphertext*>(record)), __FUNCTION__,
@@ -748,6 +758,7 @@ static void test_dtls13_plaintext_content_type_demux() {
 }
 
 static void test_dtls13_minimum_ciphertext_sample() {
+    // Action: Action: serialize short DTLS 1.3 ciphertext and inspect minimum sample padding.
     // Scenario under test: DTLS 1.3 minimum ciphertext sample and padding.
     // Expected: write a short DTLS 1.3 CCM_8 record with required padding.
     _test_case.begin("DTLS 1.3 minimum ciphertext sample and padding");
@@ -832,12 +843,7 @@ static void test_dtls13_minimum_ciphertext_sample() {
     ret = incoming.read_inner(from_client, with_trailing, 3);
     _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "decrypt only the current record when trailing datagram bytes exist");
 
-    size_t alert_count = 0;
-    reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-            ++alert_count;
-        }
-    });
+    size_t alert_count = test_count_fatal_alert(reader, from_client, tls_alertdesc_t::internal_error);
     _test_case.assert(1 == alert_count, __FUNCTION__, "strip zero padding and recover the inner alert content type");
 
     binary_t invalid_fixed_bits = wire;
@@ -930,12 +936,7 @@ static void test_tls_record_size_limit_extension() {
         size_t pos = 0;
         tls_extension* parsed = tls_extension::read(&handshake, from_client, wire.data(), wire.size(), pos);
         _test_case.assert(nullptr == parsed, __FUNCTION__, "reject record_size_limit below 64");
-        size_t illegal_parameter_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
+        size_t illegal_parameter_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::illegal_parameter);
         _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "queue fatal illegal_parameter for limit below 64");
     }
 
@@ -947,35 +948,25 @@ static void test_tls_record_size_limit_extension() {
         size_t pos = 0;
         tls_extension* parsed = tls_extension::read(&handshake, from_server, wire.data(), wire.size(), pos);
         _test_case.assert(nullptr == parsed, __FUNCTION__, "reject unsolicited server record_size_limit response");
-        size_t unsupported_extension_count = 0;
-        session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unsupported_extension == desc)) {
-                ++unsupported_extension_count;
-            }
-        });
+        size_t unsupported_extension_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::unsupported_extension);
         _test_case.assert(1 == unsupported_extension_count, __FUNCTION__, "queue fatal unsupported_extension when client did not offer record_size_limit");
     }
 
     {
         tls_session session;
-        session.get_tls_protection().set_tls_version(tls_12);
+        session.get_tls_protection().set_tls_version(tls1_2);
         tls_handshake_encrypted_extensions handshake(&session);
         binary_t wire{0x00, 0x1c, 0x00, 0x02, 0x04, 0x00};
         size_t pos = 0;
         tls_extension* parsed = tls_extension::read(&handshake, from_server, wire.data(), wire.size(), pos);
         _test_case.assert(nullptr == parsed, __FUNCTION__, "reject record_size_limit in TLS 1.2 EncryptedExtensions context");
-        size_t illegal_parameter_count = 0;
-        session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
+        size_t illegal_parameter_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::illegal_parameter);
         _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "queue fatal illegal_parameter for invalid EncryptedExtensions context");
     }
 
     {
         tls_session session;
-        session.get_tls_protection().set_tls_version(tls_12);
+        session.get_tls_protection().set_tls_version(tls1_2);
         session.get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 1024);
         tls_handshake_server_hello handshake(&session);
         binary_t wire{0x00, 0x1c, 0x00, 0x02, 0x04, 0x00};
@@ -1066,17 +1057,13 @@ static void test_tls_record_size_limit_extension() {
             ret = records.read(&oversized_reader, from_client, wire);
         }
         _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject inbound TLSInnerPlaintext above local receive limit");
-        size_t record_overflow_count = 0;
-        oversized_reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::record_overflow == desc)) {
-                ++record_overflow_count;
-            }
-        });
+        size_t record_overflow_count = test_count_fatal_alert(oversized_reader, from_client, tls_alertdesc_t::record_overflow);
         _test_case.assert(1 == record_overflow_count, __FUNCTION__, "queue fatal record_overflow for inbound negotiated-limit violation");
     }
 }
 
 static void test_tls13_rejects_truncated_aead_record_before_tag_extraction() {
+    // Action: Action: feed protected TLS 1.3 records shorter than the AEAD authentication tag.
     // Scenario under test: TLS 1.3 rejects truncated AEAD records before extracting the tag.
     // Expected: return bad_data when the record is shorter than its AEAD tag.
     _test_case.begin("TLS 1.3 rejects truncated AEAD records before extracting the tag");
@@ -1084,7 +1071,7 @@ static void test_tls13_rejects_truncated_aead_record_before_tag_extraction() {
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::one_rtt);
     protection.get_secrets().assign(tls_secret_t::handshake_client_key, binary_t(16, 0x41));
@@ -1099,13 +1086,9 @@ static void test_tls13_rejects_truncated_aead_record_before_tag_extraction() {
 
     _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "return bad_data when the record is shorter than its AEAD tag");
     _test_case.assert(plaintext.empty(), __FUNCTION__, "do not produce plaintext from a truncated record");
-    _test_case.assert(0 == session.get_session_info(from_client).get_recordno(false), __FUNCTION__, "do not consume a record number when tag extraction is impossible");
-    size_t fatal_alert_count = 0;
-    session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if (tls_alertlevel_t::fatal == level) {
-            ++fatal_alert_count;
-        }
-    });
+    uint64 recordno_after_truncated_record = session.get_session_info(from_client).get_recordno(false);
+    _test_case.assert(0 == recordno_after_truncated_record, __FUNCTION__, "do not consume a record number when tag extraction is impossible");
+    size_t fatal_alert_count = test_count_fatal_alerts(session, from_client);
     _test_case.assert(0 == fatal_alert_count, __FUNCTION__, "do not report an authentication failure before attempting AEAD");
 
     // An all-zero tag is not an authenticated empty TLSInnerPlaintext. The
@@ -1126,7 +1109,8 @@ static void test_tls13_rejects_truncated_aead_record_before_tag_extraction() {
     auto recordno_before_truncated_aad = session.get_session_info(from_client).get_recordno(false);
     ret = protection.decrypt(&session, from_client, truncated_record.data(), truncated_record.size(), 0, plaintext, aad);
     _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "reject a record too short for separately supplied AAD and tag");
-    _test_case.assert(recordno_before_truncated_aad == session.get_session_info(from_client).get_recordno(false), __FUNCTION__,
+    uint64 recordno_after_truncated_aad = session.get_session_info(from_client).get_recordno(false);
+    _test_case.assert(recordno_before_truncated_aad == recordno_after_truncated_aad, __FUNCTION__,
                       "do not consume a record number when separately supplied AAD leaves no room for the tag");
 
     // The explicit-AAD/tag overload must reject an inverted range before
@@ -1137,6 +1121,7 @@ static void test_tls13_rejects_truncated_aead_record_before_tag_extraction() {
 }
 
 static void test_tls12_rejects_truncated_aead_explicit_nonce() {
+    // Action: Action: feed protected TLS 1.2 records shorter than the explicit nonce field.
     // Scenario under test: TLS 1.2 rejects truncated AEAD explicit nonces before reading them.
     // Expected: reject ciphertext shorter than the TLS 1.2 explicit nonce.
     _test_case.begin("TLS 1.2 rejects truncated AEAD explicit nonces before reading them");
@@ -1144,7 +1129,7 @@ static void test_tls12_rejects_truncated_aead_explicit_nonce() {
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_12);
+    protection.set_tls_version(tls1_2);
     protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (supported)
 
     // TLS 1.2 AES-GCM carries an 8-byte explicit nonce before the encrypted
@@ -1157,8 +1142,84 @@ static void test_tls12_rejects_truncated_aead_explicit_nonce() {
 
     _test_case.assert(errorcode_t::bad_data == ret, __FUNCTION__, "reject ciphertext shorter than the TLS 1.2 explicit nonce");
     _test_case.assert(plaintext.empty(), __FUNCTION__, "do not produce plaintext from a truncated explicit nonce");
-    _test_case.assert(0 == session.get_session_info(from_client).get_recordno(false), __FUNCTION__,
-                      "do not consume a record number when the explicit nonce is truncated");
+    uint64 recordno_after_truncated_nonce = session.get_session_info(from_client).get_recordno(false);
+    _test_case.assert(0 == recordno_after_truncated_nonce, __FUNCTION__, "do not consume a record number when the explicit nonce is truncated");
+}
+
+static void test_tls13_early_data_limit_excludes_padding() {
+    // Action: Action: compare padded TLSInnerPlaintext records with their application-data byte counts.
+    // Scenario under test: the NewSessionTicket early-data limit counts
+    // Application Data plaintext, excluding TLSInnerPlaintext type and padding.
+    // Expected: padded records consume only their application content bytes.
+    _test_case.begin("TLS 1.3 early-data limit excludes TLSInnerPlaintext padding");
+
+    tls_session writer;
+    tls_session reader;
+    writer.set_type(session_type_t::tls);
+    reader.set_type(session_type_t::tls);
+
+    const binary_t key(16, 0x31);
+    const binary_t iv(12, 0x42);
+    auto& writer_protection = writer.get_tls_protection();
+    writer_protection.set_tls_version(tls1_3);
+    writer_protection.set_cipher_suite(0x1301);
+    writer_protection.set_flow(tls_flow_t::zero_rtt);
+    writer_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, key);
+    writer_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, iv);
+    // A client 0-RTT record is sent before ServerHello and uses the
+    // client early traffic secret. Keep the global and client-direction
+    // handshake state at ClientHello so key selection matches c_e_traffic.
+    writer.update_session_status(session_status_client_hello);
+    writer.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    writer.get_session_info(from_client).begin_protection();
+
+    auto& reader_protection = reader.get_tls_protection();
+    reader_protection.set_tls_version(tls1_3);
+    reader_protection.set_cipher_suite(0x1301);
+    reader_protection.set_flow(tls_flow_t::zero_rtt);
+    reader_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, key);
+    reader_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, iv);
+    reader.update_session_status(session_status_client_hello);
+    reader.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    reader.get_session_info(from_client).begin_protection();
+
+    auto& early_state = reader.get_session_info(from_server).get_keyvalue();
+    early_state.set(session_early_data_offered, 1);
+    early_state.set(session_early_data_accepted, 1);
+    early_state.set(session_early_data_limit, 4);
+    reader.get_keyvalue().set(session_server_psk_selected_identity, 0);
+
+    test_tls13_inner_plaintext_writer record(&writer);
+    const binary_t padded_plaintext{'p', 'i', 'n', 'g', (byte_t)tls_content_type_t::application_data, 0x00, 0x00, 0x00};
+    binary_t wire;
+    return_t ret = record.write_inner_plaintext(from_client, padded_plaintext, wire);
+    _test_case.test(ret, __FUNCTION__, "construct an authenticated 0-RTT record with three padding octets");
+
+    tls_records records;
+    if (errorcode_t::success == ret) {
+        ret = records.read(&reader, from_client, wire);
+    }
+    _test_case.test(ret, __FUNCTION__, "accept four bytes of early data with TLSInnerPlaintext padding");
+    _test_case.assert(4 == early_state.get(session_early_data_received), __FUNCTION__, "count only Application Data plaintext, excluding content type and padding");
+    if (errorcode_t::success == ret && records.size()) {
+        auto decoded = static_cast<tls_record_application_data*>(records.getat(0));
+        const binary_t expected{'p', 'i', 'n', 'g'};
+        _test_case.assert(expected == decoded->get_binary(), __FUNCTION__, "deliver only the four application bytes");
+    } else {
+        _test_case.assert(false, __FUNCTION__, "deliver the authenticated padded early-data record");
+    }
+
+    const binary_t over_limit_plaintext{'x', (byte_t)tls_content_type_t::application_data, 0x00, 0x00};
+    wire.clear();
+    ret = record.write_inner_plaintext(from_client, over_limit_plaintext, wire);
+    _test_case.test(ret, __FUNCTION__, "construct a subsequent early-data record beyond the ticket allowance");
+    if (errorcode_t::success == ret) {
+        ret = records.read(&reader, from_client, wire);
+    }
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject the first application byte beyond the cumulative ticket limit");
+    _test_case.assert(4 == early_state.get(session_early_data_received), __FUNCTION__, "do not count application bytes from a rejected over-limit record");
+    size_t fatal_alert_count = test_count_fatal_alert(reader, from_client, tls_alertdesc_t::unexpected_message);
+    _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue one fatal unexpected_message for the ticket-limit violation");
 }
 
 void testcase_gpt_record() {
@@ -1166,6 +1227,7 @@ void testcase_gpt_record() {
     test_tls12_rejects_truncated_aead_explicit_nonce();
     test_tls13_key_usage_limits();
     test_tls13_inner_plaintext_padding_and_content_type();
+    test_tls13_early_data_limit_excludes_padding();
     test_tls_record_size_limits();
     test_dtls_record_publisher_segment_boundary();
     test_dtls_record_publisher_pmtu_api();

@@ -24,7 +24,7 @@
 namespace hotplace {
 namespace net {
 
-trial_quic_client_socket::trial_quic_client_socket() : secure_client_socket(tls_13) {}
+trial_quic_client_socket::trial_quic_client_socket() : secure_client_socket(tls1_3) {}
 
 trial_quic_client_socket::~trial_quic_client_socket() {}
 

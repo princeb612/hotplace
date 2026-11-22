@@ -67,7 +67,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                 openssl_prng prng;
                 binary_t bin_rand;
                 bin_rand.reserve(32);
-                if (tls_13 == minspec) {
+                if (tls1_3 == minspec) {
                     prng.random(bin_rand, 32);
                 } else {
                     // time_t: uint64
@@ -147,15 +147,15 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                     return errorcode_t::success;
                 });
 
-            if (tls_13 == maxspec) {
+            if (tls1_3 == maxspec) {
                 // TLS 1.3
                 hs->get_extensions()
                     .add(tls_extension_type_t::supported_versions, dir, hs,
                          [&](tls_extension* extension) -> return_t {
                              auto ext = (tls_extension_client_supported_versions*)extension;
-                             (*ext).add(is_dtls ? dtls_13 : tls_13);
-                             if (tls_12 == minspec) {
-                                 (*ext).add(is_dtls ? dtls_12 : tls_12);
+                             (*ext).add(is_dtls ? dtls1_3 : tls1_3);
+                             if (tls1_2 == minspec) {
+                                 (*ext).add(is_dtls ? dtls1_2 : tls1_2);
                              }
                              return errorcode_t::success;
                          })
@@ -214,7 +214,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                     });
             }
 
-            if (tls_version_t::tls_12 == minspec) {
+            if (tls_version_t::tls1_2 == minspec) {
                 if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
                     hs->get_extensions().add(tls_extension_type_t::encrypt_then_mac, dir, hs, nullptr);
                 }
@@ -283,7 +283,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                 uint16 ticket_cipher_suite = t_narrow_cast(session->get_keyvalue().get(session_server_psk_ticket_cipher_suite));
                 const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
                 const tls_cipher_suite_t* negotiated_suite = tlsadvisor->hintof_cipher_suite(cs);
-                if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls_13 != negotiated_suite->spec) ||
+                if ((nullptr == ticket_suite) || (tls1_3 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls1_3 != negotiated_suite->spec) ||
                     (ticket_suite->mac != negotiated_suite->mac)) {
                     // A TLS 1.3 PSK cannot resume a non-TLS-1.3 handshake,
                     // even when a legacy suite happens to use the same hash.
@@ -324,7 +324,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                         uint16 ticket_cipher_suite = t_narrow_cast(keyvalue.get(session_server_psk_ticket_cipher_suite));
                         const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
                         const tls_cipher_suite_t* negotiated_suite = tlsadvisor->hintof_cipher_suite(cs);
-                        if ((nullptr == ticket_suite) || (tls_13 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls_13 != negotiated_suite->spec) ||
+                        if ((nullptr == ticket_suite) || (tls1_3 != ticket_suite->spec) || (nullptr == negotiated_suite) || (tls1_3 != negotiated_suite->spec) ||
                             (ticket_suite->mac != negotiated_suite->mac)) {
                             // A TLS 1.3 PSK can only resume with a TLS 1.3
                             // suite using the hash that established its PSK.

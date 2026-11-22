@@ -50,7 +50,7 @@ namespace net {
  *          handshake->set_cipher_suite("TLS_AES_128_GCM_SHA256");
  *
  *          auto supported_version = new tls_extension_server_supported_versions(session);
- *          supported_version->set(tls_13);
+ *          supported_version->set(tls1_3);
  *          handshake->get_extensions().add(supported_version);
  *
  *          auto key_share = new tls_extension_server_key_share(session);

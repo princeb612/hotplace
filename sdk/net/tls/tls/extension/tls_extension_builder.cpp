@@ -25,6 +25,7 @@
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_quic_transport_parameters.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_record_size_limit.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_session_ticket.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_status_request.hpp>
@@ -133,6 +134,9 @@ tls_extension* tls_extension_builder::build() {
             case tls_extension_type_t::early_data: /* 0x002a */ {
                 extension = new tls_extension_early_data(handshake);
             } break;
+            case tls_extension_type_t::session_ticket: /* 0x0023 */ {
+                extension = new tls_extension_session_ticket(handshake);
+            } break;
 
             case tls_extension_type_t::certificate_authorities:      /* 0x002f */
             case tls_extension_type_t::client_certificate_type:      /* 0x0013 */
@@ -147,7 +151,6 @@ tls_extension* tls_extension_builder::build() {
             case tls_extension_type_t::padding:                      /* 0x0015 */
             case tls_extension_type_t::post_handshake_auth:          /* 0x0031 */
             case tls_extension_type_t::server_certificate_type:      /* 0x0014 */
-            case tls_extension_type_t::session_ticket:               /* 0x0023 */
             case tls_extension_type_t::signature_algorithms_cert:    /* 0x0032 */
             case tls_extension_type_t::signed_certificate_timestamp: /* 0x0012 */
             case tls_extension_type_t::tlmsp:                        /* 0x0024 */

@@ -13,379 +13,466 @@
 
 #include "testcase_gpt_common.hpp"
 
-static void test_tls13_server_defers_inflight_early_data_until_encrypted_extensions() {
-    // Scenario under test: TLS 1.3 server defers in-flight early data until EncryptedExtensions decides acceptance.
-    // Action: prepare a valid protected 0-RTT record for the server.
-    // Expected: commit ClientHello state after a one-to-three-byte header split.
-    _test_case.begin("TLS 1.3 server defers in-flight early data until EncryptedExtensions decides acceptance");
+static void test_tls13_clienthello_fragmentation_preserves_incomplete_records(const binary_t& client_hello_wire) {
+    // Scenario under test: preserve incomplete TLS records across fragmented ClientHello input.
+    // Action: deliver the ClientHello at record-header and record-body boundaries.
+    // Expected: commit ClientHello only after the complete record body arrives.
+    _test_case.begin("TLS 1.3 ClientHello fragmentation preserves incomplete records");
 
-    tls_session client;
-    client.set_type(session_type_t::tls);
-    auto& client_protection = client.get_tls_protection();
-    client_protection.set_tls_version(tls_13);
-    client_protection.set_cipher_suite(0x1301);
-    client_protection.set_flow(tls_flow_t::zero_rtt);
-    client_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
-    client_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
-    client.update_session_status(session_status_client_hello);
-    client.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
-    client.get_session_info(from_client).begin_protection();
-    auto& client_early_state = client.get_session_info(from_server).get_keyvalue();
-    client_early_state.set(session_early_data_offered, 1);
-    client_early_state.set(session_early_data_limit, 4);
-    client_early_state.set(session_early_data_sent, 0);
-
-    tls_record_application_data client_early_record(&client);
-    client_early_record.set_binary(binary_t{0x31, 0x32, 0x33});
-    binary_t early_record_wire;
-    return_t ret = client_early_record.write(from_client, early_record_wire);
-    _test_case.test(ret, __FUNCTION__, "prepare a valid protected 0-RTT record for the server");
-    if (errorcode_t::success != ret) {
-        return;
+    return_t ret = errorcode_t::success;
+    // A TCP input chunk may end after part of the TLS record header, after the
+    // complete header, or in the middle of the record body. Preserve the
+    // incomplete tail and parse the ClientHello only after its final byte.
+    for (size_t header_fragment_size = 1; header_fragment_size < 4; ++header_fragment_size) {
+        tls_session partial_header_server;
+        partial_header_server.set_type(session_type_t::tls);
+        partial_header_server.get_tls_protection().set_tls_version(tls1_3);
+        partial_header_server.get_tls_protection().set_cipher_suite(0x1301);
+        auto partial_header_prosumer = partial_header_server.get_secure_prosumer();
+        ret = partial_header_prosumer->produce(&partial_header_server, from_client, client_hello_wire.data(), header_fragment_size);
+        _test_case.test(ret, __FUNCTION__, "retain a one-to-three-byte TLS record header fragment");
+        if (errorcode_t::success != ret) {
+            return;
+        }
+        ret = partial_header_prosumer->produce(&partial_header_server, from_client, client_hello_wire.data() + header_fragment_size,
+                                               client_hello_wire.size() - header_fragment_size);
+        _test_case.test(ret, __FUNCTION__, "parse ClientHello after the remaining record bytes arrive");
+        _test_case.assert(0 != (partial_header_server.get_session_status() & session_status_client_hello), __FUNCTION__,
+                          "commit ClientHello state after a one-to-three-byte header split");
+        if (errorcode_t::success != ret) {
+            return;
+        }
     }
 
-    tls_session coalesced_client;
-    coalesced_client.set_type(session_type_t::tls);
-    auto& coalesced_client_protection = coalesced_client.get_tls_protection();
-    coalesced_client_protection.set_tls_version(tls_13);
-    coalesced_client_protection.set_cipher_suite(0x1301);
-    // Generate an ordinary valid ClientHello, then add early_data to its
-    // serialized extension vector below. The fixture has no PSK ticket, so
-    // its composer flow must remain one_rtt.
-    coalesced_client_protection.set_flow(tls_flow_t::one_rtt);
-    binary_t coalesced_client_hello_wire;
-    ret = test_client_supportedversion_clienthello(&coalesced_client, tls_13, tls_13, coalesced_client_hello_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize a baseline TLS 1.3 ClientHello");
-    if (errorcode_t::success != ret) {
+    tls_session fragmented_client_hello_server;
+    fragmented_client_hello_server.set_type(session_type_t::tls);
+    fragmented_client_hello_server.get_tls_protection().set_tls_version(tls1_3);
+    fragmented_client_hello_server.get_tls_protection().set_cipher_suite(0x1301);
+    auto fragmented_client_hello_prosumer = fragmented_client_hello_server.get_secure_prosumer();
+    size_t fragmented_pos = 0;
+    const size_t fragmented_sizes[] = {4, 1, 7};
+    for (size_t i = 0; i < RTL_NUMBER_OF(fragmented_sizes); ++i) {
+        ret = fragmented_client_hello_prosumer->produce(&fragmented_client_hello_server, from_client, client_hello_wire.data() + fragmented_pos, fragmented_sizes[i]);
+        _test_case.test(ret, __FUNCTION__, "retain a partial ClientHello TLS record across input chunks");
+        fragmented_pos += fragmented_sizes[i];
+        if (errorcode_t::success != ret) {
+            return;
+        }
+    }
+    ret = fragmented_client_hello_prosumer->produce(&fragmented_client_hello_server, from_client, client_hello_wire.data() + fragmented_pos,
+                                                    client_hello_wire.size() - fragmented_pos);
+    _test_case.test(ret, __FUNCTION__, "parse a fragmented ClientHello after the complete TLS record arrives");
+    _test_case.assert(0 != (fragmented_client_hello_server.get_session_status() & session_status_client_hello), __FUNCTION__,
+                      "commit ClientHello state only after its complete record body is received");
+
+    // Pin the exact five-byte record-header boundary and distinct partial-body
+    // offsets. None of these prefixes may commit ClientHello before the body
+    // is complete; the remaining bytes must produce the same final state.
+    const size_t client_hello_record_body_size = (static_cast<size_t>(client_hello_wire[3]) << 8) | client_hello_wire[4];
+    const size_t client_hello_split_sizes[] = {5, 6, 5 + client_hello_record_body_size / 2};
+    for (size_t i = 0; i < RTL_NUMBER_OF(client_hello_split_sizes); ++i) {
+        const size_t split_size = client_hello_split_sizes[i];
+        if (split_size >= client_hello_wire.size()) {
+            _test_case.assert(false, __FUNCTION__, "ClientHello split point is inside the record");
+            return;
+        }
+
+        tls_session split_client_hello_server;
+        split_client_hello_server.set_type(session_type_t::tls);
+        split_client_hello_server.get_tls_protection().set_tls_version(tls1_3);
+        split_client_hello_server.get_tls_protection().set_cipher_suite(0x1301);
+        auto split_client_hello_prosumer = split_client_hello_server.get_secure_prosumer();
+        ret = split_client_hello_prosumer->produce(&split_client_hello_server, from_client, client_hello_wire.data(), split_size);
+        _test_case.test(ret, __FUNCTION__, "retain ClientHello at a record-header or partial-body boundary");
+        _test_case.assert(0 == (split_client_hello_server.get_session_status() & session_status_client_hello), __FUNCTION__,
+                          "do not commit ClientHello before the complete record body arrives");
+        if (errorcode_t::success != ret) {
+            return;
+        }
+
+        ret = split_client_hello_prosumer->produce(&split_client_hello_server, from_client, client_hello_wire.data() + split_size, client_hello_wire.size() - split_size);
+        _test_case.test(ret, __FUNCTION__, "complete ClientHello after a header/body boundary split");
+        _test_case.assert(0 != (split_client_hello_server.get_session_status() & session_status_client_hello), __FUNCTION__,
+                          "commit ClientHello after the remaining record body arrives");
+        if (errorcode_t::success != ret) {
+            return;
+        }
+    }
+}
+
+static void test_tls13_coalesced_clienthello_early_data_pending_buffer_limits(const binary_t& client_hello_wire, const binary_t& early_record_wire) {
+    // Scenario under test: enforce pending-ciphertext limits when ClientHello and early data arrive together.
+    // Action: coalesce a PSK-capable ClientHello with 0-RTT records at and beyond buffer limits.
+    // Expected: reject both configured pending-buffer overflow and the hard record-buffer ceiling.
+    _test_case.begin("TLS 1.3 coalesced ClientHello and early data pending-buffer limits");
+
+    return_t ret = errorcode_t::success;
+    binary_t coalesced_client_hello_wire = client_hello_wire;
+    // Add psk_key_exchange_modes, early_data, and a structurally valid
+    // pre_shared_key extension. RFC 8446 requires the modes extension when PSK
+    // is offered and pre_shared_key to be the final ClientHello extension.
+    if (coalesced_client_hello_wire.size() < 9 || coalesced_client_hello_wire[0] != 0x16 || coalesced_client_hello_wire[5] != 0x01) {
+        _test_case.assert(false, __FUNCTION__, "baseline ClientHello has TLS record and handshake framing");
         return;
     }
+    size_t coalesced_handshake_end = 9 + test_read_u24(coalesced_client_hello_wire, 6);
+    size_t coalesced_pos = 9 + 2 + 32;
+    uint8 coalesced_session_id_len = coalesced_client_hello_wire[coalesced_pos++];
+    coalesced_pos += coalesced_session_id_len;
+    uint16 coalesced_cipher_suites_len = test_read_u16(coalesced_client_hello_wire, coalesced_pos);
+    coalesced_pos += 2 + coalesced_cipher_suites_len;
+    uint8 coalesced_compression_len = coalesced_client_hello_wire[coalesced_pos++];
+    coalesced_pos += coalesced_compression_len;
+    size_t coalesced_extensions_len_pos = coalesced_pos;
+    uint16 coalesced_extensions_len = test_read_u16(coalesced_client_hello_wire, coalesced_extensions_len_pos);
+    size_t coalesced_extensions_end = coalesced_extensions_len_pos + 2 + coalesced_extensions_len;
+    if (coalesced_extensions_end != coalesced_handshake_end || coalesced_handshake_end != coalesced_client_hello_wire.size()) {
+        _test_case.assert(false, __FUNCTION__, "baseline ClientHello extension vector is well framed");
+        return;
+    }
+    // early_data (empty), then pre_shared_key with one identity and one
+    // 32-byte binder. The binder is only structurally parsed in this test.
+    binary_t coalesced_early_data_and_psk = {0x00, 0x2d, 0x00, 0x02, 0x01, 0x01, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x29, 0x00, 0x2c, 0x00, 0x07, 0x00, 0x01, 0x01, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x21, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // The composer may already include psk_key_exchange_modes. Keep the
+    // synthesized ClientHello unique so this test reaches the pending-record
+    // limit path rather than the independent duplicate-extension rejection.
+    bool has_psk_key_exchange_modes = false;
+    size_t existing_extension_pos = coalesced_extensions_len_pos + 2;
+    while (existing_extension_pos + 4 <= coalesced_extensions_end) {
+        uint16 extension_type = test_read_u16(coalesced_client_hello_wire, existing_extension_pos);
+        uint16 extension_size = test_read_u16(coalesced_client_hello_wire, existing_extension_pos + 2);
+        if (0x002d == extension_type) {
+            has_psk_key_exchange_modes = true;
+            break;
+        }
+        existing_extension_pos += 4 + extension_size;
+    }
+    if (has_psk_key_exchange_modes) {
+        coalesced_early_data_and_psk.erase(coalesced_early_data_and_psk.begin(), coalesced_early_data_and_psk.begin() + 6);
+    }
+    coalesced_client_hello_wire.insert(coalesced_client_hello_wire.end(), coalesced_early_data_and_psk.begin(), coalesced_early_data_and_psk.end());
+    test_write_u16(coalesced_client_hello_wire, coalesced_extensions_len_pos, coalesced_extensions_len + coalesced_early_data_and_psk.size());
+    test_write_u24(coalesced_client_hello_wire, 6, test_read_u24(coalesced_client_hello_wire, 6) + coalesced_early_data_and_psk.size());
+    test_write_u16(coalesced_client_hello_wire, 3, test_read_u16(coalesced_client_hello_wire, 3) + coalesced_early_data_and_psk.size());
 
-    // Scenario: retain incomplete ClientHello records until the complete record body arrives
+    tls_session coalesced_server;
+    coalesced_server.set_type(session_type_t::tls);
+    auto& coalesced_server_protection = coalesced_server.get_tls_protection();
+    coalesced_server_protection.set_tls_version(tls1_3);
+    coalesced_server_protection.set_cipher_suite(0x1301);
+    coalesced_server_protection.set_flow(tls_flow_t::zero_rtt);
+    coalesced_server_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
+    coalesced_server_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
+    binary_t coalesced_input = coalesced_client_hello_wire;
+    coalesced_input.insert(coalesced_input.end(), early_record_wire.begin(), early_record_wire.end());
+    auto coalesced_prosumer = coalesced_server.get_secure_prosumer();
+    coalesced_prosumer->set_pending_early_data_buffer_limit(1);
+    ret = coalesced_prosumer->produce(&coalesced_server, from_client, coalesced_input.data(), coalesced_input.size());
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the pending ciphertext limit when ClientHello and 0-RTT arrive in one input chunk");
+    _test_case.assert(0 == coalesced_server.get_session_status(), __FUNCTION__, "reset the handshake after coalesced pending ciphertext overflow");
+
+    tls_session oversized_coalesced_server;
+    oversized_coalesced_server.set_type(session_type_t::tls);
+    auto& oversized_coalesced_protection = oversized_coalesced_server.get_tls_protection();
+    oversized_coalesced_protection.set_tls_version(tls1_3);
+    oversized_coalesced_protection.set_cipher_suite(0x1301);
+    oversized_coalesced_protection.set_flow(tls_flow_t::zero_rtt);
+    oversized_coalesced_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
+    oversized_coalesced_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
+    auto oversized_coalesced_prosumer = oversized_coalesced_server.get_secure_prosumer();
+    oversized_coalesced_prosumer->set_pending_early_data_buffer_limit(0);
+    const size_t pending_record_wire_limit = 5 + 0xffff;
+    const size_t pending_record_buffer_limit = 64 * pending_record_wire_limit;
+    binary_t oversized_coalesced_input = coalesced_client_hello_wire;
+    const size_t oversized_early_data_offset = oversized_coalesced_input.size();
+    oversized_coalesced_input.resize(oversized_early_data_offset + pending_record_buffer_limit + 1, 0);
+    for (size_t i = 0; i < 64; ++i) {
+        size_t record_pos = oversized_early_data_offset + i * pending_record_wire_limit;
+        oversized_coalesced_input[record_pos] = 0x17;
+        oversized_coalesced_input[record_pos + 1] = 0x03;
+        oversized_coalesced_input[record_pos + 2] = 0x03;
+        oversized_coalesced_input[record_pos + 3] = 0xff;
+        oversized_coalesced_input[record_pos + 4] = 0xff;
+    }
+    ret = oversized_coalesced_prosumer->produce(&oversized_coalesced_server, from_client, oversized_coalesced_input.data(), oversized_coalesced_input.size());
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__,
+                      "reject coalesced 0-RTT input beyond the hard buffer ceiling after parsing ClientHello but before buffering early records");
+    _test_case.assert(0 == oversized_coalesced_server.get_session_status(), __FUNCTION__, "reset the handshake after coalesced hard-buffer overflow");
+}
+
+template <typename TPrepareServer>
+static void test_tls13_server_pending_early_data_buffer_limits(const binary_t& early_record_wire, size_t first_fragment_size, TPrepareServer prepare_server) {
+    // Scenario under test: enforce pending early-data byte, record-count, and callback buffer limits.
+    // Action: exceed configured limits through direct input and callback stream APIs.
+    // Expected: reject overflow before pending ciphertext storage can exceed its bounds.
+    _test_case.begin("TLS 1.3 server enforces pending early-data buffer limits");
+
+    return_t ret = errorcode_t::success;
+    tls_session overflow_server;
+    prepare_server(overflow_server, true);
+    auto overflow_prosumer = overflow_server.get_secure_prosumer();
+    overflow_prosumer->set_pending_early_data_buffer_limit(first_fragment_size);
+    ret = overflow_prosumer->produce(&overflow_server, from_client, early_record_wire.data(), first_fragment_size);
+    _test_case.test(ret, __FUNCTION__, "accept a pending ciphertext fragment exactly at the configured buffer limit");
+    ret = overflow_prosumer->produce(&overflow_server, from_client, early_record_wire.data() + first_fragment_size, 1);
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject cumulative pending 0-RTT ciphertext beyond the configured buffer limit");
+    size_t pending_buffer_overflow_alert_count = test_count_fatal_alert(overflow_server, from_client, tls_alertdesc_t::internal_error);
+    _test_case.assert(1 == pending_buffer_overflow_alert_count, __FUNCTION__,
+                      "raise exactly one fatal internal_error when the pending ciphertext buffer limit is exceeded");
+    _test_case.assert(0 == overflow_server.get_session_status(), __FUNCTION__, "reset the handshake state after pending ciphertext buffer overflow");
+    char overflow_output[8] = {};
+    size_t overflow_read = 0;
+    overflow_prosumer->consume(0, 0, overflow_output, sizeof(overflow_output), &overflow_read);
+    _test_case.assert(0 == overflow_read, __FUNCTION__, "do not deliver data after the pending ciphertext buffer overflow");
+
+    tls_session record_count_boundary_server;
+    prepare_server(record_count_boundary_server, true);
+    auto record_count_boundary_prosumer = record_count_boundary_server.get_secure_prosumer();
+    record_count_boundary_prosumer->set_pending_early_data_buffer_limit(0);
+    binary_t max_pending_records;
+    for (size_t i = 0; i < 64; ++i) {
+        max_pending_records.insert(max_pending_records.end(), early_record_wire.begin(), early_record_wire.end());
+    }
+    ret = record_count_boundary_prosumer->produce(&record_count_boundary_server, from_client, max_pending_records.data(), max_pending_records.size());
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "allow exactly 64 pending records when the byte cap is disabled");
+
+    tls_session record_count_server;
+    prepare_server(record_count_server, true);
+    auto record_count_prosumer = record_count_server.get_secure_prosumer();
+    record_count_prosumer->set_pending_early_data_buffer_limit(0);
+    binary_t too_many_pending_records;
+    for (size_t i = 0; i < 65; ++i) {
+        too_many_pending_records.insert(too_many_pending_records.end(), early_record_wire.begin(), early_record_wire.end());
+    }
+    ret = record_count_prosumer->produce(&record_count_server, from_client, too_many_pending_records.data(), too_many_pending_records.size());
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the pending 0-RTT record-count limit independently of the byte limit");
+
+    tls_session record_buffer_limit_server;
+    prepare_server(record_buffer_limit_server, true);
+    auto record_buffer_limit_prosumer = record_buffer_limit_server.get_secure_prosumer();
+    record_buffer_limit_prosumer->set_pending_early_data_buffer_limit(0);
+    const size_t record_buffer_limit = 64 * (5 + 0xffff);
+    binary_t oversized_pending_input(record_buffer_limit + 1, 0);
+    oversized_pending_input[0] = 0x17;
+    oversized_pending_input[1] = 0x03;
+    oversized_pending_input[2] = 0x03;
+    oversized_pending_input[3] = 0xff;
+    oversized_pending_input[4] = 0xff;
+    ret = record_buffer_limit_prosumer->produce(&record_buffer_limit_server, from_client, oversized_pending_input.data(), oversized_pending_input.size());
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject input beyond the record-count-derived hard buffer ceiling before copying it");
+    size_t record_count_overflow_alert_count = test_count_fatal_alert(record_count_server, from_client, tls_alertdesc_t::internal_error);
+    _test_case.assert(1 == record_count_overflow_alert_count, __FUNCTION__, "raise exactly one fatal internal_error for pending record-count overflow");
+
+    tls_session callback_overflow_server;
+    prepare_server(callback_overflow_server, true);
+    auto callback_overflow_prosumer = callback_overflow_server.get_secure_prosumer();
+    callback_overflow_prosumer->set_pending_early_data_buffer_limit(1);
+    bool callback_write_rejected = false;
+    ret = callback_overflow_prosumer->produce(&callback_overflow_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
+        callback_write_rejected = (errorcode_t::overflow == stream.write(early_record_wire.data(), early_record_wire.size()));
+    });
+    _test_case.assert(callback_write_rejected, __FUNCTION__, "reject callback input before it grows the pending buffer beyond its byte limit");
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the pending ciphertext bound on callback-based input");
+    size_t callback_overflow_alert_count = test_count_fatal_alert(callback_overflow_server, from_client, tls_alertdesc_t::internal_error);
+    _test_case.assert(1 == callback_overflow_alert_count, __FUNCTION__, "raise exactly one fatal internal_error for callback-based buffer overflow");
+
+    tls_session callback_api_server;
+    prepare_server(callback_api_server, true);
+    auto callback_api_prosumer = callback_api_server.get_secure_prosumer();
+    callback_api_prosumer->set_pending_early_data_buffer_limit(1);
+    bool callback_printf_rejected = false;
+    bool callback_large_printf_rejected = false;
+    bool callback_insert_rejected = false;
+    bool callback_fill_rejected = false;
+    bool callback_resize_rejected = false;
+    const std::string large_printf_output(4096, 'p');
+    ret = callback_api_prosumer->produce(&callback_api_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
+        callback_printf_rejected = (errorcode_t::overflow == stream.printf("%s", "formatted output"));
+        callback_large_printf_rejected = (errorcode_t::overflow == stream.printf("%s", large_printf_output.c_str()));
+        callback_insert_rejected = (errorcode_t::overflow == stream.insert(0, early_record_wire.data(), early_record_wire.size()));
+        callback_fill_rejected = (errorcode_t::overflow == stream.fill(2, 'x'));
+        stream.resize(2);
+        callback_resize_rejected = (0 == stream.size());
+    });
+    _test_case.assert(callback_printf_rejected, __FUNCTION__, "bound printf output before formatted data grows the pending buffer");
+    _test_case.assert(callback_large_printf_rejected, __FUNCTION__, "bound a large formatted output chunk without materializing it in an intermediate stream");
+    _test_case.assert(callback_insert_rejected, __FUNCTION__, "bound insert output before inserted data grows the pending buffer");
+    _test_case.assert(callback_fill_rejected, __FUNCTION__, "bound fill output before it grows the pending buffer");
+    _test_case.assert(callback_resize_rejected, __FUNCTION__, "reject callback resize before it grows the pending buffer");
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject callback mutation APIs that exceed the pending ciphertext limit");
+
+    tls_session callback_encoder_server;
+    prepare_server(callback_encoder_server, true);
+    auto callback_encoder_prosumer = callback_encoder_server.get_secure_prosumer();
+    callback_encoder_prosumer->set_pending_early_data_buffer_limit(1);
+    return_t callback_encoder_ret = errorcode_t::success;
+    ret = callback_encoder_prosumer->produce(&callback_encoder_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
+        callback_encoder_ret = base64_encode(binary_t{0x01, 0x02, 0x03}, stream);
+    });
+    _test_case.assert(errorcode_t::overflow == callback_encoder_ret, __FUNCTION__, "reject a Base64 encoder reservation before writing through its raw output pointer");
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "propagate an over-limit Base64 reservation to pending ciphertext handling");
+
+    tls_session callback_base16_server;
+    prepare_server(callback_base16_server, true);
+    auto callback_base16_prosumer = callback_base16_server.get_secure_prosumer();
+    callback_base16_prosumer->set_pending_early_data_buffer_limit(1);
+    return_t callback_base16_ret = errorcode_t::success;
+    ret = callback_base16_prosumer->produce(&callback_base16_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
+        callback_base16_ret = base16_encode(binary_t{0x01, 0x02, 0x03}, stream);
+    });
+    _test_case.assert(errorcode_t::overflow == callback_base16_ret, __FUNCTION__, "reject a Base16 encoder reservation before writing through its raw output pointer");
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "propagate an over-limit Base16 reservation to pending ciphertext handling");
+
+    tls_session callback_integer_server;
+    prepare_server(callback_integer_server, true);
+    auto callback_integer_prosumer = callback_integer_server.get_secure_prosumer();
+    callback_integer_prosumer->set_pending_early_data_buffer_limit(1);
+    ret = callback_integer_prosumer->produce(&callback_integer_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void { stream << 123456; });
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "bound integral stream insertion through the formatted output hook");
+
+    tls_session callback_assignment_server;
+    prepare_server(callback_assignment_server, true);
+    auto callback_assignment_prosumer = callback_assignment_server.get_secure_prosumer();
+    callback_assignment_prosumer->set_pending_early_data_buffer_limit(1);
+    ret = callback_assignment_prosumer->produce(&callback_assignment_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
+        basic_stream oversized;
+        oversized.write("oversized", 9);
+        stream = oversized;
+    });
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "bound callback stream copy assignment before replacing the pending buffer");
+
+    tls_session callback_move_assignment_server;
+    prepare_server(callback_move_assignment_server, true);
+    auto callback_move_assignment_prosumer = callback_move_assignment_server.get_secure_prosumer();
+    callback_move_assignment_prosumer->set_pending_early_data_buffer_limit(1);
+    ret = callback_move_assignment_prosumer->produce(&callback_move_assignment_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
+        basic_stream oversized;
+        oversized.write("oversized", 9);
+        stream = std::move(oversized);
+    });
+    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "bound callback stream move assignment before replacing the pending buffer");
+}
+
+template <typename TPrepareServer>
+static void test_tls13_server_discards_rejected_inflight_early_data(const binary_t& early_record_wire, size_t first_fragment_size, const size_t* early_record_split_sizes,
+                                                                    size_t split_count, TPrepareServer prepare_server) {
+    // Scenario under test: defer rejected in-flight early data until EncryptedExtensions.
+    // Action: complete buffered records before and after the rejection decision.
+    // Expected: discard each rejected record exactly once without delivering plaintext.
     {
-        // A TCP input chunk may end after part of the TLS record header, after the
-        // complete header, or in the middle of the record body. Preserve the
-        // incomplete tail and parse the ClientHello only after its final byte.
-        for (size_t header_fragment_size = 1; header_fragment_size < 4; ++header_fragment_size) {
-            tls_session partial_header_server;
-            partial_header_server.set_type(session_type_t::tls);
-            partial_header_server.get_tls_protection().set_tls_version(tls_13);
-            partial_header_server.get_tls_protection().set_cipher_suite(0x1301);
-            auto partial_header_prosumer = partial_header_server.get_secure_prosumer();
-            ret = partial_header_prosumer->produce(&partial_header_server, from_client, coalesced_client_hello_wire.data(), header_fragment_size);
-            _test_case.test(ret, __FUNCTION__, "retain a one-to-three-byte TLS record header fragment");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-            ret = partial_header_prosumer->produce(&partial_header_server, from_client, coalesced_client_hello_wire.data() + header_fragment_size,
-                                                   coalesced_client_hello_wire.size() - header_fragment_size);
-            _test_case.test(ret, __FUNCTION__, "parse ClientHello after the remaining record bytes arrive");
-            _test_case.assert(0 != (partial_header_server.get_session_status() & session_status_client_hello), __FUNCTION__,
-                              "commit ClientHello state after a one-to-three-byte header split");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-        }
-
-        tls_session fragmented_client_hello_server;
-        fragmented_client_hello_server.set_type(session_type_t::tls);
-        fragmented_client_hello_server.get_tls_protection().set_tls_version(tls_13);
-        fragmented_client_hello_server.get_tls_protection().set_cipher_suite(0x1301);
-        auto fragmented_client_hello_prosumer = fragmented_client_hello_server.get_secure_prosumer();
-        size_t fragmented_pos = 0;
-        const size_t fragmented_sizes[] = {4, 1, 7};
-        for (size_t i = 0; i < RTL_NUMBER_OF(fragmented_sizes); ++i) {
-            ret = fragmented_client_hello_prosumer->produce(&fragmented_client_hello_server, from_client, coalesced_client_hello_wire.data() + fragmented_pos,
-                                                            fragmented_sizes[i]);
-            _test_case.test(ret, __FUNCTION__, "retain a partial ClientHello TLS record across input chunks");
-            fragmented_pos += fragmented_sizes[i];
-            if (errorcode_t::success != ret) {
-                return;
-            }
-        }
-        ret = fragmented_client_hello_prosumer->produce(&fragmented_client_hello_server, from_client, coalesced_client_hello_wire.data() + fragmented_pos,
-                                                        coalesced_client_hello_wire.size() - fragmented_pos);
-        _test_case.test(ret, __FUNCTION__, "parse a fragmented ClientHello after the complete TLS record arrives");
-        _test_case.assert(0 != (fragmented_client_hello_server.get_session_status() & session_status_client_hello), __FUNCTION__,
-                          "commit ClientHello state only after its complete record body is received");
-
-        // Pin the exact five-byte record-header boundary and distinct partial-body
-        // offsets. None of these prefixes may commit ClientHello before the body
-        // is complete; the remaining bytes must produce the same final state.
-        const size_t client_hello_record_body_size = (static_cast<size_t>(coalesced_client_hello_wire[3]) << 8) | coalesced_client_hello_wire[4];
-        const size_t client_hello_split_sizes[] = {5, 6, 5 + client_hello_record_body_size / 2};
-        for (size_t i = 0; i < RTL_NUMBER_OF(client_hello_split_sizes); ++i) {
-            const size_t split_size = client_hello_split_sizes[i];
-            if (split_size >= coalesced_client_hello_wire.size()) {
-                _test_case.assert(false, __FUNCTION__, "ClientHello split point is inside the record");
-                return;
-            }
-
-            tls_session split_client_hello_server;
-            split_client_hello_server.set_type(session_type_t::tls);
-            split_client_hello_server.get_tls_protection().set_tls_version(tls_13);
-            split_client_hello_server.get_tls_protection().set_cipher_suite(0x1301);
-            auto split_client_hello_prosumer = split_client_hello_server.get_secure_prosumer();
-            ret = split_client_hello_prosumer->produce(&split_client_hello_server, from_client, coalesced_client_hello_wire.data(), split_size);
-            _test_case.test(ret, __FUNCTION__, "retain ClientHello at a record-header or partial-body boundary");
-            _test_case.assert(0 == (split_client_hello_server.get_session_status() & session_status_client_hello), __FUNCTION__,
-                              "do not commit ClientHello before the complete record body arrives");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-
-            ret = split_client_hello_prosumer->produce(&split_client_hello_server, from_client, coalesced_client_hello_wire.data() + split_size,
-                                                       coalesced_client_hello_wire.size() - split_size);
-            _test_case.test(ret, __FUNCTION__, "complete ClientHello after a header/body boundary split");
-            _test_case.assert(0 != (split_client_hello_server.get_session_status() & session_status_client_hello), __FUNCTION__,
-                              "commit ClientHello after the remaining record body arrives");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-        }
-    }
-
-    // Scenario: enforce pending-ciphertext limits when ClientHello and early data arrive together
-    {
-        // Add psk_key_exchange_modes, early_data, and a structurally valid
-        // pre_shared_key extension. RFC 8446 requires the modes extension when PSK
-        // is offered and pre_shared_key to be the final ClientHello extension.
-        if (coalesced_client_hello_wire.size() < 9 || coalesced_client_hello_wire[0] != 0x16 || coalesced_client_hello_wire[5] != 0x01) {
-            _test_case.assert(false, __FUNCTION__, "baseline ClientHello has TLS record and handshake framing");
-            return;
-        }
-        size_t coalesced_handshake_end = 9 + test_read_u24(coalesced_client_hello_wire, 6);
-        size_t coalesced_pos = 9 + 2 + 32;
-        uint8 coalesced_session_id_len = coalesced_client_hello_wire[coalesced_pos++];
-        coalesced_pos += coalesced_session_id_len;
-        uint16 coalesced_cipher_suites_len = test_read_u16(coalesced_client_hello_wire, coalesced_pos);
-        coalesced_pos += 2 + coalesced_cipher_suites_len;
-        uint8 coalesced_compression_len = coalesced_client_hello_wire[coalesced_pos++];
-        coalesced_pos += coalesced_compression_len;
-        size_t coalesced_extensions_len_pos = coalesced_pos;
-        uint16 coalesced_extensions_len = test_read_u16(coalesced_client_hello_wire, coalesced_extensions_len_pos);
-        size_t coalesced_extensions_end = coalesced_extensions_len_pos + 2 + coalesced_extensions_len;
-        if (coalesced_extensions_end != coalesced_handshake_end || coalesced_handshake_end != coalesced_client_hello_wire.size()) {
-            _test_case.assert(false, __FUNCTION__, "baseline ClientHello extension vector is well framed");
-            return;
-        }
-        // early_data (empty), then pre_shared_key with one identity and one
-        // 32-byte binder. The binder is only structurally parsed in this test.
-        binary_t coalesced_early_data_and_psk = {0x00, 0x2d, 0x00, 0x02, 0x01, 0x01, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x29, 0x00, 0x2c, 0x00, 0x07, 0x00, 0x01, 0x01, 0x00,
-                                                 0x00, 0x00, 0x00, 0x00, 0x21, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        // The composer may already include psk_key_exchange_modes. Keep the
-        // synthesized ClientHello unique so this test reaches the pending-record
-        // limit path rather than the independent duplicate-extension rejection.
-        bool has_psk_key_exchange_modes = false;
-        size_t existing_extension_pos = coalesced_extensions_len_pos + 2;
-        while (existing_extension_pos + 4 <= coalesced_extensions_end) {
-            uint16 extension_type = test_read_u16(coalesced_client_hello_wire, existing_extension_pos);
-            uint16 extension_size = test_read_u16(coalesced_client_hello_wire, existing_extension_pos + 2);
-            if (0x002d == extension_type) {
-                has_psk_key_exchange_modes = true;
-                break;
-            }
-            existing_extension_pos += 4 + extension_size;
-        }
-        if (has_psk_key_exchange_modes) {
-            coalesced_early_data_and_psk.erase(coalesced_early_data_and_psk.begin(), coalesced_early_data_and_psk.begin() + 6);
-        }
-        coalesced_client_hello_wire.insert(coalesced_client_hello_wire.end(), coalesced_early_data_and_psk.begin(), coalesced_early_data_and_psk.end());
-        test_write_u16(coalesced_client_hello_wire, coalesced_extensions_len_pos, coalesced_extensions_len + coalesced_early_data_and_psk.size());
-        test_write_u24(coalesced_client_hello_wire, 6, test_read_u24(coalesced_client_hello_wire, 6) + coalesced_early_data_and_psk.size());
-        test_write_u16(coalesced_client_hello_wire, 3, test_read_u16(coalesced_client_hello_wire, 3) + coalesced_early_data_and_psk.size());
-
-        tls_session coalesced_server;
-        coalesced_server.set_type(session_type_t::tls);
-        auto& coalesced_server_protection = coalesced_server.get_tls_protection();
-        coalesced_server_protection.set_tls_version(tls_13);
-        coalesced_server_protection.set_cipher_suite(0x1301);
-        coalesced_server_protection.set_flow(tls_flow_t::zero_rtt);
-        coalesced_server_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
-        coalesced_server_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
-        binary_t coalesced_input = coalesced_client_hello_wire;
-        coalesced_input.insert(coalesced_input.end(), early_record_wire.begin(), early_record_wire.end());
-        auto coalesced_prosumer = coalesced_server.get_secure_prosumer();
-        coalesced_prosumer->set_pending_early_data_buffer_limit(1);
-        ret = coalesced_prosumer->produce(&coalesced_server, from_client, coalesced_input.data(), coalesced_input.size());
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the pending ciphertext limit when ClientHello and 0-RTT arrive in one input chunk");
-        _test_case.assert(0 == coalesced_server.get_session_status(), __FUNCTION__, "reset the handshake after coalesced pending ciphertext overflow");
-
-        tls_session oversized_coalesced_server;
-        oversized_coalesced_server.set_type(session_type_t::tls);
-        auto& oversized_coalesced_protection = oversized_coalesced_server.get_tls_protection();
-        oversized_coalesced_protection.set_tls_version(tls_13);
-        oversized_coalesced_protection.set_cipher_suite(0x1301);
-        oversized_coalesced_protection.set_flow(tls_flow_t::zero_rtt);
-        oversized_coalesced_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
-        oversized_coalesced_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
-        auto oversized_coalesced_prosumer = oversized_coalesced_server.get_secure_prosumer();
-        oversized_coalesced_prosumer->set_pending_early_data_buffer_limit(0);
-        const size_t pending_record_wire_limit = 5 + 0xffff;
-        const size_t pending_record_buffer_limit = 64 * pending_record_wire_limit;
-        binary_t oversized_coalesced_input = coalesced_client_hello_wire;
-        const size_t oversized_early_data_offset = oversized_coalesced_input.size();
-        oversized_coalesced_input.resize(oversized_early_data_offset + pending_record_buffer_limit + 1, 0);
-        for (size_t i = 0; i < 64; ++i) {
-            size_t record_pos = oversized_early_data_offset + i * pending_record_wire_limit;
-            oversized_coalesced_input[record_pos] = 0x17;
-            oversized_coalesced_input[record_pos + 1] = 0x03;
-            oversized_coalesced_input[record_pos + 2] = 0x03;
-            oversized_coalesced_input[record_pos + 3] = 0xff;
-            oversized_coalesced_input[record_pos + 4] = 0xff;
-        }
-        ret = oversized_coalesced_prosumer->produce(&oversized_coalesced_server, from_client, oversized_coalesced_input.data(), oversized_coalesced_input.size());
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__,
-                          "reject coalesced 0-RTT input beyond the hard buffer ceiling after parsing ClientHello but before buffering early records");
-        _test_case.assert(0 == oversized_coalesced_server.get_session_status(), __FUNCTION__, "reset the handshake after coalesced hard-buffer overflow");
-    }
-
-    auto prepare_server = [&](tls_session& session, bool eligible) -> void {
-        session.set_type(session_type_t::tls);
-        auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
-        protection.set_cipher_suite(0x1301);
-        protection.set_flow(tls_flow_t::zero_rtt);
-        protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
-        protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
-        protection.reset_transcript_hash(&session);
-        session.update_session_status(session_status_client_hello);
-        session.update_session_status(session_status_server_hello);
-        session.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
-        session.get_session_info(from_server).set_status(tls_handshake_type_t::server_hello);
-        session.get_session_info(from_client).begin_protection();
-        session.get_keyvalue().set(session_server_psk_selected_identity, 0);
-        session.get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0x1301);
-
-        tls_resumption_ticket ticket;
-        ticket.identity = binary_t{0x01};
-        ticket.version = static_cast<uint16>(tls_13);
-        ticket.cipher_suite = 0x1301;
-        ticket.max_early_data_size = 4;
-        session.set_early_data_ticket(ticket);
-
-        auto& early_state = session.get_session_info(from_server).get_keyvalue();
-        early_state.set(session_early_data_offered, 1);
-        early_state.set(session_early_data_accepted, 0);
-        early_state.set(session_early_data_limit, eligible ? 4 : 0);
-        early_state.set(session_early_data_received, 0);
-        early_state.set(session_early_data_discard_limit, 4096);
-        early_state.set(session_early_data_discarded, 0);
-    };
-
-    tls_session accepted_server;
-    prepare_server(accepted_server, true);
-    auto accepted_prosumer = accepted_server.get_secure_prosumer();
-    _test_case.assert((1024 * 1024) == accepted_prosumer->get_pending_early_data_buffer_limit(), __FUNCTION__,
-                      "apply a bounded 1 MiB pending ciphertext buffer by default");
-    accepted_prosumer->set_pending_early_data_buffer_limit(early_record_wire.size());
-    _test_case.assert(early_record_wire.size() == accepted_prosumer->get_pending_early_data_buffer_limit(), __FUNCTION__,
-                      "allow the server to configure the pending ciphertext buffer limit");
-    size_t first_fragment_size = 7;
-    ret = accepted_prosumer->produce(&accepted_server, from_client, early_record_wire.data(), first_fragment_size);
-    _test_case.test(ret, __FUNCTION__, "buffer a partial in-flight 0-RTT record until the server's EncryptedExtensions decision");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(0 == accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_received), __FUNCTION__,
-                      "do not decrypt or account early data before the server decides");
-    char accepted_output[8] = {};
-    size_t accepted_read = 0;
-    accepted_prosumer->consume(0, 0, accepted_output, sizeof(accepted_output), &accepted_read);
-    _test_case.assert(0 == accepted_read, __FUNCTION__, "do not deliver early data before EncryptedExtensions");
-
-    tls_handshake_encrypted_extensions accepted_ee(&accepted_server);
-    accepted_ee.get_extensions().add(new tls_extension_early_data(&accepted_ee));
-    binary_t accepted_ee_wire;
-    ret = accepted_ee.write(from_server, accepted_ee_wire);
-    _test_case.test(ret, __FUNCTION__, "serialize the acceptance signal and resume buffered early data");
-    if (errorcode_t::success != ret) {
-        return;
-    }
-    _test_case.assert(1 == accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
-                      "record server acceptance before resuming in-flight early data");
-    ret = accepted_prosumer->produce(&accepted_server, from_client, early_record_wire.data() + first_fragment_size, early_record_wire.size() - first_fragment_size);
-    _test_case.test(ret, __FUNCTION__, "complete the buffered TLS record after EncryptedExtensions has committed acceptance");
-    size_t accepted_after_ee = 0;
-    ret = accepted_prosumer->consume(0, 0, accepted_output, sizeof(accepted_output), &accepted_after_ee);
-    _test_case.test(ret, __FUNCTION__, "deliver buffered early data after EncryptedExtensions acceptance");
-    _test_case.assert(3 == accepted_after_ee, __FUNCTION__, "deliver the complete buffered early-data payload");
-    _test_case.assert(3 == accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_received), __FUNCTION__,
-                      "account the accepted early-data payload only after it is processed");
-    _test_case.assert(binary_t({0x31, 0x32, 0x33}) == binary_t(accepted_output, accepted_output + accepted_after_ee), __FUNCTION__,
-                      "preserve the buffered early-data plaintext");
-
-    // Fragment the same pending 0-RTT record at multiple offsets, but deliver
-    // every fragment before EncryptedExtensions. The EE write must resume and
-    // process the complete retained record exactly once.
-    const size_t early_record_split_sizes[] = {1, 4, 5, 6, early_record_wire.size() / 2};
-    for (size_t i = 0; i < RTL_NUMBER_OF(early_record_split_sizes); ++i) {
-        const size_t split_size = early_record_split_sizes[i];
-        if (0 == split_size || split_size >= early_record_wire.size()) {
-            _test_case.assert(false, __FUNCTION__, "early-data split point is inside the TLS record");
-            return;
-        }
-
-        tls_session partitioned_accepted_server;
-        prepare_server(partitioned_accepted_server, true);
-        auto partitioned_accepted_prosumer = partitioned_accepted_server.get_secure_prosumer();
-        partitioned_accepted_prosumer->set_pending_early_data_buffer_limit(early_record_wire.size());
-        ret = partitioned_accepted_prosumer->produce(&partitioned_accepted_server, from_client, early_record_wire.data(), split_size);
-        _test_case.test(ret, __FUNCTION__, "buffer the first fragment of an in-flight early-data record");
+        tls_session rejected_server;
+        prepare_server(rejected_server, false);
+        // PSK rejection may select one_rtt during ClientHello processing, but
+        // in-flight early data must remain pending until EncryptedExtensions.
+        rejected_server.get_tls_protection().set_flow(tls_flow_t::one_rtt);
+        auto rejected_prosumer = rejected_server.get_secure_prosumer();
+        return_t ret = rejected_prosumer->produce(&rejected_server, from_client, early_record_wire.data(), early_record_wire.size());
+        _test_case.test(ret, __FUNCTION__, "buffer in-flight early data after PSK rejection has selected one_rtt but before EncryptedExtensions");
         if (errorcode_t::success != ret) {
             return;
         }
-        ret = partitioned_accepted_prosumer->produce(&partitioned_accepted_server, from_client, early_record_wire.data() + split_size,
-                                                     early_record_wire.size() - split_size);
-        _test_case.test(ret, __FUNCTION__, "retain the complete fragmented early-data record before EncryptedExtensions");
+        char rejected_output[8] = {};
+        size_t rejected_read = 0;
+        rejected_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &rejected_read);
+        _test_case.assert(0 == rejected_read, __FUNCTION__, "do not deliver data before a rejection decision");
+
+        tls_handshake_encrypted_extensions rejected_ee(&rejected_server);
+        binary_t rejected_ee_wire;
+        ret = rejected_ee.write(from_server, rejected_ee_wire);
+        _test_case.test(ret, __FUNCTION__, "omit early_data and discard the buffered rejected ciphertext under handshake keys");
         if (errorcode_t::success != ret) {
             return;
         }
+        _test_case.assert(0 == rejected_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
+                          "retain rejection state when EncryptedExtensions omits early_data");
+        _test_case.assert(tls_flow_t::one_rtt == rejected_server.get_tls_protection().get_flow(), __FUNCTION__,
+                          "retain handshake-key flow while resuming rejected records");
+        _test_case.assert(early_record_wire.size() - 5 == rejected_server.get_session_info(from_server).get_keyvalue().get(session_early_data_discarded), __FUNCTION__,
+                          "discard the buffered ciphertext within the configured skip bound");
+        size_t rejected_after_ee = 0;
+        ret = rejected_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &rejected_after_ee);
+        _test_case.assert(0 == rejected_after_ee, __FUNCTION__, "never deliver rejected early-data plaintext");
 
-        char partitioned_output[8] = {};
-        size_t partitioned_read = 0;
-        partitioned_accepted_prosumer->consume(0, 0, partitioned_output, sizeof(partitioned_output), &partitioned_read);
-        _test_case.assert(0 == partitioned_read, __FUNCTION__, "do not deliver fragmented early data before the EncryptedExtensions decision");
-
-        tls_handshake_encrypted_extensions partitioned_accepted_ee(&partitioned_accepted_server);
-        partitioned_accepted_ee.get_extensions().add(new tls_extension_early_data(&partitioned_accepted_ee));
-        binary_t partitioned_accepted_ee_wire;
-        ret = partitioned_accepted_ee.write(from_server, partitioned_accepted_ee_wire);
-        _test_case.test(ret, __FUNCTION__, "resume the complete fragmented early-data record after EncryptedExtensions acceptance");
+        // A record may be split across the EncryptedExtensions decision. Keep its
+        // prefix buffered, then finish it after rejection so the completed record
+        // still follows the rejected-0-RTT trial-decryption path.
+        tls_session rejected_split_server;
+        prepare_server(rejected_split_server, false);
+        rejected_split_server.get_tls_protection().set_flow(tls_flow_t::one_rtt);
+        auto rejected_split_prosumer = rejected_split_server.get_secure_prosumer();
+        ret = rejected_split_prosumer->produce(&rejected_split_server, from_client, early_record_wire.data(), first_fragment_size);
+        _test_case.test(ret, __FUNCTION__, "buffer a partial rejected early-data record before EncryptedExtensions");
         if (errorcode_t::success != ret) {
             return;
         }
-        ret = partitioned_accepted_prosumer->consume(0, 0, partitioned_output, sizeof(partitioned_output), &partitioned_read);
-        _test_case.test(ret, __FUNCTION__, "deliver accepted early data retained across multiple input chunks");
-        _test_case.assert(3 == partitioned_read, __FUNCTION__, "deliver exactly one accepted early-data payload after fragmented buffering");
-        _test_case.assert(binary_t({0x31, 0x32, 0x33}) == binary_t(partitioned_output, partitioned_output + partitioned_read), __FUNCTION__,
-                          "preserve plaintext for fragmented pending early data");
-        _test_case.assert(3 == partitioned_accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_received), __FUNCTION__,
-                          "account fragmented accepted early data exactly once");
-    }
+        tls_handshake_encrypted_extensions rejected_split_ee(&rejected_split_server);
+        binary_t rejected_split_ee_wire;
+        ret = rejected_split_ee.write(from_server, rejected_split_ee_wire);
+        _test_case.test(ret, __FUNCTION__, "commit early-data rejection while retaining the incomplete record");
+        if (errorcode_t::success != ret) {
+            return;
+        }
+        ret = rejected_split_prosumer->produce(&rejected_split_server, from_client, early_record_wire.data() + first_fragment_size,
+                                               early_record_wire.size() - first_fragment_size);
+        _test_case.test(ret, __FUNCTION__, "trial-decrypt and discard the record completed after EncryptedExtensions rejection");
+        if (errorcode_t::success != ret) {
+            return;
+        }
+        const auto& rejected_split_state = rejected_split_server.get_session_info(from_server).get_keyvalue();
+        _test_case.assert(early_record_wire.size() - 5 == rejected_split_state.get(session_early_data_discarded), __FUNCTION__,
+                          "account the rejected ciphertext completed after EncryptedExtensions exactly once");
+        _test_case.assert(1 == rejected_split_state.get(session_early_data_discarded_records), __FUNCTION__, "count the post-decision rejected record exactly once");
+        size_t rejected_split_read = 0;
+        rejected_split_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &rejected_split_read);
+        _test_case.assert(0 == rejected_split_read, __FUNCTION__, "never deliver a record completed after early-data rejection");
 
-    // Coalesce multiple complete 0-RTT records with an incomplete trailing
-    // record. Resuming after EncryptedExtensions must process each complete
-    // record once, retain the tail, and finish it when the final bytes arrive.
-    client_early_state.set(session_early_data_limit, 12);
-    tls_record_application_data second_early_record(&client);
-    second_early_record.set_binary(binary_t{0x41, 0x42, 0x43});
-    binary_t second_early_record_wire;
-    ret = second_early_record.write(from_client, second_early_record_wire);
-    _test_case.test(ret, __FUNCTION__, "prepare a second sequential protected 0-RTT record");
-    if (errorcode_t::success != ret) {
-        return;
-    }
+        for (size_t i = 0; i < split_count; ++i) {
+            const size_t split_size = early_record_split_sizes[i];
+            tls_session partitioned_rejected_server;
+            prepare_server(partitioned_rejected_server, false);
+            partitioned_rejected_server.get_tls_protection().set_flow(tls_flow_t::one_rtt);
+            auto partitioned_rejected_prosumer = partitioned_rejected_server.get_secure_prosumer();
+            ret = partitioned_rejected_prosumer->produce(&partitioned_rejected_server, from_client, early_record_wire.data(), split_size);
+            _test_case.test(ret, __FUNCTION__, "buffer the first fragment of rejected in-flight early data");
+            if (errorcode_t::success != ret) {
+                return;
+            }
+            ret = partitioned_rejected_prosumer->produce(&partitioned_rejected_server, from_client, early_record_wire.data() + split_size,
+                                                         early_record_wire.size() - split_size);
+            _test_case.test(ret, __FUNCTION__, "retain the complete rejected early-data record before EncryptedExtensions");
+            if (errorcode_t::success != ret) {
+                return;
+            }
 
-    tls_record_application_data third_early_record(&client);
-    third_early_record.set_binary(binary_t{0x51, 0x52, 0x53});
-    binary_t third_early_record_wire;
-    ret = third_early_record.write(from_client, third_early_record_wire);
-    _test_case.test(ret, __FUNCTION__, "prepare a third sequential protected 0-RTT record");
-    if (errorcode_t::success != ret) {
-        return;
+            tls_handshake_encrypted_extensions partitioned_rejected_ee(&partitioned_rejected_server);
+            binary_t partitioned_rejected_ee_wire;
+            ret = partitioned_rejected_ee.write(from_server, partitioned_rejected_ee_wire);
+            _test_case.test(ret, __FUNCTION__, "resume and discard fragmented early data after EncryptedExtensions rejection");
+            if (errorcode_t::success != ret) {
+                return;
+            }
+            const auto& partitioned_rejected_state = partitioned_rejected_server.get_session_info(from_server).get_keyvalue();
+            _test_case.assert(early_record_wire.size() - 5 == partitioned_rejected_state.get(session_early_data_discarded), __FUNCTION__,
+                              "account the fragmented rejected ciphertext exactly once");
+            _test_case.assert(1 == partitioned_rejected_state.get(session_early_data_discarded_records), __FUNCTION__, "count one fragmented rejected early-data record");
+            size_t partitioned_rejected_read = 0;
+            partitioned_rejected_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &partitioned_rejected_read);
+            _test_case.assert(0 == partitioned_rejected_read, __FUNCTION__, "never deliver fragmented rejected early-data plaintext");
+        }
     }
+}
 
+template <typename TPrepareServer>
+static void test_tls13_server_delivers_coalesced_early_data(const binary_t& early_record_wire, const binary_t& second_early_record_wire,
+                                                            const binary_t& third_early_record_wire, size_t third_record_prefix_size, TPrepareServer prepare_server) {
+    // Scenario under test: TLS 1.3 server buffers coalesced early-data records until EncryptedExtensions.
+    // Action: deliver two complete records and one fragmented record, including every two-chunk stream partition.
+    // Expected: preserve record order and deliver each accepted plaintext byte exactly once.
+    _test_case.begin("TLS 1.3 server delivers coalesced early data across every stream partition");
+
+    return_t ret = errorcode_t::success;
     tls_session coalesced_early_server;
     prepare_server(coalesced_early_server, true);
     auto coalesced_early_ticket = coalesced_early_server.get_early_data_ticket();
@@ -398,7 +485,6 @@ static void test_tls13_server_defers_inflight_early_data_until_encrypted_extensi
 
     binary_t coalesced_early_input = early_record_wire;
     coalesced_early_input.insert(coalesced_early_input.end(), second_early_record_wire.begin(), second_early_record_wire.end());
-    const size_t third_record_prefix_size = 7;
     coalesced_early_input.insert(coalesced_early_input.end(), third_early_record_wire.begin(), third_early_record_wire.begin() + third_record_prefix_size);
     ret = coalesced_early_prosumer->produce(&coalesced_early_server, from_client, coalesced_early_input.data(), coalesced_early_input.size());
     _test_case.test(ret, __FUNCTION__, "buffer two complete coalesced 0-RTT records and an incomplete trailing record before EncryptedExtensions");
@@ -521,273 +607,234 @@ static void test_tls13_server_defers_inflight_early_data_until_encrypted_extensi
         _test_case.assert(9 == partitioned_coalesced_state.get(session_early_data_received), __FUNCTION__,
                           "account all coalesced and trailing records exactly once for every stream split");
     }
+}
 
-    // Scenario: enforce pending early-data byte, record-count, and callback buffer limits
-    {
-        tls_session overflow_server;
-        prepare_server(overflow_server, true);
-        auto overflow_prosumer = overflow_server.get_secure_prosumer();
-        overflow_prosumer->set_pending_early_data_buffer_limit(first_fragment_size);
-        ret = overflow_prosumer->produce(&overflow_server, from_client, early_record_wire.data(), first_fragment_size);
-        _test_case.test(ret, __FUNCTION__, "accept a pending ciphertext fragment exactly at the configured buffer limit");
-        ret = overflow_prosumer->produce(&overflow_server, from_client, early_record_wire.data() + first_fragment_size, 1);
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject cumulative pending 0-RTT ciphertext beyond the configured buffer limit");
-        size_t pending_buffer_overflow_alert_count = 0;
-        overflow_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-                ++pending_buffer_overflow_alert_count;
-            }
-        });
-        _test_case.assert(1 == pending_buffer_overflow_alert_count, __FUNCTION__,
-                          "raise exactly one fatal internal_error when the pending ciphertext buffer limit is exceeded");
-        _test_case.assert(0 == overflow_server.get_session_status(), __FUNCTION__, "reset the handshake state after pending ciphertext buffer overflow");
-        char overflow_output[8] = {};
-        size_t overflow_read = 0;
-        overflow_prosumer->consume(0, 0, overflow_output, sizeof(overflow_output), &overflow_read);
-        _test_case.assert(0 == overflow_read, __FUNCTION__, "do not deliver data after the pending ciphertext buffer overflow");
+template <typename TPrepareServer>
+static void test_tls13_server_resumes_fragmented_accepted_early_data(const binary_t& early_record_wire, const size_t* split_sizes, size_t split_count,
+                                                                     TPrepareServer prepare_server) {
+    // Scenario under test: TLS 1.3 server resumes fragmented accepted early data after EncryptedExtensions.
+    // Action: retain each record split before the acceptance decision, then complete it.
+    // Expected: deliver the accepted plaintext exactly once for every tested split.
+    _test_case.begin("TLS 1.3 server resumes fragmented accepted early data after EncryptedExtensions");
 
-        tls_session record_count_boundary_server;
-        prepare_server(record_count_boundary_server, true);
-        auto record_count_boundary_prosumer = record_count_boundary_server.get_secure_prosumer();
-        record_count_boundary_prosumer->set_pending_early_data_buffer_limit(0);
-        binary_t max_pending_records;
-        for (size_t i = 0; i < 64; ++i) {
-            max_pending_records.insert(max_pending_records.end(), early_record_wire.begin(), early_record_wire.end());
+    return_t ret = errorcode_t::success;
+    // Fragment the same pending 0-RTT record at multiple offsets, but deliver
+    // every fragment before EncryptedExtensions. The EE write must resume and
+    // process the complete retained record exactly once.
+    for (size_t i = 0; i < split_count; ++i) {
+        const size_t split_size = split_sizes[i];
+        if (0 == split_size || split_size >= early_record_wire.size()) {
+            _test_case.assert(false, __FUNCTION__, "early-data split point is inside the TLS record");
+            return;
         }
-        ret = record_count_boundary_prosumer->produce(&record_count_boundary_server, from_client, max_pending_records.data(), max_pending_records.size());
-        _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "allow exactly 64 pending records when the byte cap is disabled");
 
-        tls_session record_count_server;
-        prepare_server(record_count_server, true);
-        auto record_count_prosumer = record_count_server.get_secure_prosumer();
-        record_count_prosumer->set_pending_early_data_buffer_limit(0);
-        binary_t too_many_pending_records;
-        for (size_t i = 0; i < 65; ++i) {
-            too_many_pending_records.insert(too_many_pending_records.end(), early_record_wire.begin(), early_record_wire.end());
+        tls_session partitioned_accepted_server;
+        prepare_server(partitioned_accepted_server, true);
+        auto partitioned_accepted_prosumer = partitioned_accepted_server.get_secure_prosumer();
+        partitioned_accepted_prosumer->set_pending_early_data_buffer_limit(early_record_wire.size());
+        ret = partitioned_accepted_prosumer->produce(&partitioned_accepted_server, from_client, early_record_wire.data(), split_size);
+        _test_case.test(ret, __FUNCTION__, "buffer the first fragment of an in-flight early-data record");
+        if (errorcode_t::success != ret) {
+            return;
         }
-        ret = record_count_prosumer->produce(&record_count_server, from_client, too_many_pending_records.data(), too_many_pending_records.size());
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the pending 0-RTT record-count limit independently of the byte limit");
+        ret = partitioned_accepted_prosumer->produce(&partitioned_accepted_server, from_client, early_record_wire.data() + split_size,
+                                                     early_record_wire.size() - split_size);
+        _test_case.test(ret, __FUNCTION__, "retain the complete fragmented early-data record before EncryptedExtensions");
+        if (errorcode_t::success != ret) {
+            return;
+        }
 
-        tls_session record_buffer_limit_server;
-        prepare_server(record_buffer_limit_server, true);
-        auto record_buffer_limit_prosumer = record_buffer_limit_server.get_secure_prosumer();
-        record_buffer_limit_prosumer->set_pending_early_data_buffer_limit(0);
-        const size_t record_buffer_limit = 64 * (5 + 0xffff);
-        binary_t oversized_pending_input(record_buffer_limit + 1, 0);
-        oversized_pending_input[0] = 0x17;
-        oversized_pending_input[1] = 0x03;
-        oversized_pending_input[2] = 0x03;
-        oversized_pending_input[3] = 0xff;
-        oversized_pending_input[4] = 0xff;
-        ret = record_buffer_limit_prosumer->produce(&record_buffer_limit_server, from_client, oversized_pending_input.data(), oversized_pending_input.size());
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject input beyond the record-count-derived hard buffer ceiling before copying it");
-        size_t record_count_overflow_alert_count = 0;
-        record_count_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-                ++record_count_overflow_alert_count;
-            }
-        });
-        _test_case.assert(1 == record_count_overflow_alert_count, __FUNCTION__, "raise exactly one fatal internal_error for pending record-count overflow");
+        char partitioned_output[8] = {};
+        size_t partitioned_read = 0;
+        partitioned_accepted_prosumer->consume(0, 0, partitioned_output, sizeof(partitioned_output), &partitioned_read);
+        _test_case.assert(0 == partitioned_read, __FUNCTION__, "do not deliver fragmented early data before the EncryptedExtensions decision");
 
-        tls_session callback_overflow_server;
-        prepare_server(callback_overflow_server, true);
-        auto callback_overflow_prosumer = callback_overflow_server.get_secure_prosumer();
-        callback_overflow_prosumer->set_pending_early_data_buffer_limit(1);
-        bool callback_write_rejected = false;
-        ret = callback_overflow_prosumer->produce(&callback_overflow_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
-            callback_write_rejected = (errorcode_t::overflow == stream.write(early_record_wire.data(), early_record_wire.size()));
-        });
-        _test_case.assert(callback_write_rejected, __FUNCTION__, "reject callback input before it grows the pending buffer beyond its byte limit");
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the pending ciphertext bound on callback-based input");
-        size_t callback_overflow_alert_count = 0;
-        callback_overflow_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-                ++callback_overflow_alert_count;
-            }
-        });
-        _test_case.assert(1 == callback_overflow_alert_count, __FUNCTION__, "raise exactly one fatal internal_error for callback-based buffer overflow");
+        tls_handshake_encrypted_extensions partitioned_accepted_ee(&partitioned_accepted_server);
+        partitioned_accepted_ee.get_extensions().add(new tls_extension_early_data(&partitioned_accepted_ee));
+        binary_t partitioned_accepted_ee_wire;
+        ret = partitioned_accepted_ee.write(from_server, partitioned_accepted_ee_wire);
+        _test_case.test(ret, __FUNCTION__, "resume the complete fragmented early-data record after EncryptedExtensions acceptance");
+        if (errorcode_t::success != ret) {
+            return;
+        }
+        ret = partitioned_accepted_prosumer->consume(0, 0, partitioned_output, sizeof(partitioned_output), &partitioned_read);
+        _test_case.test(ret, __FUNCTION__, "deliver accepted early data retained across multiple input chunks");
+        _test_case.assert(3 == partitioned_read, __FUNCTION__, "deliver exactly one accepted early-data payload after fragmented buffering");
+        _test_case.assert(binary_t({0x31, 0x32, 0x33}) == binary_t(partitioned_output, partitioned_output + partitioned_read), __FUNCTION__,
+                          "preserve plaintext for fragmented pending early data");
+        _test_case.assert(3 == partitioned_accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_received), __FUNCTION__,
+                          "account fragmented accepted early data exactly once");
+    }
+}
 
-        tls_session callback_api_server;
-        prepare_server(callback_api_server, true);
-        auto callback_api_prosumer = callback_api_server.get_secure_prosumer();
-        callback_api_prosumer->set_pending_early_data_buffer_limit(1);
-        bool callback_printf_rejected = false;
-        bool callback_large_printf_rejected = false;
-        bool callback_insert_rejected = false;
-        bool callback_fill_rejected = false;
-        bool callback_resize_rejected = false;
-        const std::string large_printf_output(4096, 'p');
-        ret = callback_api_prosumer->produce(&callback_api_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
-            callback_printf_rejected = (errorcode_t::overflow == stream.printf("%s", "formatted output"));
-            callback_large_printf_rejected = (errorcode_t::overflow == stream.printf("%s", large_printf_output.c_str()));
-            callback_insert_rejected = (errorcode_t::overflow == stream.insert(0, early_record_wire.data(), early_record_wire.size()));
-            callback_fill_rejected = (errorcode_t::overflow == stream.fill(2, 'x'));
-            stream.resize(2);
-            callback_resize_rejected = (0 == stream.size());
-        });
-        _test_case.assert(callback_printf_rejected, __FUNCTION__, "bound printf output before formatted data grows the pending buffer");
-        _test_case.assert(callback_large_printf_rejected, __FUNCTION__, "bound a large formatted output chunk without materializing it in an intermediate stream");
-        _test_case.assert(callback_insert_rejected, __FUNCTION__, "bound insert output before inserted data grows the pending buffer");
-        _test_case.assert(callback_fill_rejected, __FUNCTION__, "bound fill output before it grows the pending buffer");
-        _test_case.assert(callback_resize_rejected, __FUNCTION__, "reject callback resize before it grows the pending buffer");
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject callback mutation APIs that exceed the pending ciphertext limit");
+template <typename TPrepareServer>
+static void test_tls13_server_resumes_accepted_early_data_after_encrypted_extensions(const binary_t& early_record_wire, size_t first_fragment_size,
+                                                                                     TPrepareServer prepare_server) {
+    // Scenario under test: accepted TLS 1.3 early data resumes after EncryptedExtensions.
+    // Action: retain fragmented 0-RTT ciphertext until the server accepts early data.
+    // Expected: resume the pending record and deliver the accepted plaintext once.
+    return_t ret = errorcode_t::success;
+    tls_session accepted_server;
+    prepare_server(accepted_server, true);
+    auto accepted_prosumer = accepted_server.get_secure_prosumer();
+    _test_case.assert((1024 * 1024) == accepted_prosumer->get_pending_early_data_buffer_limit(), __FUNCTION__,
+                      "apply a bounded 1 MiB pending ciphertext buffer by default");
+    accepted_prosumer->set_pending_early_data_buffer_limit(early_record_wire.size());
+    _test_case.assert(early_record_wire.size() == accepted_prosumer->get_pending_early_data_buffer_limit(), __FUNCTION__,
+                      "allow the server to configure the pending ciphertext buffer limit");
+    ret = accepted_prosumer->produce(&accepted_server, from_client, early_record_wire.data(), first_fragment_size);
+    _test_case.test(ret, __FUNCTION__, "buffer a partial in-flight 0-RTT record until the server's EncryptedExtensions decision");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(0 == accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_received), __FUNCTION__,
+                      "do not decrypt or account early data before the server decides");
+    char accepted_output[8] = {};
+    size_t accepted_read = 0;
+    accepted_prosumer->consume(0, 0, accepted_output, sizeof(accepted_output), &accepted_read);
+    _test_case.assert(0 == accepted_read, __FUNCTION__, "do not deliver early data before EncryptedExtensions");
 
-        tls_session callback_encoder_server;
-        prepare_server(callback_encoder_server, true);
-        auto callback_encoder_prosumer = callback_encoder_server.get_secure_prosumer();
-        callback_encoder_prosumer->set_pending_early_data_buffer_limit(1);
-        return_t callback_encoder_ret = errorcode_t::success;
-        ret = callback_encoder_prosumer->produce(&callback_encoder_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
-            callback_encoder_ret = base64_encode(binary_t{0x01, 0x02, 0x03}, stream);
-        });
-        _test_case.assert(errorcode_t::overflow == callback_encoder_ret, __FUNCTION__,
-                          "reject a Base64 encoder reservation before writing through its raw output pointer");
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "propagate an over-limit Base64 reservation to pending ciphertext handling");
+    tls_handshake_encrypted_extensions accepted_ee(&accepted_server);
+    accepted_ee.get_extensions().add(new tls_extension_early_data(&accepted_ee));
+    binary_t accepted_ee_wire;
+    ret = accepted_ee.write(from_server, accepted_ee_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize the acceptance signal and resume buffered early data");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(1 == accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
+                      "record server acceptance before resuming in-flight early data");
+    ret = accepted_prosumer->produce(&accepted_server, from_client, early_record_wire.data() + first_fragment_size, early_record_wire.size() - first_fragment_size);
+    _test_case.test(ret, __FUNCTION__, "complete the buffered TLS record after EncryptedExtensions has committed acceptance");
+    size_t accepted_after_ee = 0;
+    ret = accepted_prosumer->consume(0, 0, accepted_output, sizeof(accepted_output), &accepted_after_ee);
+    _test_case.test(ret, __FUNCTION__, "deliver buffered early data after EncryptedExtensions acceptance");
+    _test_case.assert(3 == accepted_after_ee, __FUNCTION__, "deliver the complete buffered early-data payload");
+    _test_case.assert(3 == accepted_server.get_session_info(from_server).get_keyvalue().get(session_early_data_received), __FUNCTION__,
+                      "account the accepted early-data payload only after it is processed");
+    _test_case.assert(binary_t({0x31, 0x32, 0x33}) == binary_t(accepted_output, accepted_output + accepted_after_ee), __FUNCTION__,
+                      "preserve the buffered early-data plaintext");
+}
 
-        tls_session callback_base16_server;
-        prepare_server(callback_base16_server, true);
-        auto callback_base16_prosumer = callback_base16_server.get_secure_prosumer();
-        callback_base16_prosumer->set_pending_early_data_buffer_limit(1);
-        return_t callback_base16_ret = errorcode_t::success;
-        ret = callback_base16_prosumer->produce(&callback_base16_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
-            callback_base16_ret = base16_encode(binary_t{0x01, 0x02, 0x03}, stream);
-        });
-        _test_case.assert(errorcode_t::overflow == callback_base16_ret, __FUNCTION__,
-                          "reject a Base16 encoder reservation before writing through its raw output pointer");
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "propagate an over-limit Base16 reservation to pending ciphertext handling");
+static void test_tls13_server_defers_inflight_early_data_until_encrypted_extensions() {
+    // Scenario under test: TLS 1.3 server defers in-flight early data until EncryptedExtensions decides acceptance.
+    // Action: prepare a valid protected 0-RTT record for the server.
+    // Expected: commit ClientHello state after a one-to-three-byte header split.
+    _test_case.begin("TLS 1.3 server defers in-flight early data until EncryptedExtensions decides acceptance");
 
-        tls_session callback_integer_server;
-        prepare_server(callback_integer_server, true);
-        auto callback_integer_prosumer = callback_integer_server.get_secure_prosumer();
-        callback_integer_prosumer->set_pending_early_data_buffer_limit(1);
-        ret = callback_integer_prosumer->produce(&callback_integer_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void { stream << 123456; });
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "bound integral stream insertion through the formatted output hook");
+    tls_session client;
+    client.set_type(session_type_t::tls);
+    auto& client_protection = client.get_tls_protection();
+    client_protection.set_tls_version(tls1_3);
+    client_protection.set_cipher_suite(0x1301);
+    client_protection.set_flow(tls_flow_t::zero_rtt);
+    client_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
+    client_protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
+    client.update_session_status(session_status_client_hello);
+    client.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    client.get_session_info(from_client).begin_protection();
+    auto& client_early_state = client.get_session_info(from_server).get_keyvalue();
+    client_early_state.set(session_early_data_offered, 1);
+    client_early_state.set(session_early_data_limit, 4);
+    client_early_state.set(session_early_data_sent, 0);
 
-        tls_session callback_assignment_server;
-        prepare_server(callback_assignment_server, true);
-        auto callback_assignment_prosumer = callback_assignment_server.get_secure_prosumer();
-        callback_assignment_prosumer->set_pending_early_data_buffer_limit(1);
-        ret = callback_assignment_prosumer->produce(&callback_assignment_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
-            basic_stream oversized;
-            oversized.write("oversized", 9);
-            stream = oversized;
-        });
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "bound callback stream copy assignment before replacing the pending buffer");
-
-        tls_session callback_move_assignment_server;
-        prepare_server(callback_move_assignment_server, true);
-        auto callback_move_assignment_prosumer = callback_move_assignment_server.get_secure_prosumer();
-        callback_move_assignment_prosumer->set_pending_early_data_buffer_limit(1);
-        ret = callback_move_assignment_prosumer->produce(&callback_move_assignment_server, from_client, [&](basic_stream& stream, sockaddr_storage_t&) -> void {
-            basic_stream oversized;
-            oversized.write("oversized", 9);
-            stream = std::move(oversized);
-        });
-        _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "bound callback stream move assignment before replacing the pending buffer");
+    tls_record_application_data client_early_record(&client);
+    client_early_record.set_binary(binary_t{0x31, 0x32, 0x33});
+    binary_t early_record_wire;
+    return_t ret = client_early_record.write(from_client, early_record_wire);
+    _test_case.test(ret, __FUNCTION__, "prepare a valid protected 0-RTT record for the server");
+    if (errorcode_t::success != ret) {
+        return;
     }
 
-    // Scenario: defer rejected in-flight early data until EncryptedExtensions and discard it without delivery
-    {
-        tls_session rejected_server;
-        prepare_server(rejected_server, false);
-        // PSK rejection may select one_rtt during ClientHello processing, but
-        // in-flight early data must remain pending until EncryptedExtensions.
-        rejected_server.get_tls_protection().set_flow(tls_flow_t::one_rtt);
-        auto rejected_prosumer = rejected_server.get_secure_prosumer();
-        ret = rejected_prosumer->produce(&rejected_server, from_client, early_record_wire.data(), early_record_wire.size());
-        _test_case.test(ret, __FUNCTION__, "buffer in-flight early data after PSK rejection has selected one_rtt but before EncryptedExtensions");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        char rejected_output[8] = {};
-        size_t rejected_read = 0;
-        rejected_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &rejected_read);
-        _test_case.assert(0 == rejected_read, __FUNCTION__, "do not deliver data before a rejection decision");
-
-        tls_handshake_encrypted_extensions rejected_ee(&rejected_server);
-        binary_t rejected_ee_wire;
-        ret = rejected_ee.write(from_server, rejected_ee_wire);
-        _test_case.test(ret, __FUNCTION__, "omit early_data and discard the buffered rejected ciphertext under handshake keys");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        _test_case.assert(0 == rejected_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
-                          "retain rejection state when EncryptedExtensions omits early_data");
-        _test_case.assert(tls_flow_t::one_rtt == rejected_server.get_tls_protection().get_flow(), __FUNCTION__,
-                          "retain handshake-key flow while resuming rejected records");
-        _test_case.assert(early_record_wire.size() - 5 == rejected_server.get_session_info(from_server).get_keyvalue().get(session_early_data_discarded), __FUNCTION__,
-                          "discard the buffered ciphertext within the configured skip bound");
-        size_t rejected_after_ee = 0;
-        ret = rejected_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &rejected_after_ee);
-        _test_case.assert(0 == rejected_after_ee, __FUNCTION__, "never deliver rejected early-data plaintext");
-
-        // A record may be split across the EncryptedExtensions decision. Keep its
-        // prefix buffered, then finish it after rejection so the completed record
-        // still follows the rejected-0-RTT trial-decryption path.
-        tls_session rejected_split_server;
-        prepare_server(rejected_split_server, false);
-        rejected_split_server.get_tls_protection().set_flow(tls_flow_t::one_rtt);
-        auto rejected_split_prosumer = rejected_split_server.get_secure_prosumer();
-        ret = rejected_split_prosumer->produce(&rejected_split_server, from_client, early_record_wire.data(), first_fragment_size);
-        _test_case.test(ret, __FUNCTION__, "buffer a partial rejected early-data record before EncryptedExtensions");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        tls_handshake_encrypted_extensions rejected_split_ee(&rejected_split_server);
-        binary_t rejected_split_ee_wire;
-        ret = rejected_split_ee.write(from_server, rejected_split_ee_wire);
-        _test_case.test(ret, __FUNCTION__, "commit early-data rejection while retaining the incomplete record");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        ret = rejected_split_prosumer->produce(&rejected_split_server, from_client, early_record_wire.data() + first_fragment_size,
-                                               early_record_wire.size() - first_fragment_size);
-        _test_case.test(ret, __FUNCTION__, "trial-decrypt and discard the record completed after EncryptedExtensions rejection");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        const auto& rejected_split_state = rejected_split_server.get_session_info(from_server).get_keyvalue();
-        _test_case.assert(early_record_wire.size() - 5 == rejected_split_state.get(session_early_data_discarded), __FUNCTION__,
-                          "account the rejected ciphertext completed after EncryptedExtensions exactly once");
-        _test_case.assert(1 == rejected_split_state.get(session_early_data_discarded_records), __FUNCTION__, "count the post-decision rejected record exactly once");
-        size_t rejected_split_read = 0;
-        rejected_split_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &rejected_split_read);
-        _test_case.assert(0 == rejected_split_read, __FUNCTION__, "never deliver a record completed after early-data rejection");
-
-        for (size_t i = 0; i < RTL_NUMBER_OF(early_record_split_sizes); ++i) {
-            const size_t split_size = early_record_split_sizes[i];
-            tls_session partitioned_rejected_server;
-            prepare_server(partitioned_rejected_server, false);
-            partitioned_rejected_server.get_tls_protection().set_flow(tls_flow_t::one_rtt);
-            auto partitioned_rejected_prosumer = partitioned_rejected_server.get_secure_prosumer();
-            ret = partitioned_rejected_prosumer->produce(&partitioned_rejected_server, from_client, early_record_wire.data(), split_size);
-            _test_case.test(ret, __FUNCTION__, "buffer the first fragment of rejected in-flight early data");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-            ret = partitioned_rejected_prosumer->produce(&partitioned_rejected_server, from_client, early_record_wire.data() + split_size,
-                                                         early_record_wire.size() - split_size);
-            _test_case.test(ret, __FUNCTION__, "retain the complete rejected early-data record before EncryptedExtensions");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-
-            tls_handshake_encrypted_extensions partitioned_rejected_ee(&partitioned_rejected_server);
-            binary_t partitioned_rejected_ee_wire;
-            ret = partitioned_rejected_ee.write(from_server, partitioned_rejected_ee_wire);
-            _test_case.test(ret, __FUNCTION__, "resume and discard fragmented early data after EncryptedExtensions rejection");
-            if (errorcode_t::success != ret) {
-                return;
-            }
-            const auto& partitioned_rejected_state = partitioned_rejected_server.get_session_info(from_server).get_keyvalue();
-            _test_case.assert(early_record_wire.size() - 5 == partitioned_rejected_state.get(session_early_data_discarded), __FUNCTION__,
-                              "account the fragmented rejected ciphertext exactly once");
-            _test_case.assert(1 == partitioned_rejected_state.get(session_early_data_discarded_records), __FUNCTION__, "count one fragmented rejected early-data record");
-            size_t partitioned_rejected_read = 0;
-            partitioned_rejected_prosumer->consume(0, 0, rejected_output, sizeof(rejected_output), &partitioned_rejected_read);
-            _test_case.assert(0 == partitioned_rejected_read, __FUNCTION__, "never deliver fragmented rejected early-data plaintext");
-        }
+    tls_session coalesced_client;
+    coalesced_client.set_type(session_type_t::tls);
+    auto& coalesced_client_protection = coalesced_client.get_tls_protection();
+    coalesced_client_protection.set_tls_version(tls1_3);
+    coalesced_client_protection.set_cipher_suite(0x1301);
+    // Generate an ordinary valid ClientHello, then add early_data to its
+    // serialized extension vector below. The fixture has no PSK ticket, so
+    // its composer flow must remain one_rtt.
+    coalesced_client_protection.set_flow(tls_flow_t::one_rtt);
+    binary_t coalesced_client_hello_wire;
+    ret = test_client_supportedversion_clienthello(&coalesced_client, tls1_3, tls1_3, coalesced_client_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize a baseline TLS 1.3 ClientHello");
+    if (errorcode_t::success != ret) {
+        return;
     }
+
+    test_tls13_clienthello_fragmentation_preserves_incomplete_records(coalesced_client_hello_wire);
+
+    test_tls13_coalesced_clienthello_early_data_pending_buffer_limits(coalesced_client_hello_wire, early_record_wire);
+
+    auto prepare_server = [&](tls_session& session, bool eligible) -> void {
+        session.set_type(session_type_t::tls);
+        auto& protection = session.get_tls_protection();
+        protection.set_tls_version(tls1_3);
+        protection.set_cipher_suite(0x1301);
+        protection.set_flow(tls_flow_t::zero_rtt);
+        protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
+        protection.get_secrets().assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x22));
+        protection.reset_transcript_hash(&session);
+        session.update_session_status(session_status_client_hello);
+        session.update_session_status(session_status_server_hello);
+        session.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
+        session.get_session_info(from_server).set_status(tls_handshake_type_t::server_hello);
+        session.get_session_info(from_client).begin_protection();
+        session.get_keyvalue().set(session_server_psk_selected_identity, 0);
+        session.get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0x1301);
+
+        tls_resumption_ticket ticket;
+        ticket.identity = binary_t{0x01};
+        ticket.version = static_cast<uint16>(tls1_3);
+        ticket.cipher_suite = 0x1301;
+        ticket.max_early_data_size = 4;
+        session.set_early_data_ticket(ticket);
+
+        auto& early_state = session.get_session_info(from_server).get_keyvalue();
+        early_state.set(session_early_data_offered, 1);
+        early_state.set(session_early_data_accepted, 0);
+        early_state.set(session_early_data_limit, eligible ? 4 : 0);
+        early_state.set(session_early_data_received, 0);
+        early_state.set(session_early_data_discard_limit, 4096);
+        early_state.set(session_early_data_discarded, 0);
+    };
+
+    const size_t first_fragment_size = 7;
+    test_tls13_server_resumes_accepted_early_data_after_encrypted_extensions(early_record_wire, first_fragment_size, prepare_server);
+
+    const size_t early_record_split_sizes[] = {1, 4, 5, 6, early_record_wire.size() / 2};
+    test_tls13_server_resumes_fragmented_accepted_early_data(early_record_wire, early_record_split_sizes, RTL_NUMBER_OF(early_record_split_sizes), prepare_server);
+
+    // Coalesce multiple complete 0-RTT records with an incomplete trailing
+    // record. Resuming after EncryptedExtensions must process each complete
+    // record once, retain the tail, and finish it when the final bytes arrive.
+    client_early_state.set(session_early_data_limit, 12);
+    tls_record_application_data second_early_record(&client);
+    second_early_record.set_binary(binary_t{0x41, 0x42, 0x43});
+    binary_t second_early_record_wire;
+    ret = second_early_record.write(from_client, second_early_record_wire);
+    _test_case.test(ret, __FUNCTION__, "prepare a second sequential protected 0-RTT record");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_record_application_data third_early_record(&client);
+    third_early_record.set_binary(binary_t{0x51, 0x52, 0x53});
+    binary_t third_early_record_wire;
+    ret = third_early_record.write(from_client, third_early_record_wire);
+    _test_case.test(ret, __FUNCTION__, "prepare a third sequential protected 0-RTT record");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    const size_t third_record_prefix_size = 7;
+    test_tls13_server_delivers_coalesced_early_data(early_record_wire, second_early_record_wire, third_early_record_wire, third_record_prefix_size, prepare_server);
+
+    test_tls13_server_pending_early_data_buffer_limits(early_record_wire, first_fragment_size, prepare_server);
+
+    test_tls13_server_discards_rejected_inflight_early_data(early_record_wire, first_fragment_size, early_record_split_sizes, RTL_NUMBER_OF(early_record_split_sizes),
+                                                            prepare_server);
 }
 
 class test_tls13_client_hello_preprocess_probe : public tls_handshake_client_hello {
@@ -796,15 +843,13 @@ class test_tls13_client_hello_preprocess_probe : public tls_handshake_client_hel
     return_t preprocess(tls_direction_t dir) { return do_preprocess(dir); }
 };
 
-static void test_tls13_client_hello_resets_rejected_early_data_counters() {
-    // Scenario under test: TLS 1.3 fresh ClientHello resets rejected early-data counters but ClientHello2 preserves them.
-    // Action: start a fresh ClientHello processing epoch.
-    // Expected: clear the prior rejected-ciphertext byte limit.
-    _test_case.begin("TLS 1.3 fresh ClientHello resets rejected early-data counters but ClientHello2 preserves them");
-
+static void test_tls13_fresh_client_hello_resets_rejected_early_data_counters(const char* test_name) {
+    // Scenario under test: a fresh ClientHello starts a new rejected-early-data accounting epoch.
+    // Action: seed discard byte and record counters, then process a fresh ClientHello.
+    // Expected: reset counters and establish the new discard budget.
     tls_session fresh_session;
     fresh_session.set_type(session_type_t::tls);
-    fresh_session.get_tls_protection().set_tls_version(tls_13);
+    fresh_session.get_tls_protection().set_tls_version(tls1_3);
     fresh_session.get_tls_protection().set_flow(tls_flow_t::one_rtt);
     auto& fresh_state = fresh_session.get_session_info(from_server).get_keyvalue();
     fresh_state.set(session_early_data_discard_limit, 4096);
@@ -813,14 +858,19 @@ static void test_tls13_client_hello_resets_rejected_early_data_counters() {
 
     test_tls13_client_hello_preprocess_probe fresh_client_hello(&fresh_session);
     return_t ret = fresh_client_hello.preprocess(from_client);
-    _test_case.test(ret, __FUNCTION__, "start a fresh ClientHello processing epoch");
-    _test_case.assert(0 == fresh_state.get(session_early_data_discard_limit), __FUNCTION__, "clear the prior rejected-ciphertext byte limit");
-    _test_case.assert(0 == fresh_state.get(session_early_data_discarded), __FUNCTION__, "clear the prior rejected-ciphertext byte count");
-    _test_case.assert(0 == fresh_state.get(session_early_data_discarded_records), __FUNCTION__, "clear the prior rejected-record count together with its byte count");
+    _test_case.test(ret, test_name, "start a fresh ClientHello processing epoch");
+    _test_case.assert(0 == fresh_state.get(session_early_data_discard_limit), test_name, "clear the prior rejected-ciphertext byte limit");
+    _test_case.assert(0 == fresh_state.get(session_early_data_discarded), test_name, "clear the prior rejected-ciphertext byte count");
+    _test_case.assert(0 == fresh_state.get(session_early_data_discarded_records), test_name, "clear the prior rejected-record count together with its byte count");
+}
 
+static void test_tls13_client_hello2_preserves_rejected_early_data_counters(const char* test_name) {
+    // Scenario under test: ClientHello2 preserves rejected-early-data accounting from ClientHello1.
+    // Action: process ClientHello2 after HelloRetryRequest with existing discard counters.
+    // Expected: retain the accumulated byte and record counts across the retry.
     tls_session hrr_session;
     hrr_session.set_type(session_type_t::tls);
-    hrr_session.get_tls_protection().set_tls_version(tls_13);
+    hrr_session.get_tls_protection().set_tls_version(tls1_3);
     hrr_session.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
     auto& hrr_state = hrr_session.get_session_info(from_server).get_keyvalue();
     hrr_state.set(session_early_data_discard_limit, 4096);
@@ -828,94 +878,30 @@ static void test_tls13_client_hello_resets_rejected_early_data_counters() {
     hrr_state.set(session_early_data_discarded_records, 7);
 
     test_tls13_client_hello_preprocess_probe client_hello2(&hrr_session);
-    ret = client_hello2.preprocess(from_client);
-    _test_case.test(ret, __FUNCTION__, "process ClientHello2 after HelloRetryRequest");
-    _test_case.assert(4096 == hrr_state.get(session_early_data_discard_limit), __FUNCTION__, "preserve the original HRR discard byte limit");
-    _test_case.assert(1024 == hrr_state.get(session_early_data_discarded), __FUNCTION__, "preserve ciphertext already discarded after HRR");
-    _test_case.assert(7 == hrr_state.get(session_early_data_discarded_records), __FUNCTION__, "preserve the cumulative HRR record count");
+    return_t ret = client_hello2.preprocess(from_client);
+    _test_case.test(ret, test_name, "process ClientHello2 after HelloRetryRequest");
+    _test_case.assert(4096 == hrr_state.get(session_early_data_discard_limit), test_name, "preserve the original HRR discard byte limit");
+    _test_case.assert(1024 == hrr_state.get(session_early_data_discarded), test_name, "preserve ciphertext already discarded after HRR");
+    _test_case.assert(7 == hrr_state.get(session_early_data_discarded_records), test_name, "preserve the cumulative HRR record count");
 }
 
-static void test_tls13_hrr_drains_buffered_early_data() {
-    // Scenario under test: TLS 1.3 HelloRetryRequest drains already-buffered rejected early data.
-    // Action: buffer in-flight 0-RTT while the early-data decision is pending.
-    // Expected: do not discard the record before the server chooses its HRR response.
-    _test_case.begin("TLS 1.3 HelloRetryRequest drains already-buffered rejected early data");
+static void test_tls13_client_hello_resets_rejected_early_data_counters() {
+    // Scenario under test: TLS 1.3 fresh ClientHello resets rejected early-data counters but ClientHello2 preserves them.
+    // Action: compare a fresh ClientHello with ClientHello2 after HelloRetryRequest.
+    // Expected: clear counters only for the fresh ClientHello processing epoch.
+    _test_case.begin("TLS 1.3 fresh ClientHello resets rejected early-data counters but ClientHello2 preserves them");
 
-    tls_session session;
-    session.set_type(session_type_t::tls);
-    auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
-    protection.set_cipher_suite(0x1301);
-    protection.set_flow(tls_flow_t::zero_rtt);
-    // The probe bypasses ServerHello serialization; provide the RFC-defined
-    // HRR random so postprocess recognizes HRR before key-schedule processing.
-    const binary_t hrr_random{0xcf, 0x21, 0xad, 0x74, 0xe5, 0x9a, 0x61, 0x11, 0xbe, 0x1d, 0x8c, 0x02, 0x1e, 0x65, 0xb8, 0x91,
-                              0xc2, 0xa2, 0x11, 0x16, 0x7a, 0xbb, 0x8c, 0x5e, 0x07, 0x9e, 0x09, 0xe2, 0xc8, 0xa8, 0x33, 0x9c};
-    protection.get_secrets().assign(tls_secret_t::server_hello_random, hrr_random);
-    protection.get_protection_context().add_supported_version(tls_13);
-    session.update_session_status(session_status_client_hello);
-    // HRR does not select a PSK identity. Keep the synthetic ServerHello
-    // state explicit so calc() derives the zero-PSK early secret.
-    session.get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
-    auto& early_state = session.get_session_info(from_server).get_keyvalue();
-    early_state.set(session_early_data_offered, 1);
-    early_state.set(session_early_data_offered_initial, 1);
-    early_state.set(session_early_data_discard_limit, 4096);
+    test_tls13_fresh_client_hello_resets_rejected_early_data_counters(__FUNCTION__);
+    test_tls13_client_hello2_preserves_rejected_early_data_counters(__FUNCTION__);
+}
 
-    // Simulate a complete 0-RTT record coalesced after ClientHello1 while the
-    // server has not yet committed its response.
-    binary_t in_flight_record{0x17, 0x03, 0x03, 0x00, 0x10};
-    in_flight_record.insert(in_flight_record.end(), 16, 0xaa);
-    auto prosumer = session.get_secure_prosumer();
-    return_t ret = prosumer->produce(&session, from_client, in_flight_record.data(), in_flight_record.size());
-    _test_case.test(ret, __FUNCTION__, "buffer in-flight 0-RTT while the early-data decision is pending");
-    _test_case.assert(0 == early_state.get(session_early_data_discarded), __FUNCTION__, "do not discard the record before the server chooses its HRR response");
+static void test_tls13_hrr_drains_fragmented_early_data(const binary_t& hrr_random, const binary_t& in_flight_record) {
+    // Scenario under test: drain fragmented in-flight 0-RTT records after committing HelloRetryRequest.
+    // Action: split a pending early-data record at representative header and body boundaries before HRR.
+    // Expected: account the rejected ciphertext exactly once as one record after the HRR decision.
+    _test_case.begin("TLS 1.3 HelloRetryRequest drains fragmented in-flight early data");
 
-    test_tls13_server_hello_postprocess_probe hrr(&session);
-    hrr.set_version(tls_13);
-    ret = hrr.postprocess_write();
-    _test_case.test(ret, __FUNCTION__, "commit HelloRetryRequest and drain pending first-flight records");
-    _test_case.assert(tls_flow_t::hello_retry_request == protection.get_flow(), __FUNCTION__, "enter HRR flow before processing buffered records");
-    _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__,
-                      "account for the buffered ciphertext as rejected early data immediately after HRR");
-    _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__,
-                      "count the drained HRR early-data record against the independent record ceiling");
-
-    // ClientHello2 still carries pre_shared_key, but it must not reset the
-    // rejected-record ceiling accumulated for ClientHello1's 0-RTT flight.
-    tls_handshake_client_hello client_hello2(&session);
-    tls_extension_client_psk client_hello2_psk(&client_hello2);
-    binary_t client_hello2_psk_wire{0x00, 0x29, 0x00, 0x2c, 0x00, 0x07, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0x20};
-    client_hello2_psk_wire.insert(client_hello2_psk_wire.end(), 32, 0x00);
-    size_t client_hello2_psk_pos = 0;
-    ret = client_hello2_psk.read(from_client, client_hello2_psk_wire.data(), client_hello2_psk_wire.size(), client_hello2_psk_pos);
-    _test_case.test(ret, __FUNCTION__, "parse ClientHello2 pre_shared_key without resetting the HRR discard counter");
-    _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__, "preserve the rejected-record count across ClientHello2 PSK parsing");
-    _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__, "preserve the rejected-ciphertext byte count across ClientHello2 PSK parsing");
-
-    binary_t remaining_hrr_records;
-    for (size_t i = 0; i < 63; ++i) {
-        remaining_hrr_records.insert(remaining_hrr_records.end(), in_flight_record.begin(), in_flight_record.end());
-    }
-    ret = prosumer->produce(&session, from_client, remaining_hrr_records.data(), remaining_hrr_records.size());
-    _test_case.test(ret, __FUNCTION__, "accept the remaining rejected records up to the connection-wide 64-record ceiling");
-    _test_case.assert(64 == early_state.get(session_early_data_discarded_records), __FUNCTION__, "retain one cumulative 64-record ceiling across HRR and ClientHello2");
-
-    ret = prosumer->produce(&session, from_client, in_flight_record.data(), in_flight_record.size());
-    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject the 65th rejected early-data record after ClientHello2");
-    _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "abort after the cumulative rejected-record ceiling is exceeded");
-    size_t hrr_overflow_alert_count = 0;
-    session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-            ++hrr_overflow_alert_count;
-        }
-    });
-    _test_case.assert(1 == hrr_overflow_alert_count, __FUNCTION__, "queue one fatal alert when the post-ClientHello2 record ceiling is exceeded");
-
-    char output[32] = {};
-    size_t consumed = 0;
-    ret = prosumer->consume(0, 0, output, sizeof(output), &consumed);
-    _test_case.assert(0 == consumed, __FUNCTION__, "never deliver HRR-rejected early-data plaintext to the application");
+    return_t ret = errorcode_t::success;
 
     const size_t hrr_record_split_sizes[] = {1, 4, 5, 6, in_flight_record.size() / 2};
     for (size_t i = 0; i < RTL_NUMBER_OF(hrr_record_split_sizes); ++i) {
@@ -923,11 +909,11 @@ static void test_tls13_hrr_drains_buffered_early_data() {
         tls_session partitioned_hrr_session;
         partitioned_hrr_session.set_type(session_type_t::tls);
         auto& partitioned_protection = partitioned_hrr_session.get_tls_protection();
-        partitioned_protection.set_tls_version(tls_13);
+        partitioned_protection.set_tls_version(tls1_3);
         partitioned_protection.set_cipher_suite(0x1301);
         partitioned_protection.set_flow(tls_flow_t::zero_rtt);
         partitioned_protection.get_secrets().assign(tls_secret_t::server_hello_random, hrr_random);
-        partitioned_protection.get_protection_context().add_supported_version(tls_13);
+        partitioned_protection.get_protection_context().add_supported_version(tls1_3);
         partitioned_hrr_session.update_session_status(session_status_client_hello);
         partitioned_hrr_session.get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
         auto& partitioned_early_state = partitioned_hrr_session.get_session_info(from_server).get_keyvalue();
@@ -949,22 +935,66 @@ static void test_tls13_hrr_drains_buffered_early_data() {
         _test_case.assert(0 == partitioned_early_state.get(session_early_data_discarded), __FUNCTION__, "do not account fragmented early data before the HRR decision");
 
         test_tls13_server_hello_postprocess_probe partitioned_hrr(&partitioned_hrr_session);
-        partitioned_hrr.set_version(tls_13);
+        partitioned_hrr.set_version(tls1_3);
         ret = partitioned_hrr.postprocess_write();
         _test_case.test(ret, __FUNCTION__, "drain fragmented in-flight 0-RTT after committing HRR");
         _test_case.assert(16 == partitioned_early_state.get(session_early_data_discarded), __FUNCTION__, "account fragmented HRR-rejected ciphertext exactly once");
         _test_case.assert(1 == partitioned_early_state.get(session_early_data_discarded_records), __FUNCTION__,
                           "count one fragmented record against the HRR discard ceiling");
     }
+}
+template <typename TProsumer, typename TEarlyState>
+static void test_tls13_hrr_clienthello2_preserves_rejected_early_data_counters(tls_session& session, const TProsumer& prosumer, TEarlyState& early_state,
+                                                                               const binary_t& in_flight_record, const char* test_name) {
+    // Scenario under test: ClientHello2 does not reset the rejected 0-RTT discard ceiling.
+    // Action: process the retry ClientHello while rejected early-data records remain buffered.
+    // Expected: preserve the first flight's discard counters and configured limits.
+    return_t ret = errorcode_t::success;
+    // ClientHello2 still carries pre_shared_key, but it must not reset the
+    // rejected-record ceiling accumulated for ClientHello1's 0-RTT flight.
+    tls_handshake_client_hello client_hello2(&session);
+    tls_extension_client_psk client_hello2_psk(&client_hello2);
+    binary_t client_hello2_psk_wire{0x00, 0x29, 0x00, 0x2c, 0x00, 0x07, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0x20};
+    client_hello2_psk_wire.insert(client_hello2_psk_wire.end(), 32, 0x00);
+    size_t client_hello2_psk_pos = 0;
+    ret = client_hello2_psk.read(from_client, client_hello2_psk_wire.data(), client_hello2_psk_wire.size(), client_hello2_psk_pos);
+    _test_case.test(ret, test_name, "parse ClientHello2 pre_shared_key without resetting the HRR discard counter");
+    _test_case.assert(1 == early_state.get(session_early_data_discarded_records), test_name, "preserve the rejected-record count across ClientHello2 PSK parsing");
+    _test_case.assert(16 == early_state.get(session_early_data_discarded), test_name, "preserve the rejected-ciphertext byte count across ClientHello2 PSK parsing");
 
+    binary_t remaining_hrr_records;
+    for (size_t i = 0; i < 63; ++i) {
+        remaining_hrr_records.insert(remaining_hrr_records.end(), in_flight_record.begin(), in_flight_record.end());
+    }
+    ret = prosumer->produce(&session, from_client, remaining_hrr_records.data(), remaining_hrr_records.size());
+    _test_case.test(ret, test_name, "accept the remaining rejected records up to the connection-wide 64-record ceiling");
+    _test_case.assert(64 == early_state.get(session_early_data_discarded_records), test_name, "retain one cumulative 64-record ceiling across HRR and ClientHello2");
+
+    ret = prosumer->produce(&session, from_client, in_flight_record.data(), in_flight_record.size());
+    _test_case.assert(errorcode_t::overflow == ret, test_name, "reject the 65th rejected early-data record after ClientHello2");
+    _test_case.assert(0 == session.get_session_status(), test_name, "abort after the cumulative rejected-record ceiling is exceeded");
+    size_t hrr_overflow_alert_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::unexpected_message);
+    _test_case.assert(1 == hrr_overflow_alert_count, test_name, "queue one fatal alert when the post-ClientHello2 record ceiling is exceeded");
+
+    char output[32] = {};
+    size_t consumed = 0;
+    ret = prosumer->consume(0, 0, output, sizeof(output), &consumed);
+    _test_case.assert(0 == consumed, test_name, "never deliver HRR-rejected early-data plaintext to the application");
+}
+
+static void test_tls13_hrr_rejects_buffered_early_data_over_discard_limit(const binary_t& hrr_random, const binary_t& in_flight_record, const char* test_name) {
+    // Scenario under test: HelloRetryRequest rejects buffered early data beyond the discard limit.
+    // Action: buffer more rejected ciphertext than the configured discard budget before HRR.
+    // Expected: reject the over-limit flight without exceeding the configured bound.
+    return_t ret = errorcode_t::success;
     tls_session over_limit_session;
     over_limit_session.set_type(session_type_t::tls);
     auto& over_limit_protection = over_limit_session.get_tls_protection();
-    over_limit_protection.set_tls_version(tls_13);
+    over_limit_protection.set_tls_version(tls1_3);
     over_limit_protection.set_cipher_suite(0x1301);
     over_limit_protection.set_flow(tls_flow_t::zero_rtt);
     over_limit_protection.get_secrets().assign(tls_secret_t::server_hello_random, hrr_random);
-    over_limit_protection.get_protection_context().add_supported_version(tls_13);
+    over_limit_protection.get_protection_context().add_supported_version(tls1_3);
     over_limit_session.update_session_status(session_status_client_hello);
     over_limit_session.get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
     auto& over_limit_state = over_limit_session.get_session_info(from_server).get_keyvalue();
@@ -973,60 +1003,77 @@ static void test_tls13_hrr_drains_buffered_early_data() {
     over_limit_state.set(session_early_data_discard_limit, 8);
     auto over_limit_prosumer = over_limit_session.get_secure_prosumer();
     ret = over_limit_prosumer->produce(&over_limit_session, from_client, in_flight_record.data(), in_flight_record.size());
-    _test_case.test(ret, __FUNCTION__, "buffer the over-budget record before the HRR decision");
+    _test_case.test(ret, test_name, "buffer the over-budget record before the HRR decision");
 
     test_tls13_server_hello_postprocess_probe over_limit_hrr(&over_limit_session);
-    over_limit_hrr.set_version(tls_13);
+    over_limit_hrr.set_version(tls1_3);
     ret = over_limit_hrr.postprocess_write();
-    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "enforce the rejected-ciphertext budget while committing HRR");
-    _test_case.assert(0 == over_limit_session.get_session_status(), __FUNCTION__, "abort the handshake when buffered HRR data exceeds the discard budget");
-    size_t fatal_unexpected_message_count = 0;
-    over_limit_session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-            ++fatal_unexpected_message_count;
-        }
-    });
-    _test_case.assert(1 == fatal_unexpected_message_count, __FUNCTION__, "queue one fatal unexpected_message for over-budget HRR data");
+    _test_case.assert(errorcode_t::overflow == ret, test_name, "enforce the rejected-ciphertext budget while committing HRR");
+    _test_case.assert(0 == over_limit_session.get_session_status(), test_name, "abort the handshake when buffered HRR data exceeds the discard budget");
+    size_t fatal_unexpected_message_count = test_count_fatal_alert(over_limit_session, from_client, tls_alertdesc_t::unexpected_message);
+    _test_case.assert(1 == fatal_unexpected_message_count, test_name, "queue one fatal unexpected_message for over-budget HRR data");
 }
 
-static void test_tls13_server_discards_rejected_early_data_records() {
-    // Scenario under test: TLS 1.3 server discards rejected early-data records before Server Finished.
-    // Action: trial-decrypt rejected 0-RTT with handshake keys and discard failed records.
-    // Expected: consume the rejected early-data record.
-    _test_case.begin("TLS 1.3 server discards rejected early-data records before Server Finished");
+static void test_tls13_hrr_drains_buffered_early_data() {
+    // Scenario under test: TLS 1.3 HelloRetryRequest drains already-buffered rejected early data.
+    // Action: buffer in-flight 0-RTT while the early-data decision is pending.
+    // Expected: drain the first flight after HRR and preserve its discard limits.
+    _test_case.begin("TLS 1.3 HelloRetryRequest drains already-buffered rejected early data");
 
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
-    protection.set_flow(tls_flow_t::one_rtt);
+    protection.set_flow(tls_flow_t::zero_rtt);
+    // The probe bypasses ServerHello serialization; provide the RFC-defined
+    // HRR random so postprocess recognizes HRR before key-schedule processing.
+    const binary_t hrr_random{0xcf, 0x21, 0xad, 0x74, 0xe5, 0x9a, 0x61, 0x11, 0xbe, 0x1d, 0x8c, 0x02, 0x1e, 0x65, 0xb8, 0x91,
+                              0xc2, 0xa2, 0x11, 0x16, 0x7a, 0xbb, 0x8c, 0x5e, 0x07, 0x9e, 0x09, 0xe2, 0xc8, 0xa8, 0x33, 0x9c};
+    protection.get_secrets().assign(tls_secret_t::server_hello_random, hrr_random);
+    protection.get_protection_context().add_supported_version(tls1_3);
     session.update_session_status(session_status_client_hello);
-    session.update_session_status(session_status_server_hello);
-    session.get_session_info(from_client).begin_protection();
+    // HRR does not select a PSK identity. Keep the synthetic ServerHello
+    // state explicit so calc() derives the zero-PSK early secret.
+    session.get_keyvalue().set(session_server_psk_selected_identity, 0xffff);
     auto& early_state = session.get_session_info(from_server).get_keyvalue();
     early_state.set(session_early_data_offered, 1);
-    early_state.set(session_early_data_accepted, 0);
+    early_state.set(session_early_data_offered_initial, 1);
     early_state.set(session_early_data_discard_limit, 4096);
-    early_state.set(session_early_data_discarded, 0);
-    session.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
 
-    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
-    rejected_record.insert(rejected_record.end(), 16, 0xaa);
-    tls_records records;
-    return_t ret = records.read(&session, from_client, rejected_record);
-    _test_case.test(ret, __FUNCTION__, "trial-decrypt rejected 0-RTT with handshake keys and discard failed records");
-    _test_case.assert(1 == records.size(), __FUNCTION__, "consume the rejected early-data record");
-    if (records.size()) {
-        auto decoded = static_cast<tls_record_application_data*>(records.getat(0));
-        _test_case.assert(decoded->get_binary().empty(), __FUNCTION__, "do not deliver rejected early-data plaintext");
-    }
-    _test_case.assert(false == session.has_alert(from_client, tls_alertlevel_t::fatal), __FUNCTION__,
-                      "do not raise bad_record_mac for intentionally rejected 0-RTT data");
-    _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__, "count discarded ciphertext against the configured early-data skip bound");
-    _test_case.assert(0 == session.get_session_info(from_client).get_recordno(false), __FUNCTION__,
-                      "restore the handshake record sequence after failed trial decryption");
+    // Simulate a complete 0-RTT record coalesced after ClientHello1 while the
+    // server has not yet committed its response.
+    binary_t in_flight_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    in_flight_record.insert(in_flight_record.end(), 16, 0xaa);
+    auto prosumer = session.get_secure_prosumer();
+    return_t ret = prosumer->produce(&session, from_client, in_flight_record.data(), in_flight_record.size());
+    _test_case.test(ret, __FUNCTION__, "buffer in-flight 0-RTT while the early-data decision is pending");
+    _test_case.assert(0 == early_state.get(session_early_data_discarded), __FUNCTION__, "do not discard the record before the server chooses its HRR response");
 
+    test_tls13_server_hello_postprocess_probe hrr(&session);
+    hrr.set_version(tls1_3);
+    ret = hrr.postprocess_write();
+    _test_case.test(ret, __FUNCTION__, "commit HelloRetryRequest and drain pending first-flight records");
+    _test_case.assert(tls_flow_t::hello_retry_request == protection.get_flow(), __FUNCTION__, "enter HRR flow before processing buffered records");
+    _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__,
+                      "account for the buffered ciphertext as rejected early data immediately after HRR");
+    _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__,
+                      "count the drained HRR early-data record against the independent record ceiling");
+
+    test_tls13_hrr_clienthello2_preserves_rejected_early_data_counters(session, prosumer, early_state, in_flight_record, __FUNCTION__);
+
+    test_tls13_hrr_drains_fragmented_early_data(hrr_random, in_flight_record);
+
+    test_tls13_hrr_rejects_buffered_early_data_over_discard_limit(hrr_random, in_flight_record, __FUNCTION__);
+}
+
+static void test_tls13_rejected_early_data_precedes_client_finished() {
+    // Scenario under test: rejected 0-RTT data is followed by a valid Client Finished record.
+    // Action: trial-decrypt the rejected record, then authenticate Client Finished with handshake keys.
+    // Expected: restore the handshake record sequence and advance the handshake without a fatal alert.
+    _test_case.begin("TLS 1.3 rejected early data precedes valid Client Finished");
+
+    return_t ret = errorcode_t::success;
     // A rejected 0-RTT record may be followed immediately by the
     // client's first handshake-key-protected record. Exercise both records
     // through the real writer/reader so a failed trial decrypt must restore
@@ -1035,7 +1082,7 @@ static void test_tls13_server_discards_rejected_early_data_records() {
         auto configure_handshake = [](tls_session& endpoint) -> void {
             endpoint.set_type(session_type_t::tls);
             auto& endpoint_protection = endpoint.get_tls_protection();
-            endpoint_protection.set_tls_version(tls_13);
+            endpoint_protection.set_tls_version(tls1_3);
             endpoint_protection.set_cipher_suite(0x1301);
             endpoint_protection.set_flow(tls_flow_t::one_rtt);
             endpoint_protection.use_pre_master_secret(true);
@@ -1101,11 +1148,22 @@ static void test_tls13_server_discards_rejected_early_data_records() {
                               "do not raise a fatal alert for the rejected record preceding valid Client Finished");
         }
     }
+}
 
+static void test_tls13_rejected_early_data_before_server_hello() {
+    // Scenario under test: rejected 0-RTT data arrives before ServerHello.
+    // Action: read the record before handshake traffic keys are established.
+    // Expected: account for the rejected ciphertext without attempting handshake-key trial decryption.
+    _test_case.begin("TLS 1.3 rejected early data arrives before ServerHello");
+
+    return_t ret = errorcode_t::success;
+
+    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    rejected_record.insert(rejected_record.end(), 16, 0xaa);
     tls_session pre_server_hello_session;
     pre_server_hello_session.set_type(session_type_t::tls);
     auto& pre_server_hello_protection = pre_server_hello_session.get_tls_protection();
-    pre_server_hello_protection.set_tls_version(tls_13);
+    pre_server_hello_protection.set_tls_version(tls1_3);
     pre_server_hello_protection.set_cipher_suite(0x1301);
     pre_server_hello_protection.set_flow(tls_flow_t::one_rtt);
     pre_server_hello_session.update_session_status(session_status_client_hello);
@@ -1120,11 +1178,16 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     _test_case.test(ret, __FUNCTION__, "discard rejected 0-RTT records that arrive before ServerHello");
     _test_case.assert(16 == pre_server_hello_state.get(session_early_data_discarded), __FUNCTION__,
                       "account for rejected data received before handshake traffic keys exist");
+}
 
+static void test_tls13_hrr_skips_inflight_rejected_early_data_records(const char* test_name) {
+    // Scenario under test: HelloRetryRequest drains in-flight rejected early-data records.
+    // Action: process a fragmented 0-RTT record after the retry decision.
+    // Expected: skip the rejected record and account for its ciphertext once.
     tls_session hrr_session;
     hrr_session.set_type(session_type_t::tls);
     auto& hrr_protection = hrr_session.get_tls_protection();
-    hrr_protection.set_tls_version(tls_13);
+    hrr_protection.set_tls_version(tls1_3);
     hrr_protection.set_cipher_suite(0x1301);
     hrr_protection.set_flow(tls_flow_t::hello_retry_request);
     hrr_session.update_session_status(session_status_client_hello);
@@ -1134,15 +1197,22 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     hrr_early_state.set(session_early_data_offered, 1);
     hrr_early_state.set(session_early_data_accepted, 0);
     hrr_early_state.set(session_early_data_discard_limit, 4096);
+    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    rejected_record.insert(rejected_record.end(), 16, 0xaa);
     tls_records hrr_records;
-    ret = hrr_records.read(&hrr_session, from_client, rejected_record);
-    _test_case.test(ret, __FUNCTION__, "skip already-in-flight 0-RTT records after HelloRetryRequest");
-    _test_case.assert(16 == hrr_early_state.get(session_early_data_discarded), __FUNCTION__, "bound HRR early-data skipping by the configured ciphertext discard limit");
+    return_t ret = hrr_records.read(&hrr_session, from_client, rejected_record);
+    _test_case.test(ret, test_name, "skip already-in-flight 0-RTT records after HelloRetryRequest");
+    _test_case.assert(16 == hrr_early_state.get(session_early_data_discarded), test_name, "bound HRR early-data skipping by the configured ciphertext discard limit");
+}
 
+static void test_tls13_rejected_early_data_discard_limit_overflow(const char* test_name) {
+    // Scenario under test: rejected TLS 1.3 early data exceeds the configured discard byte limit.
+    // Action: deliver ciphertext whose cumulative size exceeds the discard budget.
+    // Expected: stop consuming rejected records at the configured limit.
     tls_session over_limit_session;
     over_limit_session.set_type(session_type_t::tls);
     auto& over_limit_protection = over_limit_session.get_tls_protection();
-    over_limit_protection.set_tls_version(tls_13);
+    over_limit_protection.set_tls_version(tls1_3);
     over_limit_protection.set_cipher_suite(0x1301);
     over_limit_protection.set_flow(tls_flow_t::one_rtt);
     over_limit_session.update_session_status(session_status_client_hello);
@@ -1153,18 +1223,24 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     over_limit_state.set(session_early_data_offered, 1);
     over_limit_state.set(session_early_data_accepted, 0);
     over_limit_state.set(session_early_data_discard_limit, 8);
+    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    rejected_record.insert(rejected_record.end(), 16, 0xaa);
     tls_records over_limit_records;
-    ret = over_limit_records.read(&over_limit_session, from_client, rejected_record);
-    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "abort when rejected early-data ciphertext exceeds the configured skip limit");
-    _test_case.assert(over_limit_session.has_alert(from_client, tls_alertlevel_t::fatal), __FUNCTION__, "raise a fatal alert when the rejection skip bound is exceeded");
+    return_t ret = over_limit_records.read(&over_limit_session, from_client, rejected_record);
+    _test_case.assert(errorcode_t::overflow == ret, test_name, "abort when rejected early-data ciphertext exceeds the configured skip limit");
+    _test_case.assert(over_limit_session.has_alert(from_client, tls_alertlevel_t::fatal), test_name, "raise a fatal alert when the rejection skip bound is exceeded");
+}
 
+static void test_tls13_rejected_early_data_default_discard_limit(const char* test_name) {
+    // Scenario under test: default rejected-early-data ciphertext discard budget.
+    // Action: inspect the default limit and process a record within that bound.
+    // Expected: use a bounded default budget independent of the accepted early-data limit.
     tls_session default_limit_session;
-    _test_case.assert(1024 * 1024 == default_limit_session.get_early_data_discard_limit(), __FUNCTION__,
-                      "use an independent bounded ciphertext discard budget by default");
+    _test_case.assert(1024 * 1024 == default_limit_session.get_early_data_discard_limit(), test_name, "use an independent bounded ciphertext discard budget by default");
 
     default_limit_session.set_type(session_type_t::tls);
     auto& default_protection = default_limit_session.get_tls_protection();
-    default_protection.set_tls_version(tls_13);
+    default_protection.set_tls_version(tls1_3);
     default_protection.set_cipher_suite(0x1301);
     default_protection.set_flow(tls_flow_t::one_rtt);
     default_limit_session.update_session_status(session_status_client_hello);
@@ -1175,16 +1251,23 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     default_state.set(session_early_data_offered, 1);
     default_state.set(session_early_data_accepted, 0);
     default_state.set(session_early_data_discard_limit, default_limit_session.get_early_data_discard_limit());
+    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    rejected_record.insert(rejected_record.end(), 16, 0xaa);
     tls_records default_records;
-    ret = default_records.read(&default_limit_session, from_client, rejected_record);
-    _test_case.test(ret, __FUNCTION__, "discard rejected ciphertext using the independent default budget without a per-session override");
-    _test_case.assert(16 == default_state.get(session_early_data_discarded), __FUNCTION__, "count the encrypted record body rather than the ticket plaintext allowance");
-    _test_case.assert(1 == default_state.get(session_early_data_discarded_records), __FUNCTION__, "count rejected records independently from ciphertext bytes");
+    return_t ret = default_records.read(&default_limit_session, from_client, rejected_record);
+    _test_case.test(ret, test_name, "discard rejected ciphertext using the independent default budget without a per-session override");
+    _test_case.assert(16 == default_state.get(session_early_data_discarded), test_name, "count the encrypted record body rather than the ticket plaintext allowance");
+    _test_case.assert(1 == default_state.get(session_early_data_discarded_records), test_name, "count rejected records independently from ciphertext bytes");
+}
 
+static void test_tls13_rejected_early_data_record_count_limit(const char* test_name) {
+    // Scenario under test: rejected TLS 1.3 early data is bounded by record count.
+    // Action: exceed the configured number of discarded early-data records.
+    // Expected: reject additional records after the count limit is reached.
     tls_session record_count_session;
     record_count_session.set_type(session_type_t::tls);
     auto& count_protection = record_count_session.get_tls_protection();
-    count_protection.set_tls_version(tls_13);
+    count_protection.set_tls_version(tls1_3);
     count_protection.set_cipher_suite(0x1301);
     count_protection.set_flow(tls_flow_t::one_rtt);
     record_count_session.update_session_status(session_status_client_hello);
@@ -1195,6 +1278,9 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     count_state.set(session_early_data_offered, 1);
     count_state.set(session_early_data_accepted, 0);
     count_state.set(session_early_data_discard_limit, record_count_session.get_early_data_discard_limit());
+    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    rejected_record.insert(rejected_record.end(), 16, 0xaa);
+    return_t ret = errorcode_t::success;
     bool discarded_64_records = true;
     for (size_t i = 0; i < 64; ++i) {
         tls_records one_record;
@@ -1204,16 +1290,21 @@ static void test_tls13_server_discards_rejected_early_data_records() {
             break;
         }
     }
-    _test_case.assert(discarded_64_records, __FUNCTION__, "allow at most 64 rejected TLS records within the discard budget");
-    _test_case.assert(64 == count_state.get(session_early_data_discarded_records), __FUNCTION__, "account for all discarded records");
+    _test_case.assert(discarded_64_records, test_name, "allow at most 64 rejected TLS records within the discard budget");
+    _test_case.assert(64 == count_state.get(session_early_data_discarded_records), test_name, "account for all discarded records");
     tls_records sixty_fifth_record;
     ret = sixty_fifth_record.read(&record_count_session, from_client, rejected_record);
-    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject the 65th discarded early-data record");
+    _test_case.assert(errorcode_t::overflow == ret, test_name, "reject the 65th discarded early-data record");
+}
 
+static void test_tls13_rejected_early_data_empty_ciphertext_fragment(const char* test_name) {
+    // Scenario under test: empty ciphertext fragments during rejected early-data processing.
+    // Action: submit an empty protected-record fragment while early data is being discarded.
+    // Expected: reject the empty fragment without changing discard counters or exposing plaintext.
     tls_session empty_record_session;
     empty_record_session.set_type(session_type_t::tls);
     auto& empty_protection = empty_record_session.get_tls_protection();
-    empty_protection.set_tls_version(tls_13);
+    empty_protection.set_tls_version(tls1_3);
     empty_protection.set_cipher_suite(0x1301);
     empty_protection.set_flow(tls_flow_t::zero_rtt);
     empty_record_session.update_session_status(session_status_client_hello);
@@ -1223,8 +1314,61 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     empty_state.set(session_early_data_discard_limit, empty_record_session.get_early_data_discard_limit());
     const binary_t empty_record_wire{0x17, 0x03, 0x03, 0x00, 0x00};
     tls_records empty_record;
-    ret = empty_record.read(&empty_record_session, from_client, empty_record_wire);
-    _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject an empty ciphertext fragment instead of counting it as discarded early data");
+    return_t ret = empty_record.read(&empty_record_session, from_client, empty_record_wire);
+    _test_case.assert(errorcode_t::overflow == ret, test_name, "reject an empty ciphertext fragment instead of counting it as discarded early data");
+}
+
+static void test_tls13_server_discards_rejected_early_data_records() {
+    // Scenario under test: TLS 1.3 server discards rejected early-data records before Server Finished.
+    // Action: trial-decrypt rejected 0-RTT with handshake keys and discard failed records.
+    // Expected: consume the rejected early-data record.
+    _test_case.begin("TLS 1.3 server discards rejected early-data records before Server Finished");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls1_3);
+    protection.set_cipher_suite(0x1301);
+    protection.set_flow(tls_flow_t::one_rtt);
+    session.update_session_status(session_status_client_hello);
+    session.update_session_status(session_status_server_hello);
+    session.get_session_info(from_client).begin_protection();
+    auto& early_state = session.get_session_info(from_server).get_keyvalue();
+    early_state.set(session_early_data_offered, 1);
+    early_state.set(session_early_data_accepted, 0);
+    early_state.set(session_early_data_discard_limit, 4096);
+    early_state.set(session_early_data_discarded, 0);
+    session.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+
+    binary_t rejected_record{0x17, 0x03, 0x03, 0x00, 0x10};
+    rejected_record.insert(rejected_record.end(), 16, 0xaa);
+    tls_records records;
+    return_t ret = records.read(&session, from_client, rejected_record);
+    _test_case.test(ret, __FUNCTION__, "trial-decrypt rejected 0-RTT with handshake keys and discard failed records");
+    _test_case.assert(1 == records.size(), __FUNCTION__, "consume the rejected early-data record");
+    if (records.size()) {
+        auto decoded = static_cast<tls_record_application_data*>(records.getat(0));
+        _test_case.assert(decoded->get_binary().empty(), __FUNCTION__, "do not deliver rejected early-data plaintext");
+    }
+    _test_case.assert(false == session.has_alert(from_client, tls_alertlevel_t::fatal), __FUNCTION__,
+                      "do not raise bad_record_mac for intentionally rejected 0-RTT data");
+    _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__, "count discarded ciphertext against the configured early-data skip bound");
+    uint64 recordno_after_rejected_record = session.get_session_info(from_client).get_recordno(false);
+    _test_case.assert(0 == recordno_after_rejected_record, __FUNCTION__, "restore the handshake record sequence after failed trial decryption");
+
+    test_tls13_rejected_early_data_precedes_client_finished();
+
+    test_tls13_rejected_early_data_before_server_hello();
+
+    test_tls13_hrr_skips_inflight_rejected_early_data_records(__FUNCTION__);
+
+    test_tls13_rejected_early_data_discard_limit_overflow(__FUNCTION__);
+
+    test_tls13_rejected_early_data_default_discard_limit(__FUNCTION__);
+
+    test_tls13_rejected_early_data_record_count_limit(__FUNCTION__);
+
+    test_tls13_rejected_early_data_empty_ciphertext_fragment(__FUNCTION__);
 }
 
 static void test_tls13_rejected_early_data_trial_decrypt_success() {
@@ -1236,7 +1380,7 @@ static void test_tls13_rejected_early_data_trial_decrypt_success() {
     auto configure = [](tls_session& session) -> void {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256
         protection.use_pre_master_secret(true);
 
@@ -1334,7 +1478,7 @@ static void test_tls13_rejected_early_data_trial_decryption_sequence() {
     auto configure_writer = [&](tls_session& writer, tls_flow_t flow, tls_secret_t key_type, tls_secret_t iv_type, const binary_t& key, const binary_t& iv) {
         writer.set_type(session_type_t::tls);
         auto& protection = writer.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(cipher_suite);
         protection.set_flow(flow);
         protection.get_secrets().assign(key_type, key);
@@ -1385,7 +1529,7 @@ static void test_tls13_rejected_early_data_trial_decryption_sequence() {
     tls_session server;
     server.set_type(session_type_t::tls);
     auto& server_protection = server.get_tls_protection();
-    server_protection.set_tls_version(tls_13);
+    server_protection.set_tls_version(tls1_3);
     server_protection.set_cipher_suite(cipher_suite);
     server_protection.set_flow(tls_flow_t::one_rtt);
     server_protection.get_secrets().assign(tls_secret_t::handshake_client_key, handshake_key);
@@ -1407,15 +1551,11 @@ static void test_tls13_rejected_early_data_trial_decryption_sequence() {
         tls_records rejected_records;
         ret = rejected_records.read(&server, from_client, rejected_early_wire);
         _test_case.test(ret, __FUNCTION__, "discard a real 0-RTT record that fails handshake-key trial decryption");
-        _test_case.assert(0 == server.get_session_info(from_client).get_recordno(false), __FUNCTION__, "restore the client record number after failed trial decryption");
+        uint64 recordno_after_rejected_early_data = server.get_session_info(from_client).get_recordno(false);
+        _test_case.assert(0 == recordno_after_rejected_early_data, __FUNCTION__, "restore the client record number after failed trial decryption");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__, "count the rejected 0-RTT record after authentication failure");
         _test_case.assert(rejected_early_wire.size() - 5 == early_state.get(session_early_data_discarded), __FUNCTION__, "account only the rejected ciphertext fragment");
-        size_t bad_record_mac_count = 0;
-        server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::bad_record_mac == desc)) {
-                ++bad_record_mac_count;
-            }
-        });
+        size_t bad_record_mac_count = test_count_fatal_alert(server, from_client, tls_alertdesc_t::bad_record_mac);
         _test_case.assert(0 == bad_record_mac_count, __FUNCTION__, "suppress bad_record_mac while probing rejected early data");
     }
 
@@ -1424,16 +1564,11 @@ static void test_tls13_rejected_early_data_trial_decryption_sequence() {
         ret = handshake_records.read(&server, from_client, handshake_wire);
         _test_case.assert(errorcode_t::success != ret, __FUNCTION__,
                           "reject application_data before the client's Finished after successful handshake-key authentication");
-        _test_case.assert(1 == server.get_session_info(from_client).get_recordno(false), __FUNCTION__,
-                          "keep the record number consumed by successful handshake-key trial decryption");
+        uint64 recordno_after_handshake_trial = server.get_session_info(from_client).get_recordno(false);
+        _test_case.assert(1 == recordno_after_handshake_trial, __FUNCTION__, "keep the record number consumed by successful handshake-key trial decryption");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__,
                           "do not count an authenticated handshake-key record as discarded early data");
-        size_t unexpected_message_count = 0;
-        server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-                ++unexpected_message_count;
-            }
-        });
+        size_t unexpected_message_count = test_count_fatal_alert(server, from_client, tls_alertdesc_t::unexpected_message);
         _test_case.assert(1 == unexpected_message_count, __FUNCTION__, "report unexpected_message for application_data sent before the client's Finished");
     }
 }
@@ -1454,7 +1589,7 @@ static void test_tls13_rejected_early_data_ccm_authentication() {
     auto configure_writer = [&](tls_session& writer, tls_flow_t flow, tls_secret_t key_type, tls_secret_t iv_type, const binary_t& key, const binary_t& iv) {
         writer.set_type(session_type_t::tls);
         auto& protection = writer.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(cipher_suite);
         protection.set_flow(flow);
         protection.get_secrets().assign(key_type, key);
@@ -1496,7 +1631,7 @@ static void test_tls13_rejected_early_data_ccm_authentication() {
     tls_session server;
     server.set_type(session_type_t::tls);
     auto& server_protection = server.get_tls_protection();
-    server_protection.set_tls_version(tls_13);
+    server_protection.set_tls_version(tls1_3);
     server_protection.set_cipher_suite(cipher_suite);
     server_protection.set_flow(tls_flow_t::one_rtt);
     server_protection.get_secrets().assign(tls_secret_t::handshake_client_key, handshake_key);
@@ -1518,15 +1653,11 @@ static void test_tls13_rejected_early_data_ccm_authentication() {
         tls_records rejected_records;
         ret = rejected_records.read(&server, from_client, rejected_early_wire);
         _test_case.test(ret, __FUNCTION__, "discard rejected 0-RTT ciphertext after CCM handshake-key authentication fails");
-        _test_case.assert(0 == server.get_session_info(from_client).get_recordno(false), __FUNCTION__, "restore the record number after failed CCM trial authentication");
+        uint64 recordno_after_failed_ccm_trial = server.get_session_info(from_client).get_recordno(false);
+        _test_case.assert(0 == recordno_after_failed_ccm_trial, __FUNCTION__, "restore the record number after failed CCM trial authentication");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__, "count the rejected CCM 0-RTT record");
         _test_case.assert(rejected_early_wire.size() - 5 == early_state.get(session_early_data_discarded), __FUNCTION__, "account the rejected CCM ciphertext fragment");
-        size_t bad_record_mac_count = 0;
-        server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::bad_record_mac == desc)) {
-                ++bad_record_mac_count;
-            }
-        });
+        size_t bad_record_mac_count = test_count_fatal_alert(server, from_client, tls_alertdesc_t::bad_record_mac);
         _test_case.assert(0 == bad_record_mac_count, __FUNCTION__, "suppress bad_record_mac for rejected CCM 0-RTT probing");
     }
 
@@ -1534,8 +1665,8 @@ static void test_tls13_rejected_early_data_ccm_authentication() {
         tls_records handshake_records;
         ret = handshake_records.read(&server, from_client, handshake_wire);
         _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "authenticate a handshake-key CCM record before rejecting its premature application_data message");
-        _test_case.assert(1 == server.get_session_info(from_client).get_recordno(false), __FUNCTION__,
-                          "consume the record number after successful CCM handshake-key authentication");
+        uint64 recordno_after_successful_ccm_trial = server.get_session_info(from_client).get_recordno(false);
+        _test_case.assert(1 == recordno_after_successful_ccm_trial, __FUNCTION__, "consume the record number after successful CCM handshake-key authentication");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__,
                           "do not count authenticated CCM handshake ciphertext as discarded early data");
     }
@@ -1550,7 +1681,7 @@ static void test_tls13_hrr_rejected_early_data_discard_bounds() {
     tls_session server;
     server.set_type(session_type_t::tls);
     auto& protection = server.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::hello_retry_request);
     server.update_session_status(session_status_hello_retry_request);
@@ -1598,7 +1729,7 @@ static void test_tls13_hrr_rejected_early_data_discard_bounds() {
     tls_session byte_limited_server;
     byte_limited_server.set_type(session_type_t::tls);
     auto& byte_limited_protection = byte_limited_server.get_tls_protection();
-    byte_limited_protection.set_tls_version(tls_13);
+    byte_limited_protection.set_tls_version(tls1_3);
     byte_limited_protection.set_cipher_suite(0x1301);
     byte_limited_protection.set_flow(tls_flow_t::hello_retry_request);
     byte_limited_server.update_session_status(session_status_hello_retry_request);

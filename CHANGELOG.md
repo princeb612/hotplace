@@ -40,6 +40,7 @@
     * CBOR
 
 * details
+  * Revision 1134
   * Revision 1132
     * TLS 1.3 PSK resumption and early-data hardening
       * generate and verify each PSK binder with the hash associated with its offered ticket

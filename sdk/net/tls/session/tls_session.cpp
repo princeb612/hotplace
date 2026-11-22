@@ -35,12 +35,14 @@ tls_session::tls_session()
       _dtls_record_arrange(nullptr),
       _quic_session(nullptr) {
     _shared.make_share(this);
+    _tls12_ticket_store = std::make_shared<tls12_resumption_ticket_store>();
     _tls_protection.set_session(this);
 }
 
 tls_session::tls_session(session_type_t type)
     : _type(type), _status(0), _hook_param(nullptr), _composer(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr), _quic_session(nullptr) {
     _shared.make_share(this);
+    _tls12_ticket_store = std::make_shared<tls12_resumption_ticket_store>();
     set_type(type);
 }
 
@@ -155,6 +157,137 @@ void tls_session::remove_resumption_ticket(const binary_t& identity) {
     }
 }
 
+void tls12_resumption_ticket_store::store(const tls12_resumption_ticket& ticket) {
+    critical_section_guard guard(_lock);
+    for (auto& active : _tickets) {
+        if (active.identity == ticket.identity) {
+            active = ticket;
+            return;
+        }
+    }
+    _tickets.emplace_back(ticket);
+}
+
+std::vector<tls12_resumption_ticket> tls12_resumption_ticket_store::get() {
+    critical_section_guard guard(_lock);
+    return _tickets;
+}
+
+bool tls12_resumption_ticket_store::find(const binary_t& identity, tls12_resumption_ticket& ticket) {
+    critical_section_guard guard(_lock);
+    for (const auto& entry : _tickets) {
+        if (entry.identity == identity) {
+            ticket = entry;
+            return true;
+        }
+    }
+    return false;
+}
+
+void tls12_resumption_ticket_store::remove(const binary_t& identity) {
+    critical_section_guard guard(_lock);
+    for (auto it = _tickets.begin(); it != _tickets.end();) {
+        if (it->identity == identity) {
+            it = _tickets.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void tls_session::set_tls12_resumption_ticket_store(const std::shared_ptr<tls12_resumption_ticket_store>& store) {
+    std::shared_ptr<tls12_resumption_ticket_store> selected = store;
+    if (nullptr == selected) {
+        selected = std::make_shared<tls12_resumption_ticket_store>();
+    }
+    critical_section_guard guard(_lock);
+    _tls12_ticket_store = selected;
+}
+
+void tls_session::stage_tls12_resumption_ticket(const tls12_resumption_ticket& ticket) {
+    critical_section_guard guard(_lock);
+    for (auto& pending : _pending_tls12_resumption_tickets) {
+        if (pending.identity == ticket.identity) {
+            pending = ticket;
+            return;
+        }
+    }
+    _pending_tls12_resumption_tickets.emplace_back(ticket);
+}
+
+bool tls_session::confirm_tls12_resumption_ticket(const binary_t& identity) {
+    tls12_resumption_ticket confirmed;
+    std::shared_ptr<tls12_resumption_ticket_store> store;
+    bool found = false;
+    {
+        critical_section_guard guard(_lock);
+        for (auto it = _pending_tls12_resumption_tickets.begin(); it != _pending_tls12_resumption_tickets.end(); ++it) {
+            if (it->identity == identity) {
+                confirmed = *it;
+                _pending_tls12_resumption_tickets.erase(it);
+                store = _tls12_ticket_store;
+                found = true;
+                break;
+            }
+        }
+    }
+    if ((false == found) || (nullptr == store)) {
+        return false;
+    }
+    store->store(confirmed);
+    return true;
+}
+
+void tls_session::discard_tls12_pending_resumption_ticket(const binary_t& identity) {
+    critical_section_guard guard(_lock);
+    for (auto it = _pending_tls12_resumption_tickets.begin(); it != _pending_tls12_resumption_tickets.end();) {
+        if (it->identity == identity) {
+            it = _pending_tls12_resumption_tickets.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void tls_session::discard_all_pending_tls12_resumption_tickets() {
+    critical_section_guard guard(_lock);
+    _pending_tls12_resumption_tickets.clear();
+}
+
+std::vector<tls12_resumption_ticket> tls_session::get_tls12_resumption_tickets() {
+    std::shared_ptr<tls12_resumption_ticket_store> store;
+    {
+        critical_section_guard guard(_lock);
+        store = _tls12_ticket_store;
+    }
+    return store ? store->get() : std::vector<tls12_resumption_ticket>();
+}
+
+std::vector<tls12_resumption_ticket> tls_session::get_pending_tls12_resumption_tickets() {
+    critical_section_guard guard(_lock);
+    return _pending_tls12_resumption_tickets;
+}
+
+bool tls_session::find_tls12_resumption_ticket(const binary_t& identity, tls12_resumption_ticket& ticket) {
+    std::shared_ptr<tls12_resumption_ticket_store> store;
+    {
+        critical_section_guard guard(_lock);
+        store = _tls12_ticket_store;
+    }
+    return store ? store->find(identity, ticket) : false;
+}
+
+void tls_session::remove_tls12_resumption_ticket(const binary_t& identity) {
+    std::shared_ptr<tls12_resumption_ticket_store> store;
+    {
+        critical_section_guard guard(_lock);
+        store = _tls12_ticket_store;
+    }
+    if (store) {
+        store->remove(identity);
+    }
+}
+
 void tls_session::set_offered_resumption_tickets(const std::vector<tls_resumption_ticket>& tickets) {
     critical_section_guard guard(_lock);
     _offered_resumption_tickets = tickets;
@@ -263,6 +396,19 @@ void tls_session::reset_session_status() {
     _status = 0;
     _sem.signal();
 
+    // A failed handshake must not carry an unauthenticated TLS 1.2 ticket
+    // into a later connection. Keep an already activated ticket untouched.
+    auto& secrets = _tls_protection.get_secrets();
+    secrets.erase(tls_secret_t::new_session_ticket_pending);
+    auto& ticket_state = get_session_info(from_server).get_keyvalue();
+    ticket_state.set(session_ticket_pending, 0);
+    ticket_state.set(session_ticket_pending_lifetime, 0);
+    ticket_state.set(session_ticket_pending_timestamp, 0);
+
+    // Discard only unconfirmed TLS 1.2 server-side ticket state. Previously
+    // confirmed tickets and the independent TLS 1.3 PSK cache remain usable.
+    discard_all_pending_tls12_resumption_tickets();
+
     // A fatal alert terminates the current connection. Reset the TLS flow as
     // well as the directional handshake cursors, so a replayed/new connection
     // cannot inherit the previous connection's HelloRetryRequest state.
@@ -341,7 +487,7 @@ uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_space
 
 void tls_session::reset_recordno(tls_direction_t dir, protection_space_t space) {
     auto ver = get_tls_protection().get_tls_version();
-    if ((tls_13 == ver) || (dtls_13 == ver)) {
+    if ((tls1_3 == ver) || (dtls1_3 == ver)) {
         get_session_info(dir).reset_recordno(space);
     }
 }
@@ -389,8 +535,11 @@ bool tls_session::session_info::apply_protection() const { return _protection; }
 void tls_session::session_info::reset_protection() { _protection = false; }
 
 uint64 tls_session::session_info::get_recordno(bool inc, protection_space_t space) {
-    auto& recordno = _recordno_spaces[space];
-    return inc ? recordno++ : recordno;
+    if (inc) {
+        return _recordno_spaces[space]++;
+    }
+    auto iter = _recordno_spaces.find(space);
+    return (_recordno_spaces.end() != iter) ? iter->second : 0;
 }
 
 void tls_session::session_info::inc_recordno(protection_space_t space) { ++_recordno_spaces[space]; }

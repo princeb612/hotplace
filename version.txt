@@ -3,6 +3,6 @@
 # working git tag
 set (VERSION_MAJOR 1)
 set (VERSION_MINOR 151)
-set (VERSION_PATCH 2)
+set (VERSION_PATCH 3)
 # working svn revision
-set (VERSION_BUILD 1133)
+set (VERSION_BUILD 1134)

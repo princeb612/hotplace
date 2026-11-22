@@ -336,7 +336,7 @@ void test_uint48() {
         t_enum_type<tls_content_type_t> etcontent_type(content_type);
         _test_case.assert(tls_content_type_t::handshake == etcontent_type, __FUNCTION__, "content_type 0x%02x (%s)", etcontent_type,
                           tlsadvisor->nameof_tls_record(etcontent_type).c_str());
-        _test_case.assert(tls_version_t::dtls_12 == etrecord_version, __FUNCTION__, "record_version 0x%04x (%s)", etrecord_version,
+        _test_case.assert(tls_version_t::dtls1_2 == etrecord_version, __FUNCTION__, "record_version 0x%04x (%s)", etrecord_version,
                           tlsadvisor->nameof_tls_version(etrecord_version).c_str());
         _test_case.assert(0 == dtls_record_epoch, __FUNCTION__, "dtls_record_epoch %u", dtls_record_epoch);
         _test_case.assert(1 == dtls_record_seq, __FUNCTION__, "dtls_record_seq %I64u", dtls_record_seq);

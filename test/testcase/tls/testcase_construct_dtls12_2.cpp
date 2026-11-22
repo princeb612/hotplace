@@ -25,7 +25,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
         tls_record_handshake record(session);
         tls_handshake* handshake = nullptr;
 
-        ret = tls_composer::construct_client_hello(&handshake, session, nullptr, tls_12, tls_12);
+        ret = tls_composer::construct_client_hello(&handshake, session, nullptr, tls1_2, tls1_2);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -76,7 +76,7 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
         tls_record_handshake record(session);
         tls_handshake* handshake = nullptr;
 
-        ret = tls_composer::construct_server_hello(&handshake, session, nullptr, tls_12, tls_12);
+        ret = tls_composer::construct_server_hello(&handshake, session, nullptr, tls1_2, tls1_2);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -165,8 +165,17 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
 
         _traffic.shuffle();
-        auto lambda = [&](const binary_t& bin) { arrange.produce((sockaddr*)&addr, sizeof(addr), bin.data(), bin.size()); };
+        return_t produce_ret = errorcode_t::success;
+        auto lambda = [&](const binary_t& bin) {
+            if (errorcode_t::success == produce_ret) {
+                produce_ret = arrange.produce((sockaddr*)&addr, sizeof(addr), bin.data(), bin.size());
+            }
+        };
         _traffic.consume(lambda);
+        if (errorcode_t::success != produce_ret) {
+            ret = produce_ret;
+            __leave2;
+        }
 
         bool has_fatal = false;
         auto lambda_test_fatal_alert = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
@@ -176,6 +185,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         };
         session->get_alert(dir, lambda_test_fatal_alert);
         if (has_fatal) {
+            ret = errorcode_t::handshake_failure;
             __leave2;
         }
 
@@ -187,14 +197,20 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
             auto test = arrange.consume((sockaddr*)&addr, sizeof(addr), epoch, seq, bin);
             if (errorcode_t::empty == test) {
                 break;
-            } else if (errorcode_t::not_ready == test) {
-                continue;
+            } else if (errorcode_t::success != test) {
+                // All packets have already been produced. A missing expected
+                // epoch/sequence cannot become ready by waiting here.
+                ret = test;
+                __leave2;
             }
 
             // _logger->hdump(format("epoch %i seq %I64i", epoch, seq).c_str(), bin, 16, 3);
 
             tls_records records;
-            records.read(session, dir, bin);
+            ret = records.read(session, dir, bin);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
     }
     __finally2 {
@@ -336,37 +352,37 @@ void do_test_construct_dtls12_2(uint32 flags) {
 
 void testcase_construct_dtls12_2() {
     TLS_OPTION testvector[] = {
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
 
         // TLS 1.2, httpserver1, curl
         // SSLKEYLOGFILE=sslkeylog curl -s https://localhost:9000/ -v --tlsv1.2 --tls-max 1.2 --http1.1 -k --ciphers TLS_ECDHE_ECDSA_WITH_AES_256_CCM
 
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
+        {tls1_2, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
 
 #if 1
         // no test vector (feat. s_server and s_client)
         // so the actual authenticity cannot be verified...
 
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
+        {tls1_2, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
 #endif
     };
 

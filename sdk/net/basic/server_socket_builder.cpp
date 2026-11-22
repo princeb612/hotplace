@@ -54,8 +54,8 @@ server_socket* server_socket_builder::build() {
         auto powered_by = socket_scheme_mask_powered_by & scheme;
         auto secure = socket_scheme_mask_secure & scheme;
         uint32 ossl_flags = 0;
-        tls_version_t trial_minspec = tls_12;
-        tls_version_t trial_maxspec = tls_12;
+        tls_version_t trial_minspec = tls1_2;
+        tls_version_t trial_maxspec = tls1_2;
 
         switch (powered_by) {
             case socket_scheme_openssl: {
@@ -68,18 +68,18 @@ server_socket* server_socket_builder::build() {
             } break;
             case socket_scheme_trial: {
                 if (socket_scheme_tls12 & scheme) {
-                    trial_minspec = tls_12;
+                    trial_minspec = tls1_2;
                     if (socket_scheme_tls13 & scheme) {
-                        trial_maxspec = tls_13;
+                        trial_maxspec = tls1_3;
                     } else {
-                        trial_maxspec = tls_12;
+                        trial_maxspec = tls1_2;
                     }
                 } else if (socket_scheme_tls13 & scheme) {
-                    trial_minspec = tls_13;
-                    trial_maxspec = tls_13;
+                    trial_minspec = tls1_3;
+                    trial_maxspec = tls1_3;
                 } else {
-                    trial_minspec = tls_12;
-                    trial_maxspec = tls_13;
+                    trial_minspec = tls1_2;
+                    trial_maxspec = tls1_3;
                 }
             } break;
         }

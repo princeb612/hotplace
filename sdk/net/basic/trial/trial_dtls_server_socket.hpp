@@ -22,7 +22,7 @@ namespace net {
  */
 class HOTPLACE_NET_API trial_dtls_server_socket : public naive_udp_server_socket {
    public:
-    trial_dtls_server_socket(tls_version_t minspec = tls_12, tls_version_t maxspec = tls_12);
+    trial_dtls_server_socket(tls_version_t minspec = tls1_2, tls_version_t maxspec = tls1_2);
     virtual ~trial_dtls_server_socket();
 
     /**

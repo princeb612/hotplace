@@ -53,122 +53,111 @@ static void test_tls13_server_psk_selected_identity_encoding() {
     }
 }
 
-static void test_tls13_server_psk_selected_identity_range() {
-    // Scenario under test: TLS 1.3 ServerHello PSK selected_identity range.
-    // Action: prepare a ClientHello with a PSK offer.
-    // Expected: reject an out-of-range selected_identity.
-    _test_case.begin("TLS 1.3 ServerHello PSK selected_identity range");
+static return_t prepare_tls13_psk_offer_client(tls_session& client, uint8 offered_mode, bool offer_unknown_suite, uint32 ticket_age_add, uint32 ticket_lifetime,
+                                               const binary_t& ticket, const binary_t& resumption_psk) {
+    client.set_type(session_type_t::tls);
+    auto& protection = client.get_tls_protection();
+    protection.set_tls_version(tls1_3);
+    protection.set_cipher_suite(0x1301);
+    client.get_keyvalue().set(session_tls_version, tls1_3);
+    client.update_session_status(session_status_server_finished);
+    client.update_session_status(session_status_client_finished);
+    client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+    client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
 
+    uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    auto& ticket_kv = client.get_session_info(from_server).get_keyvalue();
+    ticket_kv.set(session_ticket_lifetime, ticket_lifetime);
+    ticket_kv.set(session_ticket_age_add, ticket_age_add);
+    ticket_kv.set(session_ticket_timestamp, now_ms - 25);
+    protection.get_secrets().assign(tls_secret_t::new_session_ticket, ticket);
+    protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);
+    openssl_digest digest;
+    binary_t empty;
+    binary_t empty_hash;
+    digest.digest("sha256", empty, empty_hash);
+    protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
+
+    auto client_hello = new tls_handshake_client_hello(&client);
+    client_hello->add_ciphersuite(0x1301);
+    client_hello->add_ciphersuite(0x1302);
+    client_hello->add_ciphersuite(0x1303);
+    if (offer_unknown_suite) {
+        client_hello->add_ciphersuite(0xdead);
+    }
+    auto supported_versions = new tls_extension_client_supported_versions(client_hello);
+    supported_versions->add(tls1_3);
+    client_hello->get_extensions().add(supported_versions);
+    auto psk_modes = new tls_extension_psk_key_exchange_modes(client_hello);
+    psk_modes->add(offered_mode);
+    client_hello->get_extensions().add(psk_modes);
+    auto psk = new tls_extension_client_psk(client_hello);
+    client_hello->get_extensions().add(psk);
+    tls_record_handshake record(&client);
+    record << client_hello;
+    binary_t client_hello_wire;
+    return record.write(from_client, client_hello_wire);
+}
+
+static binary_t make_tls13_psk_server_hello(uint16 selected_identity, uint16 cipher_suite, bool hello_retry_request) {
+    binary_t body;
+    body.insert(body.end(), {0x03, 0x03});  // legacy_version
+    if (hello_retry_request) {
+        const byte_t hrr_random[32] = {
+            0xcf, 0x21, 0xad, 0x74, 0xe5, 0x9a, 0x61, 0x11, 0xbe, 0x1d, 0x8c, 0x02, 0x1e, 0x65, 0xb8, 0x91,
+            0xc2, 0xa2, 0x11, 0x16, 0x7a, 0xbb, 0x8c, 0x5e, 0x07, 0x9e, 0x09, 0xe2, 0xc8, 0xa8, 0x33, 0x9c,
+        };
+        body.insert(body.end(), hrr_random, hrr_random + 32);
+    } else {
+        body.insert(body.end(), 32, 0);  // random
+    }
+    body.push_back(0);  // legacy_session_id_echo length
+    body.push_back(static_cast<byte_t>(cipher_suite >> 8));
+    body.push_back(static_cast<byte_t>(cipher_suite));  // cipher_suite
+    body.push_back(0);                                  // legacy_compression_method
+    body.insert(body.end(), {0x00, 0x0c,                // extensions length
+                             0x00, 0x2b, 0x00, 0x02,    // supported_versions
+                             0x03, 0x04,                // TLS 1.3
+                             0x00, 0x29, 0x00, 0x02,    // pre_shared_key
+                             static_cast<byte_t>(selected_identity >> 8), static_cast<byte_t>(selected_identity)});
+
+    binary_t handshake;
+    handshake.push_back(static_cast<byte_t>(tls_handshake_type_t::server_hello));
+    uint32 body_size = t_narrow_cast(body.size());
+    handshake.push_back(static_cast<byte_t>(body_size >> 16));
+    handshake.push_back(static_cast<byte_t>(body_size >> 8));
+    handshake.push_back(static_cast<byte_t>(body_size));
+    handshake.insert(handshake.end(), body.begin(), body.end());
+    return handshake;
+}
+
+static void test_tls13_server_psk_selected_identity_range_cases(const char* function_name, uint32 ticket_age_add, uint32 ticket_lifetime, const binary_t& ticket,
+                                                                const binary_t& resumption_psk) {
+    // Scenario under test: TLS 1.3 ServerHello selected_identity range and structural validation.
+    // Action: test one- and two-identity boundaries, key-exchange mode mismatch, HRR prohibition, truncated extensions, and unknown suites.
+    // Expected: reject invalid selections and malformed ServerHello without committing provisional PSK state.
     return_t ret = errorcode_t::success;
-
-    constexpr uint32 ticket_age_add = 0x50607080;
-    constexpr uint32 ticket_lifetime = 3600;
-    const binary_t ticket = {0xaa, 0xbb, 0xcc};
-    const binary_t resumption_psk(32, 0x11);
-
-    auto prepare_client = [&](tls_session& client, uint8 offered_mode, bool offer_unknown_suite) -> return_t {
-        client.set_type(session_type_t::tls);
-        auto& protection = client.get_tls_protection();
-        protection.set_tls_version(tls_13);
-        protection.set_cipher_suite(0x1301);
-        client.get_keyvalue().set(session_tls_version, tls_13);
-        client.update_session_status(session_status_server_finished);
-        client.update_session_status(session_status_client_finished);
-        client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-
-        uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-        auto& ticket_kv = client.get_session_info(from_server).get_keyvalue();
-        ticket_kv.set(session_ticket_lifetime, ticket_lifetime);
-        ticket_kv.set(session_ticket_age_add, ticket_age_add);
-        ticket_kv.set(session_ticket_timestamp, now_ms - 25);
-        protection.get_secrets().assign(tls_secret_t::new_session_ticket, ticket);
-        protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);
-        openssl_digest digest;
-        binary_t empty;
-        binary_t empty_hash;
-        digest.digest("sha256", empty, empty_hash);
-        protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
-
-        auto client_hello = new tls_handshake_client_hello(&client);
-        client_hello->add_ciphersuite(0x1301);
-        client_hello->add_ciphersuite(0x1302);
-        client_hello->add_ciphersuite(0x1303);
-        if (offer_unknown_suite) {
-            client_hello->add_ciphersuite(0xdead);
-        }
-        auto supported_versions = new tls_extension_client_supported_versions(client_hello);
-        supported_versions->add(tls_13);
-        client_hello->get_extensions().add(supported_versions);
-        auto psk_modes = new tls_extension_psk_key_exchange_modes(client_hello);
-        psk_modes->add(offered_mode);
-        client_hello->get_extensions().add(psk_modes);
-        auto psk = new tls_extension_client_psk(client_hello);
-        client_hello->get_extensions().add(psk);
-        tls_record_handshake record(&client);
-        record << client_hello;
-        binary_t client_hello_wire;
-        return record.write(from_client, client_hello_wire);
-    };
-
-    auto make_server_hello = [](uint16 selected_identity, uint16 cipher_suite, bool hello_retry_request) -> binary_t {
-        binary_t body;
-        body.insert(body.end(), {0x03, 0x03});  // legacy_version
-        if (hello_retry_request) {
-            const byte_t hrr_random[32] = {
-                0xcf, 0x21, 0xad, 0x74, 0xe5, 0x9a, 0x61, 0x11, 0xbe, 0x1d, 0x8c, 0x02, 0x1e, 0x65, 0xb8, 0x91,
-                0xc2, 0xa2, 0x11, 0x16, 0x7a, 0xbb, 0x8c, 0x5e, 0x07, 0x9e, 0x09, 0xe2, 0xc8, 0xa8, 0x33, 0x9c,
-            };
-            body.insert(body.end(), hrr_random, hrr_random + 32);
-        } else {
-            body.insert(body.end(), 32, 0);  // random
-        }
-        body.push_back(0);  // legacy_session_id_echo length
-        body.push_back(static_cast<byte_t>(cipher_suite >> 8));
-        body.push_back(static_cast<byte_t>(cipher_suite));  // cipher_suite
-        body.push_back(0);                                  // legacy_compression_method
-        body.insert(body.end(), {0x00, 0x0c,                // extensions length
-                                 0x00, 0x2b, 0x00, 0x02,    // supported_versions
-                                 0x03, 0x04,                // TLS 1.3
-                                 0x00, 0x29, 0x00, 0x02,    // pre_shared_key
-                                 static_cast<byte_t>(selected_identity >> 8), static_cast<byte_t>(selected_identity)});
-
-        binary_t handshake;
-        handshake.push_back(static_cast<byte_t>(tls_handshake_type_t::server_hello));
-        uint32 body_size = t_narrow_cast(body.size());
-        handshake.push_back(static_cast<byte_t>(body_size >> 16));
-        handshake.push_back(static_cast<byte_t>(body_size >> 8));
-        handshake.push_back(static_cast<byte_t>(body_size));
-        handshake.insert(handshake.end(), body.begin(), body.end());
-        return handshake;
-    };
-
     auto verify_case = [&](uint16 offered_count, uint16 selected_identity, uint8 offered_mode, uint16 cipher_suite, bool hello_retry_request,
                            bool expect_illegal_parameter, const char* description) {
         tls_session client;
-        return_t ret = prepare_client(client, offered_mode, false);
-        _test_case.test(ret, __FUNCTION__, "prepare a ClientHello with a PSK offer");
+        return_t ret = prepare_tls13_psk_offer_client(client, offered_mode, false, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+        _test_case.test(ret, function_name, "prepare a ClientHello with a PSK offer");
         if (errorcode_t::success != ret) {
             return;
         }
 
         client.get_keyvalue().set(session_client_psk_identity_count, offered_count);
-        binary_t server_hello_wire = make_server_hello(selected_identity, cipher_suite, hello_retry_request);
+        binary_t server_hello_wire = make_tls13_psk_server_hello(selected_identity, cipher_suite, hello_retry_request);
         tls_handshake_server_hello server_hello(&client);
         size_t pos = 0;
         ret = server_hello.read(from_server, server_hello_wire.data(), server_hello_wire.size(), pos);
 
-        size_t illegal_parameter_count = 0;
-        client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
-        _test_case.assert(expect_illegal_parameter ? (1 == illegal_parameter_count) : (0 == illegal_parameter_count), __FUNCTION__, description);
+        size_t illegal_parameter_count = test_count_fatal_alert(client, from_server, tls_alertdesc_t::illegal_parameter);
+        _test_case.assert(expect_illegal_parameter ? (1 == illegal_parameter_count) : (0 == illegal_parameter_count), function_name, description);
         if (expect_illegal_parameter) {
-            _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject an out-of-range selected_identity");
+            _test_case.assert(errorcode_t::success != ret, function_name, "reject an out-of-range selected_identity");
         } else if (errorcode_t::success == ret) {
-            _test_case.assert(server_hello_wire.size() == pos, __FUNCTION__, "consume the complete valid ServerHello");
+            _test_case.assert(server_hello_wire.size() == pos, function_name, "consume the complete valid ServerHello");
         }
     };
 
@@ -186,10 +175,10 @@ static void test_tls13_server_psk_selected_identity_range() {
     // of a new extension header is malformed, not a successfully parsed prefix.
     {
         tls_session truncated_client;
-        ret = prepare_client(truncated_client, 0, false);
-        _test_case.test(ret, __FUNCTION__, "prepare a client for a truncated ServerHello extension vector");
+        ret = prepare_tls13_psk_offer_client(truncated_client, 0, false, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+        _test_case.test(ret, function_name, "prepare a client for a truncated ServerHello extension vector");
         if (errorcode_t::success == ret) {
-            binary_t truncated_wire = make_server_hello(0, 0x1301, false);
+            binary_t truncated_wire = make_tls13_psk_server_hello(0, 0x1301, false);
             const size_t extension_length_offset = 4 + 2 + 32 + 1 + 2 + 1;
             truncated_wire[extension_length_offset + 1] = 0x0d;
             truncated_wire.push_back(0x00);
@@ -201,17 +190,12 @@ static void test_tls13_server_psk_selected_identity_range() {
             tls_handshake_server_hello truncated_reader(&truncated_client);
             size_t truncated_pos = 0;
             ret = truncated_reader.read(from_server, truncated_wire.data(), truncated_wire.size(), truncated_pos);
-            size_t decode_error_count = 0;
-            truncated_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
-                    ++decode_error_count;
-                }
-            });
-            _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject a complete ServerHello with a truncated trailing extension header");
-            _test_case.assert(1 == decode_error_count, __FUNCTION__, "report exactly one fatal decode_error for the truncated ServerHello extension header");
-            _test_case.assert(0xffff == truncated_client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+            size_t decode_error_count = test_count_fatal_alert(truncated_client, from_server, tls_alertdesc_t::decode_error);
+            _test_case.assert(errorcode_t::bad_format == ret, function_name, "reject a complete ServerHello with a truncated trailing extension header");
+            _test_case.assert(1 == decode_error_count, function_name, "report exactly one fatal decode_error for the truncated ServerHello extension header");
+            _test_case.assert(0xffff == truncated_client.get_keyvalue().get(session_server_psk_selected_identity), function_name,
                               "do not commit the PSK selected_identity when ServerHello parsing fails");
-            _test_case.assert(truncated_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+            _test_case.assert(truncated_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), function_name,
                               "roll back the provisional PSK Early Secret when ServerHello parsing fails");
         }
     }
@@ -221,35 +205,36 @@ static void test_tls13_server_psk_selected_identity_range() {
     // continue the key schedule with the session's previous cipher suite.
     {
         tls_session unknown_suite_client;
-        ret = prepare_client(unknown_suite_client, 0, true);
-        _test_case.test(ret, __FUNCTION__, "prepare a client for an unknown selected cipher-suite test");
+        ret = prepare_tls13_psk_offer_client(unknown_suite_client, 0, true, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+        _test_case.test(ret, function_name, "prepare a client for an unknown selected cipher-suite test");
         if (errorcode_t::success == ret) {
-            binary_t unknown_suite_wire = make_server_hello(0, 0xdead, false);
+            binary_t unknown_suite_wire = make_tls13_psk_server_hello(0, 0xdead, false);
             tls_handshake_server_hello unknown_suite_reader(&unknown_suite_client);
             size_t unknown_suite_pos = 0;
             ret = unknown_suite_reader.read(from_server, unknown_suite_wire.data(), unknown_suite_wire.size(), unknown_suite_pos);
 
-            size_t illegal_parameter_count = 0;
-            unknown_suite_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                    ++illegal_parameter_count;
-                }
-            });
-            _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__,
+            size_t illegal_parameter_count = test_count_fatal_alert(unknown_suite_client, from_server, tls_alertdesc_t::illegal_parameter);
+            _test_case.assert(errorcode_t::handshake_failure == ret, function_name,
                               "reject a ServerHello cipher suite that cannot be resolved by the local implementation");
-            _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for an unusable selected cipher suite");
-            _test_case.assert(0xffff == unknown_suite_client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+            _test_case.assert(1 == illegal_parameter_count, function_name, "report exactly one fatal illegal_parameter for an unusable selected cipher suite");
+            _test_case.assert(0xffff == unknown_suite_client.get_keyvalue().get(session_server_psk_selected_identity), function_name,
                               "do not commit PSK selection after rejecting the unusable cipher suite");
-            _test_case.assert(unknown_suite_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+            _test_case.assert(unknown_suite_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), function_name,
                               "roll back the provisional PSK Early Secret after rejecting the unusable cipher suite");
         }
     }
+}
 
+static void test_tls13_server_psk_selected_identity_hash_compatibility(const char* function_name, uint32 ticket_age_add, uint32 ticket_lifetime, const binary_t& ticket,
+                                                                       const binary_t& resumption_psk) {
+    // Scenario under test: TLS 1.3 ServerHello selected_identity must match the selected ticket's cipher-suite hash.
+    // Action: select a SHA-384 identity from a mixed-hash offer, test same-hash suite changes, and test a mismatched hash.
+    // Expected: accept compatible ticket/hash combinations and reject an identity whose PSK hash differs from ServerHello.
     // A mixed-hash offer must validate the selected identity's suite hash,
     // rather than comparing every selection with the first ticket's hash.
     tls_session mixed_hash_client;
-    return_t mixed_prepare = prepare_client(mixed_hash_client, 0, false);
-    _test_case.test(mixed_prepare, __FUNCTION__, "prepare a client for mixed-hash ServerHello selection");
+    return_t mixed_prepare = prepare_tls13_psk_offer_client(mixed_hash_client, 0, false, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+    _test_case.test(mixed_prepare, function_name, "prepare a client for mixed-hash ServerHello selection");
     if (errorcode_t::success == mixed_prepare) {
         const uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
         tls_resumption_ticket sha256_ticket;
@@ -270,67 +255,507 @@ static void test_tls13_server_psk_selected_identity_range() {
         mixed_hash_client.set_offered_resumption_tickets({sha256_ticket, sha256_ticket_second, sha384_ticket});
         mixed_hash_client.get_keyvalue().set(session_client_psk_identity_count, 3);
 
-        binary_t mixed_hash_server_hello_wire = make_server_hello(2, 0x1302, false);
+        binary_t mixed_hash_server_hello_wire = make_tls13_psk_server_hello(2, 0x1302, false);
         tls_handshake_server_hello mixed_hash_server_hello(&mixed_hash_client);
         size_t mixed_hash_pos = 0;
         return_t mixed_ret = mixed_hash_server_hello.read(from_server, mixed_hash_server_hello_wire.data(), mixed_hash_server_hello_wire.size(), mixed_hash_pos);
-        _test_case.test(mixed_ret, __FUNCTION__, "accept ServerHello selecting the SHA-384 identity from a mixed-hash offer");
+        _test_case.test(mixed_ret, function_name, "accept ServerHello selecting the SHA-384 identity from a mixed-hash offer");
         if (errorcode_t::success == mixed_ret) {
-            _test_case.assert(mixed_hash_server_hello_wire.size() == mixed_hash_pos, __FUNCTION__, "consume the complete mixed-hash ServerHello");
-            _test_case.assert(2 == mixed_hash_client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+            _test_case.assert(mixed_hash_server_hello_wire.size() == mixed_hash_pos, function_name, "consume the complete mixed-hash ServerHello");
+            _test_case.assert(2 == mixed_hash_client.get_keyvalue().get(session_server_psk_selected_identity), function_name,
                               "retain the selected SHA-384 identity index");
-            _test_case.assert(48 == mixed_hash_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).size(), __FUNCTION__,
+            _test_case.assert(48 == mixed_hash_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).size(), function_name,
                               "restore the selected SHA-384 ticket before the key schedule");
         }
 
         // A ticket may resume under a different AEAD suite when the hash is unchanged.
         tls_session same_hash_different_suite_client;
-        return_t same_hash_prepare = prepare_client(same_hash_different_suite_client, 0, false);
-        _test_case.test(same_hash_prepare, __FUNCTION__, "prepare a client for same-hash cipher-suite resumption");
+        return_t same_hash_prepare = prepare_tls13_psk_offer_client(same_hash_different_suite_client, 0, false, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+        _test_case.test(same_hash_prepare, function_name, "prepare a client for same-hash cipher-suite resumption");
         if (errorcode_t::success == same_hash_prepare) {
             same_hash_different_suite_client.set_offered_resumption_tickets({sha256_ticket});
             same_hash_different_suite_client.get_keyvalue().set(session_client_psk_identity_count, 1);
-            binary_t same_hash_server_hello_wire = make_server_hello(0, 0x1303, false);
+            binary_t same_hash_server_hello_wire = make_tls13_psk_server_hello(0, 0x1303, false);
             tls_handshake_server_hello same_hash_server_hello(&same_hash_different_suite_client);
             size_t same_hash_pos = 0;
             return_t same_hash_ret = same_hash_server_hello.read(from_server, same_hash_server_hello_wire.data(), same_hash_server_hello_wire.size(), same_hash_pos);
-            _test_case.test(same_hash_ret, __FUNCTION__, "accept a SHA-256 ticket with a different SHA-256 cipher suite");
+            _test_case.test(same_hash_ret, function_name, "accept a SHA-256 ticket with a different SHA-256 cipher suite");
             if (errorcode_t::success == same_hash_ret) {
-                _test_case.assert(same_hash_server_hello_wire.size() == same_hash_pos, __FUNCTION__, "consume the complete same-hash ServerHello");
-                _test_case.assert(0x1303 == same_hash_different_suite_client.get_tls_protection().get_cipher_suite(), __FUNCTION__,
+                _test_case.assert(same_hash_server_hello_wire.size() == same_hash_pos, function_name, "consume the complete same-hash ServerHello");
+                _test_case.assert(0x1303 == same_hash_different_suite_client.get_tls_protection().get_cipher_suite(), function_name,
                                   "retain the newly negotiated ChaCha20-Poly1305 suite");
-                _test_case.assert(32 == same_hash_different_suite_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).size(), __FUNCTION__,
+                _test_case.assert(32 == same_hash_different_suite_client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).size(), function_name,
                                   "restore the SHA-256 ticket PSK for the negotiated suite");
             }
         }
 
         tls_session mismatched_hash_client;
-        return_t mismatch_prepare = prepare_client(mismatched_hash_client, 0, false);
-        _test_case.test(mismatch_prepare, __FUNCTION__, "prepare a second client for mixed-hash suite mismatch validation");
+        return_t mismatch_prepare = prepare_tls13_psk_offer_client(mismatched_hash_client, 0, false, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+        _test_case.test(mismatch_prepare, function_name, "prepare a second client for mixed-hash suite mismatch validation");
         if (errorcode_t::success == mismatch_prepare) {
             mismatched_hash_client.set_offered_resumption_tickets({sha256_ticket, sha256_ticket_second, sha384_ticket});
             mismatched_hash_client.get_keyvalue().set(session_client_psk_identity_count, 3);
-            binary_t mismatched_hash_server_hello_wire = make_server_hello(2, 0x1301, false);
+            binary_t mismatched_hash_server_hello_wire = make_tls13_psk_server_hello(2, 0x1301, false);
             tls_handshake_server_hello mismatched_hash_server_hello(&mismatched_hash_client);
             size_t mismatched_hash_pos = 0;
             return_t mismatch_ret =
                 mismatched_hash_server_hello.read(from_server, mismatched_hash_server_hello_wire.data(), mismatched_hash_server_hello_wire.size(), mismatched_hash_pos);
-            size_t illegal_parameter_count = 0;
-            mismatched_hash_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                    ++illegal_parameter_count;
-                }
-            });
-            _test_case.assert(errorcode_t::success != mismatch_ret, __FUNCTION__, "reject a SHA-384 PSK selected with a SHA-256 cipher suite");
-            _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for the mixed-hash mismatch");
+            size_t illegal_parameter_count = test_count_fatal_alert(mismatched_hash_client, from_server, tls_alertdesc_t::illegal_parameter);
+            _test_case.assert(errorcode_t::success != mismatch_ret, function_name, "reject a SHA-384 PSK selected with a SHA-256 cipher suite");
+            _test_case.assert(1 == illegal_parameter_count, function_name, "report exactly one fatal illegal_parameter for the mixed-hash mismatch");
+        }
+    }
+}
+
+static void test_tls13_server_psk_selected_identity_range() {
+    // Scenario under test: TLS 1.3 ServerHello selected_identity range and cipher-suite hash validation.
+    // Action: exercise selection bounds, malformed ServerHello, and mixed-hash ticket compatibility.
+    // Expected: commit only a valid selected identity and restore the matching ticket PSK.
+    _test_case.begin("TLS 1.3 ServerHello PSK selected_identity range");
+
+    constexpr uint32 ticket_age_add = 0x50607080;
+    constexpr uint32 ticket_lifetime = 3600;
+    const binary_t ticket = {0xaa, 0xbb, 0xcc};
+    const binary_t resumption_psk(32, 0x11);
+    test_tls13_server_psk_selected_identity_range_cases(__FUNCTION__, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+    test_tls13_server_psk_selected_identity_hash_compatibility(__FUNCTION__, ticket_age_add, ticket_lifetime, ticket, resumption_psk);
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_retires_expired_earlier_identity(const binary_t& wire, const tls_resumption_ticket& ticket1, const tls_resumption_ticket& ticket2,
+                                                                  const binary_t& identity2, uint64 now_ms, Configure configure) {
+    // Scenario: TLS 1.3 retires an expired earlier PSK identity while selecting a later ticket.
+    // Action: offer an expired first ticket followed by a valid second ticket.
+    // Expected: retire the expired ticket and retain the selected later ticket in the compatibility view.
+    _test_case.begin("TLS 1.3 retires an expired earlier PSK identity while selecting a later ticket");
+    // An expired earlier identity must be retired even when a later
+    // offered identity is selected successfully.
+    {
+        tls_resumption_ticket expired_ticket = ticket1;
+        expired_ticket.timestamp = now_ms - (static_cast<uint64>(expired_ticket.lifetime) * 1000 + 1);
+
+        tls_session expiry_cleanup_server;
+        configure(expiry_cleanup_server);
+        expiry_cleanup_server.get_tls_protection().set_cipher_suite(0);
+        expiry_cleanup_server.store_resumption_ticket(expired_ticket);
+        expiry_cleanup_server.store_resumption_ticket(ticket2);
+        auto& expiry_secrets = expiry_cleanup_server.get_tls_protection().get_secrets();
+        expiry_secrets.assign(tls_secret_t::new_session_ticket, expired_ticket.identity);
+        auto& expiry_kv = expiry_cleanup_server.get_session_info(from_server).get_keyvalue();
+        expiry_kv.set(session_ticket_lifetime, expired_ticket.lifetime);
+        expiry_kv.set(session_ticket_age_add, expired_ticket.age_add);
+        expiry_kv.set(session_ticket_timestamp, expired_ticket.timestamp);
+
+        tls_records expiry_cleanup_records;
+        return_t expiry_cleanup_ret = expiry_cleanup_records.read(&expiry_cleanup_server, from_client, wire);
+        _test_case.test(expiry_cleanup_ret, __FUNCTION__, "select a later valid identity while retiring an earlier expired ticket");
+        if (errorcode_t::success == expiry_cleanup_ret) {
+            auto remaining_tickets = expiry_cleanup_server.get_resumption_tickets();
+            _test_case.assert(1 == remaining_tickets.size(), __FUNCTION__, "remove the expired first identity despite successful later resumption");
+            if (1 == remaining_tickets.size()) {
+                _test_case.assert(identity2 == remaining_tickets.front().identity, __FUNCTION__, "retain the later valid ticket record");
+            }
+            _test_case.assert(1 == expiry_cleanup_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                              "select the second offered identity after rejecting the expired first identity");
+            _test_case.assert(identity2 == expiry_secrets.get(tls_secret_t::new_session_ticket), __FUNCTION__,
+                              "promote the remaining valid ticket into the compatibility view");
+            _test_case.assert(ticket2.lifetime == expiry_kv.get(session_ticket_lifetime), __FUNCTION__,
+                              "refresh compatibility lifetime metadata from the remaining ticket");
+            _test_case.assert(ticket2.age_add == expiry_kv.get(session_ticket_age_add), __FUNCTION__, "refresh compatibility age_add metadata from the remaining ticket");
+            _test_case.assert(ticket2.timestamp == expiry_kv.get(session_ticket_timestamp), __FUNCTION__,
+                              "refresh compatibility timestamp metadata from the remaining ticket");
+        }
+    }
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_ticket_age_mismatch(const binary_t& wire, const tls_resumption_ticket& ticket1, uint64 now_ms, Configure configure) {
+    // Scenario: TLS 1.3 retains PSK resumption when the early-data ticket age mismatches.
+    // Action: compare a matching ticket age with a delayed server issuance timestamp.
+    // Expected: retain PSK resumption but revoke the early-data allowance for the mismatch.
+    _test_case.begin("TLS 1.3 retains PSK resumption when the early-data ticket age mismatches");
+    // The server must compare the client-reported age with its own issuance
+    // timestamp for 0-RTT, while retaining PSK resumption on an age mismatch.
+    {
+        tls_session age_match_server;
+        configure(age_match_server);
+        age_match_server.get_tls_protection().set_cipher_suite(0);
+        age_match_server.store_resumption_ticket(ticket1);
+        tls_records age_match_records;
+        return_t age_match_ret = age_match_records.read(&age_match_server, from_client, wire);
+        _test_case.test(age_match_ret, __FUNCTION__, "resume with a first-identity ticket whose reported age matches server issuance time");
+        if (errorcode_t::success == age_match_ret) {
+            _test_case.assert(0 == age_match_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                              "select the first PSK identity for the age-match case");
+            uint64 age_match_early_data_limit = age_match_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit);
+            _test_case.assert(4096 == age_match_early_data_limit, __FUNCTION__, "recognize the early-data allowance when ticket age matches");
+        }
+
+        tls_resumption_ticket delayed_ticket = ticket1;
+        delayed_ticket.timestamp = now_ms - 20000;
+        tls_session age_mismatch_server;
+        configure(age_mismatch_server);
+        age_mismatch_server.get_tls_protection().set_cipher_suite(0);
+        age_mismatch_server.store_resumption_ticket(delayed_ticket);
+        tls_records age_mismatch_records;
+        return_t age_mismatch_ret = age_mismatch_records.read(&age_mismatch_server, from_client, wire);
+        _test_case.test(age_mismatch_ret, __FUNCTION__, "retain PSK resumption when the reported ticket age differs from server issuance time");
+        if (errorcode_t::success == age_mismatch_ret) {
+            _test_case.assert(0 == age_mismatch_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                              "keep the first PSK identity selected despite an early-data age mismatch");
+            _test_case.assert(0 == age_mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
+                              "reject only early data when the reported ticket age exceeds the tolerance");
+            _test_case.assert(tls_flow_t::zero_rtt == age_mismatch_server.get_tls_protection().get_flow(), __FUNCTION__,
+                              "preserve PSK resumption after declining early data");
+        }
+    }
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_verifies_sha384_binder(const binary_t& wire, const tls_resumption_ticket& ticket3, Configure configure) {
+    // Scenario: TLS 1.3 verifies a later SHA-384 PSK binder independently.
+    // Action: process the mixed-hash ClientHello on a server that stores only the SHA-384 ticket.
+    // Expected: select identity two and derive the Early Secret from the SHA-384 ticket.
+    _test_case.begin("TLS 1.3 verifies a later SHA-384 PSK binder independently");
+    return_t ret = errorcode_t::success;
+    // The third offered ticket uses SHA-384. Verify its binder independently
+    // on a server that has only that identity in its ticket store.
+    tls_session sha384_server;
+    configure(sha384_server);
+    sha384_server.get_tls_protection().set_cipher_suite(0);
+    sha384_server.store_resumption_ticket(ticket3);
+    tls_records sha384_records;
+    ret = sha384_records.read(&sha384_server, from_client, wire);
+    _test_case.test(ret, __FUNCTION__, "verify the SHA-384 binder for a later mixed-hash PSK identity");
+    if (errorcode_t::success == ret) {
+        _test_case.assert(2 == sha384_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                          "select the SHA-384 ticket at its matching identity index");
+        _test_case.assert(0x1302 == sha384_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
+                          "retain the selected ticket's SHA-384 cipher suite");
+        binary_t expected_sha384_early_secret;
+        return_t sha384_secret_ret = sha384_server.get_tls_protection().calc_resumption_early_secret(ticket3.psk, expected_sha384_early_secret);
+        _test_case.test(sha384_secret_ret, __FUNCTION__, "derive the expected SHA-384 ticket early secret");
+        if (errorcode_t::success == sha384_secret_ret) {
+            _test_case.assert(expected_sha384_early_secret == sha384_server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early), __FUNCTION__,
+                              "verify the selected SHA-384 PSK independently of the first SHA-256 identity");
+        }
+    }
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_omits_hash_incompatible_ticket(const tls_resumption_ticket& ticket1, const tls_resumption_ticket& ticket3, Configure configure) {
+    // Scenario: TLS 1.3 omits a cached PSK ticket with no matching offered cipher-suite hash.
+    // Action: offer only a SHA-256 cipher suite while the cache contains SHA-256 and SHA-384 tickets.
+    // Expected: serialize only the compatible SHA-256 identity.
+    _test_case.begin("TLS 1.3 omits a cached PSK ticket with no matching offered cipher-suite hash");
+    return_t ret = errorcode_t::success;
+    // A ticket whose hash has no matching ClientHello cipher suite must not
+    // be emitted merely because another ticket is usable.
+    tls_session restricted_client;
+    configure(restricted_client);
+    restricted_client.get_tls_protection().set_cipher_suite(0);
+    restricted_client.store_resumption_ticket(ticket1);
+    restricted_client.store_resumption_ticket(ticket3);
+    tls_handshake_client_hello restricted_hello(&restricted_client);
+    restricted_hello.add_ciphersuite(0x1301);
+    tls_extension_client_psk restricted_psk(&restricted_hello);
+    binary_t restricted_psk_wire;
+    ret = restricted_psk.write(from_client, restricted_psk_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize only PSK tickets compatible with the offered cipher-suite hashes");
+    if (errorcode_t::success == ret) {
+        _test_case.assert(1 == restricted_psk.get_identity_count(), __FUNCTION__, "omit the SHA-384 ticket when no SHA-384 suite was offered");
+        auto restricted_tickets = restricted_client.get_offered_resumption_tickets();
+        _test_case.assert((restricted_tickets.size() == 1) && (0x1301 == restricted_tickets.front().cipher_suite), __FUNCTION__,
+                          "retain the matching SHA-256 suite metadata for the emitted identity");
+    }
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_rejects_mismatched_server_identity(const binary_t& wire, const tls_resumption_ticket& ticket2, Configure configure) {
+    // Scenario: TLS 1.3 rejects a ServerHello selected_identity that differs from the verified binder identity.
+    // Action: verify identity one, then alter the composed ServerHello to select identity zero.
+    // Expected: reject the inconsistent selection and roll back provisional PSK state.
+    _test_case.begin("TLS 1.3 rejects a ServerHello selected_identity that differs from the verified binder identity");
+    tls_session mismatched_server;
+    configure(mismatched_server);
+    mismatched_server.get_tls_protection().set_cipher_suite(0);
+    mismatched_server.store_resumption_ticket(ticket2);
+    tls_records mismatched_records;
+    binary_t mismatched_client_hello_wire = wire;
+    return_t mismatched_ret = mismatched_records.read(&mismatched_server, from_client, mismatched_client_hello_wire);
+    _test_case.test(mismatched_ret, __FUNCTION__, "verify the binder for the second offered identity before testing ServerHello consistency");
+    if (errorcode_t::success == mismatched_ret) {
+        _test_case.assert(1 == mismatched_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                          "record wire identity one as the PSK whose binder was verified");
+
+        tls_handshake* mismatched_server_hello = nullptr;
+        mismatched_ret = tls_composer::construct_server_hello(&mismatched_server_hello, &mismatched_server, nullptr);
+        _test_case.test(mismatched_ret, __FUNCTION__, "construct a ServerHello for the verified second identity");
+        if ((errorcode_t::success == mismatched_ret) && (nullptr != mismatched_server_hello)) {
+            auto mismatched_psk = static_cast<tls_extension_server_psk*>(mismatched_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key));
+            _test_case.assert(nullptr != mismatched_psk, __FUNCTION__, "include the verified PSK selection in ServerHello");
+            if (nullptr != mismatched_psk) {
+                _test_case.assert(1 == mismatched_psk->get_selected_identity(), __FUNCTION__, "initially select the same identity whose binder was verified");
+                mismatched_psk->set_selected_identity(0);
+
+                binary_t mismatched_server_hello_wire;
+                mismatched_ret = mismatched_server_hello->write(from_server, mismatched_server_hello_wire);
+                _test_case.assert(errorcode_t::success != mismatched_ret, __FUNCTION__,
+                                  "reject ServerHello when selected_identity differs from the verified binder identity");
+                _test_case.assert(0xffff == mismatched_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                                  "roll back the verified identity after rejecting inconsistent ServerHello");
+                _test_case.assert(0xffff == mismatched_server.get_keyvalue().get(session_server_psk_key_exchange_mode), __FUNCTION__,
+                                  "roll back the PSK key-exchange mode after rejecting inconsistent ServerHello");
+                _test_case.assert(0 == mismatched_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
+                                  "clear provisional ticket cipher-suite metadata after rejecting inconsistent ServerHello");
+                _test_case.assert(mismatched_server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                                  "clear the verified ticket Early Secret after rejecting inconsistent ServerHello");
+                _test_case.assert(tls_flow_t::one_rtt == mismatched_server.get_tls_protection().get_flow(), __FUNCTION__,
+                                  "leave no provisional resumption flow after rejecting inconsistent ServerHello");
+                _test_case.assert(mismatched_server.get_offered_resumption_tickets().empty(), __FUNCTION__,
+                                  "discard the offered-ticket snapshot after rejecting inconsistent ServerHello");
+            }
+            mismatched_server_hello->release();
+        } else if (nullptr != mismatched_server_hello) {
+            mismatched_server_hello->release();
+        }
+    }
+}
+
+static void test_tls13_psk_offer_client_restores_selected_ticket_psk(tls_session& server, tls_session& client, const binary_t& psk2) {
+    // Scenario: TLS 1.3 client restores the selected ticket PSK when processing ServerHello.
+    // Action: compose a ServerHello selecting identity one and process it on the client.
+    // Expected: restore the PSK associated with the verified identity and derive matching shared and early secrets.
+    _test_case.begin("TLS 1.3 client restores the selected ticket PSK when processing ServerHello");
+    return_t ret = errorcode_t::success;
+    // The client's ServerHello processing must restore the PSK associated
+    // with selected_identity=1, even though binder generation iterated over
+    // both cached tickets and restored the prior secret afterward.
+    // Construct the ServerHello through the production composer so cipher-suite,
+    // version, and key-share selection are negotiated from the parsed ClientHello.
+    tls_handshake* server_hello = nullptr;
+    ret = tls_composer::construct_server_hello(&server_hello, &server, nullptr);
+    _test_case.test(ret, __FUNCTION__, "construct ServerHello through the TLS composer");
+    if ((errorcode_t::success != ret) || (nullptr == server_hello)) {
+        return;
+    }
+
+    // construct_server_hello() performs the server-side negotiation from the
+    // ClientHello offer before creating the ServerHello. Validate the negotiated
+    // key-share state only after this production handshake path has run.
+    auto negotiated_keyshare_group = server.get_tls_protection().get_protection_context().get0_keyshare_group();
+    _test_case.assert(tls_group_t::unknown != negotiated_keyshare_group, __FUNCTION__, "populate the server key-share context during ClientHello negotiation");
+
+    uint16 selected_cipher_suite = static_cast<tls_handshake_server_hello*>(server_hello)->get_cipher_suite();
+    _test_case.assert(0x1301 == selected_cipher_suite, __FUNCTION__, "select the SHA-256 cipher suite associated with the cached tickets");
+    if (0x1301 != selected_cipher_suite) {
+        server_hello->release();
+        return;
+    }
+
+    auto server_versions = server_hello->get_extensions().get(tls_extension_type_t::supported_versions);
+    auto server_key_share = server_hello->get_extensions().get(tls_extension_type_t::key_share);
+    auto server_psk = server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key);
+    _test_case.assert(nullptr != server_versions, __FUNCTION__, "register supported_versions through the ServerHello composer");
+    _test_case.assert(nullptr != server_key_share, __FUNCTION__, "register key_share through the ServerHello composer");
+    _test_case.assert(nullptr != server_psk, __FUNCTION__, "register the selected PSK identity through the ServerHello composer");
+    if ((nullptr == server_versions) || (nullptr == server_key_share) || (nullptr == server_psk)) {
+        server_hello->release();
+        return;
+    }
+
+    auto selected_server_psk = static_cast<tls_extension_server_psk*>(server_psk);
+    _test_case.assert(1 == selected_server_psk->get_selected_identity(), __FUNCTION__, "select the second identity offered by the client");
+
+    // Serialize the complete ServerHello through the production handshake
+    // writer. This exercises do_preprocess(), extension serialization, and
+    // the server key schedule instead of assembling a synthetic wire message.
+    binary_t server_hello_wire;
+    ret = server_hello->write(from_server, server_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize the composer-built ServerHello with its selected PSK identity");
+    // Direct handshake serialization bypasses tls_record::do_postprocess().
+    // Complete the containing-record boundary so the deferred TLS 1.3
+    // protection activation releases its scheduled handshake reference.
+    server.run_scheduled(from_server);
+    server_hello->release();
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    binary_t server_shared_secret = server.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret);
+    _test_case.assert(!server_shared_secret.empty(), __FUNCTION__, "derive the server-side shared secret from the negotiated key_share");
+
+    client.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    tls_handshake_server_hello server_hello_reader(&client);
+    size_t server_hello_pos = 0;
+    ret = server_hello_reader.read(from_server, server_hello_wire.data(), server_hello_wire.size(), server_hello_pos);
+    _test_case.test(ret, __FUNCTION__, "accept ServerHello selecting the second cached ticket");
+    _test_case.assert(server_hello_wire.size() == server_hello_pos, __FUNCTION__, "consume the complete composer-generated ServerHello");
+    _test_case.assert(1 == client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                      "retain the selected identity for subsequent EncryptedExtensions early-data validation");
+
+    binary_t client_shared_secret = client.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret);
+    _test_case.assert(!client_shared_secret.empty(), __FUNCTION__, "derive the client-side shared secret from the ServerHello key_share");
+    _test_case.assert(server_shared_secret == client_shared_secret, __FUNCTION__, "derive the same DHE shared secret on both peers");
+
+    binary_t expected_client_early_secret;
+    return_t expected_ret = client.get_tls_protection().calc_resumption_early_secret(psk2, expected_client_early_secret);
+    _test_case.test(expected_ret, __FUNCTION__, "derive the expected early secret for selected_identity one");
+    _test_case.assert(expected_client_early_secret == client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early), __FUNCTION__,
+                      "restore the second ticket PSK before the client key schedule");
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_clears_state_on_suite_failure(const binary_t& wire, const tls_resumption_ticket& ticket1, Configure configure) {
+    // Scenario: TLS 1.3 clears PSK and early-data state when cipher-suite negotiation fails.
+    // Action: verify the offered PSK binder and then remove every negotiable cipher suite.
+    // Expected: fail ServerHello construction and clear provisional PSK and early-data state.
+    _test_case.begin("TLS 1.3 clears PSK and early-data state when cipher-suite negotiation fails");
+    // If no cipher suite can be negotiated, terminate the handshake
+    // without retaining the binder-selected PSK or early-data state.
+    {
+        tls_session no_suite_server;
+        configure(no_suite_server);
+        no_suite_server.get_tls_protection().set_cipher_suite(0);
+        no_suite_server.store_resumption_ticket(ticket1);
+        tls_records no_suite_records;
+        return_t no_suite_ret = no_suite_records.read(&no_suite_server, from_client, wire);
+        _test_case.test(no_suite_ret, __FUNCTION__, "verify the PSK binder before forcing cipher-suite negotiation failure");
+        if (errorcode_t::success == no_suite_ret) {
+            auto& no_suite_protection = no_suite_server.get_tls_protection();
+            _test_case.assert(tls_flow_t::zero_rtt == no_suite_protection.get_flow(), __FUNCTION__, "select the PSK before attempting cipher-suite negotiation");
+            _test_case.assert(0 == no_suite_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                              "derive the selected ticket early secret before forcing negotiation failure");
+
+            no_suite_protection.get_protection_context().clear_cipher_suites();
+            tls_handshake* no_suite_server_hello = nullptr;
+            no_suite_ret = tls_composer::construct_server_hello(&no_suite_server_hello, &no_suite_server, nullptr);
+            _test_case.assert(errorcode_t::success != no_suite_ret, __FUNCTION__, "fail the handshake when no cipher suite is available");
+            _test_case.assert(nullptr == no_suite_server_hello, __FUNCTION__, "do not construct ServerHello without a negotiated cipher suite");
+            _test_case.assert(tls_flow_t::one_rtt == no_suite_protection.get_flow(), __FUNCTION__, "leave no stale PSK resumption flow after negotiation failure");
+            _test_case.assert(no_suite_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                              "clear the selected ticket early secret after negotiation failure");
+            _test_case.assert(0xffff == no_suite_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                              "clear the selected identity after negotiation failure");
+            _test_case.assert(0 == no_suite_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
+                              "clear the ticket cipher-suite metadata after negotiation failure");
+            _test_case.assert(0 == no_suite_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
+                              "clear the early-data allowance after negotiation failure");
+        }
+    }
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_hrr_declines_incompatible_ticket_hash(const binary_t& wire, const tls_resumption_ticket& ticket1, Configure configure) {
+    // Scenario: TLS 1.3 declines an HRR-incompatible PSK while preserving the transcript prefix.
+    // Action: verify the initial binder, enter HRR flow, and prefer a cipher suite with a different ticket hash.
+    // Expected: omit pre_shared_key, clear provisional PSK state, and retain the HRR transcript flow.
+    _test_case.begin("TLS 1.3 declines an HRR-incompatible PSK while preserving the transcript prefix");
+    // A PSK hash mismatch in ClientHello2 must decline resumption without
+    // discarding the HelloRetryRequest transcript prefix.
+    {
+        tls_session hrr_mismatch_server;
+        configure(hrr_mismatch_server);
+        hrr_mismatch_server.get_tls_protection().set_cipher_suite(0);
+        hrr_mismatch_server.store_resumption_ticket(ticket1);
+        tls_records hrr_mismatch_records;
+        return_t hrr_mismatch_ret = hrr_mismatch_records.read(&hrr_mismatch_server, from_client, wire);
+        _test_case.test(hrr_mismatch_ret, __FUNCTION__, "verify the PSK binder before simulating the HRR continuation");
+        if (errorcode_t::success == hrr_mismatch_ret) {
+            auto& hrr_mismatch_protection = hrr_mismatch_server.get_tls_protection();
+            hrr_mismatch_protection.set_flow(tls_flow_t::hello_retry_request);
+            hrr_mismatch_server.update_session_status(session_status_hello_retry_request);
+
+            auto& hrr_mismatch_context = hrr_mismatch_protection.get_protection_context();
+            hrr_mismatch_context.clear_cipher_suites();
+            hrr_mismatch_context.add_cipher_suite(0x1302).add_cipher_suite(0x1301);
+
+            tls_handshake* hrr_mismatch_server_hello = nullptr;
+            hrr_mismatch_ret = tls_composer::construct_server_hello(&hrr_mismatch_server_hello, &hrr_mismatch_server, nullptr);
+            _test_case.test(hrr_mismatch_ret, __FUNCTION__, "compose a full-handshake ServerHello after declining the HRR PSK");
+            if ((errorcode_t::success == hrr_mismatch_ret) && (nullptr != hrr_mismatch_server_hello)) {
+                _test_case.assert(tls_flow_t::hello_retry_request == hrr_mismatch_protection.get_flow(), __FUNCTION__,
+                                  "preserve the HRR transcript flow when the selected PSK hash is incompatible");
+                _test_case.assert(nullptr == hrr_mismatch_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key), __FUNCTION__,
+                                  "omit pre_shared_key after declining the incompatible ClientHello2 identity");
+                _test_case.assert(hrr_mismatch_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                                  "clear the selected PSK early secret while retaining the HRR transcript");
+                _test_case.assert(0xffff == hrr_mismatch_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                                  "clear the selected identity when ClientHello2 falls back to a full handshake");
+                _test_case.assert(0 == hrr_mismatch_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
+                                  "clear the ticket suite when ClientHello2 falls back to a full handshake");
+                _test_case.assert(0 == hrr_mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
+                                  "revoke the early-data allowance when ClientHello2 falls back to a full handshake");
+                _test_case.assert(0 == hrr_mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
+                                  "keep early data rejected on the non-PSK fallback path after HRR");
+                hrr_mismatch_server_hello->release();
+            } else if (nullptr != hrr_mismatch_server_hello) {
+                hrr_mismatch_server_hello->release();
+            }
+        }
+    }
+}
+
+template <typename Configure>
+static void test_tls13_psk_offer_declines_incompatible_ticket_hash(const binary_t& wire, const tls_resumption_ticket& ticket1, Configure configure) {
+    // Scenario: TLS 1.3 declines PSK when the server-preferred cipher-suite hash differs from the ticket.
+    // Action: verify a SHA-256 ticket binder, then prefer the SHA-384 cipher suite during ServerHello composition.
+    // Expected: decline PSK and clear the ticket Early Secret, identity and early-data allowance.
+    _test_case.begin("TLS 1.3 declines PSK when the server-preferred cipher-suite hash differs from the ticket");
+    // The server may prefer a different TLS 1.3 cipher-suite hash than
+    // the selected ticket. It must preserve that suite preference, decline
+    // PSK resumption, and clear the ticket's early-data/key-schedule state.
+    {
+        tls_session mismatch_server;
+        configure(mismatch_server);
+        mismatch_server.get_tls_protection().set_cipher_suite(0);
+        mismatch_server.store_resumption_ticket(ticket1);
+        tls_records mismatch_records;
+        return_t mismatch_ret = mismatch_records.read(&mismatch_server, from_client, wire);
+        _test_case.test(mismatch_ret, __FUNCTION__, "verify a SHA-256 ticket offered alongside SHA-384-first cipher-suite preferences");
+        if (errorcode_t::success == mismatch_ret) {
+            auto& mismatch_protection = mismatch_server.get_tls_protection();
+            auto& mismatch_context = mismatch_protection.get_protection_context();
+            _test_case.assert(tls_flow_t::zero_rtt == mismatch_protection.get_flow(), __FUNCTION__,
+                              "retain PSK resumption after binder verification and before suite negotiation");
+            uint64 mismatch_early_data_limit = mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit);
+            _test_case.assert(4096 == mismatch_early_data_limit, __FUNCTION__, "recognize the ticket's early-data allowance before suite compatibility is evaluated");
+
+            mismatch_context.clear_cipher_suites();
+            mismatch_context.add_cipher_suite(0x1302).add_cipher_suite(0x1301);
+
+            tls_handshake* mismatch_server_hello = nullptr;
+            mismatch_ret = tls_composer::construct_server_hello(&mismatch_server_hello, &mismatch_server, nullptr);
+            _test_case.test(mismatch_ret, __FUNCTION__, "compose ServerHello after preferring the SHA-384 cipher suite");
+            if ((errorcode_t::success == mismatch_ret) && (nullptr != mismatch_server_hello)) {
+                uint16 negotiated_suite = static_cast<tls_handshake_server_hello*>(mismatch_server_hello)->get_cipher_suite();
+                _test_case.assert(0x1302 == negotiated_suite, __FUNCTION__, "preserve the server's negotiated SHA-384 cipher-suite preference");
+                _test_case.assert(nullptr == mismatch_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key), __FUNCTION__,
+                                  "omit ServerHello pre_shared_key when the selected ticket uses a different hash");
+                _test_case.assert(tls_flow_t::one_rtt == mismatch_protection.get_flow(), __FUNCTION__,
+                                  "continue with a full-handshake flow after declining the incompatible PSK");
+                _test_case.assert(mismatch_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
+                                  "clear the selected ticket's early secret before the full-handshake key schedule");
+                _test_case.assert(0xffff == mismatch_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
+                                  "clear the selected PSK identity after declining resumption");
+                _test_case.assert(0 == mismatch_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
+                                  "clear the selected ticket cipher-suite metadata after declining resumption");
+                _test_case.assert(0 == mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
+                                  "revoke the ticket's early-data allowance after declining its PSK");
+                _test_case.assert(0 == mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
+                                  "ensure early data is not marked accepted after PSK decline");
+                mismatch_server_hello->release();
+            } else if (nullptr != mismatch_server_hello) {
+                mismatch_server_hello->release();
+            }
         }
     }
 }
 
 static void test_tls13_client_multiple_ticket_psk_offer() {
-    // Scenario under test: TLS 1.3 client offers multiple cached tickets with independent binders.
-    // Action: prepare the empty transcript hash for each ticket binder.
-    // Expected: retain the composed supported_groups offer in the client context.
+    // Scenario under test: TLS 1.3 client offers multiple cached PSK tickets with independent SHA-256 and SHA-384 binders.
+    // Action: compose ClientHello, verify ticket-specific binders, and exercise identity selection, expiry, early-data, and fallback cases.
+    // Expected: preserve identity-to-ticket mapping and clear PSK state whenever resumption is declined.
     _test_case.begin("TLS 1.3 client offers multiple cached tickets with independent binders");
 
     const binary_t identity1 = {0xa1, 0x01};
@@ -344,9 +769,9 @@ static void test_tls13_client_multiple_ticket_psk_offer() {
     auto configure = [&](tls_session& session) {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
         session.get_keyvalue().set(session_handshake_finished, 1);
         session.update_session_status(session_status_server_finished);
         session.update_session_status(session_status_client_finished);
@@ -368,7 +793,7 @@ static void test_tls13_client_multiple_ticket_psk_offer() {
     ticket1.lifetime = 3600;
     ticket1.age_add = 0x10203040;
     ticket1.timestamp = now_ms - 20;
-    ticket1.version = tls_13;
+    ticket1.version = tls1_3;
     ticket1.cipher_suite = 0x1301;
     ticket1.max_early_data_size = 4096;
 
@@ -379,7 +804,7 @@ static void test_tls13_client_multiple_ticket_psk_offer() {
     ticket2.lifetime = 3600;
     ticket2.age_add = 0x50607080;
     ticket2.timestamp = now_ms - 35;
-    ticket2.version = tls_13;
+    ticket2.version = tls1_3;
     // 0x1303 uses the same SHA-256 hash as 0x1301. A ticket issued
     // under either suite can therefore share this ClientHello binder hash.
     ticket2.cipher_suite = 0x1303;
@@ -391,7 +816,7 @@ static void test_tls13_client_multiple_ticket_psk_offer() {
     ticket3.lifetime = 3600;
     ticket3.age_add = 0x90a0b0c0;
     ticket3.timestamp = now_ms - 45;
-    ticket3.version = tls_13;
+    ticket3.version = tls1_3;
     // 0x1302 uses SHA-384; its binder is independent of the SHA-256 binders.
     ticket3.cipher_suite = 0x1302;
 
@@ -550,28 +975,7 @@ static void test_tls13_client_multiple_ticket_psk_offer() {
         }
     }
 
-    // Scenario: omit a cached ticket whose hash has no matching offered cipher suite
-    {
-        // A ticket whose hash has no matching ClientHello cipher suite must not
-        // be emitted merely because another ticket is usable.
-        tls_session restricted_client;
-        configure(restricted_client);
-        restricted_client.get_tls_protection().set_cipher_suite(0);
-        restricted_client.store_resumption_ticket(ticket1);
-        restricted_client.store_resumption_ticket(ticket3);
-        tls_handshake_client_hello restricted_hello(&restricted_client);
-        restricted_hello.add_ciphersuite(0x1301);
-        tls_extension_client_psk restricted_psk(&restricted_hello);
-        binary_t restricted_psk_wire;
-        ret = restricted_psk.write(from_client, restricted_psk_wire);
-        _test_case.test(ret, __FUNCTION__, "serialize only PSK tickets compatible with the offered cipher-suite hashes");
-        if (errorcode_t::success == ret) {
-            _test_case.assert(1 == restricted_psk.get_identity_count(), __FUNCTION__, "omit the SHA-384 ticket when no SHA-384 suite was offered");
-            auto restricted_tickets = restricted_client.get_offered_resumption_tickets();
-            _test_case.assert((restricted_tickets.size() == 1) && (0x1301 == restricted_tickets.front().cipher_suite), __FUNCTION__,
-                              "retain the matching SHA-256 suite metadata for the emitted identity");
-        }
-    }
+    test_tls13_psk_offer_omits_hash_incompatible_ticket(ticket1, ticket3, configure);
 
     // The server knows only the second identity. It must verify binder index 1
     // with that ticket's PSK rather than reusing the first ticket's PSK.
@@ -617,378 +1021,21 @@ static void test_tls13_client_multiple_ticket_psk_offer() {
         }
     }
 
-    // Scenario: verify the SHA-384 binder independently for a mixed-hash ticket offer
-    {
-        // The third offered ticket uses SHA-384. Verify its binder independently
-        // on a server that has only that identity in its ticket store.
-        tls_session sha384_server;
-        configure(sha384_server);
-        sha384_server.get_tls_protection().set_cipher_suite(0);
-        sha384_server.store_resumption_ticket(ticket3);
-        tls_records sha384_records;
-        ret = sha384_records.read(&sha384_server, from_client, wire);
-        _test_case.test(ret, __FUNCTION__, "verify the SHA-384 binder for a later mixed-hash PSK identity");
-        if (errorcode_t::success == ret) {
-            _test_case.assert(2 == sha384_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                              "select the SHA-384 ticket at its matching identity index");
-            _test_case.assert(0x1302 == sha384_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
-                              "retain the selected ticket's SHA-384 cipher suite");
-            binary_t expected_sha384_early_secret;
-            return_t sha384_secret_ret = sha384_server.get_tls_protection().calc_resumption_early_secret(ticket3.psk, expected_sha384_early_secret);
-            _test_case.test(sha384_secret_ret, __FUNCTION__, "derive the expected SHA-384 ticket early secret");
-            if (errorcode_t::success == sha384_secret_ret) {
-                _test_case.assert(expected_sha384_early_secret == sha384_server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early), __FUNCTION__,
-                                  "verify the selected SHA-384 PSK independently of the first SHA-256 identity");
-            }
-        }
-    }
+    test_tls13_psk_offer_verifies_sha384_binder(wire, ticket3, configure);
 
-    // Scenario: retain PSK resumption while rejecting an early-data ticket-age mismatch
-    {
-        // The server must compare the client-reported age with its own issuance
-        // timestamp for 0-RTT, while retaining PSK resumption on an age mismatch.
-        {
-            tls_session age_match_server;
-            configure(age_match_server);
-            age_match_server.get_tls_protection().set_cipher_suite(0);
-            age_match_server.store_resumption_ticket(ticket1);
-            tls_records age_match_records;
-            return_t age_match_ret = age_match_records.read(&age_match_server, from_client, wire);
-            _test_case.test(age_match_ret, __FUNCTION__, "resume with a first-identity ticket whose reported age matches server issuance time");
-            if (errorcode_t::success == age_match_ret) {
-                _test_case.assert(0 == age_match_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                  "select the first PSK identity for the age-match case");
-                uint64 age_match_early_data_limit = age_match_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit);
-                _test_case.assert(4096 == age_match_early_data_limit, __FUNCTION__, "recognize the early-data allowance when ticket age matches");
-            }
+    test_tls13_psk_offer_ticket_age_mismatch(wire, ticket1, now_ms, configure);
 
-            tls_resumption_ticket delayed_ticket = ticket1;
-            delayed_ticket.timestamp = now_ms - 20000;
-            tls_session age_mismatch_server;
-            configure(age_mismatch_server);
-            age_mismatch_server.get_tls_protection().set_cipher_suite(0);
-            age_mismatch_server.store_resumption_ticket(delayed_ticket);
-            tls_records age_mismatch_records;
-            return_t age_mismatch_ret = age_mismatch_records.read(&age_mismatch_server, from_client, wire);
-            _test_case.test(age_mismatch_ret, __FUNCTION__, "retain PSK resumption when the reported ticket age differs from server issuance time");
-            if (errorcode_t::success == age_mismatch_ret) {
-                _test_case.assert(0 == age_mismatch_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                  "keep the first PSK identity selected despite an early-data age mismatch");
-                _test_case.assert(0 == age_mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
-                                  "reject only early data when the reported ticket age exceeds the tolerance");
-                _test_case.assert(tls_flow_t::zero_rtt == age_mismatch_server.get_tls_protection().get_flow(), __FUNCTION__,
-                                  "preserve PSK resumption after declining early data");
-            }
-        }
-    }
+    test_tls13_psk_offer_retires_expired_earlier_identity(wire, ticket1, ticket2, identity2, now_ms, configure);
 
-    // Scenario: retire an expired earlier identity while selecting a later valid ticket
-    {
-        // An expired earlier identity must be retired even when a later
-        // offered identity is selected successfully.
-        {
-            tls_resumption_ticket expired_ticket = ticket1;
-            expired_ticket.timestamp = now_ms - (static_cast<uint64>(expired_ticket.lifetime) * 1000 + 1);
+    test_tls13_psk_offer_declines_incompatible_ticket_hash(wire, ticket1, configure);
 
-            tls_session expiry_cleanup_server;
-            configure(expiry_cleanup_server);
-            expiry_cleanup_server.get_tls_protection().set_cipher_suite(0);
-            expiry_cleanup_server.store_resumption_ticket(expired_ticket);
-            expiry_cleanup_server.store_resumption_ticket(ticket2);
-            auto& expiry_secrets = expiry_cleanup_server.get_tls_protection().get_secrets();
-            expiry_secrets.assign(tls_secret_t::new_session_ticket, expired_ticket.identity);
-            auto& expiry_kv = expiry_cleanup_server.get_session_info(from_server).get_keyvalue();
-            expiry_kv.set(session_ticket_lifetime, expired_ticket.lifetime);
-            expiry_kv.set(session_ticket_age_add, expired_ticket.age_add);
-            expiry_kv.set(session_ticket_timestamp, expired_ticket.timestamp);
+    test_tls13_psk_offer_hrr_declines_incompatible_ticket_hash(wire, ticket1, configure);
 
-            tls_records expiry_cleanup_records;
-            return_t expiry_cleanup_ret = expiry_cleanup_records.read(&expiry_cleanup_server, from_client, wire);
-            _test_case.test(expiry_cleanup_ret, __FUNCTION__, "select a later valid identity while retiring an earlier expired ticket");
-            if (errorcode_t::success == expiry_cleanup_ret) {
-                auto remaining_tickets = expiry_cleanup_server.get_resumption_tickets();
-                _test_case.assert(1 == remaining_tickets.size(), __FUNCTION__, "remove the expired first identity despite successful later resumption");
-                if (1 == remaining_tickets.size()) {
-                    _test_case.assert(identity2 == remaining_tickets.front().identity, __FUNCTION__, "retain the later valid ticket record");
-                }
-                _test_case.assert(1 == expiry_cleanup_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                  "select the second offered identity after rejecting the expired first identity");
-                _test_case.assert(identity2 == expiry_secrets.get(tls_secret_t::new_session_ticket), __FUNCTION__,
-                                  "promote the remaining valid ticket into the compatibility view");
-                _test_case.assert(ticket2.lifetime == expiry_kv.get(session_ticket_lifetime), __FUNCTION__,
-                                  "refresh compatibility lifetime metadata from the remaining ticket");
-                _test_case.assert(ticket2.age_add == expiry_kv.get(session_ticket_age_add), __FUNCTION__,
-                                  "refresh compatibility age_add metadata from the remaining ticket");
-                _test_case.assert(ticket2.timestamp == expiry_kv.get(session_ticket_timestamp), __FUNCTION__,
-                                  "refresh compatibility timestamp metadata from the remaining ticket");
-            }
-        }
-    }
+    test_tls13_psk_offer_clears_state_on_suite_failure(wire, ticket1, configure);
 
-    // Scenario: decline PSK when the server-preferred cipher-suite hash differs from the ticket
-    {
-        // The server may prefer a different TLS 1.3 cipher-suite hash than
-        // the selected ticket. It must preserve that suite preference, decline
-        // PSK resumption, and clear the ticket's early-data/key-schedule state.
-        {
-            tls_session mismatch_server;
-            configure(mismatch_server);
-            mismatch_server.get_tls_protection().set_cipher_suite(0);
-            mismatch_server.store_resumption_ticket(ticket1);
-            tls_records mismatch_records;
-            return_t mismatch_ret = mismatch_records.read(&mismatch_server, from_client, wire);
-            _test_case.test(mismatch_ret, __FUNCTION__, "verify a SHA-256 ticket offered alongside SHA-384-first cipher-suite preferences");
-            if (errorcode_t::success == mismatch_ret) {
-                auto& mismatch_protection = mismatch_server.get_tls_protection();
-                auto& mismatch_context = mismatch_protection.get_protection_context();
-                _test_case.assert(tls_flow_t::zero_rtt == mismatch_protection.get_flow(), __FUNCTION__,
-                                  "retain PSK resumption after binder verification and before suite negotiation");
-                uint64 mismatch_early_data_limit = mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit);
-                _test_case.assert(4096 == mismatch_early_data_limit, __FUNCTION__, "recognize the ticket's early-data allowance before suite compatibility is evaluated");
+    test_tls13_psk_offer_client_restores_selected_ticket_psk(server, client, psk2);
 
-                mismatch_context.clear_cipher_suites();
-                mismatch_context.add_cipher_suite(0x1302);
-                mismatch_context.add_cipher_suite(0x1301);
-
-                tls_handshake* mismatch_server_hello = nullptr;
-                mismatch_ret = tls_composer::construct_server_hello(&mismatch_server_hello, &mismatch_server, nullptr);
-                _test_case.test(mismatch_ret, __FUNCTION__, "compose ServerHello after preferring the SHA-384 cipher suite");
-                if ((errorcode_t::success == mismatch_ret) && (nullptr != mismatch_server_hello)) {
-                    uint16 negotiated_suite = static_cast<tls_handshake_server_hello*>(mismatch_server_hello)->get_cipher_suite();
-                    _test_case.assert(0x1302 == negotiated_suite, __FUNCTION__, "preserve the server's negotiated SHA-384 cipher-suite preference");
-                    _test_case.assert(nullptr == mismatch_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key), __FUNCTION__,
-                                      "omit ServerHello pre_shared_key when the selected ticket uses a different hash");
-                    _test_case.assert(tls_flow_t::one_rtt == mismatch_protection.get_flow(), __FUNCTION__,
-                                      "continue with a full-handshake flow after declining the incompatible PSK");
-                    _test_case.assert(mismatch_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
-                                      "clear the selected ticket's early secret before the full-handshake key schedule");
-                    _test_case.assert(0xffff == mismatch_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                      "clear the selected PSK identity after declining resumption");
-                    _test_case.assert(0 == mismatch_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
-                                      "clear the selected ticket cipher-suite metadata after declining resumption");
-                    _test_case.assert(0 == mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
-                                      "revoke the ticket's early-data allowance after declining its PSK");
-                    _test_case.assert(0 == mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
-                                      "ensure early data is not marked accepted after PSK decline");
-                    mismatch_server_hello->release();
-                } else if (nullptr != mismatch_server_hello) {
-                    mismatch_server_hello->release();
-                }
-            }
-        }
-    }
-
-    // Scenario: decline PSK after HRR hash filtering while preserving the transcript prefix
-    {
-        // A PSK hash mismatch in ClientHello2 must decline resumption without
-        // discarding the HelloRetryRequest transcript prefix.
-        {
-            tls_session hrr_mismatch_server;
-            configure(hrr_mismatch_server);
-            hrr_mismatch_server.get_tls_protection().set_cipher_suite(0);
-            hrr_mismatch_server.store_resumption_ticket(ticket1);
-            tls_records hrr_mismatch_records;
-            return_t hrr_mismatch_ret = hrr_mismatch_records.read(&hrr_mismatch_server, from_client, wire);
-            _test_case.test(hrr_mismatch_ret, __FUNCTION__, "verify the PSK binder before simulating the HRR continuation");
-            if (errorcode_t::success == hrr_mismatch_ret) {
-                auto& hrr_mismatch_protection = hrr_mismatch_server.get_tls_protection();
-                hrr_mismatch_protection.set_flow(tls_flow_t::hello_retry_request);
-                hrr_mismatch_server.update_session_status(session_status_hello_retry_request);
-
-                auto& hrr_mismatch_context = hrr_mismatch_protection.get_protection_context();
-                hrr_mismatch_context.clear_cipher_suites();
-                hrr_mismatch_context.add_cipher_suite(0x1302);
-                hrr_mismatch_context.add_cipher_suite(0x1301);
-
-                tls_handshake* hrr_mismatch_server_hello = nullptr;
-                hrr_mismatch_ret = tls_composer::construct_server_hello(&hrr_mismatch_server_hello, &hrr_mismatch_server, nullptr);
-                _test_case.test(hrr_mismatch_ret, __FUNCTION__, "compose a full-handshake ServerHello after declining the HRR PSK");
-                if ((errorcode_t::success == hrr_mismatch_ret) && (nullptr != hrr_mismatch_server_hello)) {
-                    _test_case.assert(tls_flow_t::hello_retry_request == hrr_mismatch_protection.get_flow(), __FUNCTION__,
-                                      "preserve the HRR transcript flow when the selected PSK hash is incompatible");
-                    _test_case.assert(nullptr == hrr_mismatch_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key), __FUNCTION__,
-                                      "omit pre_shared_key after declining the incompatible ClientHello2 identity");
-                    _test_case.assert(hrr_mismatch_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
-                                      "clear the selected PSK early secret while retaining the HRR transcript");
-                    _test_case.assert(0xffff == hrr_mismatch_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                      "clear the selected identity when ClientHello2 falls back to a full handshake");
-                    _test_case.assert(0 == hrr_mismatch_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
-                                      "clear the ticket suite when ClientHello2 falls back to a full handshake");
-                    _test_case.assert(0 == hrr_mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
-                                      "revoke the early-data allowance when ClientHello2 falls back to a full handshake");
-                    _test_case.assert(0 == hrr_mismatch_server.get_session_info(from_server).get_keyvalue().get(session_early_data_accepted), __FUNCTION__,
-                                      "keep early data rejected on the non-PSK fallback path after HRR");
-                    hrr_mismatch_server_hello->release();
-                } else if (nullptr != hrr_mismatch_server_hello) {
-                    hrr_mismatch_server_hello->release();
-                }
-            }
-        }
-    }
-
-    // Scenario: clear PSK and early-data state when cipher-suite negotiation fails
-    {
-        // If no cipher suite can be negotiated, terminate the handshake
-        // without retaining the binder-selected PSK or early-data state.
-        {
-            tls_session no_suite_server;
-            configure(no_suite_server);
-            no_suite_server.get_tls_protection().set_cipher_suite(0);
-            no_suite_server.store_resumption_ticket(ticket1);
-            tls_records no_suite_records;
-            return_t no_suite_ret = no_suite_records.read(&no_suite_server, from_client, wire);
-            _test_case.test(no_suite_ret, __FUNCTION__, "verify the PSK binder before forcing cipher-suite negotiation failure");
-            if (errorcode_t::success == no_suite_ret) {
-                auto& no_suite_protection = no_suite_server.get_tls_protection();
-                _test_case.assert(tls_flow_t::zero_rtt == no_suite_protection.get_flow(), __FUNCTION__, "select the PSK before attempting cipher-suite negotiation");
-                _test_case.assert(0 == no_suite_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
-                                  "derive the selected ticket early secret before forcing negotiation failure");
-
-                no_suite_protection.get_protection_context().clear_cipher_suites();
-                tls_handshake* no_suite_server_hello = nullptr;
-                no_suite_ret = tls_composer::construct_server_hello(&no_suite_server_hello, &no_suite_server, nullptr);
-                _test_case.assert(errorcode_t::success != no_suite_ret, __FUNCTION__, "fail the handshake when no cipher suite is available");
-                _test_case.assert(nullptr == no_suite_server_hello, __FUNCTION__, "do not construct ServerHello without a negotiated cipher suite");
-                _test_case.assert(tls_flow_t::one_rtt == no_suite_protection.get_flow(), __FUNCTION__, "leave no stale PSK resumption flow after negotiation failure");
-                _test_case.assert(no_suite_protection.get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
-                                  "clear the selected ticket early secret after negotiation failure");
-                _test_case.assert(0xffff == no_suite_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                  "clear the selected identity after negotiation failure");
-                _test_case.assert(0 == no_suite_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
-                                  "clear the ticket cipher-suite metadata after negotiation failure");
-                _test_case.assert(0 == no_suite_server.get_session_info(from_server).get_keyvalue().get(session_early_data_limit), __FUNCTION__,
-                                  "clear the early-data allowance after negotiation failure");
-            }
-        }
-    }
-
-    // Scenario: restore the selected ticket PSK when the client processes ServerHello
-    {
-        // The client's ServerHello processing must restore the PSK associated
-        // with selected_identity=1, even though binder generation iterated over
-        // both cached tickets and restored the prior secret afterward.
-        // Construct the ServerHello through the production composer so cipher-suite,
-        // version, and key-share selection are negotiated from the parsed ClientHello.
-        tls_handshake* server_hello = nullptr;
-        ret = tls_composer::construct_server_hello(&server_hello, &server, nullptr);
-        _test_case.test(ret, __FUNCTION__, "construct ServerHello through the TLS composer");
-        if ((errorcode_t::success != ret) || (nullptr == server_hello)) {
-            return;
-        }
-
-        // construct_server_hello() performs the server-side negotiation from the
-        // ClientHello offer before creating the ServerHello. Validate the negotiated
-        // key-share state only after this production handshake path has run.
-        auto negotiated_keyshare_group = server.get_tls_protection().get_protection_context().get0_keyshare_group();
-        _test_case.assert(tls_group_t::unknown != negotiated_keyshare_group, __FUNCTION__, "populate the server key-share context during ClientHello negotiation");
-
-        uint16 selected_cipher_suite = static_cast<tls_handshake_server_hello*>(server_hello)->get_cipher_suite();
-        _test_case.assert(0x1301 == selected_cipher_suite, __FUNCTION__, "select the SHA-256 cipher suite associated with the cached tickets");
-        if (0x1301 != selected_cipher_suite) {
-            server_hello->release();
-            return;
-        }
-
-        auto server_versions = server_hello->get_extensions().get(tls_extension_type_t::supported_versions);
-        auto server_key_share = server_hello->get_extensions().get(tls_extension_type_t::key_share);
-        auto server_psk = server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key);
-        _test_case.assert(nullptr != server_versions, __FUNCTION__, "register supported_versions through the ServerHello composer");
-        _test_case.assert(nullptr != server_key_share, __FUNCTION__, "register key_share through the ServerHello composer");
-        _test_case.assert(nullptr != server_psk, __FUNCTION__, "register the selected PSK identity through the ServerHello composer");
-        if ((nullptr == server_versions) || (nullptr == server_key_share) || (nullptr == server_psk)) {
-            server_hello->release();
-            return;
-        }
-
-        auto selected_server_psk = static_cast<tls_extension_server_psk*>(server_psk);
-        _test_case.assert(1 == selected_server_psk->get_selected_identity(), __FUNCTION__, "select the second identity offered by the client");
-
-        // Serialize the complete ServerHello through the production handshake
-        // writer. This exercises do_preprocess(), extension serialization, and
-        // the server key schedule instead of assembling a synthetic wire message.
-        binary_t server_hello_wire;
-        ret = server_hello->write(from_server, server_hello_wire);
-        _test_case.test(ret, __FUNCTION__, "serialize the composer-built ServerHello with its selected PSK identity");
-        // Direct handshake serialization bypasses tls_record::do_postprocess().
-        // Complete the containing-record boundary so the deferred TLS 1.3
-        // protection activation releases its scheduled handshake reference.
-        server.run_scheduled(from_server);
-        server_hello->release();
-        if (errorcode_t::success != ret) {
-            return;
-        }
-
-        binary_t server_shared_secret = server.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret);
-        _test_case.assert(!server_shared_secret.empty(), __FUNCTION__, "derive the server-side shared secret from the negotiated key_share");
-
-        client.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
-        tls_handshake_server_hello server_hello_reader(&client);
-        size_t server_hello_pos = 0;
-        ret = server_hello_reader.read(from_server, server_hello_wire.data(), server_hello_wire.size(), server_hello_pos);
-        _test_case.test(ret, __FUNCTION__, "accept ServerHello selecting the second cached ticket");
-        _test_case.assert(server_hello_wire.size() == server_hello_pos, __FUNCTION__, "consume the complete composer-generated ServerHello");
-        _test_case.assert(1 == client.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                          "retain the selected identity for subsequent EncryptedExtensions early-data validation");
-
-        binary_t client_shared_secret = client.get_tls_protection().get_secrets().get(tls_secret_t::shared_secret);
-        _test_case.assert(!client_shared_secret.empty(), __FUNCTION__, "derive the client-side shared secret from the ServerHello key_share");
-        _test_case.assert(server_shared_secret == client_shared_secret, __FUNCTION__, "derive the same DHE shared secret on both peers");
-
-        binary_t expected_client_early_secret;
-        return_t expected_ret = client.get_tls_protection().calc_resumption_early_secret(psk2, expected_client_early_secret);
-        _test_case.test(expected_ret, __FUNCTION__, "derive the expected early secret for selected_identity one");
-        _test_case.assert(expected_client_early_secret == client.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early), __FUNCTION__,
-                          "restore the second ticket PSK before the client key schedule");
-    }
-
-    // The server must not acknowledge a different identity from the one whose
-    // binder it verified. Otherwise the server and client use different PSKs.
-    {
-        tls_session mismatched_server;
-        configure(mismatched_server);
-        mismatched_server.get_tls_protection().set_cipher_suite(0);
-        mismatched_server.store_resumption_ticket(ticket2);
-        tls_records mismatched_records;
-        binary_t mismatched_client_hello_wire = wire;
-        return_t mismatched_ret = mismatched_records.read(&mismatched_server, from_client, mismatched_client_hello_wire);
-        _test_case.test(mismatched_ret, __FUNCTION__, "verify the binder for the second offered identity before testing ServerHello consistency");
-        if (errorcode_t::success == mismatched_ret) {
-            _test_case.assert(1 == mismatched_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                              "record wire identity one as the PSK whose binder was verified");
-
-            tls_handshake* mismatched_server_hello = nullptr;
-            mismatched_ret = tls_composer::construct_server_hello(&mismatched_server_hello, &mismatched_server, nullptr);
-            _test_case.test(mismatched_ret, __FUNCTION__, "construct a ServerHello for the verified second identity");
-            if ((errorcode_t::success == mismatched_ret) && (nullptr != mismatched_server_hello)) {
-                auto mismatched_psk = static_cast<tls_extension_server_psk*>(mismatched_server_hello->get_extensions().get(tls_extension_type_t::pre_shared_key));
-                _test_case.assert(nullptr != mismatched_psk, __FUNCTION__, "include the verified PSK selection in ServerHello");
-                if (nullptr != mismatched_psk) {
-                    _test_case.assert(1 == mismatched_psk->get_selected_identity(), __FUNCTION__, "initially select the same identity whose binder was verified");
-                    mismatched_psk->set_selected_identity(0);
-
-                    binary_t mismatched_server_hello_wire;
-                    mismatched_ret = mismatched_server_hello->write(from_server, mismatched_server_hello_wire);
-                    _test_case.assert(errorcode_t::success != mismatched_ret, __FUNCTION__,
-                                      "reject ServerHello when selected_identity differs from the verified binder identity");
-                    _test_case.assert(0xffff == mismatched_server.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
-                                      "roll back the verified identity after rejecting inconsistent ServerHello");
-                    _test_case.assert(0xffff == mismatched_server.get_keyvalue().get(session_server_psk_key_exchange_mode), __FUNCTION__,
-                                      "roll back the PSK key-exchange mode after rejecting inconsistent ServerHello");
-                    _test_case.assert(0 == mismatched_server.get_keyvalue().get(session_server_psk_ticket_cipher_suite), __FUNCTION__,
-                                      "clear provisional ticket cipher-suite metadata after rejecting inconsistent ServerHello");
-                    _test_case.assert(mismatched_server.get_tls_protection().get_secrets().get(tls_secret_t::resumption_early).empty(), __FUNCTION__,
-                                      "clear the verified ticket Early Secret after rejecting inconsistent ServerHello");
-                    _test_case.assert(tls_flow_t::one_rtt == mismatched_server.get_tls_protection().get_flow(), __FUNCTION__,
-                                      "leave no provisional resumption flow after rejecting inconsistent ServerHello");
-                    _test_case.assert(mismatched_server.get_offered_resumption_tickets().empty(), __FUNCTION__,
-                                      "discard the offered-ticket snapshot after rejecting inconsistent ServerHello");
-                }
-                mismatched_server_hello->release();
-            } else if (nullptr != mismatched_server_hello) {
-                mismatched_server_hello->release();
-            }
-        }
-    }
+    test_tls13_psk_offer_rejects_mismatched_server_identity(wire, ticket2, configure);
 }
 
 static void test_tls13_client_falls_back_when_server_declines_psk() {
@@ -1010,9 +1057,9 @@ static void test_tls13_client_falls_back_when_server_declines_psk() {
     auto configure = [](tls_session& session) {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
         session.get_keyvalue().set(session_handshake_finished, 1);
         session.update_session_status(session_status_server_finished);
         session.update_session_status(session_status_client_finished);
@@ -1117,15 +1164,15 @@ static void test_tls13_psk_ke_serverhello_roundtrip() {
     ticket.age_add = 0x10203040;
     ticket.timestamp = now_ms - 20;
     ticket.cipher_suite = 0x1301;
-    ticket.version = static_cast<uint16>(tls_13);
+    ticket.version = static_cast<uint16>(tls1_3);
     ticket.max_early_data_size = 4096;
 
     auto configure = [&](tls_session& session) -> return_t {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
         session.get_keyvalue().set(session_handshake_finished, 1);
         session.update_session_status(session_status_server_finished);
         session.update_session_status(session_status_client_finished);
@@ -1153,7 +1200,7 @@ static void test_tls13_psk_ke_serverhello_roundtrip() {
     auto client_hello = new tls_handshake_client_hello(&client);
     client_hello->add_ciphersuite(0x1301);
     auto versions = new tls_extension_client_supported_versions(client_hello);
-    versions->add(tls_13);
+    versions->add(tls1_3);
     client_hello->get_extensions().add(versions);
     auto modes = new tls_extension_psk_key_exchange_modes(client_hello);
     modes->add(0);  // psk_ke only
@@ -1273,7 +1320,7 @@ static void test_tls13_psk_offer_requires_key_exchange_modes() {
     tls_session client;
     client.set_type(session_type_t::tls);
     binary_t wire;
-    return_t ret = test_client_supportedversion_clienthello(&client, tls_12, tls_13, wire);
+    return_t ret = test_client_supportedversion_clienthello(&client, tls1_2, tls1_3, wire);
     _test_case.test(ret, __FUNCTION__, "construct a TLS 1.3-capable ClientHello");
     if (errorcode_t::success != ret) {
         return;
@@ -1362,12 +1409,7 @@ static void test_tls13_psk_offer_requires_key_exchange_modes() {
     ret = records.read(&server, from_client, wire);
     _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject a PSK offer without psk_key_exchange_modes");
 
-    size_t missing_extension_alerts = 0;
-    server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::missing_extension == desc)) {
-            ++missing_extension_alerts;
-        }
-    });
+    size_t missing_extension_alerts = test_count_fatal_alert(server, from_client, tls_alertdesc_t::missing_extension);
     _test_case.assert(1 == missing_extension_alerts, __FUNCTION__, "send fatal missing_extension for the omitted PSK modes extension");
 
     // RFC 8446 4.2.11 also requires pre_shared_key to be the final
@@ -1386,12 +1428,7 @@ static void test_tls13_psk_offer_requires_key_exchange_modes() {
     ret = reordered_records.read(&reordered_server, from_client, reordered_wire);
     _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject pre_shared_key when another extension follows it");
 
-    size_t illegal_parameter_alerts = 0;
-    reordered_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++illegal_parameter_alerts;
-        }
-    });
+    size_t illegal_parameter_alerts = test_count_fatal_alert(reordered_server, from_client, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(1 == illegal_parameter_alerts, __FUNCTION__, "send fatal illegal_parameter when pre_shared_key is not the final extension");
 }
 
@@ -1463,6 +1500,7 @@ static void test_tls13_psk_key_exchange_modes_vector() {
 }
 
 static void test_tls13_psk_key_exchange_modes_message_scope() {
+    // Action: place psk_key_exchange_modes in EncryptedExtensions and parse it on the receiving endpoint.
     // Scenario under test: TLS 1.3 PSK key exchange modes are ClientHello-only.
     // Expected: reject psk_key_exchange_modes received in EncryptedExtensions.
     _test_case.begin("TLS 1.3 PSK key exchange modes are ClientHello-only");
@@ -1476,12 +1514,7 @@ static void test_tls13_psk_key_exchange_modes_message_scope() {
         size_t pos = 0;
         return_t ret = extension.read(from_server, wire.data(), wire.size(), pos);
         _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "reject psk_key_exchange_modes received in EncryptedExtensions");
-        size_t illegal_parameter_count = 0;
-        receiver.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
+        size_t illegal_parameter_count = test_count_fatal_alert(receiver, from_server, tls_alertdesc_t::illegal_parameter);
         _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report one fatal illegal_parameter for the misplaced extension");
     }
 
@@ -1501,7 +1534,7 @@ static void test_tls13_psk_key_exchange_modes_message_scope() {
         tls_session receiver;
         receiver.set_type(session_type_t::tls);
         auto& protection = receiver.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
         receiver.update_session_status(session_status_client_hello);
         receiver.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
@@ -1520,12 +1553,7 @@ static void test_tls13_psk_key_exchange_modes_message_scope() {
         return_t ret = server_hello.read(from_server, wire.data(), wire.size(), pos);
         _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__,
                           "reject psk_key_exchange_modes received in a TLS 1.3 ServerHello through the generic extension-context guard");
-        size_t illegal_parameter_count = 0;
-        receiver.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
+        size_t illegal_parameter_count = test_count_fatal_alert(receiver, from_server, tls_alertdesc_t::illegal_parameter);
         _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for psk_key_exchange_modes in ServerHello");
         _test_case.assert(0 == receiver.get_session_status(), __FUNCTION__, "reset handshake status after the forbidden ServerHello extension");
     }
@@ -1556,9 +1584,9 @@ static void test_tls13_psk_ticket_sni_binding() {
 
     auto configure = [&](tls_session& session) {
         session.set_type(session_type_t::tls);
-        session.get_tls_protection().set_tls_version(tls_13);
+        session.get_tls_protection().set_tls_version(tls1_3);
         session.get_tls_protection().set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
         session.set_client_server_name({'E', 'X', 'A', 'M', 'P', 'L', 'E', '.', 'C', 'O', 'M'});
 
         openssl_digest digest;
@@ -1632,10 +1660,10 @@ static void test_tls13_client_psk_hrr_filters_mixed_hash_tickets() {
     tls_session client;
     client.set_type(session_type_t::tls);
     auto& protection = client.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1303);
     protection.set_flow(tls_flow_t::hello_retry_request);
-    client.get_keyvalue().set(session_tls_version, tls_13);
+    client.get_keyvalue().set(session_tls_version, tls1_3);
     client.store_resumption_ticket(sha256_first);
     client.store_resumption_ticket(sha384_middle);
     client.store_resumption_ticket(sha256_last);
@@ -1677,9 +1705,9 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
     tls_session client;
     client.set_type(session_type_t::tls);
     auto& protection = client.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
-    client.get_keyvalue().set(session_tls_version, tls_13);
+    client.get_keyvalue().set(session_tls_version, tls1_3);
     client.update_session_status(session_status_server_finished);
     client.update_session_status(session_status_client_finished);
     client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
@@ -1690,7 +1718,7 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
     oversized_ticket.identity.assign(0x10000, 0x11);
     oversized_ticket.psk = binary_t(32, 0x31);
     oversized_ticket.cipher_suite = 0x1301;
-    oversized_ticket.version = static_cast<uint16>(tls_13);
+    oversized_ticket.version = static_cast<uint16>(tls1_3);
     oversized_ticket.lifetime = 3600;
     oversized_ticket.timestamp = now_ms - 100;
     oversized_ticket.max_early_data_size = 8192;
@@ -1703,7 +1731,7 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
     extension_oversized_ticket.identity.assign(65493, 0x12);
     extension_oversized_ticket.psk = binary_t(32, 0x32);
     extension_oversized_ticket.cipher_suite = 0x1301;
-    extension_oversized_ticket.version = static_cast<uint16>(tls_13);
+    extension_oversized_ticket.version = static_cast<uint16>(tls1_3);
     extension_oversized_ticket.lifetime = 3600;
     extension_oversized_ticket.timestamp = now_ms - 100;
     extension_oversized_ticket.max_early_data_size = 4096;
@@ -1713,7 +1741,7 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
     serializable_ticket.identity = {0x22, 0x23};
     serializable_ticket.psk = binary_t(48, 0x42);
     serializable_ticket.cipher_suite = 0x1302;
-    serializable_ticket.version = static_cast<uint16>(tls_13);
+    serializable_ticket.version = static_cast<uint16>(tls1_3);
     serializable_ticket.lifetime = 3600;
     serializable_ticket.timestamp = now_ms - 100;
     serializable_ticket.max_early_data_size = 1024;
@@ -1733,7 +1761,7 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
     client_hello->add_ciphersuite(0x1301);
     client_hello->add_ciphersuite(0x1302);
     auto versions = new tls_extension_client_supported_versions(client_hello);
-    versions->add(tls_13);
+    versions->add(tls1_3);
     client_hello->get_extensions().add(versions);
     auto modes = new tls_extension_psk_key_exchange_modes(client_hello);
     modes->add(1);  // psk_dhe_ke
@@ -1776,6 +1804,9 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
 }
 
 static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
+    // Scenario: ClientHello early-data key-schedule derivation fails locally.
+    // Action: run ClientHello postprocessing for both read and write operations with an invalid suite.
+    // Expected: queue one fatal internal_error and clear all provisional PSK and early-data state.
     _test_case.begin("TLS 1.3 ClientHello early key-schedule failure terminates the session");
 
     class client_hello_postprocess_probe : public tls_handshake_client_hello {
@@ -1789,7 +1820,7 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
         tls_session session;
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0);
         protection.set_flow(tls_flow_t::zero_rtt);
         return_t ret = protection.reset_transcript_hash(&session);
@@ -1806,7 +1837,7 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
         ticket.identity = {0xa1, 0xb2, 0xc3};
         ticket.psk = binary_t(32, 0x44);
         ticket.cipher_suite = 0x1301;
-        ticket.version = static_cast<uint16>(tls_13);
+        ticket.version = static_cast<uint16>(tls1_3);
         ticket.lifetime = 3600;
         ticket.timestamp = 1;
         ticket.max_early_data_size = 1024;
@@ -1832,12 +1863,7 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
         ret = hello.run_postprocess(from_client, opdir, &marker, sizeof(marker));
         _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "propagate the local ClientHello key-schedule failure");
 
-        size_t fatal_internal_error_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-                ++fatal_internal_error_count;
-            }
-        });
+        size_t fatal_internal_error_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::internal_error);
         _test_case.assert(1 == fatal_internal_error_count, __FUNCTION__, "queue exactly one fatal internal_error for the local key-schedule failure");
         _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "do not commit ClientHello handshake status after key-schedule failure");
         _test_case.assert(tls_flow_t::one_rtt == protection.get_flow(), __FUNCTION__, "leave zero_rtt after the failed early key schedule");
@@ -1857,6 +1883,9 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
 }
 
 static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
+    // Scenario: ServerHello key-schedule derivation fails locally after HRR.
+    // Action: run ServerHello postprocessing with a TLS 1.3 HRR transcript and an invalid suite.
+    // Expected: preserve the failure, queue one fatal internal_error, and clear provisional state.
     _test_case.begin("TLS 1.3 ServerHello key-schedule failure is terminal");
 
     class server_hello_postprocess_probe : public tls_handshake_server_hello {
@@ -1868,7 +1897,7 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0);
     protection.set_flow(tls_flow_t::hello_retry_request);
     return_t ret = protection.reset_transcript_hash(&session);
@@ -1882,7 +1911,7 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
     secrets.assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x77));
     secrets.assign(tls_secret_t::c_e_traffic_iv, binary_t(12, 0x88));
 
-    session.get_keyvalue().set(session_tls_version, tls_13);
+    session.get_keyvalue().set(session_tls_version, tls1_3);
     session.get_keyvalue().set(session_server_psk_selected_identity, 0);
     session.get_keyvalue().set(session_server_psk_key_exchange_mode, 1);
     session.get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0x1301);
@@ -1891,7 +1920,7 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
     ticket.identity = {0xa1, 0xb2, 0xc3};
     ticket.psk = binary_t(32, 0x44);
     ticket.cipher_suite = 0x1301;
-    ticket.version = static_cast<uint16>(tls_13);
+    ticket.version = static_cast<uint16>(tls1_3);
     ticket.lifetime = 3600;
     ticket.timestamp = 1;
     ticket.max_early_data_size = 1024;
@@ -1912,28 +1941,20 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
     // do_postprocess() treats the message as TLS 1.2 and exits through the
     // downgrade check before reaching the key schedule.
     hello.get_extensions().add(tls_extension_type_t::supported_versions, from_server, &hello, [](tls_extension* extension) -> return_t {
-        static_cast<tls_extension_server_supported_versions*>(extension)->set(tls_13);
+        static_cast<tls_extension_server_supported_versions*>(extension)->set(tls1_3);
         return errorcode_t::success;
     });
-    _test_case.assert(tls_13 == protection.get_tls_version(), __FUNCTION__, "keep TLS 1.3 selected by the ServerHello supported_versions extension");
+    _test_case.assert(tls1_3 == protection.get_tls_version(), __FUNCTION__, "keep TLS 1.3 selected by the ServerHello supported_versions extension");
     const byte_t marker = 0;
     ret = hello.run_postprocess(from_server, tls_io_operation_t::write, &marker, sizeof(marker));
     _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__,
                       "preserve the local key-schedule failure instead of overwriting it while resuming pending records");
 
-    size_t fatal_internal_error_count = 0;
-    size_t fatal_protocol_version_count = 0;
-    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if (tls_alertlevel_t::fatal == level) {
-            if (tls_alertdesc_t::internal_error == desc) {
-                ++fatal_internal_error_count;
-            } else if (tls_alertdesc_t::protocol_version == desc) {
-                ++fatal_protocol_version_count;
-            }
-        }
-    });
-    _test_case.assert(0 == fatal_protocol_version_count, __FUNCTION__, "do not exit through the TLS version downgrade path");
-    _test_case.assert(1 == fatal_internal_error_count, __FUNCTION__, "queue exactly one fatal internal_error for the local key-schedule failure");
+    std::set<tls_alertdesc_t> fatal_alerts;
+    size_t fatal_alert_count = test_collect_fatal_alerts(session, from_server, fatal_alerts);
+    _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue exactly one fatal alert for the local key-schedule failure");
+    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::internal_error}, __FUNCTION__,
+                      "queue internal_error without protocol_version for the local key-schedule failure");
     _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "reset handshake status after ServerHello key-schedule failure");
     _test_case.assert(tls_flow_t::one_rtt == protection.get_flow(), __FUNCTION__, "leave HRR flow after terminal ServerHello failure");
     _test_case.assert(false == session.get_session_info(from_client).apply_protection(), __FUNCTION__,

@@ -87,10 +87,17 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
                 __leave2;
             }
 
-            // certificate, server_key_exchange, server_hello_done, client_key_exchange
-            // change_cipher_spec(client), finished(client), change_cipher_spec(server), finished(server)
+            // Full handshake: client Finished precedes server Finished.
+            // Abbreviated ticket handshake: server Finished precedes client Finished.
             session_status_prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
-            if (from_server == dir) {
+            bool abbreviated = protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed));
+            if (abbreviated) {
+                // RFC 5077 abbreviated order: server Finished precedes client Finished.
+                if (from_client == dir) {
+                    session_status_prerequisite |= session_status_server_finished;
+                }
+            } else if (from_server == dir) {
+                // Full TLS 1.2 order: client Finished precedes server Finished.
                 session_status_prerequisite |= session_status_client_finished;
             }
         }
@@ -160,8 +167,63 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
 
             if (from_server == dir) {
                 session->update_session_status(session_status_server_finished);
+
+                // A TLS 1.2 NewSessionTicket precedes Server Finished on the
+                // wire. Publish it only after this Finished has been verified
+                // and the post-processing/key-schedule step has succeeded.
+                if (false == protection.is_kindof_tls13()) {
+                    auto& ticket_state = session->get_session_info(from_server).get_keyvalue();
+                    if (0 != ticket_state.get(session_ticket_pending)) {
+                        binary_t pending_ticket = secrets.get(tls_secret_t::new_session_ticket_pending);
+
+                        // The client can resume a later TLS 1.2 connection only
+                        // after authenticating the server Finished that closes
+                        // the handshake in which this ticket was issued.
+                        if ((tls_io_operation_t::read == opdir) && protection.is_kindof_tls12()) {
+                            const binary_t& master_secret = secrets.get(tls_secret_t::master);
+                            if ((false == pending_ticket.empty()) && (48 == master_secret.size())) {
+                                tls12_resumption_ticket ticket;
+                                ticket.identity = pending_ticket;
+                                ticket.master_secret = master_secret;
+                                ticket.server_name = session->get_client_server_name();
+                                ticket.alpn = secrets.get(tls_secret_t::alpn);
+                                ticket.lifetime = static_cast<uint32>(ticket_state.get(session_ticket_pending_lifetime));
+                                ticket.timestamp = ticket_state.get(session_ticket_pending_timestamp);
+                                ticket.version = static_cast<uint16>(protection.get_tls_version());
+                                ticket.cipher_suite = protection.get_cipher_suite();
+                                const auto& session_values = session->get_keyvalue();
+                                ticket.extended_master_secret = (0 != session_values.get(session_extended_master_secret));
+                                ticket.encrypt_then_mac = (0 != session_values.get(session_encrypt_then_mac));
+
+                                session->stage_tls12_resumption_ticket(ticket);
+                                session->confirm_tls12_resumption_ticket(ticket.identity);
+                            }
+                        }
+
+                        secrets.assign(tls_secret_t::new_session_ticket, std::move(pending_ticket));
+                        secrets.erase(tls_secret_t::new_session_ticket_pending);
+                        ticket_state.set(session_ticket_lifetime, static_cast<uint32>(ticket_state.get(session_ticket_pending_lifetime)));
+                        ticket_state.set(session_ticket_age_add, 0);
+                        ticket_state.set(session_ticket_timestamp, ticket_state.get(session_ticket_pending_timestamp));
+                        ticket_state.set(session_ticket_pending, 0);
+                        ticket_state.set(session_ticket_pending_lifetime, 0);
+                        ticket_state.set(session_ticket_pending_timestamp, 0);
+                    }
+                }
             } else if (from_client == dir) {
                 session->update_session_status(session_status_client_finished);
+
+                // A TLS 1.2 server may have issued a replacement ticket before
+                // receiving Client Finished (abbreviated handshake). Promote
+                // those tickets only after Finished verification and key
+                // schedule post-processing have both succeeded.
+                if (protection.is_kindof_tls12()) {
+                    const auto pending_tickets = session->get_pending_tls12_resumption_tickets();
+                    for (const auto& pending_ticket : pending_tickets) {
+                        session->confirm_tls12_resumption_ticket(pending_ticket.identity);
+                    }
+                }
+
                 // A client that was rejected for 0-RTT does not send
                 // EndOfEarlyData. Its Finished still closes the early-data
                 // phase before any subsequent 1-RTT application data.

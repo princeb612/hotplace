@@ -180,7 +180,7 @@ void tls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    auto minver = (option.flags & option_flag_allow_tls12) ? tls_12 : tls_13;
+    auto minver = (option.flags & option_flag_allow_tls12) ? tls1_2 : tls1_3;
     trial_tls_client_socket cli(minver);
 
 #if defined __GNUC__
@@ -288,7 +288,7 @@ void dtls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    trial_dtls_client_socket cli(dtls_12);
+    trial_dtls_client_socket cli(dtls1_2);
     cli.get_session()->get_dtls_record_publisher().set_fragment_size(512);
     cli.get_session()->get_dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes);
 

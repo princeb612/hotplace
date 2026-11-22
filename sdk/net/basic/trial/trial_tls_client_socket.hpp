@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALTLSCLIENTSOCKET__
 
 #include <hotplace/sdk/net/basic/trial/secure_client_socket.hpp>
+#include <memory>
 
 namespace hotplace {
 namespace net {
@@ -32,7 +33,7 @@ namespace net {
  */
 class HOTPLACE_NET_API trial_tls_client_socket : public secure_client_socket {
    public:
-    trial_tls_client_socket(tls_version_t spec = tls_13);
+    trial_tls_client_socket(tls_version_t spec = tls1_3);
     virtual ~trial_tls_client_socket();
 
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
@@ -45,6 +46,7 @@ class HOTPLACE_NET_API trial_tls_client_socket : public secure_client_socket {
     virtual return_t do_send(binary_t& bin);
 
    private:
+    std::shared_ptr<tls12_resumption_ticket_store> _tls12_ticket_store;
 };
 
 }  // namespace net

@@ -23,6 +23,7 @@
 #include <hotplace/sdk/net/basic/types.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <hotplace/sdk/net/tls/types.hpp>
+#include <memory>
 #include <queue>
 #include <vector>
 
@@ -43,6 +44,37 @@ struct tls_resumption_ticket {
     uint32 max_early_data_size;
 
     tls_resumption_ticket() : lifetime(0), age_add(0), timestamp(0), version(0), cipher_suite(0), max_early_data_size(0) {}
+};
+
+/**
+ * TLS 1.2 RFC 5077 state referenced by an opaque SessionTicket identity.
+ * Active and pending entries are isolated from the TLS 1.3 PSK cache.
+ */
+struct tls12_resumption_ticket {
+    binary_t identity;
+    binary_t master_secret;
+    binary_t server_name;
+    binary_t alpn;
+    uint32 lifetime;
+    uint64 timestamp;
+    uint16 version;
+    uint16 cipher_suite;
+    bool extended_master_secret;
+    bool encrypt_then_mac;
+
+    tls12_resumption_ticket() : lifetime(0), timestamp(0), version(0), cipher_suite(0), extended_master_secret(false), encrypt_then_mac(false) {}
+};
+
+class HOTPLACE_NET_API tls12_resumption_ticket_store {
+   public:
+    void store(const tls12_resumption_ticket& ticket);
+    std::vector<tls12_resumption_ticket> get();
+    bool find(const binary_t& identity, tls12_resumption_ticket& ticket);
+    void remove(const binary_t& identity);
+
+   private:
+    critical_section _lock;
+    std::vector<tls12_resumption_ticket> _tickets;
 };
 
 enum session_type_t {
@@ -83,6 +115,9 @@ enum sessioninfo_conf_t : uint8 {
     session_early_data_offered_initial = 19,    // RFC 9846: ClientHello1 offered early_data; retain through HRR
     session_ticket_max_early_data_size = 20,    // RFC 8446: max_early_data_size from the legacy latest-ticket view
     session_early_data_discarded_records = 21,  // Local limit: rejected early-data TLS records skipped
+    session_ticket_pending = 22,                // RFC 5077: a received ticket awaits authenticated server Finished
+    session_ticket_pending_lifetime = 23,       // RFC 5077: pending ticket lifetime_hint
+    session_ticket_pending_timestamp = 24,      // Local receipt time for the pending TLS 1.2 ticket
 };
 enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()
@@ -92,18 +127,28 @@ enum session_conf_t : uint16 {
     session_conf_enable_renegotiation = 0x1003,           // TLS 1.2 renegotiation
     session_conf_enable_extended_master_secret = 0x1004,  // extended master secret
     // status
-    session_tls_version = 0x2001,                     // TLS version
-    session_encrypt_then_mac = 0x2002,                // TLS 1.2 EtM
-    session_handshake_finished = 0x2003,              // if finished HRR->0-RTT else HRR->1-RTT
-    session_extended_master_secret = 0x2004,          // PRF("extended master secret", transcript_hash)
-    session_client_post_handshake_auth = 0x2006,      // RFC 9846 4.7.2: ClientHello offer for post-handshake authentication
-    session_client_psk_identity_count = 0x2007,       // RFC 8446 4.2.11: identities offered in the latest ClientHello
-    session_client_psk_modes_present = 0x2008,        // RFC 8446 4.2.9: psk_key_exchange_modes extension was offered
-    session_client_psk_modes = 0x2009,                // RFC 8446 4.2.9: bit mask of offered PSK key exchange modes
-    session_client_psk_hash = 0x200A,                 // RFC 8446 4.2.11: hash associated with the offered PSK binder
-    session_server_psk_selected_identity = 0x200B,    // RFC 8446 4.2.11: identity selected by the server
-    session_server_psk_ticket_cipher_suite = 0x200C,  // RFC 8446 4.6.1: cipher suite that established the selected ticket PSK
-    session_server_psk_key_exchange_mode = 0x200D,    // RFC 8446 4.2.9: selected psk_ke (0) or psk_dhe_ke (1) mode
+    session_tls_version = 0x2001,                           // TLS version
+    session_encrypt_then_mac = 0x2002,                      // TLS 1.2 EtM
+    session_handshake_finished = 0x2003,                    // if finished HRR->0-RTT else HRR->1-RTT
+    session_extended_master_secret = 0x2004,                // PRF("extended master secret", transcript_hash)
+    session_client_post_handshake_auth = 0x2006,            // RFC 9846 4.7.2: ClientHello offer for post-handshake authentication
+    session_client_psk_identity_count = 0x2007,             // RFC 8446 4.2.11: identities offered in the latest ClientHello
+    session_client_psk_modes_present = 0x2008,              // RFC 8446 4.2.9: psk_key_exchange_modes extension was offered
+    session_client_psk_modes = 0x2009,                      // RFC 8446 4.2.9: bit mask of offered PSK key exchange modes
+    session_client_psk_hash = 0x200A,                       // RFC 8446 4.2.11: hash associated with the offered PSK binder
+    session_server_psk_selected_identity = 0x200B,          // RFC 8446 4.2.11: identity selected by the server
+    session_server_psk_ticket_cipher_suite = 0x200C,        // RFC 8446 4.6.1: cipher suite that established the selected ticket PSK
+    session_server_psk_key_exchange_mode = 0x200D,          // RFC 8446 4.2.9: selected psk_ke (0) or psk_dhe_ke (1) mode
+    session_client_session_ticket_offered = 0x200E,         // RFC 5077: SessionTicket extension was offered in ClientHello
+    session_client_session_ticket_offer_observed = 0x200F,  // RFC 5077: ClientHello offer state was observed
+    session_tls12_ticket_candidate = 0x2010,                // RFC 5077: locally validated ticket candidate
+    session_tls12_ticket_resumed = 0x2011,                  // RFC 5077: abbreviated handshake selected
+    session_tls12_ticket_cipher_suite = 0x2012,             // Cipher suite bound to the candidate ticket
+    session_tls12_ticket_identity_present = 0x2013,         // ClientHello carried a non-empty ticket identity
+    session_tls12_ticket_ems = 0x2014,                      // EMS state bound to the cached TLS 1.2 ticket
+    session_tls12_ticket_etm = 0x2015,                      // EtM state bound to the cached TLS 1.2 ticket
+    session_tls12_ticket_acknowledged = 0x2016,             // ServerHello acknowledged ticket issuance
+    session_client_session_ticket_offer_enabled = 0x2017,   // Client is prepared to receive TLS 1.2 tickets
     // debug
     session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
 };
@@ -141,6 +186,15 @@ class HOTPLACE_NET_API tls_session {
     std::vector<tls_resumption_ticket> get_resumption_tickets();
     bool find_resumption_ticket(const binary_t& identity, tls_resumption_ticket& ticket);
     void remove_resumption_ticket(const binary_t& identity);
+    void set_tls12_resumption_ticket_store(const std::shared_ptr<tls12_resumption_ticket_store>& store);
+    void stage_tls12_resumption_ticket(const tls12_resumption_ticket& ticket);
+    bool confirm_tls12_resumption_ticket(const binary_t& identity);
+    void discard_tls12_pending_resumption_ticket(const binary_t& identity);
+    void discard_all_pending_tls12_resumption_tickets();
+    std::vector<tls12_resumption_ticket> get_tls12_resumption_tickets();
+    std::vector<tls12_resumption_ticket> get_pending_tls12_resumption_tickets();
+    bool find_tls12_resumption_ticket(const binary_t& identity, tls12_resumption_ticket& ticket);
+    void remove_tls12_resumption_ticket(const binary_t& identity);
     void set_offered_resumption_tickets(const std::vector<tls_resumption_ticket>& tickets);
     std::vector<tls_resumption_ticket> get_offered_resumption_tickets();
     void set_early_data_ticket(const tls_resumption_ticket& ticket);
@@ -270,7 +324,9 @@ class HOTPLACE_NET_API tls_session {
     tls_protection _tls_protection;
     session_type_t _type;
     uint32 _status;
-    std::vector<tls_resumption_ticket> _resumption_tickets;
+    std::vector<tls_resumption_ticket> _resumption_tickets;  // TLS 1.3 PSK tickets
+    std::shared_ptr<tls12_resumption_ticket_store> _tls12_ticket_store;
+    std::vector<tls12_resumption_ticket> _pending_tls12_resumption_tickets;
     std::vector<tls_resumption_ticket> _offered_resumption_tickets;
     tls_resumption_ticket _early_data_ticket;
     uint64 _early_data_discard_limit = 1024 * 1024;

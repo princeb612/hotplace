@@ -23,10 +23,10 @@ void test_client_supportedversion() {
         return_t rc;
         tls_version_t expect;
     } table[] = {
-        {tls_12, tls_13, tls_12, tls_13, errorcode_t::success, tls_13},
-        {tls_12, tls_12, tls_12, tls_13, errorcode_t::success, tls_12},
-        {tls_12, tls_13, tls_12, tls_12, errorcode_t::success, tls_12},
-        {tls_13, tls_13, tls_12, tls_12, errorcode_t::handshake_failure, unknown},
+        {tls1_2, tls1_3, tls1_2, tls1_3, errorcode_t::success, tls1_3},
+        {tls1_2, tls1_2, tls1_2, tls1_3, errorcode_t::success, tls1_2},
+        {tls1_2, tls1_3, tls1_2, tls1_2, errorcode_t::success, tls1_2},
+        {tls1_3, tls1_3, tls1_2, tls1_2, errorcode_t::handshake_failure, unknown},
     };
 
     for (const auto& entry : table) {

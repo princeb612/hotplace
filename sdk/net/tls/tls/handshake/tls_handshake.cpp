@@ -31,6 +31,24 @@ constexpr char constexpr_fragment[] = "fragment";
 constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
+static bool tls12_abbreviated_forbidden_message(tls_handshake_type_t type) {
+    switch (type) {
+        case tls_handshake_type_t::supplemental_data:
+        case tls_handshake_type_t::certificate:
+        case tls_handshake_type_t::certificate_url:
+        case tls_handshake_type_t::certificate_status:
+        case tls_handshake_type_t::server_key_exchange:
+        case tls_handshake_type_t::certificate_request:
+        case tls_handshake_type_t::server_hello_done:
+        case tls_handshake_type_t::certificate_verify:
+        case tls_handshake_type_t::client_certificate_request:
+        case tls_handshake_type_t::client_key_exchange:
+            return true;
+        default:
+            return false;
+    }
+}
+
 tls_handshake::tls_handshake(tls_handshake_type_t type, tls_session* session)
     : _extension_len(0),
       _type(type),
@@ -94,6 +112,13 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
+        if (session->get_tls_protection().is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) &&
+            (0 != (session->get_session_status() & session_status_server_hello)) && tls12_abbreviated_forbidden_message(get_type())) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
+        }
 
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
@@ -184,9 +209,15 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-#if defined DEBUG
         auto session = get_session();
-
+        if (session->get_tls_protection().is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) &&
+            (0 != (session->get_session_status() & session_status_server_hello)) && tls12_abbreviated_forbidden_message(get_type())) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
+            session->reset_session_status();
+            ret = errorcode_t::handshake_failure;
+            __leave2_trace(ret);
+        }
+#if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();

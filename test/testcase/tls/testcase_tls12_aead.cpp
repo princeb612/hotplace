@@ -41,7 +41,7 @@ void test_tls12_aead_aes128gcm() {
 
     auto& protection = session.get_tls_protection();
     protection.set_cipher_suite(cs);
-    protection.set_tls_version(tls_12);
+    protection.set_tls_version(tls1_2);
 
     {
         binary_t client_hello_random = base16_decode("8d4e72acf55111544eadc50e5e9e0c3015648025881194328bce1573dec89ed6");
@@ -93,7 +93,7 @@ void test_tls12_aead_chacha20poly1305() {
 
     auto& protection = session.get_tls_protection();
     protection.set_cipher_suite(cs);
-    protection.set_tls_version(tls_12);
+    protection.set_tls_version(tls1_2);
 
     {
         binary_t client_hello_random = base16_decode("19587698676b7fe86d78564051c0c44d0d8123939567dafbc01bbf8f78b323c0");

@@ -18,9 +18,12 @@
 namespace hotplace {
 namespace net {
 
-trial_tls_client_socket::trial_tls_client_socket(tls_version_t spec) : secure_client_socket(spec) {
+trial_tls_client_socket::trial_tls_client_socket(tls_version_t spec)
+    : secure_client_socket(spec), _tls12_ticket_store(std::make_shared<tls12_resumption_ticket_store>()) {
     auto session = &_session;
     session->set_type(session_type_t::tls);
+    session->set_tls12_resumption_ticket_store(_tls12_ticket_store);
+    session->get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
 }
 
 trial_tls_client_socket::~trial_tls_client_socket() {}

@@ -35,6 +35,8 @@ class HOTPLACE_NET_API tls_extension_key_share : public tls_extension {
     return_t add(tls_group_t group, tls_direction_t dir);
     return_t add(const std::string& group, tls_direction_t dir);
     return_t add_pubkey(tls_group_t group, const binary_t& pubkey, const keydesc& desc, tls_direction_t dir);
+    return_t read_keyshare_entry(const byte_t* stream, size_t limit, size_t& pos, uint16& group, binary_t& pubkey, bool allow_group_only, bool& group_only);
+    return_t write_keyshare_entry(uint16 group, const binary_t& pubkey, bool include_key_exchange, binary_t& bin);
 };
 
 class HOTPLACE_NET_API tls_extension_client_key_share : public tls_extension_key_share {

@@ -17,14 +17,14 @@ namespace hotplace {
 namespace net {
 
 const tls_version_hint_t tls_version_hint[] = {
-    {tls_version_t::tls_13, tls_version_t::tls_13, 1, flag_kindof_tls, "TLS v1.3"},  //
-    {tls_version_t::tls_12, tls_version_t::tls_12, 1, flag_kindof_tls, "TLS v1.2"},  // RFC 5246 A.1.  Record Layer
-    {tls_version_t::tls_11, tls_version_t::tls_11, 0, flag_kindof_tls, "TLS v1.1"},  // RFC 4346 A.1. Record Layer
-    {tls_version_t::tls_10, tls_version_t::tls_10, 0, flag_kindof_tls, "TLS v1.0"},  // RFC 2246 A.1. Record layer
-    {tls_version_t::dtls_13, tls_version_t::tls_13, 1, 0, "DTLS 1.3"},               //
-    {tls_version_t::dtls_12, tls_version_t::tls_12, 1, 0, "DTLS 1.2"},               //
-    {tls_version_t::dtls_11, tls_version_t::tls_11, 0, 0, "DTLS 1.1"},               //
-    {tls_version_t::dtls_10, tls_version_t::tls_10, 0, 0, "DTLS 1.0"},               //
+    {tls_version_t::tls1_3, tls_version_t::tls1_3, 1, flag_kindof_tls, "TLS v1.3"},  //
+    {tls_version_t::tls1_2, tls_version_t::tls1_2, 1, flag_kindof_tls, "TLS v1.2"},  // RFC 5246 A.1.  Record Layer
+    {tls_version_t::tls1_1, tls_version_t::tls1_1, 0, flag_kindof_tls, "TLS v1.1"},  // RFC 4346 A.1. Record Layer
+    {tls_version_t::tls1_0, tls_version_t::tls1_0, 0, flag_kindof_tls, "TLS v1.0"},  // RFC 2246 A.1. Record layer
+    {tls_version_t::dtls1_3, tls_version_t::tls1_3, 1, 0, "DTLS 1.3"},               //
+    {tls_version_t::dtls1_2, tls_version_t::tls1_2, 1, 0, "DTLS 1.2"},               //
+    {tls_version_t::dtls1_1, tls_version_t::tls1_1, 0, 0, "DTLS 1.1"},               //
+    {tls_version_t::dtls1_0, tls_version_t::tls1_0, 0, 0, "DTLS 1.0"},               //
 };
 const size_t sizeof_tls_version_hint = RTL_NUMBER_OF(tls_version_hint);
 
@@ -179,28 +179,28 @@ const tls_layer_hint_t tls_layer_hint[] = {
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
     // TLS HandshakeType
 
-    {tls_layer_handshake, tls_handshake_type_t::hello_request, tls_10, tls_12},           // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::hello_request, tls1_0, tls1_2},           // RFC 2246, 5246
     {tls_layer_handshake, tls_handshake_type_t::client_hello},                            // RFC 2246, 5246, 8446
     {tls_layer_handshake, tls_handshake_type_t::server_hello},                            // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_handshake_type_t::hello_verify_request, dtls_12, dtls_13},  // RFC 6347, 9147
-    {tls_layer_handshake, tls_handshake_type_t::new_session_ticket, tls_13, tls_13},      // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::hello_verify_request, dtls1_2, dtls1_3},  // RFC 6347, 9147
+    {tls_layer_handshake, tls_handshake_type_t::new_session_ticket, tls1_3, tls1_3},      // RFC 8446
     {tls_layer_handshake, tls_handshake_type_t::end_of_early_data},                       // RFC 8446
     {tls_layer_handshake, tls_handshake_type_t::hello_retry_request},                     // RFC 9147 reserved
-    {tls_layer_handshake, tls_handshake_type_t::encrypted_extensions, tls_13, tls_13},    // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::encrypted_extensions, tls1_3, tls1_3},    // RFC 8446
     {tls_layer_handshake, tls_handshake_type_t::request_connection_id},                   // RFC 9147
     {tls_layer_handshake, tls_handshake_type_t::new_connection_id},                       // RFC 9147
-    {tls_layer_handshake, tls_handshake_type_t::certificate, tls_10, tls_13},             // RFC 2246
-    {tls_layer_handshake, tls_handshake_type_t::server_key_exchange, tls_10, tls_12},     // RFC 2246, 5246
-    {tls_layer_handshake, tls_handshake_type_t::certificate_request, tls_10, tls_13},     // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_handshake_type_t::server_hello_done, tls_10, tls_12},       // RFC 2246, 5246
-    {tls_layer_handshake, tls_handshake_type_t::certificate_verify, tls_10, tls_13},      // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_handshake_type_t::client_key_exchange, tls_10, tls_12},     // RFC 2246, 5246
-    {tls_layer_handshake, tls_handshake_type_t::certificate_request, tls_10, tls_13},     // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_handshake_type_t::finished, tls_10, tls_13},                // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::certificate, tls1_0, tls1_3},             // RFC 2246
+    {tls_layer_handshake, tls_handshake_type_t::server_key_exchange, tls1_0, tls1_2},     // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::certificate_request, tls1_0, tls1_3},     // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::server_hello_done, tls1_0, tls1_2},       // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::certificate_verify, tls1_0, tls1_3},      // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::client_key_exchange, tls1_0, tls1_2},     // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::certificate_request, tls1_0, tls1_3},     // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::finished, tls1_0, tls1_3},                // RFC 2246, 5246, 8446
     {tls_layer_handshake, tls_handshake_type_t::certificate_url},                         // RFC 8446 reserved
     {tls_layer_handshake, tls_handshake_type_t::certificate_status},                      // RFC 8446 reserved
     {tls_layer_handshake, tls_handshake_type_t::supplemental_data},                       // RFC 8446 reserved
-    {tls_layer_handshake, tls_handshake_type_t::key_update, tls_13, tls_13},              // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::key_update, tls1_3, tls1_3},              // RFC 8446
     {tls_layer_handshake, tls_handshake_type_t::compressed_certificate},                  //
     {tls_layer_handshake, tls_handshake_type_t::ekt_key},                                 //
 
@@ -248,14 +248,14 @@ const tls_layer_hint_t tls_layer_hint[] = {
     {tls_layer_extension, tls1_extension_type_t::supported_ekt_ciphers},                  // RFC 8870
     {tls_layer_extension, tls1_extension_type_t::pre_shared_key},                         // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::early_data},                             // RFC 8446
-    {tls_layer_extension, tls1_extension_type_t::supported_versions, tls_13, tls_13, 0},  // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::supported_versions, tls1_3, tls1_3, 0},  // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::cookie},                                 // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::psk_key_exchange_modes},                 // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::certificate_authorities},                // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::oid_filters},                            // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::post_handshake_auth},                    // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::signature_algorithms_cert},              // RFC 8446
-    {tls_layer_extension, tls1_extension_type_t::key_share, tls_13, tls_13},              // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::key_share, tls1_3, tls1_3},              // RFC 8446
     {tls_layer_extension, tls1_extension_type_t::transparency_info},                      // RFC 9162
     {tls_layer_extension, tls1_extension_type_t::connection_id},                          // RFC 9146
     {tls_layer_extension, tls1_extension_type_t::external_id_hash},                       // RFC 8844

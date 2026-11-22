@@ -32,7 +32,7 @@ namespace net {
  */
 class HOTPLACE_NET_API trial_dtls_client_socket : public secure_client_socket {
    public:
-    trial_dtls_client_socket(tls_version_t spec = dtls_12);
+    trial_dtls_client_socket(tls_version_t spec = dtls1_2);
     virtual ~trial_dtls_client_socket();
 
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);

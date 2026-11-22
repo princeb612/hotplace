@@ -24,7 +24,7 @@
 namespace hotplace {
 namespace net {
 
-tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(tls_12), _maxspec(tls_13) {
+tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(tls1_2), _maxspec(tls1_3) {
     auto session_type = session->get_type();
     switch (session_type) {
         case session_type_t::dtls: {
@@ -35,7 +35,7 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
         } break;
         case session_type_t::quic:
         case session_type_t::quic2: {
-            _minspec = tls_13;
+            _minspec = tls1_3;
         } break;
         default:
             break;
@@ -96,11 +96,15 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
             //   C client_hello
             //   S server_hello, certificate, certificate_verify, change_cipher_spec, finished
             //   C change_cipher_spec, finished
-            // TLS 1.2
+            // TLS 1.2 full handshake
             //   C client_hello
             //   S server_hello, certificate, server_key_exchange, server_hello_done
             //   C client_key_exchange, change_cipher_spec, finished
             //   S change_cipher_spec, finished
+            // TLS 1.2 abbreviated ticket handshake
+            //   C client_hello
+            //   S server_hello, [new_session_ticket], change_cipher_spec, finished
+            //   C change_cipher_spec, finished
             switch (session_type) {
                 case session_type_t::tls:
                 case session_type_t::dtls: {
@@ -109,8 +113,10 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
                             ret = do_tls_server_handshake_phase1(func);
                         } break;
                         case session_status_client_finished: {
-                            // TLS 1.2
-                            if (protection.is_kindof_tls12()) {
+                            // Full TLS 1.2 handshakes send Server Finished after
+                            // Client Finished. Abbreviated handshakes already sent
+                            // Server Finished in phase 1.
+                            if (protection.is_kindof_tls12() && (0 == session->get_keyvalue().get(session_tls12_ticket_resumed))) {
                                 ret = do_tls_server_handshake_phase2(func);
                             }
                         } break;

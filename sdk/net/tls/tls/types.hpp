@@ -65,6 +65,7 @@ class tls_extension_renegotiation_info;
 class tls_extension_record_size_limit;
 class tls_extension_signature_algorithms;
 class tls_extension_sni;
+class tls_extension_session_ticket;
 class tls_extension_status_request;
 class tls_extension_supported_groups;
 class tls_extension_supported_versions;

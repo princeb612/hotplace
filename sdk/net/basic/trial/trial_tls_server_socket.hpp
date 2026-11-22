@@ -26,7 +26,7 @@ namespace net {
  */
 class HOTPLACE_NET_API trial_tls_server_socket : public naive_tcp_server_socket {
    public:
-    trial_tls_server_socket(tls_version_t minspec = tls_12, tls_version_t maxspec = tls_13);
+    trial_tls_server_socket(tls_version_t minspec = tls1_2, tls_version_t maxspec = tls1_3);
     virtual ~trial_tls_server_socket();
 
     /**
@@ -74,6 +74,7 @@ class HOTPLACE_NET_API trial_tls_server_socket : public naive_tcp_server_socket 
     secure_prosumer _secure;
     tls_version_t _minspec;
     tls_version_t _maxspec;
+    std::shared_ptr<tls12_resumption_ticket_store> _tls12_ticket_store;
 };
 
 }  // namespace net

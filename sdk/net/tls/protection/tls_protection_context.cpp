@@ -44,19 +44,35 @@ return_t protection_context::negotiate(tls_session* session, tls_version_t minsp
     return ret;
 }
 
-void protection_context::add_cipher_suite(uint16 cs) { _cipher_suites.push_back(cs); }
+protection_context& protection_context::add_cipher_suite(uint16 cs) {
+    _cipher_suites.push_back(cs);
+    return *this;
+}
 
-void protection_context::add_signature_algorithm(tls_sigscheme_t sa) { _signature_algorithms.push_back(sa); }
+protection_context& protection_context::add_signature_algorithm(tls_sigscheme_t sa) {
+    _signature_algorithms.push_back(sa);
+    return *this;
+}
 
-void protection_context::add_supported_group(tls_group_t sg) { _supported_groups.push_back(sg); }
+protection_context& protection_context::add_supported_group(tls_group_t sg) {
+    _supported_groups.push_back(sg);
+    return *this;
+}
 
-void protection_context::add_supported_version(tls_version_t sv) { _supported_versions.push_back(sv); }
+protection_context& protection_context::add_supported_version(tls_version_t sv) {
+    _supported_versions.push_back(sv);
+    return *this;
+}
 
-void protection_context::add_ec_point_format(uint8 epf) { _ec_point_formats.push_back(epf); }
+protection_context& protection_context::add_ec_point_format(uint8 epf) {
+    _ec_point_formats.push_back(epf);
+    return *this;
+}
 
-void protection_context::add_keyshare_group(tls_group_t group) {
+protection_context& protection_context::add_keyshare_group(tls_group_t group) {
     _keyshare_groups.push_back(group);
     _keyshare_set.insert(group);
+    return *this;
 }
 
 void protection_context::clear_cipher_suites() { _cipher_suites.clear(); }
@@ -173,7 +189,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         for (auto t : other._supported_versions) {
             clispecs.insert((tls_version_t)t);
         }
-        for (uint16 t = tls_10; t <= tls_13; t++) {
+        for (uint16 t = tls1_0; t <= tls1_3; t++) {
             if ((minspec <= t) && (t <= maxspec)) {
                 specs.insert((tls_version_t)t);
             }
@@ -216,7 +232,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                         continue;
                     }
 
-                    if (tls_13 != hint->spec) {
+                    if (tls1_3 != hint->spec) {
                         if (certkty_set.empty()) {
                             continue;
                         }
@@ -258,7 +274,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                 for (const auto& cs : cs_map[ver]) {
                     spec = ver;
                     for (const auto& t : clispecs) {
-                        // based on the spec, rather than the version. for example is_kindof(tls_13, dtls_13) return true
+                        // based on the spec, rather than the version. for example is_kindof(tls1_3, dtls1_3) return true
                         if (tlsadvisor->is_kindof(t, ver)) {
                             // RFC 8446 4.2.1.  Supported Versions
                             add_supported_version(t);
@@ -284,16 +300,16 @@ return_t protection_context::select_from(const protection_context& other, tls_se
             };
 
             bool test = false;
-            test = lambda_select_cs(tls_13);
+            test = lambda_select_cs(tls1_3);
             if ((session_type_t::tls == session_type) || (session_type_t::dtls == session_type)) {  // not QUIC, QUIC2
-                if ((false == test) && (tls_12 >= minspec)) {
-                    test = lambda_select_cs(tls_12);
+                if ((false == test) && (tls1_2 >= minspec)) {
+                    test = lambda_select_cs(tls1_2);
                 }
-                if ((false == test) && (tls_11 >= minspec)) {
-                    test = lambda_select_cs(tls_11);
+                if ((false == test) && (tls1_1 >= minspec)) {
+                    test = lambda_select_cs(tls1_1);
                 }
-                if ((false == test) && (tls_10 >= minspec)) {
-                    test = lambda_select_cs(tls_10);
+                if ((false == test) && (tls1_0 >= minspec)) {
+                    test = lambda_select_cs(tls1_0);
                 }
             }
 
@@ -313,7 +329,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     if (tlsadvisor->test_tls_group(group)) {
                         if (tls_flag_pqc & hint->flags) {
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-                            cond = (tls_13 == spec);
+                            cond = (tls1_3 == spec);
 #else
                             cond = false;
 #endif
@@ -433,7 +449,7 @@ bool protection_context::is_certificate_request_signature_algorithm_offered(tls_
 bool protection_context::is_signature_algorithm_compatible(tls_sigscheme_t scheme, crypto_kty_t kty, uint32 nid, bool tls13) const {
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_sigscheme(scheme);
-    if (nullptr == hint || (tls_flag_support & hint->flags) == 0 || hint->kty != kty) {
+    if (nullptr == hint || 0 == (tls_flag_support & hint->flags) || hint->kty != kty) {
         return false;
     }
     if (nid &&

@@ -11,6 +11,7 @@
 #include "testcase_gpt_common.hpp"
 
 static void test_tls13_psk_ticket_age_limit() {
+    // Action: offer tickets with obfuscated ages at and beyond the accepted ticket-age tolerance.
     // Scenario under test: TLS 1.3 PSK ticket age seven-day limit.
     // Expected: validate the binder for a ticket within the seven-day limit.
     _test_case.begin("TLS 1.3 PSK ticket age seven-day limit");
@@ -34,10 +35,10 @@ static void test_tls13_psk_ticket_age_limit() {
     for (const auto& vector : vectors) {
         tls_session session;
         session.set_type(session_type_t::tls);
-        session.get_tls_protection().set_tls_version(tls_13);
+        session.get_tls_protection().set_tls_version(tls1_3);
         session.get_tls_protection().set_cipher_suite(0x1301);
         session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
         session.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, binary_t{0xaa});
         session.get_tls_protection().get_secrets().assign(tls_secret_t::resumption_early, binary_t(32, 0x11));
         auto& kv = session.get_session_info(from_server).get_keyvalue();
@@ -88,11 +89,7 @@ static void test_tls13_psk_ticket_age_limit() {
             // The deliberately invalid binder must be checked for an in-range ticket.
             _test_case.assert(nullptr == parsed, __FUNCTION__, vector.description);
             size_t decrypt_error_count = 0;
-            session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decrypt_error == desc)) {
-                    ++decrypt_error_count;
-                }
-            });
+            decrypt_error_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::decrypt_error);
             _test_case.assert(1 == decrypt_error_count, __FUNCTION__, "validate the binder for a ticket within the seven-day limit");
         } else {
             _test_case.assert(nullptr != parsed, __FUNCTION__, vector.description);
@@ -123,9 +120,9 @@ static void test_tls13_psk_expired_clienthello_fallback() {
     tls_session server;
     client.set_type(session_type_t::tls);
     server.set_type(session_type_t::tls);
-    client.get_tls_protection().set_tls_version(tls_13);
-    server.get_tls_protection().set_tls_version(tls_13);
-    server.get_keyvalue().set(session_tls_version, tls_13);
+    client.get_tls_protection().set_tls_version(tls1_3);
+    server.get_tls_protection().set_tls_version(tls1_3);
+    server.get_keyvalue().set(session_tls_version, tls1_3);
     // Model a fully completed TLS 1.3 handshake: the plaintext ClientHello
     // phase gate requires both Finished messages before accepting a new
     // ClientHello for a resumption attempt.
@@ -143,7 +140,7 @@ static void test_tls13_psk_expired_clienthello_fallback() {
     server.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, binary_t{0xaa});
 
     binary_t client_hello;
-    return_t ret = test_client_supportedversion_clienthello(&client, tls_12, tls_13, client_hello);
+    return_t ret = test_client_supportedversion_clienthello(&client, tls1_2, tls1_3, client_hello);
     _test_case.test(ret, __FUNCTION__, "construct a TLS 1.3-capable ClientHello");
     if (errorcode_t::success != ret) {
         return;
@@ -264,9 +261,9 @@ static void test_tls13_client_ticket_age_fallback() {
         tls_session session;
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
         session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
 
         uint64 now_ms = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
@@ -327,7 +324,7 @@ static void test_tls13_client_psk_writer_ticket_lifetime() {
         tls_session session;
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
         protection.get_secrets().assign(tls_secret_t::new_session_ticket, ticket);
         protection.get_secrets().assign(tls_secret_t::resumption_early, resumption_psk);

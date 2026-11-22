@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <chrono>
 
-#include "sample.hpp"
+#include "testcase_gpt_common.hpp"
 
 static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* group, binary_t& bin, const char* omit_supported_group = nullptr,
                                                bool include_key_share = true, bool include_psk = false) {
@@ -110,7 +110,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                         return errorcode_t::success;
                                     })
                                .add(tls_extension_type_t::supported_versions, dir, handshake, [&](tls_extension* extension) -> return_t {
-                                   (*(tls_extension_client_supported_versions*)extension).add(tls_13);
+                                   (*(tls_extension_client_supported_versions*)extension).add(tls1_3);
                                    return errorcode_t::success;
                                });
 
@@ -141,112 +141,63 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
 }
 
 static bool mutate_client_hello2_key_share(binary_t& message, uint8 mutation) {
-    auto read_u16 = [&](size_t offset) -> uint16 { return static_cast<uint16>((static_cast<uint16>(message[offset]) << 8) | message[offset + 1]); };
-    auto write_u16 = [&](size_t offset, uint16 value) -> void {
-        message[offset] = static_cast<byte_t>((value >> 8) & 0xff);
-        message[offset + 1] = static_cast<byte_t>(value & 0xff);
-    };
-
-    if ((message.size() < 9) || (0x16 != message[0]) || (0x01 != message[5])) {
-        return false;
-    }
-    size_t record_end = 5 + read_u16(3);
-    size_t handshake_end = 9 + ((static_cast<uint32>(message[6]) << 16) | (static_cast<uint32>(message[7]) << 8) | message[8]);
-    if ((record_end > message.size()) || (handshake_end > record_end)) {
+    test_tls_client_hello_view hello;
+    if (false == test_parse_client_hello_view(message, hello)) {
         return false;
     }
 
-    size_t pos = 9 + 2 + 32;
-    if (pos >= handshake_end) {
-        return false;
-    }
-    size_t session_id_len = message[pos++];
-    pos += session_id_len;
-    if (pos + 2 > handshake_end) {
-        return false;
-    }
-    size_t cipher_suites_len = read_u16(pos);
-    pos += 2 + cipher_suites_len;
-    if (pos >= handshake_end) {
-        return false;
-    }
-    size_t compression_len = message[pos++];
-    pos += compression_len;
-    if (pos + 2 > handshake_end) {
-        return false;
-    }
-    size_t extensions_length_offset = pos;
-    size_t extensions_length = read_u16(pos);
-    size_t extensions_begin = pos + 2;
-    size_t extensions_end = extensions_begin + extensions_length;
-    if (extensions_end > handshake_end) {
+    test_tls_extension_view extension;
+    if (false == test_find_tls_extension(message, hello.extensions_length_offset, hello.handshake_end, 0x0033, extension) || (extension.extension_length < 2)) {
         return false;
     }
 
-    pos = extensions_begin;
-    while (pos + 4 <= extensions_end) {
-        uint16 extension_type = read_u16(pos);
-        size_t extension_length_offset = pos + 2;
-        size_t extension_length = read_u16(extension_length_offset);
-        size_t body = pos + 4;
-        size_t extension_end = body + extension_length;
-        if (extension_end > extensions_end) {
+    size_t vector_length_offset = extension.body_offset;
+    size_t vector_length = test_read_u16(message, vector_length_offset);
+    size_t entries_begin = vector_length_offset + 2;
+    if (vector_length != extension.extension_length - 2) {
+        return false;
+    }
+
+    if (0 == mutation) {
+        if (vector_length < 4) {
             return false;
         }
-        if (0x0033 == extension_type) {
-            if (extension_length < 2) {
-                return false;
-            }
-            size_t vector_length_offset = body;
-            size_t vector_length = read_u16(vector_length_offset);
-            size_t entries_begin = body + 2;
-            if (vector_length != extension_length - 2) {
-                return false;
-            }
-            if (0 == mutation) {
-                if (vector_length < 4) {
-                    return false;
-                }
-                write_u16(entries_begin, t_underlying(tls_group_t::secp256r1));
-                return true;
-            }
-            if (1 == mutation) {
-                if (vector_length < 4) {
-                    return false;
-                }
-                binary_t entry(message.begin() + entries_begin, message.begin() + entries_begin + vector_length);
-                message.insert(message.begin() + extension_end, entry.begin(), entry.end());
-                write_u16(vector_length_offset, static_cast<uint16>(vector_length + entry.size()));
-                write_u16(extension_length_offset, static_cast<uint16>(extension_length + entry.size()));
-                write_u16(extensions_length_offset, static_cast<uint16>(extensions_length + entry.size()));
-                uint16 record_length = read_u16(3);
-                write_u16(3, static_cast<uint16>(record_length + entry.size()));
-                uint32 handshake_length = (static_cast<uint32>(message[6]) << 16) | (static_cast<uint32>(message[7]) << 8) | message[8];
-                handshake_length += static_cast<uint32>(entry.size());
-                message[6] = static_cast<byte_t>((handshake_length >> 16) & 0xff);
-                message[7] = static_cast<byte_t>((handshake_length >> 8) & 0xff);
-                message[8] = static_cast<byte_t>(handshake_length & 0xff);
-                return true;
-            }
-            if (2 == mutation) {
-                size_t removed = vector_length;
-                message.erase(message.begin() + entries_begin, message.begin() + extension_end);
-                write_u16(vector_length_offset, 0);
-                write_u16(extension_length_offset, 2);
-                write_u16(extensions_length_offset, static_cast<uint16>(extensions_length - removed));
-                uint16 record_length = read_u16(3);
-                write_u16(3, static_cast<uint16>(record_length - removed));
-                uint32 handshake_length = (static_cast<uint32>(message[6]) << 16) | (static_cast<uint32>(message[7]) << 8) | message[8];
-                handshake_length -= static_cast<uint32>(removed);
-                message[6] = static_cast<byte_t>((handshake_length >> 16) & 0xff);
-                message[7] = static_cast<byte_t>((handshake_length >> 8) & 0xff);
-                message[8] = static_cast<byte_t>(handshake_length & 0xff);
-                return true;
-            }
+        test_write_u16(message, entries_begin, t_underlying(tls_group_t::secp256r1));
+        return true;
+    }
+
+    if (1 == mutation) {
+        size_t added = vector_length;
+        if (vector_length < 4 || added > 0xffff - vector_length || added > 0xffff - extension.extension_length || added > 0xffff - extension.extensions_length ||
+            added > 0xffff - hello.record_length || added > 0xffffff - hello.handshake_length) {
             return false;
         }
-        pos = extension_end;
+
+        binary_t entry(message.begin() + entries_begin, message.begin() + extension.end_offset);
+        message.insert(message.begin() + extension.end_offset, entry.begin(), entry.end());
+        test_write_u16(message, vector_length_offset, static_cast<uint16>(vector_length + added));
+        test_write_u16(message, extension.extension_length_offset, static_cast<uint16>(extension.extension_length + added));
+        test_write_u16(message, extension.extensions_length_offset, static_cast<uint16>(extension.extensions_length + added));
+        test_write_u16(message, 3, static_cast<uint16>(hello.record_length + added));
+        test_write_u24(message, 6, static_cast<uint32>(hello.handshake_length + added));
+        return true;
     }
+
+    if (2 == mutation) {
+        size_t removed = vector_length;
+        if ((removed > extension.extensions_length) || (removed > hello.record_length) || (removed > hello.handshake_length)) {
+            return false;
+        }
+
+        message.erase(message.begin() + entries_begin, message.begin() + extension.end_offset);
+        test_write_u16(message, vector_length_offset, 0);
+        test_write_u16(message, extension.extension_length_offset, 2);
+        test_write_u16(message, extension.extensions_length_offset, static_cast<uint16>(extension.extensions_length - removed));
+        test_write_u16(message, 3, static_cast<uint16>(hello.record_length - removed));
+        test_write_u24(message, 6, static_cast<uint32>(hello.handshake_length - removed));
+        return true;
+    }
+
     return false;
 }
 
@@ -334,60 +285,56 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
     return ret;
 }
 
-static bool do_test_mutate_server_hello_key_share_group(binary_t& bin, tls_group_t group) {
+static bool do_test_mutate_server_hello_key_share(binary_t& bin, tls_group_t group, bool empty_key_exchange = false) {
     // TLSPlaintext record + ServerHello handshake framing.
-    auto read_u16 = [&](size_t pos) -> uint16 { return (uint16)(((uint16)bin[pos] << 8) | bin[pos + 1]); };
-    auto read_u24 = [&](size_t pos) -> uint32 { return ((uint32)bin[pos] << 16) | ((uint32)bin[pos + 1] << 8) | (uint32)bin[pos + 2]; };
-
-    if (bin.size() < 9 || bin[0] != 0x16 || bin[5] != 0x02) {
+    if ((bin.size() < 9) || (0x16 != bin[0]) || (0x02 != bin[5])) {
         return false;
     }
 
-    size_t record_end = 5 + read_u16(3);
-    size_t handshake_end = 9 + read_u24(6);
-    if (record_end > bin.size() || handshake_end > record_end) {
+    size_t record_length = test_read_u16(bin, 3);
+    if ((record_length < 4) || (record_length > bin.size() - 5)) {
         return false;
     }
+    size_t record_end = 5 + record_length;
+
+    size_t handshake_length = test_read_u24(bin, 6);
+    if (handshake_length > record_end - 9) {
+        return false;
+    }
+    size_t handshake_end = 9 + handshake_length;
 
     size_t pos = 9;
     // ServerHello: legacy_version, random, legacy_session_id_echo,
     // cipher_suite, legacy_compression_method, extensions.
-    if (pos + 2 + 32 + 1 > handshake_end) {
+    if (handshake_end - pos < 2 + 32 + 1) {
         return false;
     }
     pos += 2 + 32;
-    uint8 session_id_len = bin[pos++];
-    if (pos + session_id_len + 2 + 1 + 2 > handshake_end) {
+
+    size_t session_id_len = bin[pos++];
+    if (session_id_len > handshake_end - pos) {
         return false;
     }
-    pos += session_id_len + 2 + 1;
+    pos += session_id_len;
 
-    uint16 extensions_len = read_u16(pos);
-    pos += 2;
-    size_t extensions_end = pos + extensions_len;
-    if (extensions_end > handshake_end) {
+    if (handshake_end - pos < 2 + 1 + 2) {
+        return false;
+    }
+    pos += 2 + 1;
+
+    test_tls_extension_view extension;
+    if (false == test_find_tls_extension(bin, pos, handshake_end, 0x0033, extension) || (extension.extension_length < 2)) {
         return false;
     }
 
-    while (pos + 4 <= extensions_end) {
-        uint16 extension_type = read_u16(pos);
-        uint16 extension_len = read_u16(pos + 2);
-        pos += 4;
-        if (pos + extension_len > extensions_end) {
+    test_write_u16(bin, extension.body_offset, static_cast<uint16>(group));
+    if (empty_key_exchange) {
+        if (extension.extension_length < 4) {
             return false;
         }
-
-        if (0x0033 == extension_type) {  // key_share (ServerHello or HelloRetryRequest)
-            if (extension_len < 2) {
-                return false;
-            }
-            bin[pos] = (byte_t)((uint16)group >> 8);
-            bin[pos + 1] = (byte_t)((uint16)group & 0xff);
-            return true;
-        }
-        pos += extension_len;
+        test_write_u16(bin, extension.body_offset + 2, 0);
     }
-    return false;
+    return true;
 }
 
 // GPT Generated testcase
@@ -414,7 +361,8 @@ static void test_server_hello_key_share_validation(const char* name, const char*
     _test_case.test(ret, __FUNCTION__, "server hello");
 
     if (mutate_group) {
-        _test_case.assert(do_test_mutate_server_hello_key_share_group(server_hello, tls_group_t::x25519), __FUNCTION__, "mutate ServerHello key_share group");
+        bool mutated = do_test_mutate_server_hello_key_share(server_hello, tls_group_t::x25519);
+        _test_case.assert(mutated, __FUNCTION__, "mutate ServerHello key_share group");
     }
 
     ret = do_test_send_record(&session_client, from_server, server_hello);
@@ -422,15 +370,53 @@ static void test_server_hello_key_share_validation(const char* name, const char*
 
     size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
-    session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if (tls_alertlevel_t::fatal == level) {
-            ++fatal_alert_count;
-            fatal_alerts.insert(desc);
-        }
-    });
+    fatal_alert_count = test_collect_fatal_alerts(session_client, from_server, fatal_alerts);
     _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
                       "exactly one fatal illegal_parameter alert");
     _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after invalid ServerHello key_share");
+}
+
+// A ServerHello KeyShareEntry must carry a non-empty key_exchange vector.
+static void test_server_hello_key_share_rejects_empty_key_exchange() {
+    // Scenario under test: ServerHello key_share rejects an empty key_exchange vector.
+    // Expected: reject the malformed selected group with fatal illegal_parameter.
+    // Action: serialize ServerHello key_share with an empty key_exchange vector and parse the malformed extension.
+    _test_case.begin("ServerHello key_share rejects an empty key_exchange");
+
+    tls_session session_client;
+    tls_session session_server;
+    binary_t client_hello;
+    binary_t server_hello;
+    return_t ret = errorcode_t::success;
+
+    ret = do_test_construct_client_hello(&session_client, from_client, "secp256r1", client_hello);
+    _test_case.test(ret, __FUNCTION__, "construct ClientHello");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    ret = do_test_send_record(&session_server, from_client, client_hello);
+    _test_case.test(ret, __FUNCTION__, "process ClientHello");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(tls_group_t::secp256r1));
+    ret = do_test_construct_server_hello(&session_server, &session_client, from_server, server_hello);
+    _test_case.test(ret, __FUNCTION__, "construct ServerHello");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    bool mutated = do_test_mutate_server_hello_key_share(server_hello, tls_group_t::secp256r1, true);
+    _test_case.assert(mutated, __FUNCTION__, "set ServerHello key_share key_exchange length to zero");
+    ret = do_test_send_record(&session_client, from_server, server_hello);
+    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject empty ServerHello key_exchange");
+
+    std::set<tls_alertdesc_t> fatal_alerts;
+    size_t fatal_alert_count = test_collect_fatal_alerts(session_client, from_server, fatal_alerts);
+    _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::decode_error}, __FUNCTION__,
+                      "queue exactly one fatal decode_error");
+    _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after malformed key_share");
 }
 
 // GPT Generated testcase
@@ -456,19 +442,15 @@ static void test_hello_retry_request_group_validation(const char* name, const ch
     ret = do_test_construct_server_hello(&session_server, &session_client, from_server, hello_retry_request);
     _test_case.test(ret, __FUNCTION__, "HelloRetryRequest");
 
-    _test_case.assert(do_test_mutate_server_hello_key_share_group(hello_retry_request, selected_group), __FUNCTION__, "mutate HelloRetryRequest selected_group");
+    bool mutated = do_test_mutate_server_hello_key_share(hello_retry_request, selected_group);
+    _test_case.assert(mutated, __FUNCTION__, "mutate HelloRetryRequest selected_group");
 
     ret = do_test_send_record(&session_client, from_server, hello_retry_request);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject invalid HelloRetryRequest selected_group");
 
     size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
-    session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if (tls_alertlevel_t::fatal == level) {
-            ++fatal_alert_count;
-            fatal_alerts.insert(desc);
-        }
-    });
+    fatal_alert_count = test_collect_fatal_alerts(session_client, from_server, fatal_alerts);
     _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
                       "exactly one fatal illegal_parameter alert");
     _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after invalid HRR selected_group");
@@ -522,11 +504,7 @@ static void test_clienthello2_requires_hrr_key_share() {
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject ClientHello2 that omits the HRR-requested key_share");
 
     size_t illegal_parameter_count = 0;
-    session_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++illegal_parameter_count;
-        }
-    });
+    illegal_parameter_count = test_count_fatal_alert(session_server, from_client, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for a missing retry key_share");
 }
 
@@ -572,7 +550,8 @@ static void test_clienthello2_rejects_invalid_hrr_key_share_entries() {
         if (errorcode_t::success != ret) {
             return;
         }
-        _test_case.assert(mutate_client_hello2_key_share(malformed_client_hello2, mutation), __FUNCTION__, "%s: mutate ClientHello2 key_share", label);
+        bool mutated = mutate_client_hello2_key_share(malformed_client_hello2, mutation);
+        _test_case.assert(mutated, __FUNCTION__, "%s: mutate ClientHello2 key_share", label);
 
         ret = do_test_send_record(&session_server, from_client, malformed_client_hello2);
         _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "%s: reject invalid ClientHello2 key_share", label);
@@ -628,19 +607,15 @@ static void test_server_hello_after_hrr_group_validation() {
 
     ret = do_test_construct_server_hello(&session_server, &session_client, from_server, server_hello);
     _test_case.test(ret, __FUNCTION__, "final ServerHello");
-    _test_case.assert(do_test_mutate_server_hello_key_share_group(server_hello, tls_group_t::secp256r1), __FUNCTION__, "mutate final ServerHello key_share group");
+    bool mutated = do_test_mutate_server_hello_key_share(server_hello, tls_group_t::secp256r1);
+    _test_case.assert(mutated, __FUNCTION__, "mutate final ServerHello key_share group");
 
     ret = do_test_send_record(&session_client, from_server, server_hello);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject ServerHello group not in retry key_share");
 
     size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
-    session_client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if (tls_alertlevel_t::fatal == level) {
-            ++fatal_alert_count;
-            fatal_alerts.insert(desc);
-        }
-    });
+    fatal_alert_count = test_collect_fatal_alerts(session_client, from_server, fatal_alerts);
     _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
                       "exactly one fatal illegal_parameter alert");
     _test_case.assert(0 == session_client.get_session_status(), __FUNCTION__, "terminate handshake after mismatched post-HRR ServerHello");
@@ -858,9 +833,9 @@ static void test_hrr_psk_decline_uses_full_handshake_schedule() {
 
     auto configure_tls13 = [](tls_session& session) {
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
-        session.get_keyvalue().set(session_tls_version, tls_13);
+        session.get_keyvalue().set(session_tls_version, tls1_3);
     };
     configure_tls13(client);
     configure_tls13(server);
@@ -888,7 +863,7 @@ static void test_hrr_psk_decline_uses_full_handshake_schedule() {
     ticket.lifetime = 3600;
     ticket.age_add = 0x12345678;
     ticket.timestamp = now_ms - 10;
-    ticket.version = tls_13;
+    ticket.version = tls1_3;
     ticket.cipher_suite = 0x1301;
     client.store_resumption_ticket(ticket);
 
@@ -976,6 +951,7 @@ void testcase_gpt_helloretryrequest() {
     // the client's supported_groups and key_share offers.
     test_server_hello_key_share_validation("ServerHello key_share not offered", nullptr, true);
     test_server_hello_key_share_validation("ServerHello key_share not supported", "secp256r1", false);
+    test_server_hello_key_share_rejects_empty_key_exchange();
 
     // HRR selected_group must be supported, and must not already be in key_share.
     test_hello_retry_request_group_validation("HRR selected_group not supported", "x25519", tls_group_t::x25519);

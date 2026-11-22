@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_BASIC_KEYVALUE__
 
 #include <algorithm>
+#include <atomic>
 #include <deque>
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
@@ -19,6 +20,7 @@
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <map>
+#include <mutex>
 
 namespace hotplace {
 
@@ -360,61 +362,251 @@ class t_key_value {
    public:
     typedef std::map<KEY, TYPE> keyvalue_map_t;
 
+    enum class hook_operation_t {
+        set,
+        get,
+        access,
+        increment,
+        remove,
+        copy_construct,
+        assign,
+        copyfrom,
+    };
+
+    /**
+     * @brief event emitted by the optional t_key_value hook
+     * @remarks
+     *          before_value and after_value are valid only for the duration
+     *          of the hook callback. A null pointer means that the key did
+     *          not exist on that side of the operation.
+     */
+    struct hook_event_t {
+        hook_operation_t operation;
+        const t_key_value* owner;
+        const t_key_value* source;
+        KEY key;
+        bool before_exists;
+        const TYPE* before_value;
+        bool after_exists;
+        const TYPE* after_value;
+    };
+
+    typedef void (*hook_handler_t)(const hook_event_t&, void*);
+
     t_key_value() {}
-    t_key_value(const t_key_value& other) { _keyvalue_map = other._keyvalue_map; }
+
+    t_key_value(const t_key_value& other) {
+        hook_binding_t binding = get_hook_binding();
+        keyvalue_map_t source;
+        {
+            critical_section_guard guard(other._lock);
+            source = other._keyvalue_map;
+        }
+        _keyvalue_map = source;
+
+        if (nullptr != binding.handler) {
+            keyvalue_map_t empty;
+            notify_replacement(binding, hook_operation_t::copy_construct, this, &other, empty, _keyvalue_map);
+        }
+    }
+
+    /**
+     * @brief register an instance-local hook for this key-value object
+     * @remarks
+     *          The callback is invoked after the key-value lock is released.
+     *          It can filter event.key and use a debugger breakpoint in its
+     *          own handler. Register nullptr to disable the hook.
+     */
+    void set_hook(hook_handler_t handler, void* parameter = nullptr) {
+        std::lock_guard<std::mutex> guard(_hook_lock);
+        _hook_handler = handler;
+        _hook_parameter = parameter;
+        _hook_enabled.store(nullptr != handler, std::memory_order_release);
+    }
+
+    void clear_hook() { set_hook(nullptr, nullptr); }
 
     t_key_value& set(KEY key, const TYPE& value) {
-        critical_section_guard guard(_lock);
-        auto pib = _keyvalue_map.insert(std::make_pair(key, value));
-        if (false == pib.second) {
-            pib.first->second = value;
+        hook_binding_t binding = get_hook_binding();
+        TYPE before{};
+        bool before_exists = false;
+
+        {
+            critical_section_guard guard(_lock);
+            auto pib = _keyvalue_map.insert(std::make_pair(key, value));
+            if (false == pib.second) {
+                if (nullptr != binding.handler) {
+                    before = pib.first->second;
+                    before_exists = true;
+                }
+                pib.first->second = value;
+            }
         }
 
+        if (nullptr != binding.handler) {
+            notify_hook(binding, hook_operation_t::set, this, nullptr, key, before_exists, before_exists ? &before : nullptr, true, &value);
+        }
         return *this;
     }
+
     TYPE get(const KEY& key) const {
-        critical_section_guard guard(_lock);
-        auto iter = _keyvalue_map.find(key);
-        if (_keyvalue_map.end() != iter) return iter->second;
-        return TYPE{};
+        hook_binding_t binding = get_hook_binding();
+        TYPE value{};
+        bool exists = false;
+
+        {
+            critical_section_guard guard(_lock);
+            auto iter = _keyvalue_map.find(key);
+            if (_keyvalue_map.end() != iter) {
+                value = iter->second;
+                exists = true;
+            }
+        }
+
+        if (nullptr != binding.handler) {
+            notify_hook(binding, hook_operation_t::get, this, nullptr, key, false, nullptr, exists, exists ? &value : nullptr);
+        }
+        return value;
     }
+
     TYPE access(const KEY& key, bool get_then_inc) {
-        critical_section_guard guard(_lock);
-        auto value = _keyvalue_map[key];
-        if (get_then_inc) {
-            _keyvalue_map[key] = value + 1;
+        hook_binding_t binding = get_hook_binding();
+        TYPE before{};
+        TYPE result{};
+        TYPE after{};
+        bool before_exists = false;
+
+        {
+            critical_section_guard guard(_lock);
+            auto iter = _keyvalue_map.find(key);
+            before_exists = (_keyvalue_map.end() != iter);
+            if (before_exists && (nullptr != binding.handler)) {
+                before = iter->second;
+            }
+
+            result = _keyvalue_map[key];
+            if (get_then_inc) {
+                _keyvalue_map[key] = result + 1;
+            }
+            after = _keyvalue_map[key];
         }
-        return value;
+
+        if (nullptr != binding.handler) {
+            notify_hook(binding, hook_operation_t::access, this, nullptr, key, before_exists, before_exists ? &before : nullptr, true, &after);
+        }
+        return result;
     }
+
     TYPE inc(const KEY& key) {
-        critical_section_guard guard(_lock);
-        auto value = _keyvalue_map[key];
-        _keyvalue_map[key] = ++value;
-        return value;
+        hook_binding_t binding = get_hook_binding();
+        TYPE before{};
+        TYPE after{};
+        bool before_exists = false;
+
+        {
+            critical_section_guard guard(_lock);
+            auto iter = _keyvalue_map.find(key);
+            before_exists = (_keyvalue_map.end() != iter);
+            if (before_exists && (nullptr != binding.handler)) {
+                before = iter->second;
+            }
+
+            TYPE value = _keyvalue_map[key];
+            _keyvalue_map[key] = ++value;
+            after = _keyvalue_map[key];
+        }
+
+        if (nullptr != binding.handler) {
+            notify_hook(binding, hook_operation_t::increment, this, nullptr, key, before_exists, before_exists ? &before : nullptr, true, &after);
+        }
+        return after;
     }
+
     void remove(const KEY& key) {
-        critical_section_guard guard(_lock);
-        auto iter = _keyvalue_map.find(key);
-        if (_keyvalue_map.end() != iter) {
-            _keyvalue_map.erase(iter);
+        hook_binding_t binding = get_hook_binding();
+        TYPE before{};
+        bool before_exists = false;
+
+        {
+            critical_section_guard guard(_lock);
+            auto iter = _keyvalue_map.find(key);
+            if (_keyvalue_map.end() != iter) {
+                if (nullptr != binding.handler) {
+                    before = iter->second;
+                    before_exists = true;
+                }
+                _keyvalue_map.erase(iter);
+            }
+        }
+
+        if (before_exists) {
+            notify_hook(binding, hook_operation_t::remove, this, nullptr, key, true, &before, false, nullptr);
         }
     }
+
     t_key_value& operator=(const t_key_value& other) {
-        critical_section_guard guard(_lock);
-        _keyvalue_map.clear();
-        _keyvalue_map = other._keyvalue_map;
+        if (this == &other) {
+            return *this;
+        }
+
+        hook_binding_t binding = get_hook_binding();
+        keyvalue_map_t source;
+        {
+            critical_section_guard guard(other._lock);
+            source = other._keyvalue_map;
+        }
+
+        keyvalue_map_t before;
+        keyvalue_map_t after;
+        {
+            critical_section_guard guard(_lock);
+            if (nullptr != binding.handler) {
+                before = _keyvalue_map;
+            }
+            _keyvalue_map = source;
+            if (nullptr != binding.handler) {
+                after = _keyvalue_map;
+            }
+        }
+
+        if (nullptr != binding.handler) {
+            notify_replacement(binding, hook_operation_t::assign, this, &other, before, after);
+        }
         return *this;
     }
+
     return_t copyfrom(const t_key_value* other) {
-        return_t ret = errorcode_t::success;
         if (nullptr == other) {
-            ret = errorcode_t::invalid_parameter;
-        } else {
-            critical_section_guard guard(_lock);
-            _keyvalue_map.clear();
-            _keyvalue_map = other->_keyvalue_map;
+            return errorcode_t::invalid_parameter;
         }
-        return ret;
+        if (this == other) {
+            return errorcode_t::success;
+        }
+
+        hook_binding_t binding = get_hook_binding();
+        keyvalue_map_t source;
+        {
+            critical_section_guard guard(other->_lock);
+            source = other->_keyvalue_map;
+        }
+
+        keyvalue_map_t before;
+        keyvalue_map_t after;
+        {
+            critical_section_guard guard(_lock);
+            if (nullptr != binding.handler) {
+                before = _keyvalue_map;
+            }
+            _keyvalue_map = source;
+            if (nullptr != binding.handler) {
+                after = _keyvalue_map;
+            }
+        }
+
+        if (nullptr != binding.handler) {
+            notify_replacement(binding, hook_operation_t::copyfrom, this, other, before, after);
+        }
+        return errorcode_t::success;
     }
 
     /*
@@ -434,8 +626,53 @@ class t_key_value {
     }
 
    private:
+    struct hook_binding_t {
+        hook_handler_t handler;
+        void* parameter;
+    };
+
+    hook_binding_t get_hook_binding() const {
+        if (false == _hook_enabled.load(std::memory_order_acquire)) {
+            hook_binding_t disabled = {nullptr, nullptr};
+            return disabled;
+        }
+
+        std::lock_guard<std::mutex> guard(_hook_lock);
+        hook_binding_t binding = {_hook_handler, _hook_parameter};
+        return binding;
+    }
+
+    static void notify_hook(const hook_binding_t& binding, hook_operation_t operation, const t_key_value* owner, const t_key_value* source, const KEY& key,
+                            bool before_exists, const TYPE* before_value, bool after_exists, const TYPE* after_value) {
+        if (nullptr != binding.handler) {
+            hook_event_t event = {operation, owner, source, key, before_exists, before_value, after_exists, after_value};
+            binding.handler(event, binding.parameter);
+        }
+    }
+
+    static void notify_replacement(const hook_binding_t& binding, hook_operation_t operation, const t_key_value* owner, const t_key_value* source,
+                                   const keyvalue_map_t& before, const keyvalue_map_t& after) {
+        for (const auto& pair : before) {
+            auto iter = after.find(pair.first);
+            bool after_exists = (after.end() != iter);
+            notify_hook(binding, operation, owner, source, pair.first, true, &pair.second, after_exists, after_exists ? &iter->second : nullptr);
+        }
+
+        for (const auto& pair : after) {
+            if (before.end() == before.find(pair.first)) {
+                notify_hook(binding, operation, owner, source, pair.first, false, nullptr, true, &pair.second);
+            }
+        }
+    }
+
     mutable critical_section _lock;
     keyvalue_map_t _keyvalue_map;
+
+    // Hook registration is local to this t_key_value instance.
+    mutable std::mutex _hook_lock;
+    std::atomic<bool> _hook_enabled{false};
+    hook_handler_t _hook_handler = nullptr;
+    void* _hook_parameter = nullptr;
 };
 
 }  // namespace hotplace

@@ -22,7 +22,8 @@
 namespace hotplace {
 namespace net {
 
-trial_tls_server_socket::trial_tls_server_socket(tls_version_t minspec, tls_version_t maxspec) : naive_tcp_server_socket(), _minspec(minspec), _maxspec(maxspec) {}
+trial_tls_server_socket::trial_tls_server_socket(tls_version_t minspec, tls_version_t maxspec)
+    : naive_tcp_server_socket(), _minspec(minspec), _maxspec(maxspec), _tls12_ticket_store(std::make_shared<tls12_resumption_ticket_store>()) {}
 
 trial_tls_server_socket::~trial_tls_server_socket() {}
 
@@ -30,6 +31,7 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = new tls_session(session_type_t::tls);
+        session->set_tls12_resumption_ticket_store(_tls12_ticket_store);
         auto context = new socket_context_t(cli_socket);
 
         context->handle.session = session;

@@ -247,6 +247,7 @@
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_quic_transport_parameters.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_record_size_limit.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension_session_ticket.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_status_request.hpp>

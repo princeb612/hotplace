@@ -257,7 +257,7 @@ void test_quic_xargs_org() {
         auto cs = protection.get_cipher_suite();
         _test_case.assert(0x1301 == cs, __FUNCTION__, "cipher suite 0x%04x", cs);
         auto tlsver = protection.get_tls_version();
-        _test_case.assert(tls_13 == tlsver, __FUNCTION__, "TLS version 0x%04x", tlsver);
+        _test_case.assert(tls1_3 == tlsver, __FUNCTION__, "TLS version 0x%04x", tlsver);
 
         binary_t bin;
         lambda_test_secret(tls_secret_t::shared_secret, bin, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");

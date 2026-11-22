@@ -7,7 +7,18 @@
 
 #include "testcase_gpt_common.hpp"
 
+static void assert_single_fatal_illegal_parameter_alert(tls_session& session, const char* test_function, const char* count_message, const char* description_message) {
+    size_t fatal_alert_count = 0;
+    std::set<tls_alertdesc_t> fatal_alerts;
+    fatal_alert_count = test_collect_fatal_alerts(session, from_server, fatal_alerts);
+    _test_case.assert(1 == fatal_alert_count, test_function, count_message);
+    _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, test_function, description_message);
+}
+
 static void test_supported_versions_negative_paths() {
+    // Scenario under test: supported_versions rejects malformed and out-of-range vector lengths.
+    // Action: exercise empty, odd, truncated, trailing-byte, and boundary-length vectors, plus unoffered server selection.
+    // Expected: accept valid even-length vectors within the one-byte limit and reject malformed or oversized vectors.
     test_client_supported_versions_vector("supported_versions vector length 2 boundary", 2, binary_t{0x03, 0x04}, true);
     test_client_supported_versions_vector("supported_versions vector length 0", 0, binary_t(), false);
     test_client_supported_versions_vector("supported_versions vector length 1", 1, binary_t{0x03}, false);
@@ -38,7 +49,7 @@ static void test_supported_versions_unknown_and_legacy_fallback() {
     tls_session mixed_client;
     tls_session mixed_server;
     binary_t mixed_client_hello;
-    return_t ret = test_client_supportedversion_clienthello(&mixed_client, tls_12, tls_13, mixed_client_hello);
+    return_t ret = test_client_supportedversion_clienthello(&mixed_client, tls1_2, tls1_3, mixed_client_hello);
     _test_case.test(ret, __FUNCTION__, "construct mixed-version ClientHello");
     if (errorcode_t::success != ret) {
         return;
@@ -60,14 +71,14 @@ static void test_supported_versions_unknown_and_legacy_fallback() {
     }
 
     tls_version_t selected = tls_version_t{};
-    ret = test_client_supportedversion_serverhello(&mixed_server, tls_12, tls_13, selected);
+    ret = test_client_supportedversion_serverhello(&mixed_server, tls1_2, tls1_3, selected);
     _test_case.test(ret, __FUNCTION__, "negotiate from mixed known/unknown versions");
-    _test_case.assert(tls_13 == selected, __FUNCTION__, "select highest locally supported version offered by peer");
+    _test_case.assert(tls1_3 == selected, __FUNCTION__, "select highest locally supported version offered by peer");
 
     tls_session unknown_client;
     tls_session unknown_server;
     binary_t unknown_client_hello;
-    ret = test_client_supportedversion_clienthello(&unknown_client, tls_12, tls_13, unknown_client_hello);
+    ret = test_client_supportedversion_clienthello(&unknown_client, tls1_2, tls1_3, unknown_client_hello);
     _test_case.test(ret, __FUNCTION__, "construct unknown-only ClientHello");
     if (errorcode_t::success != ret) {
         return;
@@ -89,13 +100,13 @@ static void test_supported_versions_unknown_and_legacy_fallback() {
     }
 
     selected = tls_version_t{};
-    ret = test_client_supportedversion_serverhello(&unknown_server, tls_12, tls_13, selected);
+    ret = test_client_supportedversion_serverhello(&unknown_server, tls1_2, tls1_3, selected);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "fail when no mutually supported version remains");
 
     tls_session legacy_client;
     tls_session legacy_server;
     binary_t legacy_client_hello;
-    ret = test_client_supportedversion_clienthello(&legacy_client, tls_12, tls_13, legacy_client_hello);
+    ret = test_client_supportedversion_clienthello(&legacy_client, tls1_2, tls1_3, legacy_client_hello);
     _test_case.test(ret, __FUNCTION__, "construct ClientHello for legacy fallback");
     if (errorcode_t::success != ret) {
         return;
@@ -116,9 +127,9 @@ static void test_supported_versions_unknown_and_legacy_fallback() {
     }
 
     selected = tls_version_t{};
-    ret = test_client_supportedversion_serverhello(&legacy_server, tls_12, tls_13, selected);
+    ret = test_client_supportedversion_serverhello(&legacy_server, tls1_2, tls1_3, selected);
     _test_case.test(ret, __FUNCTION__, "negotiate using legacy_version fallback");
-    _test_case.assert(tls_12 == selected, __FUNCTION__, "fall back to TLS 1.2 when supported_versions is absent");
+    _test_case.assert(tls1_2 == selected, __FUNCTION__, "fall back to TLS 1.2 when supported_versions is absent");
 }
 
 static void test_psk_hash_does_not_override_cipher_suite_preference() {
@@ -134,9 +145,7 @@ static void test_psk_hash_does_not_override_cipher_suite_preference() {
 
         // The server follows the client's cipher-suite order. A PSK with a
         // different hash is declined later when composing ServerHello.
-        context.add_cipher_suite(0x1302);
-        context.add_cipher_suite(0x1301);
-        context.add_supported_version(tls_13);
+        context.add_cipher_suite(0x1302).add_cipher_suite(0x1301).add_supported_version(tls1_3);
 
         const tls_cipher_suite_t* sha256_suite = tls_advisor::get_instance()->hintof_cipher_suite(0x1301);
         if (nullptr == sha256_suite) {
@@ -146,7 +155,7 @@ static void test_psk_hash_does_not_override_cipher_suite_preference() {
         session.get_keyvalue().set(session_client_psk_hash, static_cast<uint16>(sha256_suite->mac));
 
         tls_version_t selected_version = tls_version_t{};
-        return protection.negotiate(&session, tls_13, tls_13, selected_suite, selected_version);
+        return protection.negotiate(&session, tls1_3, tls1_3, selected_suite, selected_version);
     };
 
     uint16 selected_suite = 0;
@@ -174,7 +183,7 @@ static void test_tls_downgrade_sentinel() {
         tls_session client;
         tls_session server;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(client, server, tls_12, tls_13, wire);
+        return_t ret = test_build_tls12_serverhello(client, server, tls1_2, tls1_3, wire);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.2 ServerHello after a TLS 1.3-capable ClientHello");
         if (errorcode_t::success == ret) {
             bool marker_found = (wire.size() >= 43);
@@ -196,22 +205,13 @@ static void test_tls_downgrade_sentinel() {
         tls_session client;
         tls_session server;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(client, server, tls_12, tls_13, wire);
+        return_t ret = test_build_tls12_serverhello(client, server, tls1_2, tls1_3, wire);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.2 ServerHello for DOWNGRD\\x01 validation");
         if (errorcode_t::success == ret) {
             tls_records records;
             ret = records.read(&client, from_server, wire);
             _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "TLS 1.3 client rejects DOWNGRD\\x01");
-            size_t fatal_alert_count = 0;
-            std::set<tls_alertdesc_t> fatal_alerts;
-            client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                if (tls_alertlevel_t::fatal == level) {
-                    ++fatal_alert_count;
-                    fatal_alerts.insert(desc);
-                }
-            });
-            _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue exactly one fatal alert for DOWNGRD\\x01");
-            _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "use illegal_parameter for DOWNGRD\\x01");
+            assert_single_fatal_illegal_parameter_alert(client, __FUNCTION__, "queue exactly one fatal alert for DOWNGRD\\x01", "use illegal_parameter for DOWNGRD\\x01");
         }
     }
 
@@ -219,7 +219,7 @@ static void test_tls_downgrade_sentinel() {
         tls_session client;
         tls_session server;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(client, server, tls_12, tls_13, wire);
+        return_t ret = test_build_tls12_serverhello(client, server, tls1_2, tls1_3, wire);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.2 ServerHello for DOWNGRD\\x00 validation");
         if (errorcode_t::success == ret) {
             bool rewritten = test_set_tls_serverhello_random_suffix(wire, downgrade_tls11);
@@ -228,16 +228,8 @@ static void test_tls_downgrade_sentinel() {
                 tls_records records;
                 ret = records.read(&client, from_server, wire);
                 _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "TLS 1.3 client rejects DOWNGRD\\x00");
-                size_t fatal_alert_count = 0;
-                std::set<tls_alertdesc_t> fatal_alerts;
-                client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                    if (tls_alertlevel_t::fatal == level) {
-                        ++fatal_alert_count;
-                        fatal_alerts.insert(desc);
-                    }
-                });
-                _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue exactly one fatal alert for DOWNGRD\\x00");
-                _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__, "use illegal_parameter for DOWNGRD\\x00");
+                assert_single_fatal_illegal_parameter_alert(client, __FUNCTION__, "queue exactly one fatal alert for DOWNGRD\\x00",
+                                                            "use illegal_parameter for DOWNGRD\\x00");
             }
         }
     }
@@ -246,7 +238,7 @@ static void test_tls_downgrade_sentinel() {
         tls_session client;
         tls_session server;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(client, server, tls_12, tls_13, wire);
+        return_t ret = test_build_tls12_serverhello(client, server, tls1_2, tls1_3, wire);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.2 ServerHello without a downgrade marker");
         if (errorcode_t::success == ret) {
             bool rewritten = test_set_tls_serverhello_random_suffix(wire, no_sentinel);
@@ -264,11 +256,11 @@ static void test_tls_downgrade_sentinel() {
         tls_session server;
         tls_session legacy_client;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(source_client, server, tls_12, tls_13, wire);
+        return_t ret = test_build_tls12_serverhello(source_client, server, tls1_2, tls1_3, wire);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.2 ServerHello carrying a downgrade sentinel");
         if (errorcode_t::success == ret) {
             binary_t legacy_client_hello;
-            ret = test_client_supportedversion_clienthello(&legacy_client, tls_12, tls_13, legacy_client_hello);
+            ret = test_client_supportedversion_clienthello(&legacy_client, tls1_2, tls1_3, legacy_client_hello);
             _test_case.test(ret, __FUNCTION__, "construct ClientHello before removing supported_versions");
             if (errorcode_t::success == ret) {
                 bool removed = test_remove_client_hello_supported_versions(legacy_client_hello);
@@ -291,7 +283,7 @@ static void test_tls_downgrade_sentinel() {
         tls_session client;
         tls_session server;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(client, server, tls_12, tls_13, wire);
+        return_t ret = test_build_tls12_serverhello(client, server, tls1_2, tls1_3, wire);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.2 ServerHello for misplaced-marker validation");
         if (errorcode_t::success == ret) {
             bool rewritten = test_set_tls_serverhello_random_suffix(wire, downgrade_tls12);
@@ -313,24 +305,15 @@ static void test_tls_downgrade_sentinel() {
         tls_session client;
         tls_session server;
         binary_t wire;
-        return_t ret = test_build_tls12_serverhello(client, server, tls_12, tls_13, wire, true);
+        return_t ret = test_build_tls12_serverhello(client, server, tls1_2, tls1_3, wire, true);
         _test_case.test(ret, __FUNCTION__, "construct TLS 1.3-capable client offering only TLS 1.2 through supported_versions");
         if (errorcode_t::success == ret) {
             tls_records records;
             ret = records.read(&client, from_server, wire);
             _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__,
                               "TLS 1.3-capable client checks the sentinel even when its offer is restricted to TLS 1.2");
-            size_t fatal_alert_count = 0;
-            std::set<tls_alertdesc_t> fatal_alerts;
-            client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                if (tls_alertlevel_t::fatal == level) {
-                    ++fatal_alert_count;
-                    fatal_alerts.insert(desc);
-                }
-            });
-            _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue exactly one fatal alert for a TLS 1.3-capable client with a TLS 1.2-only offer");
-            _test_case.assert(fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
-                              "use illegal_parameter for a TLS 1.3-capable client with a TLS 1.2-only offer");
+            assert_single_fatal_illegal_parameter_alert(client, __FUNCTION__, "queue exactly one fatal alert for a TLS 1.3-capable client with a TLS 1.2-only offer",
+                                                        "use illegal_parameter for a TLS 1.3-capable client with a TLS 1.2-only offer");
         }
     }
 }

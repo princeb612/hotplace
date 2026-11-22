@@ -57,7 +57,7 @@ bool test_tls13_server_hello_writer_probe::serialized_body_valid() const {
     if ((_serialized.size() < 50) || (_serialized[0] != (byte_t)tls_handshake_type_t::server_hello)) {
         return false;
     }
-    uint32 handshake_size = ((uint32)_serialized[1] << 16) | ((uint32)_serialized[2] << 8) | _serialized[3];
+    uint32 handshake_size = test_read_u24(_serialized, 1);
     if (handshake_size != _serialized.size() - 4) {
         return false;
     }
@@ -76,13 +76,13 @@ bool test_tls13_server_hello_writer_probe::serialized_body_valid() const {
     }
     pos += session_id_size;
 
-    uint16 cipher_suite = ((uint16)_serialized[pos] << 8) | _serialized[pos + 1];
+    uint16 cipher_suite = test_read_u16(_serialized, pos);
     pos += 2;
     if ((cipher_suite != 0x1301) || (_serialized[pos++] != 0)) {
         return false;
     }
 
-    uint16 extensions_size = ((uint16)_serialized[pos] << 8) | _serialized[pos + 1];
+    uint16 extensions_size = test_read_u16(_serialized, pos);
     pos += 2;
     if (pos + extensions_size != _serialized.size()) {
         return false;
@@ -94,8 +94,8 @@ bool test_tls13_server_hello_writer_probe::serialized_body_valid() const {
         if (extensions_end - pos < 4) {
             return false;
         }
-        uint16 extension_type = ((uint16)_serialized[pos] << 8) | _serialized[pos + 1];
-        uint16 extension_size = ((uint16)_serialized[pos + 2] << 8) | _serialized[pos + 3];
+        uint16 extension_type = test_read_u16(_serialized, pos);
+        uint16 extension_size = test_read_u16(_serialized, pos + 2);
         pos += 4;
         if (extension_size > extensions_end - pos) {
             return false;
@@ -160,165 +160,227 @@ return_t test_client_supportedversion_serverhello(tls_session* session, tls_vers
     return ret;
 }
 
-uint16 test_read_u16(const binary_t& bin, size_t pos) { return (uint16)(((uint16)bin[pos] << 8) | bin[pos + 1]); }
+uint16 test_read_u16(const binary_t& bin, size_t pos) {
+    if ((pos > bin.size()) || (bin.size() - pos < sizeof(uint16))) {
+        return 0;
+    }
+    return (static_cast<uint16>(bin[pos]) << 8) | static_cast<uint16>(bin[pos + 1]);
+}
 
-uint32 test_read_u24(const binary_t& bin, size_t pos) { return ((uint32)bin[pos] << 16) | ((uint32)bin[pos + 1] << 8) | (uint32)bin[pos + 2]; }
+uint32 test_read_u24(const binary_t& bin, size_t pos) {
+    if ((pos > bin.size()) || (bin.size() - pos < 3)) {
+        return 0;
+    }
+    return (static_cast<uint32>(bin[pos]) << 16) | (static_cast<uint32>(bin[pos + 1]) << 8) | static_cast<uint32>(bin[pos + 2]);
+}
 
 void test_write_u16(binary_t& bin, size_t pos, uint16 value) {
-    bin[pos] = (byte_t)(value >> 8);
-    bin[pos + 1] = (byte_t)value;
+    if ((pos > bin.size()) || (bin.size() - pos < sizeof(uint16))) {
+        return;
+    }
+
+    binary_t encoded;
+    binary_append(encoded, value, hton16);
+    std::copy(encoded.begin(), encoded.end(), bin.begin() + pos);
 }
 
 void test_write_u24(binary_t& bin, size_t pos, uint32 value) {
-    bin[pos] = (byte_t)(value >> 16);
-    bin[pos + 1] = (byte_t)(value >> 8);
-    bin[pos + 2] = (byte_t)value;
+    if ((pos > bin.size()) || (bin.size() - pos < 3)) {
+        return;
+    }
+
+    bin[pos] = static_cast<byte_t>(value >> 16);
+    bin[pos + 1] = static_cast<byte_t>(value >> 8);
+    bin[pos + 2] = static_cast<byte_t>(value);
 }
 
-bool test_rewrite_client_hello_supported_versions(binary_t& bin, uint8 vector_len, const binary_t& versions) {
-    // TLSPlaintext + ClientHello framing.
-    if (bin.size() < 9 || bin[0] != 0x16 || bin[5] != 0x01) {
+bool test_parse_client_hello_view(const binary_t& message, test_tls_client_hello_view& view) {
+    if ((message.size() < 9) || (0x16 != message[0]) || (0x01 != message[5])) {
         return false;
     }
 
-    uint16 record_len = test_read_u16(bin, 3);
-    uint32 handshake_len = test_read_u24(bin, 6);
-    size_t record_end = 5 + record_len;
-    size_t handshake_end = 9 + handshake_len;
-    if (record_end > bin.size() || handshake_end > record_end) {
+    view = {};
+    view.record_length = test_read_u16(message, 3);
+    if ((view.record_length < 4) || (view.record_length > message.size() - 5)) {
         return false;
     }
+    view.record_end = 5 + view.record_length;
+
+    view.handshake_length = test_read_u24(message, 6);
+    if (view.handshake_length > view.record_end - 9) {
+        return false;
+    }
+    view.handshake_end = 9 + view.handshake_length;
 
     size_t pos = 9;
-    if (pos + 2 + 32 + 1 > handshake_end) {
+    if (view.handshake_end - pos < 2 + 32 + 1) {
         return false;
     }
     pos += 2 + 32;
 
-    uint8 session_id_len = bin[pos++];
-    if (pos + session_id_len + 2 > handshake_end) {
+    size_t session_id_length = message[pos++];
+    if (session_id_length > view.handshake_end - pos) {
         return false;
     }
-    pos += session_id_len;
+    pos += session_id_length;
 
-    uint16 cipher_suites_len = test_read_u16(bin, pos);
+    if (view.handshake_end - pos < 2) {
+        return false;
+    }
+    size_t cipher_suites_length = test_read_u16(message, pos);
     pos += 2;
-    if (pos + cipher_suites_len + 1 > handshake_end) {
+    if (cipher_suites_length > view.handshake_end - pos) {
         return false;
     }
-    pos += cipher_suites_len;
+    pos += cipher_suites_length;
 
-    uint8 compression_methods_len = bin[pos++];
-    if (pos + compression_methods_len + 2 > handshake_end) {
+    if (pos >= view.handshake_end) {
         return false;
     }
-    pos += compression_methods_len;
+    size_t compression_methods_length = message[pos++];
+    if (compression_methods_length > view.handshake_end - pos) {
+        return false;
+    }
+    pos += compression_methods_length;
 
-    size_t extensions_len_pos = pos;
-    uint16 extensions_len = test_read_u16(bin, pos);
-    pos += 2;
-    size_t extensions_end = pos + extensions_len;
-    if (extensions_end != handshake_end) {
+    if (view.handshake_end - pos < sizeof(uint16)) {
+        return false;
+    }
+    view.extensions_length_offset = pos;
+    view.extensions_length = test_read_u16(message, pos);
+    view.extensions_begin = pos + sizeof(uint16);
+    if (view.extensions_length > view.handshake_end - view.extensions_begin) {
+        return false;
+    }
+    view.extensions_end = view.extensions_begin + view.extensions_length;
+    return true;
+}
+
+bool test_find_tls_extension(const binary_t& message, size_t extensions_length_offset, size_t message_end, uint16 extension_type, test_tls_extension_view& view) {
+    if ((message_end > message.size()) || (extensions_length_offset > message_end) || (message_end - extensions_length_offset < sizeof(uint16))) {
         return false;
     }
 
-    while (pos + 4 <= extensions_end) {
-        uint16 extension_type = test_read_u16(bin, pos);
-        uint16 extension_len = test_read_u16(bin, pos + 2);
-        size_t extension_len_pos = pos + 2;
-        size_t extension_data_pos = pos + 4;
-        pos = extension_data_pos + extension_len;
-        if (pos > extensions_end) {
+    view = {};
+    view.extensions_length_offset = extensions_length_offset;
+    view.extensions_length = test_read_u16(message, extensions_length_offset);
+
+    size_t pos = extensions_length_offset + sizeof(uint16);
+    if (view.extensions_length > message_end - pos) {
+        return false;
+    }
+    size_t extensions_end = pos + view.extensions_length;
+
+    while ((pos <= extensions_end) && (extensions_end - pos >= 4)) {
+        uint16 candidate_type = test_read_u16(message, pos);
+        size_t candidate_length = test_read_u16(message, pos + 2);
+        size_t body_offset = pos + 4;
+        if (candidate_length > extensions_end - body_offset) {
             return false;
         }
 
-        if (0x002b == extension_type) {  // supported_versions
-            binary_t replacement;
-            replacement.push_back(vector_len);
-            replacement.insert(replacement.end(), versions.begin(), versions.end());
-
-            int delta = (int)replacement.size() - (int)extension_len;
-            if ((int)extensions_len + delta < 0 || (int)handshake_len + delta < 0 || (int)record_len + delta < 0) {
-                return false;
-            }
-
-            bin.erase(bin.begin() + extension_data_pos, bin.begin() + extension_data_pos + extension_len);
-            bin.insert(bin.begin() + extension_data_pos, replacement.begin(), replacement.end());
-
-            test_write_u16(bin, extension_len_pos, (uint16)replacement.size());
-            test_write_u16(bin, extensions_len_pos, (uint16)((int)extensions_len + delta));
-            test_write_u24(bin, 6, (uint32)((int)handshake_len + delta));
-            test_write_u16(bin, 3, (uint16)((int)record_len + delta));
+        if (extension_type == candidate_type) {
+            view.extension_length_offset = pos + 2;
+            view.extension_length = candidate_length;
+            view.body_offset = body_offset;
+            view.end_offset = body_offset + candidate_length;
             return true;
         }
+        pos = body_offset + candidate_length;
     }
     return false;
 }
 
+bool test_find_client_hello_extension(const binary_t& message, uint16 extension_type, size_t& body_pos, size_t& body_size) {
+    test_tls_client_hello_view hello;
+    if (false == test_parse_client_hello_view(message, hello) || (hello.record_end != message.size()) || (hello.handshake_end != hello.record_end) ||
+        (hello.extensions_end != hello.handshake_end)) {
+        return false;
+    }
+
+    test_tls_extension_view extension;
+    if (false == test_find_tls_extension(message, hello.extensions_length_offset, hello.handshake_end, extension_type, extension)) {
+        return false;
+    }
+
+    body_pos = extension.body_offset;
+    body_size = extension.extension_length;
+    return true;
+}
+
+void test_append_u16(binary_t& bin, uint16 value) { binary_append(bin, value, hton16); }
+
+void test_append_u32(binary_t& bin, uint32 value) { binary_append(bin, value, hton32); }
+
+void test_write_u32(binary_t& bin, size_t pos, uint32 value) {
+    if ((pos > bin.size()) || (bin.size() - pos < sizeof(uint32))) {
+        return;
+    }
+
+    binary_t encoded;
+    binary_append(encoded, value, hton32);
+    std::copy(encoded.begin(), encoded.end(), bin.begin() + pos);
+}
+
+bool test_rewrite_client_hello_supported_versions(binary_t& bin, uint8 vector_len, const binary_t& versions) {
+    test_tls_client_hello_view hello;
+    if (false == test_parse_client_hello_view(bin, hello) || (hello.extensions_end != hello.handshake_end)) {
+        return false;
+    }
+
+    test_tls_extension_view extension;
+    if (false == test_find_tls_extension(bin, hello.extensions_length_offset, hello.handshake_end, 0x002b, extension)) {
+        return false;
+    }
+
+    binary_t replacement;
+    replacement.push_back(vector_len);
+    replacement.insert(replacement.end(), versions.begin(), versions.end());
+    if (replacement.size() > 0xffff) {
+        return false;
+    }
+
+    int delta = static_cast<int>(replacement.size()) - static_cast<int>(extension.extension_length);
+    int new_extensions_length = static_cast<int>(hello.extensions_length) + delta;
+    int new_handshake_length = static_cast<int>(hello.handshake_length) + delta;
+    int new_record_length = static_cast<int>(hello.record_length) + delta;
+    if ((new_extensions_length < 0) || (new_extensions_length > 0xffff) || (new_handshake_length < 0) || (new_handshake_length > 0xffffff) || (new_record_length < 0) ||
+        (new_record_length > 0xffff)) {
+        return false;
+    }
+
+    bin.erase(bin.begin() + extension.body_offset, bin.begin() + extension.end_offset);
+    bin.insert(bin.begin() + extension.body_offset, replacement.begin(), replacement.end());
+
+    test_write_u16(bin, extension.extension_length_offset, static_cast<uint16>(replacement.size()));
+    test_write_u16(bin, hello.extensions_length_offset, static_cast<uint16>(new_extensions_length));
+    test_write_u24(bin, 6, static_cast<uint32>(new_handshake_length));
+    test_write_u16(bin, 3, static_cast<uint16>(new_record_length));
+    return true;
+}
+
 bool test_remove_client_hello_supported_versions(binary_t& bin) {
-    // TLSPlaintext + ClientHello framing.
-    if (bin.size() < 9 || bin[0] != 0x16 || bin[5] != 0x01) {
+    test_tls_client_hello_view hello;
+    if (false == test_parse_client_hello_view(bin, hello) || (hello.extensions_end != hello.handshake_end)) {
         return false;
     }
 
-    uint16 record_len = test_read_u16(bin, 3);
-    uint32 handshake_len = test_read_u24(bin, 6);
-    size_t record_end = 5 + record_len;
-    size_t handshake_end = 9 + handshake_len;
-    if (record_end > bin.size() || handshake_end > record_end) {
+    test_tls_extension_view extension;
+    if (false == test_find_tls_extension(bin, hello.extensions_length_offset, hello.handshake_end, 0x002b, extension)) {
         return false;
     }
 
-    size_t pos = 9 + 2 + 32;
-    if (pos + 1 > handshake_end) {
-        return false;
-    }
-    uint8 session_id_len = bin[pos++];
-    if (pos + session_id_len + 2 > handshake_end) {
-        return false;
-    }
-    pos += session_id_len;
-
-    uint16 cipher_suites_len = test_read_u16(bin, pos);
-    pos += 2;
-    if (pos + cipher_suites_len + 1 > handshake_end) {
-        return false;
-    }
-    pos += cipher_suites_len;
-
-    uint8 compression_methods_len = bin[pos++];
-    if (pos + compression_methods_len + 2 > handshake_end) {
-        return false;
-    }
-    pos += compression_methods_len;
-
-    size_t extensions_len_pos = pos;
-    uint16 extensions_len = test_read_u16(bin, pos);
-    pos += 2;
-    size_t extensions_end = pos + extensions_len;
-    if (extensions_end != handshake_end) {
+    size_t removed = 4 + extension.extension_length;
+    if ((removed > hello.extensions_length) || (removed > hello.handshake_length) || (removed > hello.record_length)) {
         return false;
     }
 
-    while (pos + 4 <= extensions_end) {
-        uint16 extension_type = test_read_u16(bin, pos);
-        uint16 extension_len = test_read_u16(bin, pos + 2);
-        size_t extension_end = pos + 4 + extension_len;
-        if (extension_end > extensions_end) {
-            return false;
-        }
-
-        if (0x002b == extension_type) {  // supported_versions
-            size_t removed = 4 + extension_len;
-            bin.erase(bin.begin() + pos, bin.begin() + extension_end);
-            test_write_u16(bin, extensions_len_pos, (uint16)(extensions_len - removed));
-            test_write_u24(bin, 6, handshake_len - (uint32)removed);
-            test_write_u16(bin, 3, (uint16)(record_len - removed));
-            return true;
-        }
-        pos = extension_end;
-    }
-    return false;
+    size_t extension_begin = extension.extension_length_offset - 2;
+    bin.erase(bin.begin() + extension_begin, bin.begin() + extension.end_offset);
+    test_write_u16(bin, hello.extensions_length_offset, static_cast<uint16>(hello.extensions_length - removed));
+    test_write_u24(bin, 6, static_cast<uint32>(hello.handshake_length - removed));
+    test_write_u16(bin, 3, static_cast<uint16>(hello.record_length - removed));
+    return true;
 }
 
 void test_client_supported_versions_vector(const char* name, uint8 vector_len, const binary_t& versions, bool expect_success) {
@@ -331,7 +393,7 @@ void test_client_supported_versions_vector(const char* name, uint8 vector_len, c
     tls_session server_session;
     binary_t client_hello;
 
-    return_t ret = test_client_supportedversion_clienthello(&client_session, tls_12, tls_13, client_hello);
+    return_t ret = test_client_supportedversion_clienthello(&client_session, tls1_2, tls1_3, client_hello);
     _test_case.test(ret, __FUNCTION__, "construct ClientHello");
     if (errorcode_t::success != ret) {
         return;
@@ -352,12 +414,7 @@ void test_client_supported_versions_vector(const char* name, uint8 vector_len, c
 
         size_t fatal_alert_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        server_session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_alert_count;
-                fatal_alerts.insert(desc);
-            }
-        });
+        fatal_alert_count = test_collect_fatal_alerts(server_session, from_client, fatal_alerts);
         _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::decode_error}, __FUNCTION__,
                           "exactly one fatal decode_error alert");
         _test_case.assert(0 == server_session.get_session_status(), __FUNCTION__, "terminate malformed ClientHello handshake state");
@@ -372,7 +429,7 @@ void test_serverhello_unoffered_supported_version() {
 
     tls_session client_session;
     binary_t client_hello;
-    return_t ret = test_client_supportedversion_clienthello(&client_session, tls_12, tls_12, client_hello);
+    return_t ret = test_client_supportedversion_clienthello(&client_session, tls1_2, tls1_2, client_hello);
     _test_case.test(ret, __FUNCTION__, "construct TLS 1.2-only ClientHello");
     if (errorcode_t::success != ret) {
         return;
@@ -431,12 +488,7 @@ void test_serverhello_unoffered_supported_version() {
 
     size_t fatal_alert_count = 0;
     std::set<tls_alertdesc_t> fatal_alerts;
-    client_session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if (tls_alertlevel_t::fatal == level) {
-            ++fatal_alert_count;
-            fatal_alerts.insert(desc);
-        }
-    });
+    fatal_alert_count = test_collect_fatal_alerts(client_session, from_server, fatal_alerts);
     _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::illegal_parameter}, __FUNCTION__,
                       "exactly one fatal illegal_parameter alert");
     _test_case.assert(0 == client_session.get_session_status(), __FUNCTION__, "terminate handshake after unoffered version selection");
@@ -487,7 +539,7 @@ return_t test_build_tls12_serverhello(tls_session& client, tls_session& server, 
     for (size_t i = 0; i < cipher_suites_size; i += 2) {
         uint16 candidate = test_read_u16(client_hello, pos + i);
         auto hint = tlsadvisor->hintof_cipher_suite(candidate);
-        if (hint && (tls_12 == hint->spec) && (tls_flag_support & hint->flags)) {
+        if (hint && (tls1_2 == hint->spec) && (tls_flag_support & hint->flags)) {
             cipher_suite = candidate;
             break;
         }
@@ -497,11 +549,11 @@ return_t test_build_tls12_serverhello(tls_session& client, tls_session& server, 
     }
 
     auto& protection = server.get_tls_protection();
-    protection.set_tls_version(tls_12);
+    protection.set_tls_version(tls1_2);
     server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
 
     auto hello = new tls_handshake_server_hello(&server);
-    hello->set_version(tls_12);
+    hello->set_version(tls1_2);
     ret = hello->set_cipher_suite(cipher_suite);
     if (errorcode_t::success != ret) {
         delete hello;
@@ -530,7 +582,7 @@ bool test_set_tls_serverhello_random_suffix(binary_t& wire, const byte_t suffix[
 
 void test_configure_tls13_inner_plaintext_session(tls_session& session, bool server_finished, bool client_finished) {
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256
     protection.set_flow(tls_flow_t::one_rtt);
 
@@ -627,7 +679,7 @@ return_t test_write_tls_record_header_path(tls_version_t version, size_t length)
 
 void test_configure_dtls13_ccm8_session(tls_session& session) {
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_version_t::dtls_13);
+    protection.set_tls_version(tls_version_t::dtls1_3);
     protection.set_cipher_suite(0x1305);  // TLS_AES_128_CCM_8_SHA256
     protection.set_flow(tls_flow_t::one_rtt);
 

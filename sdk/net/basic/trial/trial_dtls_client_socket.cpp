@@ -44,7 +44,7 @@ return_t trial_dtls_client_socket::sendto(const char* ptr_data, size_t size_data
 
         auto tlsver = session->get_tls_protection().get_tls_version();
 
-        if (dtls_13 == tlsver) {
+        if (dtls1_3 == tlsver) {
             dtls13_ciphertext record(tls_content_type_t::application_data, session);
             record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
             record.write(from_client, bin);

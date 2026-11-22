@@ -34,7 +34,7 @@ class HOTPLACE_NET_API secure_client_socket : public client_socket_prosumer {
     secure_prosumer* get_secure_prosumer();
 
    protected:
-    secure_client_socket(tls_version_t spec = tls_12);
+    secure_client_socket(tls_version_t spec = tls1_2);
 
     virtual return_t do_handshake();
     virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);

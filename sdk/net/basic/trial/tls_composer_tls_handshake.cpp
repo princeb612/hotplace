@@ -115,8 +115,14 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<retur
 
             session_status_finished = session_status_client_finished;
         } else if (protection.is_kindof_tls12()) {
-            uint32 session_status_prerequisite =
-                session_status_server_hello | session_status_server_cert | session_status_server_key_exchange | session_status_server_hello_done;
+            bool abbreviated = (0 != session->get_keyvalue().get(session_tls12_ticket_resumed));
+            uint32 session_status_prerequisite = session_status_server_hello;
+            if (abbreviated) {
+                // The server sends Finished first in the RFC 5077 abbreviated flow.
+                session_status_prerequisite |= session_status_server_finished;
+            } else {
+                session_status_prerequisite |= session_status_server_cert | session_status_server_key_exchange | session_status_server_hello_done;
+            }
             ret = session->wait_change_session_status(session_status_prerequisite, wto);
             session_status = session->get_session_status();
 
@@ -128,22 +134,21 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<retur
             }
             ret = errorcode_t::success;
 
-            builder.set(dir)
-                .construct()
-                .add(&records, tls_content_type_t::handshake, session,
-                     [&](tls_record* record) -> return_t {
-                         record->add(tls_handshake_type_t::client_key_exchange, session);
-                         return errorcode_t::success;
-                     })
-                .add(&records, tls_content_type_t::change_cipher_spec, session)
+            builder.set(dir).construct();
+            if (false == abbreviated) {
+                builder.add(&records, tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
+                    record->add(tls_handshake_type_t::client_key_exchange, session);
+                    return errorcode_t::success;
+                });
+            }
+            builder.add(&records, tls_content_type_t::change_cipher_spec, session)
                 .set_protected(true)
-                .add(&records, tls_content_type_t::handshake, session,  //
-                     [&](tls_record* record) -> return_t {
-                         record->add(tls_handshake_type_t::finished, session);
-                         return errorcode_t::success;
-                     });
+                .add(&records, tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
+                    record->add(tls_handshake_type_t::finished, session);
+                    return errorcode_t::success;
+                });
 
-            session_status_finished = session_status_server_finished;
+            session_status_finished = abbreviated ? session_status_client_finished : session_status_server_finished;
         }
 
         ret = do_tls_compose(&records, dir, func);
@@ -301,6 +306,22 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
                              record->add(tls_handshake_type_t::finished, session);
                              return errorcode_t::success;
                          });
+            } else if (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) {
+                // RFC 5077 abbreviated flow: optional ticket renewal, then
+                // server CCS and Finished before the client sends Finished.
+                if ((0 != session->get_keyvalue().get(session_tls12_ticket_acknowledged)) &&
+                    (false == protection.get_secrets().get(tls_secret_t::new_session_ticket).empty())) {
+                    builder.add(&records, tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
+                        record->add(tls_handshake_type_t::new_session_ticket, session);
+                        return errorcode_t::success;
+                    });
+                }
+                builder.add(&records, tls_content_type_t::change_cipher_spec, session)
+                    .set_protected(true)
+                    .add(&records, tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
+                        record->add(tls_handshake_type_t::finished, session);
+                        return errorcode_t::success;
+                    });
             } else {
                 builder  //
                     .add(&records, tls_content_type_t::handshake, session,
@@ -342,16 +363,20 @@ return_t tls_composer::do_tls_server_handshake_phase2(std::function<void(tls_ses
     __try2 {
         auto session = get_session();
 
-        builder  //
-            .set(dir)
-            .construct()
-            .add(&records, tls_content_type_t::change_cipher_spec, session)
+        builder.set(dir).construct();
+        if ((0 != session->get_keyvalue().get(session_tls12_ticket_acknowledged)) &&
+            (false == session->get_tls_protection().get_secrets().get(tls_secret_t::new_session_ticket).empty())) {
+            builder.add(&records, tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
+                record->add(tls_handshake_type_t::new_session_ticket, session);
+                return errorcode_t::success;
+            });
+        }
+        builder.add(&records, tls_content_type_t::change_cipher_spec, session)
             .set_protected(true)
-            .add(&records, tls_content_type_t::handshake, session,  //
-                 [&](tls_record* record) -> return_t {
-                     record->add(tls_handshake_type_t::finished, session);
-                     return errorcode_t::success;
-                 });
+            .add(&records, tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
+                record->add(tls_handshake_type_t::finished, session);
+                return errorcode_t::success;
+            });
 
         do_tls_compose(&records, dir, func);
     }

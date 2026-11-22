@@ -263,6 +263,20 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
         bool activate_tls13_protection = false;
         auto ext_selected_psk = get_extensions().get(tls_extension_type_t::pre_shared_key);
         bool server_selected_psk = (nullptr != ext_selected_psk);
+        if ((tls_io_operation_t::read == opdir) && (from_server == dir) && (false == protection.is_kindof_tls13())) {
+            // RFC 5077 §3.2: a server may acknowledge SessionTicket only
+            // when the ClientHello offered the extension. Its parser already
+            // enforces the ServerHello acknowledgement's empty extension_data.
+            bool ticket_offer_was_observed = (0 != kv.get(session_client_session_ticket_offer_observed));
+            bool ticket_was_offered = (0 != kv.get(session_client_session_ticket_offered));
+            bool ticket_was_acknowledged = (nullptr != get_extensions().get(tls_extension_type_t::session_ticket));
+            if (ticket_offer_was_observed && ticket_was_acknowledged && (false == ticket_was_offered)) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unsupported_extension);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+        }
         bool server_hello_is_hrr = is_hello_retry_request_random(secrets.get(tls_secret_t::server_hello_random));
         if ((tls_io_operation_t::write == opdir) && (from_server == dir) && protection.is_kindof_tls13() && server_selected_psk) {
             // The server verified exactly one cached PSK binder while parsing
@@ -388,7 +402,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
                         selected_ticket = &offered_tickets[selected_identity];
                         const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(selected_ticket->cipher_suite);
                         const hint_digest_t* ticket_hash = ticket_suite ? crypto_advisor::get_instance()->hintof_digest(ticket_suite->mac) : nullptr;
-                        hash_matches = hash_matches && (nullptr != ticket_suite) && (tls_13 == ticket_suite->spec) && (ticket_suite->mac == selected_suite->mac) &&
+                        hash_matches = hash_matches && (nullptr != ticket_suite) && (tls1_3 == ticket_suite->spec) && (ticket_suite->mac == selected_suite->mac) &&
                                        (nullptr != ticket_hash) && (selected_ticket->psk.size() == ticket_hash->digest_size);
                     } else {
                         uint16 offered_psk_hash = kv.get(session_client_psk_hash);
@@ -446,7 +460,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
 
                 // RFC 9846 4.2.3: a TLS 1.3 client must reject the downgrade
                 // sentinels when a ServerHello selects TLS 1.2 or an earlier version.
-                auto tls13_hint = tlsadvisor->hintof_tls_version(tls_13);
+                auto tls13_hint = tlsadvisor->hintof_tls_version(tls1_3);
                 // A TLS 1.2-only supported_versions offer is still from a modern client; legacy ClientHello omits the extension.
                 if ((session_type_t::tls == session_type) && kv.get(constexpr_session_client_supported_versions_key) && tls13_hint && tls13_hint->support &&
                     false == tlsadvisor->is_specof_tls13_or_later(ver) && is_tls_downgrade_sentinel(secrets.get(tls_secret_t::server_hello_random))) {
@@ -474,6 +488,54 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
                 protection.set_flow(tls_flow_t::one_rtt);
             }
             secrets.assign(tls_secret_t::resumption_early, binary_t());
+        }
+
+        // The ServerHello SessionTicket extension acknowledges that the
+        // server will issue a ticket; it does not itself signal resumption.
+        if ((from_server == dir) && protection.is_kindof_tls12()) {
+            kv.set(session_tls12_ticket_acknowledged, (nullptr != get_extensions().get(tls_extension_type_t::session_ticket)) ? 1 : 0);
+        }
+
+        // RFC 5077 §3.4: the server echoes the non-empty ClientHello
+        // Session ID only when it accepted the presented ticket.
+        if ((from_server == dir) && (0 != kv.get(session_tls12_ticket_identity_present))) {
+            if (protection.is_kindof_tls12()) {
+                bool ticket_candidate = (0 != kv.get(session_tls12_ticket_candidate));
+                uint16 ticket_cipher_suite = t_narrow_cast(kv.get(session_tls12_ticket_cipher_suite));
+                bool session_id_echoed = (false == _session_id.empty()) && (_session_id == secrets.get(tls_secret_t::session_id));
+                bool alpn_matches = (secrets.get(tls_secret_t::tls12_resumption_alpn) == secrets.get(tls_secret_t::alpn));
+                bool ems_matches = (kv.get(session_extended_master_secret) == kv.get(session_tls12_ticket_ems));
+                bool etm_matches = (kv.get(session_encrypt_then_mac) == kv.get(session_tls12_ticket_etm));
+                // RFC 7627 §5.3: an echoed Session ID confirms that the
+                // server accepted abbreviated resumption. The client MUST
+                // abort if that resumed session changes its original EMS state;
+                // this is not an ordinary full-handshake fallback.
+                if ((tls_io_operation_t::read == opdir) && ticket_candidate && session_id_echoed && (false == ems_matches)) {
+                    kv.set(session_tls12_ticket_candidate, 0);
+                    kv.set(session_tls12_ticket_resumed, 0);
+                    secrets.assign(tls_secret_t::master, binary_t());
+                    secrets.erase(tls_secret_t::tls12_resumption_alpn);
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+
+                bool accepted =
+                    ticket_candidate && session_id_echoed && alpn_matches && ems_matches && etm_matches && (ticket_cipher_suite == protection.get_cipher_suite());
+                kv.set(session_tls12_ticket_resumed, accepted ? 1 : 0);
+                if (false == accepted) {
+                    kv.set(session_tls12_ticket_candidate, 0);
+                    secrets.assign(tls_secret_t::master, binary_t());
+                }
+                secrets.erase(tls_secret_t::tls12_resumption_alpn);
+            } else {
+                // RFC 8446 uses PSK identities, not the TLS 1.2 SessionTicket
+                // extension, for TLS 1.3 resumption.
+                kv.set(session_tls12_ticket_candidate, 0);
+                kv.set(session_tls12_ticket_resumed, 0);
+                secrets.assign(tls_secret_t::master, binary_t());
+            }
         }
 
         {
@@ -532,6 +594,23 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
                 session->reset_session_status();
                 ret = test;
                 __leave2_trace(ret);
+            }
+
+            // TLS 1.2 abbreviated handshakes omit ClientKeyExchange. Reuse
+            // the authenticated ticket Master Secret to derive the record
+            // key block at the ServerHello boundary instead.
+            if ((errorcode_t::success == test) && protection.is_kindof_tls12() && (0 != kv.get(session_tls12_ticket_resumed))) {
+                bool previous_pre_master_secret = protection.use_pre_master_secret();
+                protection.use_pre_master_secret(true);
+                ret = protection.calc(session, tls_handshake_type_t::client_key_exchange, dir);
+                protection.use_pre_master_secret(previous_pre_master_secret);
+                if (errorcode_t::success != ret) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                    session->reset_session_status();
+                    __leave2_trace(ret);
+                }
+                session->update_session_status(session_status_server_key_exchange);
+                session->update_session_status(session_status_client_key_exchange);
             }
             if ((errorcode_t::success == test) && (tls_flow_t::hello_retry_request == protection.get_flow()) && (false == server_hello_is_hrr) &&
                 (false == server_selected_psk)) {
@@ -804,6 +883,13 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
                 // session_ids = pl.t_value_of<uint8>(constexpr_session_id_len);
                 pl.get_binary(constexpr_session_id, session_id);
+                if (session_id.size() > 32) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
+                    ret = errorcode_t::bad_format;
+                    __leave2_trace(ret);
+                }
+                _session_id = session_id;
                 cipher_suite = pl.t_value_of<uint16>(constexpr_cipher_suite);
                 // RFC 8446 4.1.4: a final ServerHello after HRR MUST retain
                 // the exact cipher suite selected by the HelloRetryRequest.
@@ -979,6 +1065,14 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         auto cs = get_cipher_suite();
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
 
+        // RFC 5077 §3.2: acknowledge a ClientHello SessionTicket offer
+        // with an empty ServerHello extension. This only negotiates ticket
+        // support; issuance and resumption state are handled separately.
+        if ((nullptr != hint) && (tls1_2 == hint->spec) && (0 != kv.get(session_client_session_ticket_offered)) &&
+            (false == secrets.get(tls_secret_t::new_session_ticket).empty()) && (nullptr == get_extensions().get(tls_extension_type_t::session_ticket))) {
+            get_extensions().add(tls_extension_type_t::session_ticket, dir, this, nullptr);
+        }
+
         // RFC 8446: never emit a TLS 1.3 cipher suite that was not offered
         // by the peer. The ClientHello processing path populates this list.
         if (protection.is_kindof_tls13()) {
@@ -1034,7 +1128,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             // cipher suite that this ServerHello will actually negotiate.
             uint16 ticket_cipher_suite = t_narrow_cast(kv.get(session_server_psk_ticket_cipher_suite));
             const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket_cipher_suite);
-            if ((nullptr == hint) || (tls_13 != hint->spec) || (nullptr == ticket_suite) || (tls_13 != ticket_suite->spec) || (ticket_suite->mac != hint->mac)) {
+            if ((nullptr == hint) || (tls1_3 != hint->spec) || (nullptr == ticket_suite) || (tls1_3 != ticket_suite->spec) || (ticket_suite->mac != hint->mac)) {
                 ret = errorcode_t::bad_request;
                 __leave2;
             }
@@ -1058,7 +1152,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         {
             // extended master secret
             auto request_ems = kv.get(session_extended_master_secret);
-            if (tls_12 == hint->spec) {
+            if (tls1_2 == hint->spec) {
                 if (request_ems) {
                     auto ext_ems = get_extensions().get(tls_extension_type_t::extended_master_secret);
                     if (nullptr == ext_ems) {
@@ -1070,7 +1164,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             // test session_conf_ems && client_hello.get_extensions.has(ems extension) && server_hello.get_extensions.has(ems extension)
             session->get_keyvalue().set(session_extended_master_secret, (request_ems && ext_ems) ? 1 : 0);
         }
-        if (tls_12 == hint->spec) {
+        if (tls1_2 == hint->spec) {
             // fatal:handshake_failure
             // avoid final_renegotiate:unsafe legacy renegotiation disabled
             auto ext_renego = get_extensions().get(tls_extension_type_t::renegotiation_info);
@@ -1095,6 +1189,21 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             __leave2;
         }
 
+        // A resumed TLS 1.2 session retains the ALPN protocol negotiated by
+        // the ticket. If this ClientHello negotiates a different protocol,
+        // decline resumption and continue with a full handshake.
+        if (hint && (tls1_2 == hint->spec) && (0 != kv.get(session_tls12_ticket_candidate))) {
+            const binary_t& ticket_alpn = secrets.get(tls_secret_t::tls12_resumption_alpn);
+            const binary_t& selected_alpn = secrets.get(tls_secret_t::alpn);
+            bool alpn_matches = (ticket_alpn == selected_alpn);
+            bool ems_matches = (kv.get(session_extended_master_secret) == kv.get(session_tls12_ticket_ems));
+            bool etm_matches = (kv.get(session_encrypt_then_mac) == kv.get(session_tls12_ticket_etm));
+            if ((false == alpn_matches) || (false == ems_matches) || (false == etm_matches)) {
+                kv.set(session_tls12_ticket_candidate, 0);
+                secrets.assign(tls_secret_t::master, binary_t());
+            }
+        }
+
         // RFC 8446
         // If there is no overlap between the received "supported_groups" and the groups supported by the server, then the
         // server MUST abort the handshake with a "handshake_failure" or an "insufficient_security" alert.
@@ -1109,6 +1218,27 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             }
         }
 
+        bool ticket_identity_present = (0 != kv.get(session_tls12_ticket_identity_present));
+        if (hint && (tls1_2 == hint->spec) && ticket_identity_present) {
+            bool ticket_candidate = (0 != kv.get(session_tls12_ticket_candidate));
+            uint16 ticket_cipher_suite = t_narrow_cast(kv.get(session_tls12_ticket_cipher_suite));
+            const binary_t& client_session_id = secrets.get(tls_secret_t::session_id);
+            bool accept_ticket = ticket_candidate && (ticket_cipher_suite == cs) && (false == client_session_id.empty());
+            if (accept_ticket) {
+                // RFC 5077 §3.4 requires the exact non-empty Session ID echo.
+                _session_id = client_session_id;
+            } else {
+                // A rejected non-empty ticket must not be mistaken for a
+                // resumed session by echoing its Session ID.
+                _session_id.clear();
+                secrets.assign(tls_secret_t::master, binary_t());
+                kv.set(session_tls12_ticket_candidate, 0);
+            }
+        } else if (32 != _random.size()) {
+            // Preserve the legacy behavior for ordinary (non-ticket) handshakes.
+            _session_id = secrets.get(tls_secret_t::session_id);
+        }
+
         if (32 != _random.size()) {
             // gmt_unix_time(4 bytes) + random(28 bytes)
             openssl_prng prng;
@@ -1121,20 +1251,24 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             binary_append(random, temp);
 
             _random = std::move(random);
-
-            _session_id = secrets.get(tls_secret_t::session_id);  // avoid routines:tls_process_server_hello:invalid session id
         }
 
         // RFC 9846 4.2.3: a TLS 1.3 server negotiating TLS 1.2 marks
         // ServerHello.random so a TLS 1.3 client can detect a downgrade.
-        if ((session_type_t::tls == session->get_type()) && (tls_12 == hint->spec)) {
-            auto tls13_hint = tlsadvisor->hintof_tls_version(tls_13);
+        if ((session_type_t::tls == session->get_type()) && (tls1_2 == hint->spec)) {
+            auto tls13_hint = tlsadvisor->hintof_tls_version(tls1_3);
             if (tls13_hint && tls13_hint->support) {
                 static const byte_t downgrade_tls12[8] = {0x44, 0x4f, 0x57, 0x4e, 0x47, 0x52, 0x44, 0x01};
                 for (size_t i = 0; i < 8; ++i) {
                     _random[24 + i] = downgrade_tls12[i];
                 }
             }
+        }
+
+        // RFC 5246 / RFC 8446: legacy_session_id is limited to 32 bytes.
+        if (_session_id.size() > 32) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
         {

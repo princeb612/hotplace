@@ -48,9 +48,9 @@ class HOTPLACE_NET_API tls_composer {
     uint16 get_maxver() const;
 
     static return_t construct_client_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
-                                           tls_version_t minspec = tls_version_t::tls_12, tls_version_t maxspec = tls_version_t::tls_13);
+                                           tls_version_t minspec = tls_version_t::tls1_2, tls_version_t maxspec = tls_version_t::tls1_3);
     static return_t construct_server_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
-                                           tls_version_t minspec = tls_version_t::tls_12, tls_version_t maxspec = tls_version_t::tls_13);
+                                           tls_version_t minspec = tls_version_t::tls1_2, tls_version_t maxspec = tls_version_t::tls1_3);
 
    protected:
     /**

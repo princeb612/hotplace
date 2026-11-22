@@ -95,8 +95,8 @@ struct tls_version_hint_t {
      * The DTLS protocol is based on the Transport Layer Security (TLS) protocol and provides equivalent security guarantees.
      * Datagram semantics of the underlying transport are preserved by the DTLS protocol.
      *
-     *  tls_13  -> tls_13
-     *  dtls_13 -> tls_13
+     *  tls1_3  -> tls1_3
+     *  dtls1_3 -> tls1_3
      */
     tls_version_t spec;
     uint8 support;
@@ -116,7 +116,7 @@ extern const size_t sizeof_tls_version_hint;
  */
 struct HOTPLACE_NET_API tls_cipher_suite_t {
     uint16 code;                // 0xc023
-    tls_version_t spec;         // tls_12 (specfication i.e. TLS 1.2, TLS 1.3)
+    tls_version_t spec;         // tls1_2 (specfication i.e. TLS 1.2, TLS 1.3)
     uint8 flags;                // tls_resource_flag_t
     const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
@@ -191,8 +191,8 @@ class HOTPLACE_NET_API tls_advisor {
     bool is_kindof_tls(tls_version_t ver);
     bool is_kindof_dtls(tls_version_t ver);
     /**
-     * tlsadvisor->is_kindof(tls_version_t::tls_12, tls_version_t::dtls_12);
-     * tlsadvisor->is_kindof(tls_version_t::tls_13, tls_version_t::dtls_13);
+     * tlsadvisor->is_kindof(tls_version_t::tls1_2, tls_version_t::dtls1_2);
+     * tlsadvisor->is_kindof(tls_version_t::tls1_3, tls_version_t::dtls1_3);
      */
     bool is_kindof(tls_version_t lhs, tls_version_t rhs);
 

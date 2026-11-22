@@ -68,7 +68,7 @@ quic_packet_publisher& quic_packet_publisher::add(tls_handshake_type_t type, tls
     return_t ret = errorcode_t::success;
     tls_handshake* handshake = nullptr;
     auto session = get_session();
-    auto spec = tls_13;
+    auto spec = tls1_3;
     switch (type) {
         case tls_handshake_type_t::client_hello: {
             ret = tls_composer::construct_client_hello(&handshake, session, func, spec, spec);

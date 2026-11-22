@@ -91,7 +91,7 @@ return_t odbc_query::execute(LPCTSTR query_string, va_list ap) {
 
         SQLRETURN ret_sql = SQL_SUCCESS;
         ret_sql = SQLAllocHandle(SQL_HANDLE_STMT, _dbc_handle, &_stmt_handle);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
@@ -120,7 +120,7 @@ return_t odbc_query::execute_async(LPCTSTR query_string, va_list ap) {
 
         SQLRETURN ret_sql = SQL_SUCCESS;
         ret_sql = SQLAllocHandle(SQL_HANDLE_STMT, _dbc_handle, &_stmt_handle);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
@@ -177,7 +177,7 @@ return_t odbc_query::prepare_statement(LPCTSTR query_string) {
 
         SQLRETURN ret_sql = SQL_SUCCESS;
         ret_sql = SQLAllocHandle(SQL_HANDLE_STMT, _dbc_handle, &_stmt_handle);
-        if (SQL_FAILED(ret_sql)) {
+        if (!SQL_SUCCEEDED(ret_sql)) {
             ret = errorcode_t::internal_error;
             __leave2;
         }

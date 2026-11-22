@@ -13,6 +13,7 @@
 
 static void test_tls13_fatal_reset_clears_hrr_flow() {
     // Scenario under test: TLS 1.3 fatal reset clears HelloRetryRequest flow.
+    // Action: trigger a fatal reset while the session is in HRR flow.
     // Expected: clear aggregate handshake status after fatal failure.
     _test_case.begin("TLS 1.3 fatal reset clears HelloRetryRequest flow");
 
@@ -42,13 +43,14 @@ static void test_tls13_fatal_reset_clears_hrr_flow() {
 
 static void test_tls13_encrypted_extensions_failure_after_hrr_disables_client_protection() {
     // Scenario under test: a fatal EncryptedExtensions error after HRR retires any residual client protection.
+    // Action: process an invalid EncryptedExtensions message after HRR with client-direction protection active.
     // Expected: reset_session_status() may clear HRR flow, but rollback must still reset the client direction.
     _test_case.begin("TLS 1.3 EncryptedExtensions failure after HRR disables client protection");
 
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::hello_retry_request);
     session.update_session_status(session_status_hello_retry_request);
@@ -72,12 +74,7 @@ static void test_tls13_encrypted_extensions_failure_after_hrr_disables_client_pr
     size_t pos = 0;
     return_t ret = encrypted_extensions.read(from_server, wire.data(), wire.size(), pos);
 
-    size_t illegal_parameter_count = 0;
-    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++illegal_parameter_count;
-        }
-    });
+    size_t illegal_parameter_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject early_data acceptance after HRR");
     _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter for early_data acceptance after HRR");
     _test_case.assert(tls_flow_t::one_rtt == protection.get_flow(), __FUNCTION__, "clear HRR flow after fatal EncryptedExtensions failure");
@@ -97,20 +94,21 @@ static void test_tls13_encrypted_extensions_failure_after_hrr_disables_client_pr
 
 static void test_tls13_encrypted_extensions_failure_clears_selected_psk_state() {
     // Scenario under test: invalid EncryptedExtensions after final ServerHello must retire the selected PSK state.
+    // Action: inject an invalid EncryptedExtensions message after PSK selection and inspect retained state.
     // Expected: clear the peer-selected identity and ticket snapshots while retaining installed handshake keys for the fatal alert.
     _test_case.begin("TLS 1.3 EncryptedExtensions failure clears selected PSK state");
 
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::zero_rtt);
 
     tls_resumption_ticket ticket;
     ticket.identity = binary_t(1, 0x01);
     ticket.psk = binary_t(32, 0x11);
-    ticket.version = tls_13;
+    ticket.version = tls1_3;
     ticket.cipher_suite = 0x1301;
     ticket.max_early_data_size = 4096;
     session.set_offered_resumption_tickets(std::vector<tls_resumption_ticket>{ticket});
@@ -144,12 +142,7 @@ static void test_tls13_encrypted_extensions_failure_clears_selected_psk_state() 
     size_t pos = 0;
     return_t ret = encrypted_extensions.read(from_server, wire.data(), wire.size(), pos);
 
-    size_t illegal_parameter_count = 0;
-    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++illegal_parameter_count;
-        }
-    });
+    size_t illegal_parameter_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject early_data acceptance for selected identity one");
     _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "report exactly one fatal illegal_parameter");
     _test_case.assert(0xffff == session.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
@@ -169,6 +162,7 @@ static void test_tls13_encrypted_extensions_failure_clears_selected_psk_state() 
 
 static void test_tls13_fatal_reset_wakes_status_waiter() {
     // Scenario under test: TLS 1.3 fatal reset wakes handshake status waiters.
+    // Action: block a waiter on a handshake-status transition, then trigger fatal reset.
     // Expected: consume the prior status notification before waiting.
     _test_case.begin("TLS 1.3 fatal reset wakes handshake status waiters");
 
@@ -203,7 +197,7 @@ static void test_tls13_end_of_early_data_usage_reset() {
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::zero_rtt);
 
@@ -244,12 +238,13 @@ static void test_tls13_end_of_early_data_usage_reset() {
 
 static void test_tls13_end_of_early_data_requires_server_finished() {
     // Scenario under test: TLS 1.3 EndOfEarlyData requires Server Finished.
+    // Action: read EndOfEarlyData before the server Finished message.
     // Expected: reject EndOfEarlyData before Server Finished.
     _test_case.begin("TLS 1.3 EndOfEarlyData requires Server Finished");
 
     tls_session session;
     session.set_type(session_type_t::tls);
-    session.get_tls_protection().set_tls_version(tls_13);
+    session.get_tls_protection().set_tls_version(tls1_3);
     session.get_tls_protection().set_cipher_suite(0x1301);
     session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
     session.get_session_info(from_server).get_keyvalue().set(session_early_data_accepted, 1);
@@ -260,12 +255,7 @@ static void test_tls13_end_of_early_data_requires_server_finished() {
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject EndOfEarlyData before Server Finished");
     _test_case.assert(wire.empty(), __FUNCTION__, "emit no EndOfEarlyData bytes before Server Finished");
 
-    size_t fatal_alert_count = 0;
-    session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-            ++fatal_alert_count;
-        }
-    });
+    size_t fatal_alert_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::unexpected_message);
     _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue one fatal unexpected_message before Server Finished");
 }
 
@@ -278,7 +268,7 @@ static void test_tls13_end_of_early_data_read_validation() {
     auto prepare_session = [](tls_session& session, bool accepted, bool server_finished) {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
         protection.set_flow(tls_flow_t::zero_rtt);
         protection.get_secrets().assign(tls_secret_t::c_hs_traffic, binary_t(32, 0x11));
@@ -312,12 +302,7 @@ static void test_tls13_end_of_early_data_read_validation() {
         size_t pos = 0;
         return_t ret = end_of_early_data.read(from_client, wire.data(), wire.size(), pos);
         _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject a non-empty EndOfEarlyData body");
-        size_t fatal_decode_error_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
-                ++fatal_decode_error_count;
-            }
-        });
+        size_t fatal_decode_error_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::decode_error);
         _test_case.assert(1 == fatal_decode_error_count, __FUNCTION__, "send one fatal decode_error for a non-empty EndOfEarlyData");
         _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "reset handshake state after malformed EndOfEarlyData");
         _test_case.assert(0 == session.get_session_info(from_server).get_keyvalue().get(session_early_data_finished), __FUNCTION__,
@@ -344,12 +329,7 @@ static void test_tls13_end_of_early_data_read_validation() {
         size_t pos = 0;
         return_t ret = end_of_early_data.read(from_client, wire.data(), wire.size(), pos);
         _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject received EndOfEarlyData after client CertificateVerify");
-        size_t fatal_unexpected_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-                ++fatal_unexpected_count;
-            }
-        });
+        size_t fatal_unexpected_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::unexpected_message);
         _test_case.assert(1 == fatal_unexpected_count, __FUNCTION__, "send fatal unexpected_message for late EndOfEarlyData");
     }
 
@@ -361,12 +341,7 @@ static void test_tls13_end_of_early_data_read_validation() {
         return_t ret = end_of_early_data.write(from_client, wire);
         _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject EndOfEarlyData when the server did not accept early data");
         _test_case.assert(wire.empty(), __FUNCTION__, "emit no EndOfEarlyData when early data was rejected");
-        size_t fatal_unexpected_count = 0;
-        session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-                ++fatal_unexpected_count;
-            }
-        });
+        size_t fatal_unexpected_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::unexpected_message);
         _test_case.assert(1 == fatal_unexpected_count, __FUNCTION__, "send one fatal unexpected_message when EndOfEarlyData was not negotiated");
     }
 
@@ -430,11 +405,7 @@ static void test_tls13_application_data_finished_direction_policy() {
         return_t ret = test_read_tls13_application_data_with_finished_status(from_server, false, true, reader, records);
         _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "reject server Application Data before Server Finished");
         size_t fatal_alert_count = 0;
-        reader.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level && tls_alertdesc_t::unexpected_message == desc) {
-                ++fatal_alert_count;
-            }
-        });
+        fatal_alert_count = test_count_fatal_alert(reader, from_server, tls_alertdesc_t::unexpected_message);
         _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue one fatal unexpected_message for early server Application Data");
         _test_case.assert(0 == reader.get_session_status(), __FUNCTION__, "reset state after early server Application Data");
     }
@@ -445,11 +416,7 @@ static void test_tls13_application_data_finished_direction_policy() {
         return_t ret = test_read_tls13_application_data_with_finished_status(from_client, true, false, reader, records);
         _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "reject client Application Data before Client Finished");
         size_t fatal_alert_count = 0;
-        reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level && tls_alertdesc_t::unexpected_message == desc) {
-                ++fatal_alert_count;
-            }
-        });
+        fatal_alert_count = test_count_fatal_alert(reader, from_client, tls_alertdesc_t::unexpected_message);
         _test_case.assert(1 == fatal_alert_count, __FUNCTION__, "queue one fatal unexpected_message for early client Application Data");
         _test_case.assert(0 == reader.get_session_status(), __FUNCTION__, "reset state after early client Application Data");
     }
@@ -467,17 +434,14 @@ static void test_tls13_application_data_finished_direction_policy() {
         }
     }
 }
-
-static void test_tls13_handshake_protection_transition() {
-    // Scenario under test: TLS 1.3 handshake protection transition.
-    // Action: construct ClientHello state for coalesced ServerHello reader test.
-    // Expected: reject plaintext ClientHello writer after ServerHello.
-    _test_case.begin("TLS 1.3 handshake protection transition");
-
+static void test_tls13_handshake_protection_duplicate_server_hello_guards() {
+    // Scenario under test: TLS 1.3 rejects duplicate or out-of-phase ServerHello messages.
+    // Action: exercise the plaintext reader, writer, and phase-validation paths.
+    // Expected: reject duplicate ServerHello messages and roll back partial record output.
     {
         tls_session writer;
         writer.set_type(session_type_t::tls);
-        writer.get_tls_protection().set_tls_version(tls_13);
+        writer.get_tls_protection().set_tls_version(tls1_3);
         writer.update_session_status(session_status_client_hello);
         writer.update_session_status(session_status_server_hello);
         writer.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
@@ -499,14 +463,14 @@ static void test_tls13_handshake_protection_transition() {
         // the second must be rejected by its message-level phase guard.
         tls_session client;
         binary_t client_hello;
-        return_t ret = test_client_supportedversion_clienthello(&client, tls_13, tls_13, client_hello);
+        return_t ret = test_client_supportedversion_clienthello(&client, tls1_3, tls1_3, client_hello);
         _test_case.test(ret, __FUNCTION__, "construct ClientHello state for coalesced ServerHello reader test");
         if (errorcode_t::success == ret) {
             // The ClientHello advertises TLS 1.3, but the negotiated version
             // is not committed until ServerHello is parsed. Seed the selected
             // version here because this fixture specifically exercises the
             // TLS 1.3 plaintext-record pre-scan before parsing either message.
-            client.get_tls_protection().set_tls_version(tls_13);
+            client.get_tls_protection().set_tls_version(tls1_3);
 
             size_t pos = 9 + 2 + 32;
             uint8 session_id_len = client_hello[pos++];
@@ -551,12 +515,7 @@ static void test_tls13_handshake_protection_transition() {
 
             size_t fatal_alert_count = 0;
             std::set<tls_alertdesc_t> fatal_alerts;
-            client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                if (tls_alertlevel_t::fatal == level) {
-                    ++fatal_alert_count;
-                    fatal_alerts.insert(desc);
-                }
-            });
+            fatal_alert_count = test_collect_fatal_alerts(client, from_server, fatal_alerts);
             _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, __FUNCTION__,
                               "queue exactly one fatal unexpected_message for duplicate ServerHello");
         }
@@ -569,22 +528,22 @@ static void test_tls13_handshake_protection_transition() {
         // postprocess hook is isolated from key-schedule setup.
         tls_session writer;
         writer.set_type(session_type_t::tls);
-        writer.get_tls_protection().set_tls_version(tls_13);
+        writer.get_tls_protection().set_tls_version(tls1_3);
         writer.get_tls_protection().set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256
         writer.update_session_status(session_status_client_hello);
         writer.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
         writer.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
 
         auto first = new test_tls13_server_hello_writer_probe(&writer);
-        first->set_version(tls_12);  // TLS 1.3 ServerHello legacy_version
+        first->set_version(tls1_2);  // TLS 1.3 ServerHello legacy_version
         auto first_version = new tls_extension_server_supported_versions(first);
-        first_version->set(tls_13);
+        first_version->set(tls1_3);
         first->get_extensions().add(first_version);
 
         auto second = new test_tls13_server_hello_writer_probe(&writer);
-        second->set_version(tls_12);
+        second->set_version(tls1_2);
         auto second_version = new tls_extension_server_supported_versions(second);
-        second_version->set(tls_13);
+        second_version->set(tls1_3);
         second->get_extensions().add(second_version);
 
         tls_record_handshake record(&writer);
@@ -604,12 +563,7 @@ static void test_tls13_handshake_protection_transition() {
 
         size_t fatal_alert_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        writer.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_alert_count;
-                fatal_alerts.insert(desc);
-            }
-        });
+        fatal_alert_count = test_collect_fatal_alerts(writer, from_server, fatal_alerts);
         _test_case.assert(1 == fatal_alert_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, __FUNCTION__,
                           "queue exactly one fatal unexpected_message for duplicate ServerHello writer");
     }
@@ -617,7 +571,7 @@ static void test_tls13_handshake_protection_transition() {
     {
         tls_session writer;
         writer.set_type(session_type_t::tls);
-        writer.get_tls_protection().set_tls_version(tls_13);
+        writer.get_tls_protection().set_tls_version(tls1_3);
         writer.update_session_status(session_status_client_hello);
         writer.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
         writer.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
@@ -638,7 +592,7 @@ static void test_tls13_handshake_protection_transition() {
     {
         tls_session retry;
         retry.set_type(session_type_t::tls);
-        retry.get_tls_protection().set_tls_version(tls_13);
+        retry.get_tls_protection().set_tls_version(tls1_3);
         retry.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
         retry.update_session_status(session_status_client_hello);
         retry.update_session_status(session_status_hello_retry_request);
@@ -660,7 +614,7 @@ static void test_tls13_handshake_protection_transition() {
     {
         tls_session writer;
         writer.set_type(session_type_t::tls);
-        writer.get_tls_protection().set_tls_version(tls_13);
+        writer.get_tls_protection().set_tls_version(tls1_3);
         writer.update_session_status(session_status_client_hello);
         writer.update_session_status(session_status_server_hello);
         writer.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
@@ -679,7 +633,7 @@ static void test_tls13_handshake_protection_transition() {
     {
         tls_session writer;
         writer.set_type(session_type_t::tls);
-        writer.get_tls_protection().set_tls_version(tls_13);
+        writer.get_tls_protection().set_tls_version(tls1_3);
         writer.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
         writer.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
 
@@ -694,10 +648,15 @@ static void test_tls13_handshake_protection_transition() {
         _test_case.assert(false == writer.get_session_info(from_client).apply_protection(), __FUNCTION__,
                           "leave client protection inactive when plaintext Handshake serialization fails");
     }
+}
 
+static void test_tls13_handshake_protection_server_hello_scheduling() {
+    // Scenario under test: TLS 1.3 ServerHello scheduling changes record protection and sequence numbers.
+    // Action: run the initial ServerHello, early-data, and HelloRetryRequest scheduling paths.
+    // Expected: activate only the appropriate handshake protection and preserve early-data state.
     {
         tls_session session;
-        session.get_tls_protection().set_tls_version(tls_13);
+        session.get_tls_protection().set_tls_version(tls1_3);
         session.set_recordno(from_client, 7);
         session.set_recordno(from_server, 11);
 
@@ -721,7 +680,7 @@ static void test_tls13_handshake_protection_transition() {
     {
         tls_session session;
         session.set_type(session_type_t::tls);
-        session.get_tls_protection().set_tls_version(tls_13);
+        session.get_tls_protection().set_tls_version(tls1_3);
         session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
         session.get_session_info(from_client).begin_protection();  // early-data protection was activated after ClientHello
         session.set_recordno(from_client, 5);
@@ -738,7 +697,7 @@ static void test_tls13_handshake_protection_transition() {
 
     {
         tls_session session;
-        session.get_tls_protection().set_tls_version(tls_13);
+        session.get_tls_protection().set_tls_version(tls1_3);
         session.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
 
         tls_handshake_server_hello hello_retry_request(&session);
@@ -755,11 +714,16 @@ static void test_tls13_handshake_protection_transition() {
             record->release();
         }
     }
+}
 
+static void test_tls13_post_server_hello_fatal_reset_and_reuse(const char* function_name) {
+    // Scenario under test: TLS 1.3 fatal plaintext-handshake errors reset handshake cursors without disabling protection.
+    // Action: reject plaintext EncryptedExtensions after ServerHello, then process a fatal alert and a new connection ClientHello.
+    // Expected: reset aggregate and directional handshake state, retain active protection, and allow a fresh connection.
     {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.update_session_status(session_status_client_hello);
         reader.update_session_status(session_status_server_hello);
         reader.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
@@ -771,24 +735,19 @@ static void test_tls13_handshake_protection_transition() {
         binary_t record{0x16, 0x03, 0x03, 0x00, 0x06, 0x08, 0x00, 0x00, 0x02, 0x00, 0x00};
         tls_records records;
         return_t ret = records.read(&reader, from_server, record);
-        _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "reject plaintext EncryptedExtensions after ServerHello");
+        _test_case.assert(errorcode_t::unexpected == ret, function_name, "reject plaintext EncryptedExtensions after ServerHello");
 
         size_t fatal_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        reader.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_count;
-                fatal_alerts.insert(desc);
-            }
-        });
-        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, __FUNCTION__,
+        fatal_count = test_collect_fatal_alerts(reader, from_server, fatal_alerts);
+        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, function_name,
                           "queue exactly one fatal unexpected_message for plaintext post-ServerHello Handshake");
-        _test_case.assert(reader.get_session_info(from_server).apply_protection(), __FUNCTION__,
+        _test_case.assert(reader.get_session_info(from_server).apply_protection(), function_name,
                           "do not clear active protection while rejecting a plaintext Handshake record");
-        _test_case.assert(0 == reader.get_session_status(), __FUNCTION__, "reset aggregate session status after fatal protocol error");
-        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_client).get_status(), __FUNCTION__,
+        _test_case.assert(0 == reader.get_session_status(), function_name, "reset aggregate session status after fatal protocol error");
+        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_client).get_status(), function_name,
                           "reset client handshake cursor after fatal protocol error");
-        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_server).get_status(), __FUNCTION__,
+        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_server).get_status(), function_name,
                           "reset server handshake cursor after fatal protocol error");
 
         // A new connection reuses the session object in PCAP replay. Its first
@@ -796,13 +755,13 @@ static void test_tls13_handshake_protection_transition() {
         binary_t next_connection_client_hello{0x16, 0x03, 0x03, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00};
         tls_records next_connection_records;
         ret = next_connection_records.read(&reader, from_client, next_connection_client_hello);
-        _test_case.assert(errorcode_t::unexpected != ret, __FUNCTION__, "allow a new initial ClientHello after fatal-state reset");
+        _test_case.assert(false == (errorcode_t::unexpected == ret), function_name, "allow a new initial ClientHello after fatal-state reset");
     }
 
     {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.update_session_status(session_status_client_hello);
         reader.update_session_status(session_status_server_hello);
         reader.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
@@ -814,26 +773,26 @@ static void test_tls13_handshake_protection_transition() {
         binary_t alert_payload{(byte_t)tls_alertlevel_t::fatal, (byte_t)tls_alertdesc_t::certificate_unknown};
         size_t alert_pos = 0;
         return_t ret = alert.read_plaintext(from_server, alert_payload.data(), alert_payload.size(), alert_pos);
-        _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "parse a fatal alert from decrypted TLS 1.3 content");
-        _test_case.assert(0 == reader.get_session_status(), __FUNCTION__, "reset aggregate status after fatal alert");
-        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_client).get_status(), __FUNCTION__,
+        _test_case.assert(errorcode_t::success == ret, function_name, "parse a fatal alert from decrypted TLS 1.3 content");
+        _test_case.assert(0 == reader.get_session_status(), function_name, "reset aggregate status after fatal alert");
+        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_client).get_status(), function_name,
                           "reset client handshake cursor after fatal alert");
-        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_server).get_status(), __FUNCTION__,
+        _test_case.assert(tls_handshake_type_t::client_hello == reader.get_session_info(from_server).get_status(), function_name,
                           "reset server handshake cursor after fatal alert");
 
-        size_t fatal_count = 0;
-        reader.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::certificate_unknown == desc)) {
-                ++fatal_count;
-            }
-        });
-        _test_case.assert(1 == fatal_count, __FUNCTION__, "preserve fatal alert when resetting handshake state");
+        size_t fatal_count = test_count_fatal_alert(reader, from_server, tls_alertdesc_t::certificate_unknown);
+        _test_case.assert(1 == fatal_count, function_name, "preserve fatal alert when resetting handshake state");
     }
+}
 
+static void test_tls13_post_server_hello_rejects_plaintext_handshake_records(const char* function_name) {
+    // Scenario under test: TLS 1.3 plaintext ClientHello and ServerHello are rejected after the final ServerHello.
+    // Action: parse out-of-phase plaintext ClientHello and duplicate ServerHello records in both directions.
+    // Expected: reject each record with one fatal unexpected_message while preserving active protection.
     auto verify_rejected_plaintext = [&](tls_direction_t dir, const binary_t& record, const char* message) -> void {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.get_tls_protection().set_flow(tls_flow_t::one_rtt);
         reader.update_session_status(session_status_client_hello);
         reader.update_session_status(session_status_server_hello);
@@ -843,18 +802,13 @@ static void test_tls13_handshake_protection_transition() {
 
         tls_records records;
         return_t ret = records.read(&reader, dir, record);
-        _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, message);
-        _test_case.assert(reader.get_session_info(dir).apply_protection(), __FUNCTION__, "retain active protection when rejecting an out-of-phase plaintext Handshake");
+        _test_case.assert(errorcode_t::unexpected == ret, function_name, message);
+        _test_case.assert(reader.get_session_info(dir).apply_protection(), function_name, "retain active protection when rejecting an out-of-phase plaintext Handshake");
 
         size_t fatal_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        reader.get_alert(dir, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_count;
-                fatal_alerts.insert(desc);
-            }
-        });
-        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, __FUNCTION__,
+        fatal_count = test_collect_fatal_alerts(reader, dir, fatal_alerts);
+        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, function_name,
                           "queue exactly one fatal unexpected_message for an out-of-phase plaintext Handshake");
     };
 
@@ -867,7 +821,7 @@ static void test_tls13_handshake_protection_transition() {
     {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
         reader.update_session_status(session_status_client_hello);
         reader.update_session_status(session_status_hello_retry_request);
@@ -882,26 +836,27 @@ static void test_tls13_handshake_protection_transition() {
         binary_t duplicate_server_hello{0x16, 0x03, 0x03, 0x00, 0x04, 0x02, 0x00, 0x00, 0x00};
         tls_records records;
         return_t ret = records.read(&reader, from_server, duplicate_server_hello);
-        _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "reject plaintext duplicate ServerHello after the final ServerHello in an HRR handshake");
-        _test_case.assert(reader.get_session_info(from_server).apply_protection(), __FUNCTION__,
+        _test_case.assert(errorcode_t::unexpected == ret, function_name, "reject plaintext duplicate ServerHello after the final ServerHello in an HRR handshake");
+        _test_case.assert(reader.get_session_info(from_server).apply_protection(), function_name,
                           "retain server-direction protection after rejecting post-HRR plaintext ServerHello");
 
         size_t fatal_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        reader.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_count;
-                fatal_alerts.insert(desc);
-            }
-        });
-        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, __FUNCTION__,
+        fatal_count = test_collect_fatal_alerts(reader, from_server, fatal_alerts);
+        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, function_name,
                           "queue exactly one fatal unexpected_message for post-HRR plaintext ServerHello");
     }
+}
+
+static void test_tls13_hrr_plaintext_window_and_duplicate_server_hello_guards(const char* function_name) {
+    // Scenario under test: HelloRetryRequest preserves the ClientHello2 plaintext window but closes it after the final ServerHello.
+    // Action: reject duplicate post-HRR ServerHello, test its writer guard, and allow valid resumed or retry plaintext messages.
+    // Expected: keep valid retry transitions available and reject duplicate plaintext ServerHello.
 
     {
         tls_session writer;
         writer.set_type(session_type_t::tls);
-        writer.get_tls_protection().set_tls_version(tls_13);
+        writer.get_tls_protection().set_tls_version(tls1_3);
         writer.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
         writer.update_session_status(session_status_client_hello);
         writer.update_session_status(session_status_hello_retry_request);
@@ -914,16 +869,16 @@ static void test_tls13_handshake_protection_transition() {
         record << new tls_handshake_server_hello(&writer);
         binary_t wire;
         return_t ret = record.write(from_server, wire);
-        _test_case.assert(errorcode_t::unexpected == ret, __FUNCTION__, "reject post-HRR duplicate ServerHello in the writer");
-        _test_case.assert(wire.empty(), __FUNCTION__, "emit no plaintext bytes for post-HRR duplicate ServerHello");
-        _test_case.assert(writer.get_session_info(from_server).apply_protection(), __FUNCTION__,
+        _test_case.assert(errorcode_t::unexpected == ret, function_name, "reject post-HRR duplicate ServerHello in the writer");
+        _test_case.assert(wire.empty(), function_name, "emit no plaintext bytes for post-HRR duplicate ServerHello");
+        _test_case.assert(writer.get_session_info(from_server).apply_protection(), function_name,
                           "retain server-direction protection after post-HRR duplicate ServerHello writer rejection");
     }
 
     {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.get_tls_protection().set_flow(tls_flow_t::one_rtt);
         reader.update_session_status(session_status_client_hello);
         reader.update_session_status(session_status_server_hello);
@@ -937,13 +892,13 @@ static void test_tls13_handshake_protection_transition() {
         binary_t resumed_client_hello{0x16, 0x03, 0x03, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00};
         tls_records records;
         return_t ret = records.read(&reader, from_client, resumed_client_hello);
-        _test_case.assert(errorcode_t::unexpected != ret, __FUNCTION__, "allow a resumed ClientHello after both Finished messages");
+        _test_case.assert(false == (errorcode_t::unexpected == ret), function_name, "allow a resumed ClientHello after both Finished messages");
     }
 
     {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
         reader.update_session_status(session_status_hello_retry_request);
         reader.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
@@ -954,13 +909,13 @@ static void test_tls13_handshake_protection_transition() {
         binary_t retry_client_hello{0x16, 0x03, 0x03, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00};
         tls_records records;
         return_t ret = records.read(&reader, from_client, retry_client_hello);
-        _test_case.assert(errorcode_t::unexpected != ret, __FUNCTION__, "keep the second ClientHello plaintext after HelloRetryRequest");
+        _test_case.assert(false == (errorcode_t::unexpected == ret), function_name, "keep the second ClientHello plaintext after HelloRetryRequest");
     }
 
     {
         tls_session reader;
         reader.set_type(session_type_t::tls);
-        reader.get_tls_protection().set_tls_version(tls_13);
+        reader.get_tls_protection().set_tls_version(tls1_3);
         reader.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
         reader.update_session_status(session_status_client_hello);
         reader.update_session_status(session_status_hello_retry_request);
@@ -971,8 +926,14 @@ static void test_tls13_handshake_protection_transition() {
         binary_t retry_server_hello{0x16, 0x03, 0x03, 0x00, 0x04, 0x02, 0x00, 0x00, 0x00};
         tls_records records;
         return_t ret = records.read(&reader, from_server, retry_server_hello);
-        _test_case.assert(errorcode_t::unexpected != ret, __FUNCTION__, "keep the second ServerHello plaintext after the retry ClientHello");
+        _test_case.assert(false == (errorcode_t::unexpected == ret), function_name, "keep the second ServerHello plaintext after the retry ClientHello");
     }
+}
+
+static void test_tls13_rejects_second_hrr_after_retry_client_hello(const char* function_name) {
+    // Scenario under test: TLS 1.3 server rejects a second HelloRetryRequest.
+    // Action: execute ServerHello post-processing once for the initial HRR and again after the retry ClientHello.
+    // Expected: terminate the handshake with one fatal unexpected_message on the second HRR.
     {
         // Exercise the production ServerHello postprocess branch that handles
         // a second HelloRetryRequest. With no negotiated key-share group,
@@ -982,18 +943,18 @@ static void test_tls13_handshake_protection_transition() {
         tls_session session;
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
-        protection.get_protection_context().add_supported_version(tls_13);
+        protection.get_protection_context().add_supported_version(tls1_3);
         session.update_session_status(session_status_client_hello);
 
         test_tls13_server_hello_postprocess_probe server_hello(&session);
-        server_hello.set_version(tls_13);
+        server_hello.set_version(tls1_3);
 
         return_t ret = server_hello.postprocess_read();
-        _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "accept the first HelloRetryRequest in production ServerHello postprocess");
-        _test_case.assert(session_status_hello_retry_request & session.get_session_status(), __FUNCTION__, "record the first HelloRetryRequest state");
-        _test_case.assert(tls_flow_t::hello_retry_request == protection.get_flow(), __FUNCTION__, "enter HelloRetryRequest flow after the first retry");
+        _test_case.assert(errorcode_t::success == ret, function_name, "accept the first HelloRetryRequest in production ServerHello postprocess");
+        _test_case.assert(session_status_hello_retry_request & session.get_session_status(), function_name, "record the first HelloRetryRequest state");
+        _test_case.assert(tls_flow_t::hello_retry_request == protection.get_flow(), function_name, "enter HelloRetryRequest flow after the first retry");
 
         // Model receipt of the retry ClientHello while preserving the fact
         // that one HelloRetryRequest has already occurred.
@@ -1002,30 +963,47 @@ static void test_tls13_handshake_protection_transition() {
         session.update_session_status(session_status_client_hello);
 
         ret = server_hello.postprocess_read();
-        _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "abort a second HelloRetryRequest in production ServerHello postprocess");
-        _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "reset aggregate handshake state after a second HelloRetryRequest");
+        _test_case.assert(errorcode_t::handshake_failure == ret, function_name, "abort a second HelloRetryRequest in production ServerHello postprocess");
+        _test_case.assert(0 == session.get_session_status(), function_name, "reset aggregate handshake state after a second HelloRetryRequest");
         size_t fatal_count = 0;
         std::set<tls_alertdesc_t> fatal_alerts;
-        session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if (tls_alertlevel_t::fatal == level) {
-                ++fatal_count;
-                fatal_alerts.insert(desc);
-            }
-        });
-        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, __FUNCTION__,
+        fatal_count = test_collect_fatal_alerts(session, from_server, fatal_alerts);
+        _test_case.assert(1 == fatal_count && fatal_alerts == std::set<tls_alertdesc_t>{tls_alertdesc_t::unexpected_message}, function_name,
                           "queue exactly one fatal unexpected_message for a second HelloRetryRequest");
     }
 }
 
+static void test_tls13_handshake_protection_post_server_hello_plaintext_guards() {
+    // Scenario under test: TLS 1.3 closes the plaintext handshake window after the final ServerHello.
+    // Action: exercise fatal reset, out-of-phase plaintext rejection, HRR retry transitions, and second-HRR rejection.
+    // Expected: reject out-of-phase plaintext messages while retaining valid new-connection and HRR transitions.
+    test_tls13_post_server_hello_fatal_reset_and_reuse(__FUNCTION__);
+    test_tls13_post_server_hello_rejects_plaintext_handshake_records(__FUNCTION__);
+    test_tls13_hrr_plaintext_window_and_duplicate_server_hello_guards(__FUNCTION__);
+    test_tls13_rejects_second_hrr_after_retry_client_hello(__FUNCTION__);
+}
+
+static void test_tls13_handshake_protection_transition() {
+    // Scenario under test: TLS 1.3 handshake protection transition.
+    // Action: run the focused duplicate-message, scheduling, and post-ServerHello guards.
+    // Expected: enforce the plaintext-to-protected handshake transition in both directions.
+    _test_case.begin("TLS 1.3 handshake protection transition");
+
+    test_tls13_handshake_protection_duplicate_server_hello_guards();
+    test_tls13_handshake_protection_server_hello_scheduling();
+    test_tls13_handshake_protection_post_server_hello_plaintext_guards();
+}
+
 static void test_tls13_server_rejects_early_data_for_nonzero_selected_identity() {
     // Scenario under test: TLS 1.3 server early-data acceptance requires selected_identity zero.
+    // Action: offer early data with a nonzero selected_identity and process the acceptance signal.
     // Expected: reject server early-data acceptance when selected_identity is not zero.
     _test_case.begin("TLS 1.3 server early-data acceptance requires selected_identity zero");
 
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::zero_rtt);
     protection.reset_transcript_hash(&session);
@@ -1039,18 +1017,13 @@ static void test_tls13_server_rejects_early_data_for_nonzero_selected_identity()
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject server early-data acceptance when selected_identity is not zero");
     _test_case.assert(wire.size() == pos, __FUNCTION__, "parse the complete EncryptedExtensions before rejecting the early-data PSK rule");
 
-    size_t illegal_parameter_count = 0;
-    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++illegal_parameter_count;
-        }
-    });
+    size_t illegal_parameter_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "queue one fatal illegal_parameter alert");
 
     tls_session unsolicited_session;
     unsolicited_session.set_type(session_type_t::tls);
     auto& unsolicited_protection = unsolicited_session.get_tls_protection();
-    unsolicited_protection.set_tls_version(tls_13);
+    unsolicited_protection.set_tls_version(tls1_3);
     unsolicited_protection.set_cipher_suite(0x1301);
     unsolicited_protection.set_flow(tls_flow_t::zero_rtt);
     unsolicited_protection.reset_transcript_hash(&unsolicited_session);
@@ -1073,7 +1046,7 @@ static void test_tls13_server_requires_early_data_ticket_permission() {
         tls_session session;
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(negotiated_suite);
         protection.set_flow(tls_flow_t::zero_rtt);
         protection.reset_transcript_hash(&session);
@@ -1119,7 +1092,7 @@ static void test_tls13_server_requires_early_data_ticket_permission() {
 
     const binary_t alpn_h2{0x02, 'h', '2'};
     const binary_t alpn_h3{0x02, 'h', '3'};
-    const uint16 tls13_version = static_cast<uint16>(tls_13);
+    const uint16 tls13_version = static_cast<uint16>(tls1_3);
     verify_server_acceptance(0, 4096, 1, 0x1301, 0x1301, tls13_version, binary_t(), binary_t(), true,
                              "accept early data for identity zero with matching version, cipher suite, ALPN and ticket allowance");
     verify_server_acceptance(0, 0, 1, 0x1301, 0x1301, tls13_version, binary_t(), binary_t(), false, "do not accept early data when the selected ticket has no allowance");
@@ -1130,7 +1103,7 @@ static void test_tls13_server_requires_early_data_ticket_permission() {
     verify_server_acceptance(0xffff, 4096, 1, 0x1301, 0x1301, tls13_version, binary_t(), binary_t(), false, "do not accept early data when no PSK identity was selected");
     verify_server_acceptance(0, 4096, 1, 0x1303, 0x1301, tls13_version, binary_t(), binary_t(), false,
                              "do not accept early data when the negotiated cipher suite differs from the ticket suite");
-    verify_server_acceptance(0, 4096, 1, 0x1301, 0x1301, static_cast<uint16>(tls_12), binary_t(), binary_t(), false,
+    verify_server_acceptance(0, 4096, 1, 0x1301, 0x1301, static_cast<uint16>(tls1_2), binary_t(), binary_t(), false,
                              "do not accept early data when the ticket was established under a different TLS version");
     verify_server_acceptance(0, 4096, 1, 0x1301, 0x1301, tls13_version, alpn_h2, alpn_h3, false,
                              "do not accept early data when the negotiated ALPN differs from the ticket ALPN");
@@ -1139,7 +1112,7 @@ static void test_tls13_server_requires_early_data_ticket_permission() {
     tls_session hrr_session;
     hrr_session.set_type(session_type_t::tls);
     auto& hrr_protection = hrr_session.get_tls_protection();
-    hrr_protection.set_tls_version(tls_13);
+    hrr_protection.set_tls_version(tls1_3);
     hrr_protection.set_cipher_suite(0x1301);
     hrr_protection.set_flow(tls_flow_t::hello_retry_request);
     const binary_t hrr_resumption_secret(32, 0x5a);
@@ -1186,7 +1159,7 @@ static void test_tls13_client_requires_psk_for_early_data_offer() {
 
     tls_session session;
     session.set_type(session_type_t::tls);
-    session.get_tls_protection().set_tls_version(tls_13);
+    session.get_tls_protection().set_tls_version(tls1_3);
     session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
     session.get_session_info(from_server).get_keyvalue().set(session_early_data_limit, 4096);
 
@@ -1201,7 +1174,7 @@ static void test_tls13_client_requires_psk_for_early_data_offer() {
 
     tls_session direct_session;
     direct_session.set_type(session_type_t::tls);
-    direct_session.get_tls_protection().set_tls_version(tls_13);
+    direct_session.get_tls_protection().set_tls_version(tls1_3);
     direct_session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
     direct_session.get_session_info(from_server).get_keyvalue().set(session_early_data_limit, 4096);
     tls_handshake_client_hello direct_hello(&direct_session);
@@ -1218,7 +1191,7 @@ static void test_tls13_client_requires_psk_for_early_data_offer() {
 
     tls_session rejected_session;
     rejected_session.set_type(session_type_t::tls);
-    rejected_session.get_tls_protection().set_tls_version(tls_13);
+    rejected_session.get_tls_protection().set_tls_version(tls1_3);
     rejected_session.get_tls_protection().set_flow(tls_flow_t::one_rtt);
     tls_handshake_client_hello rejected_hello(&rejected_session);
     rejected_hello.get_extensions().add(new tls_extension_early_data(&rejected_hello));
@@ -1231,7 +1204,7 @@ static void test_tls13_client_requires_psk_for_early_data_offer() {
 
     tls_session no_allowance_session;
     no_allowance_session.set_type(session_type_t::tls);
-    no_allowance_session.get_tls_protection().set_tls_version(tls_13);
+    no_allowance_session.get_tls_protection().set_tls_version(tls1_3);
     no_allowance_session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
     tls_handshake_client_hello no_allowance_hello(&no_allowance_session);
     no_allowance_hello.get_extensions().add(new tls_extension_early_data(&no_allowance_hello));
@@ -1244,7 +1217,7 @@ static void test_tls13_client_requires_psk_for_early_data_offer() {
 
     tls_session hrr_session;
     hrr_session.set_type(session_type_t::tls);
-    hrr_session.get_tls_protection().set_tls_version(tls_13);
+    hrr_session.get_tls_protection().set_tls_version(tls1_3);
     hrr_session.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
     tls_handshake_client_hello client_hello2(&hrr_session);
     auto hrr_early_data = new tls_extension_early_data(&client_hello2);
@@ -1278,7 +1251,7 @@ static void test_tls13_server_records_early_data_offer_during_extension_parse() 
 
     tls_session session;
     session.set_type(session_type_t::tls);
-    session.get_tls_protection().set_tls_version(tls_13);
+    session.get_tls_protection().set_tls_version(tls1_3);
     session.get_tls_protection().set_flow(tls_flow_t::zero_rtt);
     tls_handshake_client_hello client_hello(&session);
 
@@ -1302,12 +1275,7 @@ static void test_tls13_server_records_early_data_offer_during_extension_parse() 
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject a duplicate early_data extension in ClientHello");
     _test_case.assert(4 == duplicate_pos, __FUNCTION__, "reject the duplicate before parsing its body or mutating extension state");
     _test_case.assert(0 == duplicate_session.get_session_status(), __FUNCTION__, "reset the handshake after a duplicate extension");
-    size_t duplicate_illegal_parameter_count = 0;
-    duplicate_session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++duplicate_illegal_parameter_count;
-        }
-    });
+    size_t duplicate_illegal_parameter_count = test_count_fatal_alert(duplicate_session, from_client, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(1 == duplicate_illegal_parameter_count, __FUNCTION__, "queue exactly one fatal illegal_parameter for duplicate extensions");
 
     tls_session ee_session;
@@ -1362,12 +1330,7 @@ static void test_tls13_server_records_early_data_offer_during_extension_parse() 
     _test_case.assert(0 == malformed_client_session.get_session_status(), __FUNCTION__, "reset handshake state after malformed ClientHello early_data");
     _test_case.assert(0 == malformed_client_session.get_session_info(from_server).get_keyvalue().get(session_early_data_offered), __FUNCTION__,
                       "do not commit the early-data offer before validating its empty body");
-    size_t malformed_client_decode_error_count = 0;
-    malformed_client_session.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
-            ++malformed_client_decode_error_count;
-        }
-    });
+    size_t malformed_client_decode_error_count = test_count_fatal_alert(malformed_client_session, from_client, tls_alertdesc_t::decode_error);
     _test_case.assert(1 == malformed_client_decode_error_count, __FUNCTION__, "queue exactly one fatal decode_error for malformed ClientHello early_data");
 
     tls_session malformed_ee_session;
@@ -1378,17 +1341,12 @@ static void test_tls13_server_records_early_data_offer_during_extension_parse() 
     ret = malformed_ee.get_extensions().read(&malformed_ee, from_server, malformed_early_data_extension.data(), malformed_early_data_extension.size(), malformed_ee_pos);
     _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject a non-empty EncryptedExtensions early_data body");
     _test_case.assert(0 == malformed_ee_session.get_session_status(), __FUNCTION__, "reset handshake state after malformed EncryptedExtensions early_data");
-    size_t malformed_ee_decode_error_count = 0;
-    malformed_ee_session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
-            ++malformed_ee_decode_error_count;
-        }
-    });
+    size_t malformed_ee_decode_error_count = test_count_fatal_alert(malformed_ee_session, from_server, tls_alertdesc_t::decode_error);
     _test_case.assert(1 == malformed_ee_decode_error_count, __FUNCTION__, "queue exactly one fatal decode_error for malformed EncryptedExtensions early_data");
 
     tls_session hrr_session;
     hrr_session.set_type(session_type_t::tls);
-    hrr_session.get_tls_protection().set_tls_version(tls_13);
+    hrr_session.get_tls_protection().set_tls_version(tls1_3);
     hrr_session.get_tls_protection().set_flow(tls_flow_t::hello_retry_request);
     tls_handshake_client_hello client_hello2(&hrr_session);
     size_t hrr_pos = 0;
@@ -1416,12 +1374,7 @@ static void test_tls13_server_records_early_data_offer_during_extension_parse() 
         size_t invalid_pos = 0;
         ret = invalid_handshake.get_extensions().read(&invalid_handshake, from_server, early_data_extension.data(), early_data_extension.size(), invalid_pos);
         _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject early_data in ServerHello");
-        size_t illegal_parameter_count = 0;
-        invalid_session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
+        size_t illegal_parameter_count = test_count_fatal_alert(invalid_session, from_server, tls_alertdesc_t::illegal_parameter);
         _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "raise exactly one fatal illegal_parameter for early_data in ServerHello");
     }
 
@@ -1432,12 +1385,7 @@ static void test_tls13_server_records_early_data_offer_during_extension_parse() 
         size_t invalid_pos = 0;
         ret = invalid_handshake.get_extensions().read(&invalid_handshake, from_server, early_data_extension.data(), early_data_extension.size(), invalid_pos);
         _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject server-sent early_data in ClientHello");
-        size_t illegal_parameter_count = 0;
-        invalid_session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-            if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                ++illegal_parameter_count;
-            }
-        });
+        size_t illegal_parameter_count = test_count_fatal_alert(invalid_session, from_server, tls_alertdesc_t::illegal_parameter);
         _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "raise exactly one fatal illegal_parameter for server-sent ClientHello early_data");
     }
 
@@ -1476,7 +1424,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
         tls_session session;
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(negotiated_suite);
         protection.set_flow(tls_flow_t::zero_rtt);
         protection.reset_transcript_hash(&session);
@@ -1517,19 +1465,14 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
             _test_case.assert(1 == early_state.get(session_early_data_accepted), __FUNCTION__, "mark early data accepted after valid EncryptedExtensions");
         } else {
             _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, description);
-            size_t illegal_parameter_count = 0;
-            session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-                    ++illegal_parameter_count;
-                }
-            });
+            size_t illegal_parameter_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::illegal_parameter);
             _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "reject mismatched early-data parameters with one fatal illegal_parameter");
         }
     };
 
     const binary_t alpn_h2{0x02, 'h', '2'};
     const binary_t alpn_h3{0x02, 'h', '3'};
-    const uint16 tls13_version = static_cast<uint16>(tls_13);
+    const uint16 tls13_version = static_cast<uint16>(tls1_3);
     verify_acceptance(true, 0, 4096, tls13_version, 0x1301, alpn_h2, 0x1301, alpn_h2, true, "accept early_data when version, suite and ALPN match the selected PSK");
     verify_acceptance(false, 0, 4096, tls13_version, 0x1301, alpn_h2, 0x1301, alpn_h2, false,
                       "reject unsolicited early_data acceptance when the client did not offer it");
@@ -1537,7 +1480,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     verify_acceptance(true, 0xffff, 4096, tls13_version, 0x1301, alpn_h2, 0x1301, alpn_h2, false, "reject early_data when the server did not select a PSK");
     verify_acceptance(true, 0, 0, tls13_version, 0x1301, alpn_h2, 0x1301, alpn_h2, false, "reject early_data when the ticket allowance is zero");
     verify_acceptance(true, 0, 4096, tls13_version, 0x1301, alpn_h3, 0x1301, alpn_h2, false, "reject early_data when negotiated ALPN differs from the selected PSK");
-    verify_acceptance(true, 0, 4096, static_cast<uint16>(tls_12), 0x1301, alpn_h2, 0x1301, alpn_h2, false,
+    verify_acceptance(true, 0, 4096, static_cast<uint16>(tls1_2), 0x1301, alpn_h2, 0x1301, alpn_h2, false,
                       "reject early_data when the selected PSK is bound to another TLS version");
     verify_acceptance(true, 0, 4096, tls13_version, 0x1301, alpn_h2, 0x1303, alpn_h2, false,
                       "reject early_data when the negotiated cipher suite differs from the selected PSK");
@@ -1545,7 +1488,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     tls_session rejected_session;
     rejected_session.set_type(session_type_t::tls);
     auto& rejected_protection = rejected_session.get_tls_protection();
-    rejected_protection.set_tls_version(tls_13);
+    rejected_protection.set_tls_version(tls1_3);
     rejected_protection.set_cipher_suite(0x1301);
     rejected_protection.set_flow(tls_flow_t::zero_rtt);
     rejected_protection.reset_transcript_hash(&rejected_session);
@@ -1589,7 +1532,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     tls_session failed_acceptance_session;
     failed_acceptance_session.set_type(session_type_t::tls);
     auto& failed_acceptance_protection = failed_acceptance_session.get_tls_protection();
-    failed_acceptance_protection.set_tls_version(tls_13);
+    failed_acceptance_protection.set_tls_version(tls1_3);
     failed_acceptance_protection.set_cipher_suite(0x1301);
     failed_acceptance_protection.set_flow(tls_flow_t::zero_rtt);
     // Model a final ServerHello: the client handshake traffic secret exists,
@@ -1604,7 +1547,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     failed_acceptance_state.set(session_early_data_limit, 4096);
     tls_resumption_ticket failed_acceptance_ticket;
     failed_acceptance_ticket.identity = binary_t{0x01};
-    failed_acceptance_ticket.version = static_cast<uint16>(tls_13);
+    failed_acceptance_ticket.version = static_cast<uint16>(tls1_3);
     failed_acceptance_ticket.cipher_suite = 0x1301;
     failed_acceptance_ticket.max_early_data_size = 4096;
     failed_acceptance_session.set_early_data_ticket(failed_acceptance_ticket);
@@ -1630,18 +1573,13 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     }
     _test_case.assert(0 == failed_acceptance_session.get_recordno(from_client, false), __FUNCTION__,
                       "reset the client record sequence for the handshake-protected fatal alert");
-    size_t failed_acceptance_alert_count = 0;
-    failed_acceptance_session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::illegal_parameter == desc)) {
-            ++failed_acceptance_alert_count;
-        }
-    });
+    size_t failed_acceptance_alert_count = test_count_fatal_alert(failed_acceptance_session, from_server, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(1 == failed_acceptance_alert_count, __FUNCTION__, "queue exactly one fatal illegal_parameter alert");
 
     tls_session unsolicited_acceptance_session;
     unsolicited_acceptance_session.set_type(session_type_t::tls);
     auto& unsolicited_protection = unsolicited_acceptance_session.get_tls_protection();
-    unsolicited_protection.set_tls_version(tls_13);
+    unsolicited_protection.set_tls_version(tls1_3);
     unsolicited_protection.set_cipher_suite(0x1301);
     unsolicited_protection.set_flow(tls_flow_t::one_rtt);
     unsolicited_protection.reset_transcript_hash(&unsolicited_acceptance_session);
@@ -1675,7 +1613,7 @@ static void test_tls13_client_sends_bounded_early_data() {
     auto prepare_client = [](tls_session& session, uint64 limit) -> void {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
         protection.set_flow(tls_flow_t::zero_rtt);
         protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
@@ -1711,7 +1649,7 @@ static void test_tls13_client_sends_bounded_early_data() {
     tls_session accepted_reader;
     accepted_reader.set_type(session_type_t::tls);
     auto& accepted_reader_protection = accepted_reader.get_tls_protection();
-    accepted_reader_protection.set_tls_version(tls_13);
+    accepted_reader_protection.set_tls_version(tls1_3);
     accepted_reader_protection.set_cipher_suite(0x1301);
     accepted_reader_protection.set_flow(tls_flow_t::zero_rtt);
     accepted_reader_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
@@ -1738,7 +1676,7 @@ static void test_tls13_client_sends_bounded_early_data() {
     tls_session bad_mac_reader;
     bad_mac_reader.set_type(session_type_t::tls);
     auto& bad_mac_protection = bad_mac_reader.get_tls_protection();
-    bad_mac_protection.set_tls_version(tls_13);
+    bad_mac_protection.set_tls_version(tls1_3);
     bad_mac_protection.set_cipher_suite(0x1301);
     bad_mac_protection.set_flow(tls_flow_t::zero_rtt);
     bad_mac_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
@@ -1760,18 +1698,13 @@ static void test_tls13_client_sends_bounded_early_data() {
     return_t bad_mac_ret = corrupted_early_records.read(&bad_mac_reader, from_client, corrupted_early_wire);
     _test_case.assert(errorcode_t::success != bad_mac_ret, __FUNCTION__, "abort when an accepted 0-RTT record fails AEAD authentication");
     _test_case.assert(0 == corrupted_early_records.size(), __FUNCTION__, "do not deliver unauthenticated accepted early data");
-    size_t fatal_bad_record_mac_count = 0;
-    bad_mac_reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::bad_record_mac == desc)) {
-            ++fatal_bad_record_mac_count;
-        }
-    });
+    size_t fatal_bad_record_mac_count = test_count_fatal_alert(bad_mac_reader, from_client, tls_alertdesc_t::bad_record_mac);
     _test_case.assert(1 == fatal_bad_record_mac_count, __FUNCTION__, "send exactly one fatal bad_record_mac for failed accepted early-data authentication");
 
     tls_session server_overflow_reader;
     server_overflow_reader.set_type(session_type_t::tls);
     auto& server_overflow_protection = server_overflow_reader.get_tls_protection();
-    server_overflow_protection.set_tls_version(tls_13);
+    server_overflow_protection.set_tls_version(tls1_3);
     server_overflow_protection.set_cipher_suite(0x1301);
     server_overflow_protection.set_flow(tls_flow_t::zero_rtt);
     server_overflow_protection.get_secrets().assign(tls_secret_t::c_e_traffic_key, binary_t(16, 0x11));
@@ -1788,12 +1721,7 @@ static void test_tls13_client_sends_bounded_early_data() {
     ret = server_overflow_records.read(&server_overflow_reader, from_client, accepted_wire);
     _test_case.assert(errorcode_t::overflow == ret, __FUNCTION__, "reject accepted early data that exceeds the ticket allowance");
     _test_case.assert(server_overflow_reader.has_alert(from_client, tls_alertlevel_t::fatal), __FUNCTION__, "raise a fatal alert for excess early-data bytes");
-    size_t early_data_overflow_alert_count = 0;
-    server_overflow_reader.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-            ++early_data_overflow_alert_count;
-        }
-    });
+    size_t early_data_overflow_alert_count = test_count_fatal_alert(server_overflow_reader, from_client, tls_alertdesc_t::unexpected_message);
     _test_case.assert(1 == early_data_overflow_alert_count, __FUNCTION__,
                       "report exactly one fatal unexpected_message for accepted early data beyond max_early_data_size");
 
@@ -1828,7 +1756,7 @@ static void test_tls13_server_requires_consistent_early_data_acceptance_signal()
     auto prepare_server = [](tls_session& session, bool eligible) -> void {
         session.set_type(session_type_t::tls);
         auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
+        protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
         protection.set_flow(tls_flow_t::zero_rtt);
         protection.reset_transcript_hash(&session);
@@ -1838,7 +1766,7 @@ static void test_tls13_server_requires_consistent_early_data_acceptance_signal()
 
         tls_resumption_ticket ticket;
         ticket.identity = binary_t{0x01};
-        ticket.version = tls_13;
+        ticket.version = tls1_3;
         ticket.cipher_suite = 0x1301;
         ticket.max_early_data_size = 1024;
         session.set_early_data_ticket(ticket);
@@ -1941,12 +1869,15 @@ static void test_tls13_server_requires_consistent_early_data_acceptance_signal()
 }
 
 static void test_tls13_encrypted_extensions_rejects_truncated_extension_header() {
+    // Scenario under test: TLS 1.3 EncryptedExtensions rejects a truncated trailing extension header.
+    // Action: parse a complete handshake message whose extension vector contains an incomplete header.
+    // Expected: reject the malformed extension vector without accepting a partial extension.
     _test_case.begin("TLS 1.3 EncryptedExtensions rejects a truncated trailing extension header");
 
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     session.update_session_status(session_status_server_hello);
 
@@ -1957,12 +1888,7 @@ static void test_tls13_encrypted_extensions_rejects_truncated_extension_header()
     size_t pos = 0;
     return_t ret = encrypted_extensions.read(from_server, wire.data(), wire.size(), pos);
 
-    size_t decode_error_count = 0;
-    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::decode_error == desc)) {
-            ++decode_error_count;
-        }
-    });
+    size_t decode_error_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::decode_error);
     _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject the incomplete extension header in a complete EncryptedExtensions message");
     _test_case.assert(1 == decode_error_count, __FUNCTION__, "report exactly one fatal decode_error for the truncated EncryptedExtensions extension vector");
     _test_case.assert(0 == (session_status_encrypted_extensions & session.get_session_status()), __FUNCTION__,

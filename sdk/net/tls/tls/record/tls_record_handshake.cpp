@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -190,8 +191,12 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
                     __leave2;
                 }
                 tpos = 0;
-                auto handshake = tls_handshake::read(session, dir, plaintext.data(), plaintext.size(), tpos);
-                get_handshakes().add(handshake);
+                // Preserve handshake parsing and verification errors from the
+                // protected record instead of silently dropping a failed message.
+                ret = get_handshakes().read(session, dir, plaintext.data(), plaintext.size(), tpos);
+                if (errorcode_t::success != ret) {
+                    __leave2_trace(ret);
+                }
             }
         } else {
             // record-handshake 1..*

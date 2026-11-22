@@ -56,12 +56,12 @@ class HOTPLACE_NET_API protection_context {
     return_t negotiate(tls_session* session, uint16& cs, tls_version_t& tlsver);
     return_t negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& cs, tls_version_t& tlsver);
 
-    void add_cipher_suite(uint16 cs);
-    void add_signature_algorithm(tls_sigscheme_t sa);
-    void add_supported_group(tls_group_t sg);
-    void add_supported_version(tls_version_t sv);
-    void add_ec_point_format(uint8 epf);
-    void add_keyshare_group(tls_group_t group);
+    protection_context& add_cipher_suite(uint16 cs);
+    protection_context& add_signature_algorithm(tls_sigscheme_t sa);
+    protection_context& add_supported_group(tls_group_t sg);
+    protection_context& add_supported_version(tls_version_t sv);
+    protection_context& add_ec_point_format(uint8 epf);
+    protection_context& add_keyshare_group(tls_group_t group);
 
     void clear_cipher_suites();
     void clear_signature_algorithms();
@@ -90,8 +90,8 @@ class HOTPLACE_NET_API protection_context {
     /**
      * @remarks negotiation
      */
-    return_t select_from(const protection_context& other, tls_session* session, tls_version_t minspec = tls_version_t::tls_12,
-                         tls_version_t maxspec = tls_version_t::tls_13);
+    return_t select_from(const protection_context& other, tls_session* session, tls_version_t minspec = tls_version_t::tls1_2,
+                         tls_version_t maxspec = tls_version_t::tls1_3);
 
     void set_cipher_suite(uint16 cs);
     uint16 get_cipher_suite(uint16 cs);

@@ -349,7 +349,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                     // from the server's not-yet-negotiated cipher suite.
                     const tls_cipher_suite_t* candidate_suite = tls_advisor::get_instance()->hintof_cipher_suite(candidate.cipher_suite);
                     const hint_digest_t* candidate_hash =
-                        (candidate_suite && (tls_13 == candidate_suite->spec)) ? crypto_advisor::get_instance()->hintof_digest(candidate_suite->mac) : nullptr;
+                        (candidate_suite && (tls1_3 == candidate_suite->spec)) ? crypto_advisor::get_instance()->hintof_digest(candidate_suite->mac) : nullptr;
                     if ((nullptr == candidate_hash) || (candidate.psk.size() != candidate_hash->digest_size) || (candidate.psk.size() != binders[i].size())) {
                         continue;
                     }
@@ -359,7 +359,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                     // otherwise valid under the ticket's original suite.
                     if (tls_flow_t::hello_retry_request == protection.get_flow()) {
                         const tls_cipher_suite_t* retry_suite = tls_advisor::get_instance()->hintof_cipher_suite(protection.get_cipher_suite());
-                        if ((nullptr == retry_suite) || (tls_13 != retry_suite->spec) || (retry_suite->mac != candidate_suite->mac)) {
+                        if ((nullptr == retry_suite) || (tls1_3 != retry_suite->spec) || (retry_suite->mac != candidate_suite->mac)) {
                             continue;
                         }
                     }
@@ -392,7 +392,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 if (tls_flow_t::hello_retry_request == protection.get_flow()) {
                     const tls_cipher_suite_t* retry_suite = tls_advisor::get_instance()->hintof_cipher_suite(protection.get_cipher_suite());
                     const hint_digest_t* retry_hash =
-                        (retry_suite && (tls_13 == retry_suite->spec)) ? crypto_advisor::get_instance()->hintof_digest(retry_suite->mac) : nullptr;
+                        (retry_suite && (tls1_3 == retry_suite->spec)) ? crypto_advisor::get_instance()->hintof_digest(retry_suite->mac) : nullptr;
                     const binary_t& legacy_psk = secrets.get(tls_secret_t::resumption_early);
                     if ((nullptr == retry_hash) || (legacy_psk.size() != retry_hash->digest_size) || (binders[i].size() != retry_hash->digest_size)) {
                         continue;
@@ -552,7 +552,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             // EncryptedExtensions performs the final suite/ALPN acceptance
             // check after ServerHello negotiation.
             bool early_data_ticket_metadata_match =
-                selected_ticket_from_store && (selected_ticket.version == static_cast<uint16>(tls_13)) && (selected_ticket.alpn == negotiated_alpn);
+                selected_ticket_from_store && (selected_ticket.version == static_cast<uint16>(tls1_3)) && (selected_ticket.alpn == negotiated_alpn);
             bool early_data_acceptable = (tls_flow_t::hello_retry_request != protection.get_flow()) && (0 == selected_index) && selected_ticket_from_store &&
                                          (0 != server_ticket_state.get(session_early_data_offered)) && early_data_age_valid && early_data_ticket_metadata_match &&
                                          (0 != selected_ticket.max_early_data_size);
@@ -678,7 +678,7 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                 uint32 lifetime = (ticket.lifetime > max_ticket_lifetime) ? max_ticket_lifetime : ticket.lifetime;
                 uint64 lifetime_ms = static_cast<uint64>(lifetime) * 1000;
                 const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket.cipher_suite);
-                const hint_digest_t* ticket_hash = (ticket_suite && (tls_13 == ticket_suite->spec)) ? advisor->hintof_digest(ticket_suite->mac) : nullptr;
+                const hint_digest_t* ticket_hash = (ticket_suite && (tls1_3 == ticket_suite->spec)) ? advisor->hintof_digest(ticket_suite->mac) : nullptr;
                 // RFC 8446 4.1.4: after HRR, the client SHOULD offer only PSKs
                 // whose hash matches the cipher suite selected by the server.
                 // Keep that exact suite for the final ServerHello; a ticket may
@@ -687,7 +687,7 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                 const tls_cipher_suite_t* provisional_suite = ticket_suite;
                 if (tls_flow_t::hello_retry_request == protection.get_flow()) {
                     const tls_cipher_suite_t* retry_suite = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
-                    if ((nullptr == retry_suite) || (tls_13 != retry_suite->spec) || (nullptr == ticket_suite) || (retry_suite->mac != ticket_suite->mac)) {
+                    if ((nullptr == retry_suite) || (tls1_3 != retry_suite->spec) || (nullptr == ticket_suite) || (retry_suite->mac != ticket_suite->mac)) {
                         continue;
                     }
                     provisional_suite = retry_suite;
@@ -697,7 +697,7 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                 if (ticket_suite && client_hello) {
                     for (uint16 offered_code : client_hello->get_cipher_suites()) {
                         const tls_cipher_suite_t* offered_suite = tlsadvisor->hintof_cipher_suite(offered_code);
-                        if (offered_suite && (tls_13 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
+                        if (offered_suite && (tls1_3 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
                             offered_hash_compatible = true;
                             break;
                         }
@@ -736,11 +736,11 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                 uint32 lifetime = (ticket.lifetime > max_ticket_lifetime) ? max_ticket_lifetime : ticket.lifetime;
                 uint64 lifetime_ms = static_cast<uint64>(lifetime) * 1000;
                 const tls_cipher_suite_t* ticket_suite = tlsadvisor->hintof_cipher_suite(ticket.cipher_suite);
-                const hint_digest_t* ticket_hash = (ticket_suite && (tls_13 == ticket_suite->spec)) ? advisor->hintof_digest(ticket_suite->mac) : nullptr;
+                const hint_digest_t* ticket_hash = (ticket_suite && (tls1_3 == ticket_suite->spec)) ? advisor->hintof_digest(ticket_suite->mac) : nullptr;
                 // Keep ClientHello2's emitted identities aligned with the HRR-selected hash.
                 if (tls_flow_t::hello_retry_request == protection.get_flow()) {
                     const tls_cipher_suite_t* retry_suite = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
-                    if ((nullptr == retry_suite) || (tls_13 != retry_suite->spec) || (nullptr == ticket_suite) || (retry_suite->mac != ticket_suite->mac)) {
+                    if ((nullptr == retry_suite) || (tls1_3 != retry_suite->spec) || (nullptr == ticket_suite) || (retry_suite->mac != ticket_suite->mac)) {
                         continue;
                     }
                 }
@@ -749,7 +749,7 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                 if (ticket_suite && client_hello) {
                     for (uint16 offered_code : client_hello->get_cipher_suites()) {
                         const tls_cipher_suite_t* offered_suite = tlsadvisor->hintof_cipher_suite(offered_code);
-                        if (offered_suite && (tls_13 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
+                        if (offered_suite && (tls1_3 == offered_suite->spec) && (offered_suite->mac == ticket_suite->mac)) {
                             offered_hash_compatible = true;
                             break;
                         }

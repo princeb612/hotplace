@@ -7,7 +7,130 @@
 
 #include "testcase_gpt_common.hpp"
 
+static void configure_tls13_finished_application_epoch(tls_session& session) {
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls1_3);
+    protection.set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256
+    protection.use_pre_master_secret(true);
+    auto& secrets = protection.get_secrets();
+    secrets.assign(tls_secret_t::s_hs_traffic, binary_t(32, 0x11));
+    secrets.assign(tls_secret_t::c_hs_traffic, binary_t(32, 0x22));
+    secrets.assign(tls_secret_t::s_ap_traffic, binary_t(32, 0x33));
+    secrets.assign(tls_secret_t::c_ap_traffic, binary_t(32, 0x44));
+    secrets.assign(tls_secret_t::application, binary_t(32, 0x99));
+    secrets.assign(tls_secret_t::handshake_server_key, binary_t(16, 0x55));
+    secrets.assign(tls_secret_t::handshake_server_iv, binary_t(12, 0x66));
+    secrets.assign(tls_secret_t::handshake_client_key, binary_t(16, 0x77));
+    secrets.assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x88));
+    session.update_session_status(session_status_server_hello);
+    session.update_session_status(session_status_encrypted_extensions);
+    session.update_session_status(session_status_server_cert_verified);
+    session.get_session_info(from_server).set_status(tls_handshake_type_t::certificate_verify);
+    session.get_session_info(from_server).begin_protection();
+    session.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
+    session.get_session_info(from_client).begin_protection();
+    session.set_recordno(from_server, 7);
+    session.set_recordno(from_client, 9);
+}
+
+static void configure_tls13_psk_finished(tls_session& session, bool psk_selected) {
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls1_3);
+    protection.set_cipher_suite(0x1301);
+    protection.use_pre_master_secret(true);
+    auto& secrets = protection.get_secrets();
+    secrets.assign(tls_secret_t::s_hs_traffic, binary_t(32, 0x11));
+    secrets.assign(tls_secret_t::c_hs_traffic, binary_t(32, 0x22));
+    secrets.assign(tls_secret_t::s_ap_traffic, binary_t(32, 0x33));
+    secrets.assign(tls_secret_t::c_ap_traffic, binary_t(32, 0x44));
+    secrets.assign(tls_secret_t::application, binary_t(32, 0x99));
+    secrets.assign(tls_secret_t::handshake_server_key, binary_t(16, 0x55));
+    secrets.assign(tls_secret_t::handshake_server_iv, binary_t(12, 0x66));
+    secrets.assign(tls_secret_t::handshake_client_key, binary_t(16, 0x77));
+    secrets.assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x88));
+    session.update_session_status(session_status_server_hello);
+    session.update_session_status(session_status_encrypted_extensions);
+    session.get_keyvalue().set(session_client_psk_identity_count, psk_selected ? 1 : 0);
+    session.get_keyvalue().set(session_server_psk_selected_identity, psk_selected ? 0 : 0xffff);
+    session.get_session_info(from_server).set_status(tls_handshake_type_t::encrypted_extensions);
+    session.get_session_info(from_server).begin_protection();
+    session.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
+    session.get_session_info(from_client).begin_protection();
+}
+
+static void configure_tls12_finished_sequence(tls_session& session) {
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls1_2);
+    protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    protection.get_secrets().assign(tls_secret_t::master, binary_t(48, 0x55));
+    protection.get_secrets().assign(tls_secret_t::client_key, binary_t(16, 0x11));
+    protection.get_secrets().assign(tls_secret_t::client_iv, binary_t(4, 0x22));
+    protection.get_secrets().assign(tls_secret_t::server_key, binary_t(16, 0x33));
+    protection.get_secrets().assign(tls_secret_t::server_iv, binary_t(4, 0x44));
+    session.get_keyvalue().set(session_tls_version, tls1_2);
+    session.update_session_status(session_status_server_key_exchange);
+    session.update_session_status(session_status_client_key_exchange);
+    session.get_session_info(from_client).begin_protection();
+    session.get_session_info(from_server).begin_protection();
+    session.set_recordno(from_client, 0);
+    session.set_recordno(from_server, 0);
+}
+
+static bool exchange_tls12_interleaved_application_records(tls_session& writer, tls_session& reader, const char* test_function) {
+    for (uint64 index = 0; index < 3; ++index) {
+        const auto expected_client_sequence = 3 + index;
+        const std::string client_message = "client application record " + std::to_string(index);
+        tls_record_application_data client_record(&writer, client_message);
+        binary_t client_wire;
+        return_t ret = client_record.write(from_client, client_wire);
+        _test_case.test(ret, test_function, "write consecutive TLS 1.2 Client Application Data");
+        if (errorcode_t::success != ret) return false;
+        _test_case.assert(expected_client_sequence == writer.get_recordno(from_client), test_function,
+                          "increment client write sequence for each Application Data record");
+        tls_records client_records;
+        ret = client_records.read(&reader, from_client, client_wire);
+        _test_case.test(ret, test_function, "read consecutive TLS 1.2 Client Application Data");
+        if (errorcode_t::success != ret || 1 != client_records.size()) {
+            _test_case.assert(false, test_function, "decode consecutive TLS 1.2 Client Application Data");
+            return false;
+        }
+        auto decoded_client = (tls_record_application_data*)client_records.getat(0);
+        binary_t expected_client(client_message.begin(), client_message.end());
+        _test_case.assert(expected_client == decoded_client->get_binary(), test_function, "authenticate each consecutive client record with its sequence");
+        _test_case.assert(expected_client_sequence == reader.get_recordno(from_client), test_function, "increment client read sequence for each Application Data record");
+        const auto expected_server_sequence = 3 + index;
+        const std::string server_message = "server application record " + std::to_string(index);
+        tls_record_application_data server_record(&writer, server_message);
+        binary_t server_wire;
+        ret = server_record.write(from_server, server_wire);
+        _test_case.test(ret, test_function, "write consecutive TLS 1.2 Server Application Data");
+        if (errorcode_t::success != ret) return false;
+        _test_case.assert(expected_server_sequence == writer.get_recordno(from_server), test_function,
+                          "increment server write sequence for each Application Data record");
+        tls_records server_records;
+        ret = server_records.read(&reader, from_server, server_wire);
+        _test_case.test(ret, test_function, "read consecutive TLS 1.2 Server Application Data");
+        if (errorcode_t::success != ret || 1 != server_records.size()) {
+            _test_case.assert(false, test_function, "decode consecutive TLS 1.2 Server Application Data");
+            return false;
+        }
+        auto decoded_server_record = (tls_record_application_data*)server_records.getat(0);
+        binary_t expected_server(server_message.begin(), server_message.end());
+        _test_case.assert(expected_server == decoded_server_record->get_binary(), test_function, "authenticate each consecutive server record with its sequence");
+        _test_case.assert(expected_server_sequence == reader.get_recordno(from_server), test_function, "increment server read sequence for each Application Data record");
+        _test_case.assert(expected_client_sequence == writer.get_recordno(from_client), test_function, "server records do not alter client write sequence");
+        _test_case.assert(expected_server_sequence == writer.get_recordno(from_server), test_function, "client records do not alter server write sequence");
+        _test_case.assert(expected_client_sequence == reader.get_recordno(from_client), test_function, "server records do not alter client read sequence");
+        _test_case.assert(expected_server_sequence == reader.get_recordno(from_server), test_function, "client records do not alter server read sequence");
+    }
+    return true;
+}
+
 static void test_finished_record_sequence_transition() {
+    // Action: exchange Finished messages and inspect the record sequence in each direction.
     // Scenario under test: TLS Finished record sequence transition.
     // Expected: preserve TLS 1.2 client record sequence after Finished.
     _test_case.begin("TLS Finished record sequence transition");
@@ -15,7 +138,7 @@ static void test_finished_record_sequence_transition() {
     {
         tls_session session;
         session.set_type(session_type_t::tls);
-        session.get_tls_protection().set_tls_version(tls_12);
+        session.get_tls_protection().set_tls_version(tls1_2);
 
         session.set_recordno(from_client, 1);
         tls_handshake_finished client_finished(&session);
@@ -31,7 +154,7 @@ static void test_finished_record_sequence_transition() {
     {
         tls_session session;
         session.set_type(session_type_t::tls);
-        session.get_tls_protection().set_tls_version(tls_13);
+        session.get_tls_protection().set_tls_version(tls1_3);
 
         session.set_recordno(from_client, 9);
         tls_handshake_finished client_finished(&session);
@@ -46,13 +169,14 @@ static void test_finished_record_sequence_transition() {
 }
 
 static void test_tls13_finished_record_boundary() {
+    // Action: serialize Finished followed by NewSessionTicket in the same record stream.
     // Scenario under test: TLS 1.3 Finished record boundary.
     // Expected: reject NewSessionTicket coalesced after TLS 1.3 Finished.
     _test_case.begin("TLS 1.3 Finished record boundary");
 
     tls_session writer;
     writer.set_type(session_type_t::tls);
-    writer.get_tls_protection().set_tls_version(tls_13);
+    writer.get_tls_protection().set_tls_version(tls1_3);
     writer.update_session_status(session_status_server_hello);
 
     tls_record_application_data outgoing(&writer);
@@ -71,39 +195,10 @@ static void test_tls13_finished_application_epoch_integration() {
     // Expected: select the expected server-direction traffic IV.
     _test_case.begin("TLS 1.3 Finished application traffic epoch integration");
 
-    auto configure = [](tls_session& session) -> void {
-        session.set_type(session_type_t::tls);
-        auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
-        protection.set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256
-        protection.use_pre_master_secret(true);
-
-        auto& secrets = protection.get_secrets();
-        secrets.assign(tls_secret_t::s_hs_traffic, binary_t(32, 0x11));
-        secrets.assign(tls_secret_t::c_hs_traffic, binary_t(32, 0x22));
-        secrets.assign(tls_secret_t::s_ap_traffic, binary_t(32, 0x33));
-        secrets.assign(tls_secret_t::c_ap_traffic, binary_t(32, 0x44));
-        secrets.assign(tls_secret_t::application, binary_t(32, 0x99));
-        secrets.assign(tls_secret_t::handshake_server_key, binary_t(16, 0x55));
-        secrets.assign(tls_secret_t::handshake_server_iv, binary_t(12, 0x66));
-        secrets.assign(tls_secret_t::handshake_client_key, binary_t(16, 0x77));
-        secrets.assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x88));
-
-        session.update_session_status(session_status_server_hello);
-        session.update_session_status(session_status_encrypted_extensions);
-        session.update_session_status(session_status_server_cert_verified);
-        session.get_session_info(from_server).set_status(tls_handshake_type_t::certificate_verify);
-        session.get_session_info(from_server).begin_protection();
-        session.get_session_info(from_client).set_status(tls_handshake_type_t::server_hello);
-        session.get_session_info(from_client).begin_protection();
-        session.set_recordno(from_server, 7);
-        session.set_recordno(from_client, 9);
-    };
-
     tls_session writer;
     tls_session reader;
-    configure(writer);
-    configure(reader);
+    configure_tls13_finished_application_epoch(writer);
+    configure_tls13_finished_application_epoch(reader);
 
     auto assert_server_key = [](tls_session& session, tls_secret_t expected_key, tls_secret_t expected_iv, const char* message) -> void {
         tls_secret_t actual_key{};
@@ -250,38 +345,10 @@ static void test_tls13_psk_finished_without_certificate_authentication() {
     // Expected: accept both Finished messages without server certificate verification.
     _test_case.begin("TLS 1.3 PSK Finished does not require certificate authentication");
 
-    auto configure = [](tls_session& session, bool psk_selected) -> void {
-        session.set_type(session_type_t::tls);
-        auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_13);
-        protection.set_cipher_suite(0x1301);
-        protection.use_pre_master_secret(true);
-
-        auto& secrets = protection.get_secrets();
-        secrets.assign(tls_secret_t::s_hs_traffic, binary_t(32, 0x11));
-        secrets.assign(tls_secret_t::c_hs_traffic, binary_t(32, 0x22));
-        secrets.assign(tls_secret_t::s_ap_traffic, binary_t(32, 0x33));
-        secrets.assign(tls_secret_t::c_ap_traffic, binary_t(32, 0x44));
-        secrets.assign(tls_secret_t::application, binary_t(32, 0x99));
-        secrets.assign(tls_secret_t::handshake_server_key, binary_t(16, 0x55));
-        secrets.assign(tls_secret_t::handshake_server_iv, binary_t(12, 0x66));
-        secrets.assign(tls_secret_t::handshake_client_key, binary_t(16, 0x77));
-        secrets.assign(tls_secret_t::handshake_client_iv, binary_t(12, 0x88));
-
-        session.update_session_status(session_status_server_hello);
-        session.update_session_status(session_status_encrypted_extensions);
-        session.get_keyvalue().set(session_client_psk_identity_count, psk_selected ? 1 : 0);
-        session.get_keyvalue().set(session_server_psk_selected_identity, psk_selected ? 0 : 0xffff);
-        session.get_session_info(from_server).set_status(tls_handshake_type_t::encrypted_extensions);
-        session.get_session_info(from_server).begin_protection();
-        session.get_session_info(from_client).set_status(tls_handshake_type_t::client_hello);
-        session.get_session_info(from_client).begin_protection();
-    };
-
     tls_session writer;
     tls_session reader;
-    configure(writer, true);
-    configure(reader, true);
+    configure_tls13_psk_finished(writer, true);
+    configure_tls13_psk_finished(reader, true);
 
     _test_case.assert(0 == (writer.get_session_status() & session_status_server_cert_verified), __FUNCTION__,
                       "begin the PSK handshake without server certificate verification");
@@ -325,19 +392,14 @@ static void test_tls13_psk_finished_without_certificate_authentication() {
     // Keep the full-handshake prerequisite intact: without a selected PSK,
     // Finished must still wait for server certificate verification.
     tls_session unauthenticated_full_handshake;
-    configure(unauthenticated_full_handshake, false);
+    configure_tls13_psk_finished(unauthenticated_full_handshake, false);
     tls_record_application_data premature_server_finished(&unauthenticated_full_handshake);
     premature_server_finished << new tls_handshake_finished(&unauthenticated_full_handshake);
     binary_t rejected_server_finished_wire;
     ret = premature_server_finished.write(from_server, rejected_server_finished_wire);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "reject full-handshake Server Finished before server certificate verification");
 
-    size_t unexpected_message_count = 0;
-    unauthenticated_full_handshake.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::unexpected_message == desc)) {
-            ++unexpected_message_count;
-        }
-    });
+    size_t unexpected_message_count = test_count_fatal_alert(unauthenticated_full_handshake, from_server, tls_alertdesc_t::unexpected_message);
     _test_case.assert(1 == unexpected_message_count, __FUNCTION__, "retain the fatal unexpected_message alert for a full handshake without certificate verification");
 }
 
@@ -347,29 +409,10 @@ static void test_tls12_finished_record_sequence_integration() {
     // Expected: consume one TLS 1.2 record sequence number for outbound Finished.
     _test_case.begin("TLS 1.2 Finished record sequence integration");
 
-    auto configure = [](tls_session& session) -> void {
-        session.set_type(session_type_t::tls);
-        auto& protection = session.get_tls_protection();
-        protection.set_tls_version(tls_12);
-        protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        protection.get_secrets().assign(tls_secret_t::master, binary_t(48, 0x55));
-        protection.get_secrets().assign(tls_secret_t::client_key, binary_t(16, 0x11));
-        protection.get_secrets().assign(tls_secret_t::client_iv, binary_t(4, 0x22));
-        protection.get_secrets().assign(tls_secret_t::server_key, binary_t(16, 0x33));
-        protection.get_secrets().assign(tls_secret_t::server_iv, binary_t(4, 0x44));
-        session.get_keyvalue().set(session_tls_version, tls_12);
-        session.update_session_status(session_status_server_key_exchange);
-        session.update_session_status(session_status_client_key_exchange);
-        session.get_session_info(from_client).begin_protection();
-        session.get_session_info(from_server).begin_protection();
-        session.set_recordno(from_client, 0);
-        session.set_recordno(from_server, 0);
-    };
-
     tls_session writer;
     tls_session reader;
-    configure(writer);
-    configure(reader);
+    configure_tls12_finished_sequence(writer);
+    configure_tls12_finished_sequence(reader);
 
     tls_record_handshake outgoing_finished(&writer);
     outgoing_finished << new tls_handshake_finished(&writer);
@@ -390,6 +433,34 @@ static void test_tls12_finished_record_sequence_integration() {
     _test_case.assert(1 == reader.get_recordno(from_client), __FUNCTION__, "preserve the consumed TLS 1.2 sequence number after inbound Finished");
     _test_case.assert(0 != (reader.get_session_status() & session_status_client_finished), __FUNCTION__, "record Client Finished state after successful verification");
 
+    // RFC 5077: the server sends NewSessionTicket after Client Finished but
+    // before Server Finished. The client must stage it until Server Finished
+    // has been successfully authenticated.
+    const binary_t ticket_identity{0x10, 0x20, 0x30, 0x40};
+    writer.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, ticket_identity);
+    writer.get_session_info(from_server).get_keyvalue().set(session_ticket_lifetime, 3600);
+    tls_handshake_new_session_ticket outgoing_ticket(&writer);
+    binary_t ticket_wire;
+    ret = outgoing_ticket.write(from_server, ticket_wire);
+    _test_case.test(ret, __FUNCTION__, "write TLS 1.2 NewSessionTicket after Client Finished");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+
+    tls_handshake_new_session_ticket incoming_ticket(&reader);
+    size_t ticket_pos = 0;
+    ret = incoming_ticket.read(from_server, ticket_wire.data(), ticket_wire.size(), ticket_pos);
+    _test_case.test(ret, __FUNCTION__, "read TLS 1.2 NewSessionTicket before Server Finished");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    auto& reader_secrets = reader.get_tls_protection().get_secrets();
+    auto& reader_ticket_state = reader.get_session_info(from_server).get_keyvalue();
+    _test_case.assert(reader_secrets.get(tls_secret_t::new_session_ticket).empty(), __FUNCTION__,
+                      "do not publish a TLS 1.2 ticket before Server Finished authentication");
+    _test_case.assert(ticket_identity == reader_secrets.get(tls_secret_t::new_session_ticket_pending), __FUNCTION__, "retain the received TLS 1.2 ticket as pending");
+    _test_case.assert(1 == reader_ticket_state.get(session_ticket_pending), __FUNCTION__, "mark the received ticket pending");
+
     tls_record_handshake outgoing_server_finished(&writer);
     outgoing_server_finished << new tls_handshake_finished(&writer);
     binary_t server_finished_wire;
@@ -408,6 +479,21 @@ static void test_tls12_finished_record_sequence_integration() {
     }
     _test_case.assert(1 == reader.get_recordno(from_server), __FUNCTION__, "consume one TLS 1.2 record sequence number for inbound Server Finished");
     _test_case.assert(0 != (reader.get_session_status() & session_status_server_finished), __FUNCTION__, "record Server Finished state after successful verification");
+    _test_case.assert(ticket_identity == reader_secrets.get(tls_secret_t::new_session_ticket), __FUNCTION__,
+                      "publish the TLS 1.2 ticket only after authenticating Server Finished");
+    _test_case.assert(reader_secrets.get(tls_secret_t::new_session_ticket_pending).empty(), __FUNCTION__, "clear pending ticket bytes after activation");
+    _test_case.assert(3600 == reader_ticket_state.get(session_ticket_lifetime), __FUNCTION__, "publish ticket lifetime metadata after Server Finished");
+    _test_case.assert(0 == reader_ticket_state.get(session_ticket_pending), __FUNCTION__, "clear pending ticket state after activation");
+
+    const auto cached_tls12_tickets = reader.get_tls12_resumption_tickets();
+    _test_case.assert(1 == cached_tls12_tickets.size(), __FUNCTION__, "cache the received TLS 1.2 ticket after Server Finished authentication");
+    if (1 == cached_tls12_tickets.size()) {
+        _test_case.assert(ticket_identity == cached_tls12_tickets[0].identity, __FUNCTION__, "retain the received opaque ticket identity");
+        _test_case.assert(binary_t(48, 0x55) == cached_tls12_tickets[0].master_secret, __FUNCTION__, "associate the authenticated ticket with the current Master Secret");
+        _test_case.assert(3600 == cached_tls12_tickets[0].lifetime, __FUNCTION__, "retain the ticket lifetime in the client cache");
+        _test_case.assert(tls1_2 == static_cast<tls_version_t>(cached_tls12_tickets[0].version), __FUNCTION__, "retain the negotiated TLS version");
+        _test_case.assert(0xc02f == cached_tls12_tickets[0].cipher_suite, __FUNCTION__, "retain the negotiated cipher suite");
+    }
 
     const std::string message = "application data after Finished";
     tls_record_application_data outgoing_application(&writer, message);
@@ -457,67 +543,21 @@ static void test_tls12_finished_record_sequence_integration() {
     _test_case.assert(2 == reader.get_recordno(from_client), __FUNCTION__, "preserve inbound client sequence while reading server data");
 
     // Exercise multiple records in both directions, interleaving the independent sequences.
-    for (uint64 index = 0; index < 3; ++index) {
-        const auto expected_client_sequence = 3 + index;
-        const std::string client_message = "client application record " + std::to_string(index);
-        tls_record_application_data client_record(&writer, client_message);
-        binary_t client_wire;
-        ret = client_record.write(from_client, client_wire);
-        _test_case.test(ret, __FUNCTION__, "write consecutive TLS 1.2 Client Application Data");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        _test_case.assert(expected_client_sequence == writer.get_recordno(from_client), __FUNCTION__, "increment client write sequence for each Application Data record");
-
-        tls_records client_records;
-        ret = client_records.read(&reader, from_client, client_wire);
-        _test_case.test(ret, __FUNCTION__, "read consecutive TLS 1.2 Client Application Data");
-        if (errorcode_t::success != ret || 1 != client_records.size()) {
-            _test_case.assert(false, __FUNCTION__, "decode consecutive TLS 1.2 Client Application Data");
-            return;
-        }
-        auto decoded_client = (tls_record_application_data*)client_records.getat(0);
-        binary_t expected_client(client_message.begin(), client_message.end());
-        _test_case.assert(expected_client == decoded_client->get_binary(), __FUNCTION__, "authenticate each consecutive client record with its sequence");
-        _test_case.assert(expected_client_sequence == reader.get_recordno(from_client), __FUNCTION__, "increment client read sequence for each Application Data record");
-
-        const auto expected_server_sequence = 3 + index;
-        const std::string server_message = "server application record " + std::to_string(index);
-        tls_record_application_data server_record(&writer, server_message);
-        binary_t server_wire;
-        ret = server_record.write(from_server, server_wire);
-        _test_case.test(ret, __FUNCTION__, "write consecutive TLS 1.2 Server Application Data");
-        if (errorcode_t::success != ret) {
-            return;
-        }
-        _test_case.assert(expected_server_sequence == writer.get_recordno(from_server), __FUNCTION__, "increment server write sequence for each Application Data record");
-
-        tls_records server_records;
-        ret = server_records.read(&reader, from_server, server_wire);
-        _test_case.test(ret, __FUNCTION__, "read consecutive TLS 1.2 Server Application Data");
-        if (errorcode_t::success != ret || 1 != server_records.size()) {
-            _test_case.assert(false, __FUNCTION__, "decode consecutive TLS 1.2 Server Application Data");
-            return;
-        }
-        auto decoded_server_record = (tls_record_application_data*)server_records.getat(0);
-        binary_t expected_server(server_message.begin(), server_message.end());
-        _test_case.assert(expected_server == decoded_server_record->get_binary(), __FUNCTION__, "authenticate each consecutive server record with its sequence");
-        _test_case.assert(expected_server_sequence == reader.get_recordno(from_server), __FUNCTION__, "increment server read sequence for each Application Data record");
-
-        _test_case.assert(expected_client_sequence == writer.get_recordno(from_client), __FUNCTION__, "server records do not alter client write sequence");
-        _test_case.assert(expected_server_sequence == writer.get_recordno(from_server), __FUNCTION__, "client records do not alter server write sequence");
-        _test_case.assert(expected_client_sequence == reader.get_recordno(from_client), __FUNCTION__, "server records do not alter client read sequence");
-        _test_case.assert(expected_server_sequence == reader.get_recordno(from_server), __FUNCTION__, "client records do not alter server read sequence");
+    if (false == exchange_tls12_interleaved_application_records(writer, reader, __FUNCTION__)) {
+        return;
     }
 }
 
 static void test_finished_calculation_propagates_invalid_algorithm() {
+    // Scenario under test: Finished verify_data calculation with an unsupported hash algorithm.
+    // Action: configure a Finished calculation with an invalid digest identifier.
+    // Expected: propagate the digest failure instead of emitting verify_data.
     _test_case.begin("Finished calculation propagates an invalid hash algorithm");
 
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
 
     tls_secret_t typeof_secret{};
@@ -528,6 +568,9 @@ static void test_finished_calculation_propagates_invalid_algorithm() {
 }
 
 static void test_tls13_finished_postprocess_key_schedule_failure_is_terminal() {
+    // Scenario under test: TLS 1.3 Finished post-processing fails while deriving the application key schedule.
+    // Action: force a key-schedule failure after Finished verification reaches post-processing.
+    // Expected: terminate the session and do not continue with partially installed traffic secrets.
     _test_case.begin("TLS 1.3 Finished key-schedule failure terminates the session");
 
     class finished_postprocess_probe : public tls_handshake_finished {
@@ -539,7 +582,7 @@ static void test_tls13_finished_postprocess_key_schedule_failure_is_terminal() {
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_cipher_suite(0x1301);
     protection.set_flow(tls_flow_t::one_rtt);
     protection.reset_transcript_hash(&session);
@@ -564,16 +607,12 @@ static void test_tls13_finished_postprocess_key_schedule_failure_is_terminal() {
                       "reset the server handshake cursor after local Finished processing failure");
     _test_case.assert(0 == session.get_keyvalue().get(session_handshake_finished), __FUNCTION__, "do not commit Finished after key-schedule failure");
 
-    size_t fatal_internal_error_count = 0;
-    session.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) {
-        if ((tls_alertlevel_t::fatal == level) && (tls_alertdesc_t::internal_error == desc)) {
-            ++fatal_internal_error_count;
-        }
-    });
+    size_t fatal_internal_error_count = test_count_fatal_alert(session, from_server, tls_alertdesc_t::internal_error);
     _test_case.assert(1 == fatal_internal_error_count, __FUNCTION__, "queue exactly one fatal internal_error for local Finished processing failure");
 }
 
 static void test_tls13_finished_requires_cipher_suite() {
+    // Action: attempt to serialize TLS 1.3 Finished before negotiating a cipher suite.
     // Scenario under test: TLS 1.3 Finished without a negotiated cipher suite.
     // Expected: fail before emitting a malformed empty Finished message.
     _test_case.begin("TLS 1.3 Finished requires a negotiated cipher suite");
@@ -581,7 +620,7 @@ static void test_tls13_finished_requires_cipher_suite() {
     tls_session session;
     session.set_type(session_type_t::tls);
     auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls_13);
+    protection.set_tls_version(tls1_3);
     protection.set_flow(tls_flow_t::one_rtt);
     session.update_session_status(session_status_server_hello);
     session.update_session_status(session_status_encrypted_extensions);
@@ -597,6 +636,161 @@ static void test_tls13_finished_requires_cipher_suite() {
     _test_case.assert(0 == session.get_keyvalue().get(session_handshake_finished), __FUNCTION__, "do not commit Finished status after the write failure");
 }
 
+static void test_tls12_finished_rejects_invalid_verify_data_without_ticket_activation() {
+    // Action: send an invalid Server Finished while a newly issued session ticket is pending confirmation.
+    // Scenario under test: TLS 1.2 Server Finished verification failure with a pending session ticket.
+    // Expected: reject Finished and keep the ticket unpublished.
+    _test_case.begin("TLS 1.2 invalid Server Finished does not activate a pending session ticket");
+
+    auto configure = [](tls_session& session) -> void {
+        session.set_type(session_type_t::tls);
+        auto& protection = session.get_tls_protection();
+        protection.set_tls_version(tls1_2);
+        protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        protection.get_secrets().assign(tls_secret_t::master, binary_t(48, 0x55));
+        protection.reset_transcript_hash(&session);
+        session.update_session_status(session_status_server_key_exchange);
+        session.update_session_status(session_status_client_key_exchange);
+        session.update_session_status(session_status_client_finished);
+        session.get_session_info(from_server).begin_protection();
+    };
+
+    tls_session writer;
+    tls_session reader;
+    configure(writer);
+    configure(reader);
+
+    const binary_t pending_ticket{0x10, 0x20, 0x30, 0x40};
+    auto& reader_secrets = reader.get_tls_protection().get_secrets();
+    auto& ticket_state = reader.get_session_info(from_server).get_keyvalue();
+    reader_secrets.assign(tls_secret_t::new_session_ticket_pending, pending_ticket);
+    ticket_state.set(session_ticket_pending_lifetime, 3600);
+    ticket_state.set(session_ticket_pending_timestamp, uint64(123456789));
+    ticket_state.set(session_ticket_pending, 1);
+
+    tls_handshake_finished outgoing_finished(&writer);
+    binary_t finished_wire;
+    return_t ret = outgoing_finished.write(from_server, finished_wire);
+    _test_case.test(ret, __FUNCTION__, "write a valid TLS 1.2 Server Finished for the negative-path fixture");
+    if (errorcode_t::success != ret || finished_wire.empty()) {
+        return;
+    }
+
+    // Corrupt verify_data, not the enclosing record ciphertext, so the test
+    // reaches Finished MAC verification rather than record-layer authentication.
+    finished_wire.back() ^= 0x01;
+
+    tls_handshake_finished incoming_finished(&reader);
+    size_t pos = 0;
+    ret = incoming_finished.read(from_server, finished_wire.data(), finished_wire.size(), pos);
+    _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "reject Server Finished with mismatched verify_data");
+    _test_case.assert(reader_secrets.get(tls_secret_t::new_session_ticket).empty(), __FUNCTION__, "do not publish the pending ticket after Finished verification fails");
+    _test_case.assert(reader_secrets.get(tls_secret_t::new_session_ticket_pending).empty(), __FUNCTION__,
+                      "discard pending ticket bytes when Finished verification fails");
+    _test_case.assert(0 == ticket_state.get(session_ticket_pending), __FUNCTION__, "clear pending ticket state after Finished verification failure");
+    _test_case.assert(0 == ticket_state.get(session_ticket_pending_lifetime), __FUNCTION__, "clear pending ticket lifetime after Finished verification failure");
+    _test_case.assert(0 == ticket_state.get(session_ticket_pending_timestamp), __FUNCTION__, "clear pending ticket timestamp after Finished verification failure");
+    _test_case.assert(0 == (reader.get_session_status() & session_status_server_finished), __FUNCTION__,
+                      "do not mark Server Finished successful after verify_data mismatch");
+
+    size_t fatal_handshake_failure_count = test_count_fatal_alert(reader, from_server, tls_alertdesc_t::handshake_failure);
+    _test_case.assert(1 == fatal_handshake_failure_count, __FUNCTION__, "queue exactly one fatal handshake_failure alert");
+
+    // A subsequent TLS 1.2 ClientHello starts a fresh handshake and must
+    // discard ticket material left pending by the failed Server Finished.
+    tls_handshake_client_hello next_client_hello(&reader);
+    ret = next_client_hello.add_ciphersuite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    _test_case.test(ret, __FUNCTION__, "configure a fresh TLS 1.2 ClientHello after failed Server Finished");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    next_client_hello.get_extensions().add(tls_extension_type_t::encrypt_then_mac, from_client, &next_client_hello);
+    binary_t next_client_hello_wire;
+    ret = next_client_hello.write(from_client, next_client_hello_wire);
+    _test_case.test(ret, __FUNCTION__, "write a fresh TLS 1.2 ClientHello after failed Server Finished");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    _test_case.assert(false == next_client_hello_wire.empty(), __FUNCTION__, "serialize the fresh ClientHello");
+    _test_case.assert(reader_secrets.get(tls_secret_t::new_session_ticket).empty(), __FUNCTION__, "keep the active ticket empty after starting a fresh handshake");
+    _test_case.assert(reader_secrets.get(tls_secret_t::new_session_ticket_pending).empty(), __FUNCTION__,
+                      "discard pending ticket bytes when the fresh ClientHello starts");
+    _test_case.assert(0 == ticket_state.get(session_ticket_pending), __FUNCTION__, "clear pending ticket state on the fresh ClientHello");
+    _test_case.assert(0 == ticket_state.get(session_ticket_pending_lifetime), __FUNCTION__, "clear pending ticket lifetime on the fresh ClientHello");
+    _test_case.assert(0 == ticket_state.get(session_ticket_pending_timestamp), __FUNCTION__, "clear pending ticket timestamp on the fresh ClientHello");
+}
+
+static void test_tls12_abbreviated_finished_rejects_invalid_client_verify_data_without_ticket_activation() {
+    // Action: send an invalid abbreviated Client Finished after the server staged a ticket renewal.
+    // Scenario under test: TLS 1.2 abbreviated Client Finished verification failure.
+    // Expected: discard the server's pending renewal without removing an older confirmed ticket.
+    _test_case.begin("TLS 1.2 invalid abbreviated Client Finished does not activate a pending ticket");
+
+    auto configure = [](tls_session& session) -> void {
+        session.set_type(session_type_t::tls);
+        auto& protection = session.get_tls_protection();
+        protection.set_tls_version(tls1_2);
+        protection.set_cipher_suite(0xc02f);
+        protection.get_secrets().assign(tls_secret_t::master, binary_t(48, 0x55));
+        protection.reset_transcript_hash(&session);
+        session.get_keyvalue().set(session_tls12_ticket_resumed, 1);
+        session.update_session_status(session_status_server_hello);
+        session.update_session_status(session_status_server_key_exchange);
+        session.update_session_status(session_status_client_key_exchange);
+        session.update_session_status(session_status_server_finished);
+        session.get_session_info(from_client).begin_protection();
+    };
+
+    tls_session writer;
+    tls_session reader;
+    configure(writer);
+    configure(reader);
+
+    tls12_resumption_ticket active_ticket;
+    active_ticket.identity = binary_t{0x01, 0x02};
+    active_ticket.master_secret = binary_t(48, 0x55);
+    active_ticket.version = static_cast<uint16>(tls1_2);
+    active_ticket.cipher_suite = 0xc02f;
+    reader.stage_tls12_resumption_ticket(active_ticket);
+    bool active_ticket_confirmed = reader.confirm_tls12_resumption_ticket(active_ticket.identity);
+    _test_case.assert(active_ticket_confirmed, __FUNCTION__, "retain an older confirmed ticket before the failed abbreviated handshake");
+
+    tls12_resumption_ticket pending_ticket = active_ticket;
+    pending_ticket.identity = binary_t{0x03, 0x04};
+    reader.stage_tls12_resumption_ticket(pending_ticket);
+    _test_case.assert(1 == reader.get_pending_tls12_resumption_tickets().size(), __FUNCTION__, "stage the replacement ticket until Client Finished authentication");
+
+    tls_handshake_finished outgoing_finished(&writer);
+    binary_t finished_wire;
+    return_t ret = outgoing_finished.write(from_client, finished_wire);
+    _test_case.test(ret, __FUNCTION__, "write Client Finished for the abbreviated negative-path fixture");
+    if (errorcode_t::success != ret || finished_wire.empty()) {
+        return;
+    }
+
+    // Corrupt verify_data so the reader reaches Finished MAC verification.
+    finished_wire.back() ^= 0x01;
+
+    tls_handshake_finished incoming_finished(&reader);
+    size_t pos = 0;
+    ret = incoming_finished.read(from_client, finished_wire.data(), finished_wire.size(), pos);
+    _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "reject abbreviated Client Finished with mismatched verify_data");
+    _test_case.assert(reader.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__,
+                      "discard the unconfirmed server renewal after Client Finished verification failure");
+
+    tls12_resumption_ticket cached_ticket;
+    bool active_ticket_found = reader.find_tls12_resumption_ticket(active_ticket.identity, cached_ticket);
+    _test_case.assert(active_ticket_found, __FUNCTION__, "preserve the older confirmed server ticket after the failed renewal");
+    tls12_resumption_ticket unconfirmed_ticket;
+    bool pending_ticket_found = reader.find_tls12_resumption_ticket(pending_ticket.identity, unconfirmed_ticket);
+    _test_case.assert(false == pending_ticket_found, __FUNCTION__, "keep the failed renewal unavailable for future resumption");
+    _test_case.assert(0 == (reader.get_session_status() & session_status_client_finished), __FUNCTION__,
+                      "do not mark Client Finished successful after verify_data mismatch");
+
+    size_t fatal_handshake_failure_count = test_count_fatal_alert(reader, from_client, tls_alertdesc_t::handshake_failure);
+    _test_case.assert(1 == fatal_handshake_failure_count, __FUNCTION__, "queue exactly one fatal handshake_failure for invalid Client Finished");
+}
+
 void testcase_gpt_finished() {
     test_finished_calculation_propagates_invalid_algorithm();
     test_tls13_finished_postprocess_key_schedule_failure_is_terminal();
@@ -606,4 +800,6 @@ void testcase_gpt_finished() {
     test_tls13_finished_application_epoch_integration();
     test_tls13_psk_finished_without_certificate_authentication();
     test_tls12_finished_record_sequence_integration();
+    test_tls12_finished_rejects_invalid_verify_data_without_ticket_activation();
+    test_tls12_abbreviated_finished_rejects_invalid_client_verify_data_without_ticket_activation();
 }

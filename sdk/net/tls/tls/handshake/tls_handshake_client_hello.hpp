@@ -58,7 +58,7 @@ namespace net {
  *          handshake->get_extensions().add(signature_algorithms);
  *
  *          auto supported_versions = new tls_extension_client_supported_versions(session);
- *          (*supported_versions).add(tls_13);
+ *          (*supported_versions).add(tls1_3);
  *          handshake->get_extensions().add(supported_versions);
  *
  *          auto key_share = new tls_extension_client_key_share(session);
