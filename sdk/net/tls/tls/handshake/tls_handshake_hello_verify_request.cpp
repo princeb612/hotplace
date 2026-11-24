@@ -27,7 +27,7 @@ tls_handshake_hello_verify_request::tls_handshake_hello_verify_request(tls_sessi
 
 tls_handshake_hello_verify_request::~tls_handshake_hello_verify_request() {}
 
-return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (from_server != dir) {

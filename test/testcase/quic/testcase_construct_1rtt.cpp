@@ -42,7 +42,7 @@ void testcase_construct_1rtt() {
 
     // write & read (PKN 15)
     {
-        uint32 recno = t_narrow_cast(quicsession.get_recordno(dir, false, protection_space_t::application));
+        uint32 recno = t_narrow_cast(quicsession.get_recordno(dir, protection_space_t::application));
 
         /**
          *  > frame ACK 0x2(2) @0x0

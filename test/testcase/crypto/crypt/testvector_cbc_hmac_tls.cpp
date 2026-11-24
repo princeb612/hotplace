@@ -70,6 +70,15 @@ void test_cbc_hmac(test_vector_cbchmac_tls_t* entry) {
     _logger->writeln("  %s", base16_encode(ct).c_str());
     ret = cbchmac.decrypt(enckey, mackey, iv, aad, ct, pt);
     _test_case.assert(plaintext == pt, __FUNCTION__, "%s #decryption", desc.c_str());
+
+    if ("encrypt_then_mac" == entry->flag && false == ciphertext.empty()) {
+        binary_t tampered_record = ciphertext;
+        tampered_record.back() ^= 0x01;
+        binary_t rejected_plaintext;
+        ret = cbchmac.decrypt(enckey, mackey, iv, aad, tampered_record, rejected_plaintext);
+        _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "%s #reject modified EtM authenticator", desc.c_str());
+        _test_case.assert(rejected_plaintext.empty(), __FUNCTION__, "%s #EtM exposes no plaintext after authenticator failure", desc.c_str());
+    }
 }
 
 void test_yaml_testvector_cbc_hmac_tls() {

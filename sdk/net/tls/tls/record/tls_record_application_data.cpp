@@ -240,7 +240,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
 
         auto limit = recpos + get_record_size();
         if (trial_decrypt_rejected_early_data) {
-            uint64 record_no = session->get_session_info(dir).get_recordno(false);
+            uint64 record_no = session->get_session_info(dir).get_recordno();
             ret = protection.decrypt_aead(session, dir, stream, limit, recpos, plaintext, protection_space_t::tls, decrypt_alert_policy_t::suppress);
             if (errorcode_t::verification_failure == ret) {
                 // Only an authentication failure identifies a late 0-RTT
@@ -267,7 +267,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-            if (protection.is_kindof_tls13()) {
+            if (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) {
                 // RFC 9846 5.2 / 5.4: TLSInnerPlaintext is content || type || zero padding.
                 // The generic decrypt path has already enforced its 2^14+1 size limit.
                 // Scan only the AEAD-decrypted plaintext and locate the last non-zero octet.
@@ -421,7 +421,7 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     auto& records = get_records();
     auto session = get_session();
     auto& protection = session->get_tls_protection();
-    auto is_tls13 = protection.is_kindof_tls13();
+    auto is_tls13 = protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session);
     if (handshakes.size()) {
         if (is_tls13) {
             bool finished_seen = false;

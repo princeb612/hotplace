@@ -519,10 +519,6 @@ static void test_tls13_new_session_ticket_early_data_resumption(const char* func
     resumed_client_protection.set_tls_version(tls1_3);
     resumed_client_protection.set_cipher_suite(0x1301);
     resumed_client.get_keyvalue().set(session_tls_version, tls1_3);
-    resumed_client.update_session_status(session_status_server_finished);
-    resumed_client.update_session_status(session_status_client_finished);
-    resumed_client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-    resumed_client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
     resumed_client.store_resumption_ticket(client_tickets[1]);
     resumed_client_protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
 
@@ -562,10 +558,6 @@ static void test_tls13_new_session_ticket_early_data_resumption(const char* func
     resumed_server_protection.set_tls_version(tls1_3);
     resumed_server_protection.set_cipher_suite(0x1301);
     resumed_server.get_keyvalue().set(session_tls_version, tls1_3);
-    resumed_server.update_session_status(session_status_server_finished);
-    resumed_server.update_session_status(session_status_client_finished);
-    resumed_server.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-    resumed_server.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
     resumed_server_protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
     resumed_server.set_early_data_discard_limit(4096);
     resumed_server.store_resumption_ticket(server_tickets[1]);
@@ -1911,14 +1903,44 @@ static void test_tls12_server_hello_session_id_length_bounds(const char* functio
     // Expected: accept 32 bytes and reject oversized ServerHello input with decode_error.
     return_t ret = errorcode_t::success;
     tls_session server_hello_session;
-    tls_session receiving_client;
+    tls_session valid_client_hello_session;
+    tls_session valid_receiving_client;
     server_hello_session.set_type(session_type_t::tls);
-    receiving_client.set_type(session_type_t::tls);
+    valid_client_hello_session.set_type(session_type_t::tls);
+    valid_receiving_client.set_type(session_type_t::tls);
     server_hello_session.get_tls_protection().set_tls_version(tls1_2);
-    receiving_client.get_tls_protection().set_tls_version(tls1_2);
-    receiving_client.update_session_status(session_status_client_hello);
+    valid_client_hello_session.get_tls_protection().set_tls_version(tls1_2);
+    valid_receiving_client.get_tls_protection().set_tls_version(tls1_2);
     server_hello_session.update_session_status(session_status_client_hello);
     server_hello_session.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
+
+    // Build and exchange a real ClientHello first so both endpoints
+    // derive the secure-renegotiation offer state from the SCSV.
+    auto valid_client_hello = new tls_handshake_client_hello(&valid_client_hello_session);
+    valid_client_hello->set_session_id(binary_t(32, 0x44));
+    ret = valid_client_hello->add_ciphersuite(0xc02f);
+    _test_case.test(ret, function_name, "configure a matching ClientHello for the maximum-length ServerHello case");
+    if (errorcode_t::success != ret) {
+        valid_client_hello->release();
+        return;
+    }
+    valid_client_hello->get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, valid_client_hello, nullptr);
+
+    tls_record_handshake outgoing_valid_client_hello(&valid_client_hello_session);
+    outgoing_valid_client_hello << valid_client_hello;
+    binary_t valid_client_hello_wire;
+    ret = outgoing_valid_client_hello.write(from_client, valid_client_hello_wire);
+    _test_case.test(ret, function_name, "serialize a matching ClientHello for the maximum-length ServerHello case");
+    if (errorcode_t::success != ret) {
+        return;
+    }
+    tls_record_handshake incoming_server_client_hello(&server_hello_session);
+    size_t server_client_hello_pos = 0;
+    ret = incoming_server_client_hello.read(from_client, valid_client_hello_wire.data(), valid_client_hello_wire.size(), server_client_hello_pos);
+    _test_case.test(ret, function_name, "server parses the matching ClientHello before constructing ServerHello");
+    if (errorcode_t::success != ret) {
+        return;
+    }
 
     auto server_hello = new tls_handshake_server_hello(&server_hello_session);
     server_hello->set_version(tls1_2);
@@ -1964,31 +1986,6 @@ static void test_tls12_server_hello_session_id_length_bounds(const char* functio
 
     // The protocol boundary is inclusive: a 32-byte Session ID must
     // remain readable before the malformed 33-byte variant is constructed.
-    tls_session valid_client_hello_session;
-    tls_session valid_receiving_client;
-    valid_client_hello_session.set_type(session_type_t::tls);
-    valid_receiving_client.set_type(session_type_t::tls);
-    valid_client_hello_session.get_tls_protection().set_tls_version(tls1_2);
-    valid_receiving_client.get_tls_protection().set_tls_version(tls1_2);
-
-    auto valid_client_hello = new tls_handshake_client_hello(&valid_client_hello_session);
-    valid_client_hello->set_session_id(binary_t(32, 0x44));
-    ret = valid_client_hello->add_ciphersuite(0xc02f);
-    _test_case.test(ret, function_name, "configure a matching ClientHello for the maximum-length ServerHello case");
-    if (errorcode_t::success != ret) {
-        valid_client_hello->release();
-        return;
-    }
-    valid_client_hello->get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, valid_client_hello, nullptr);
-
-    tls_record_handshake outgoing_valid_client_hello(&valid_client_hello_session);
-    outgoing_valid_client_hello << valid_client_hello;
-    binary_t valid_client_hello_wire;
-    ret = outgoing_valid_client_hello.write(from_client, valid_client_hello_wire);
-    _test_case.test(ret, function_name, "serialize a matching ClientHello for the maximum-length ServerHello case");
-    if (errorcode_t::success != ret) {
-        return;
-    }
     tls_record_handshake incoming_valid_client_hello(&valid_receiving_client);
     size_t valid_client_hello_pos = 0;
     ret = incoming_valid_client_hello.read(from_client, valid_client_hello_wire.data(), valid_client_hello_wire.size(), valid_client_hello_pos);
@@ -2028,12 +2025,12 @@ static void test_tls12_server_hello_session_id_length_bounds(const char* functio
     server_hello_wire[7] = static_cast<byte_t>((handshake_length >> 8) & 0xff);
     server_hello_wire[8] = static_cast<byte_t>(handshake_length & 0xff);
 
-    tls_record_handshake incoming_server_hello(&receiving_client);
+    tls_record_handshake incoming_server_hello(&valid_receiving_client);
     size_t server_hello_pos = 0;
     ret = incoming_server_hello.read(from_server, server_hello_wire.data(), server_hello_wire.size(), server_hello_pos);
     _test_case.assert(errorcode_t::bad_format == ret, function_name, "reject a ServerHello Session ID longer than 32 bytes");
 
-    size_t server_decode_error_count = test_count_fatal_alert(receiving_client, from_server, tls_alertdesc_t::decode_error);
+    size_t server_decode_error_count = test_count_fatal_alert(valid_receiving_client, from_server, tls_alertdesc_t::decode_error);
     _test_case.assert(1 == server_decode_error_count, function_name, "queue exactly one fatal decode_error for oversized ServerHello Session ID");
 }
 

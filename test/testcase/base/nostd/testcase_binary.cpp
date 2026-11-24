@@ -112,7 +112,62 @@ void test_binary2() {
     _test_case.assert(str2 == "8000", __FUNCTION__, "%s", str2.c_str());
 }
 
+void test_binaries_moveto() {
+    _test_case.begin("binaries");
+
+    t_binaries<uint32, uint8> bins;
+    const byte_t first[] = {0x11};
+    const byte_t third[] = {0x33};
+
+    // A reserved entry's tag and keep-entry policy move with the entry.
+    bins.reserve(1, 0x51);
+    bins.write(1, 0, first, sizeof(first));
+    bins.write(1, 3, third, sizeof(third));
+    _test_case.assert(true == bins.is_fragmented(1), __FUNCTION__, "source entry is fragmented");
+
+    return_t ret = bins.moveto(1, 2);
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "move to an unused id");
+    _test_case.assert(false == bins.exist(1), __FUNCTION__, "source id is removed");
+    _test_case.assert(true == bins.exist(2), __FUNCTION__, "destination id exists");
+    _test_case.assert(true == bins.is_fragmented(2), __FUNCTION__, "fragment metadata moves");
+    uint8 tag = 0;
+    ret = bins.get_tag(2, tag);
+    _test_case.assert((errorcode_t::success == ret) && (0x51 == tag), __FUNCTION__, "entry tag moves");
+    binary_t actual;
+    ret = bins.peek(2, actual);
+    _test_case.assert((errorcode_t::success == ret) && (4 == actual.size()) && (0x11 == actual[0]) && (0x00 == actual[1]) && (0x00 == actual[2]) && (0x33 == actual[3]),
+                      __FUNCTION__, "entry bytes move");
+    bins.erase(2);
+    _test_case.assert(true == bins.exist(2), __FUNCTION__, "bin_keep_entry moves to destination");
+    ret = bins.peek(2, actual);
+    _test_case.assert((errorcode_t::success == ret) && actual.empty(), __FUNCTION__, "erase clears moved reservation");
+
+    // Moving onto an existing id replaces the complete destination entry.
+    binary_t old_value;
+    binary_t new_value;
+    binary_append(old_value, byte_t(0xaa));
+    binary_append(new_value, byte_t(0xbb));
+    bins.assign(3, old_value);
+    bins.set_tag(3, 0x31);
+    bins.assign(4, new_value);
+    bins.set_tag(4, 0x42);
+    ret = bins.moveto(4, 3);
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "move replaces an existing destination");
+    ret = bins.peek(3, actual);
+    _test_case.assert((errorcode_t::success == ret) && (actual == new_value), __FUNCTION__, "source payload replaces destination payload");
+    ret = bins.get_tag(3, tag);
+    _test_case.assert((errorcode_t::success == ret) && (0x42 == tag), __FUNCTION__, "source tag replaces destination tag");
+    _test_case.assert(false == bins.exist(4), __FUNCTION__, "replaced source id is removed");
+
+    ret = bins.moveto(3, 3);
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "same-id move is a no-op");
+    ret = bins.moveto(9, 10);
+    _test_case.assert(errorcode_t::not_found == ret, __FUNCTION__, "missing source is reported");
+    _test_case.assert(false == bins.exist(10), __FUNCTION__, "missing source does not create destination");
+}
+
 void testcase_binary() {
     test_binary1();
     test_binary2();
+    test_binaries_moveto();
 }

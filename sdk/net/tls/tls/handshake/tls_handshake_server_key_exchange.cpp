@@ -37,7 +37,7 @@ tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session
 
 tls_handshake_server_key_exchange::~tls_handshake_server_key_exchange() {}
 
-return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (from_server != dir) {

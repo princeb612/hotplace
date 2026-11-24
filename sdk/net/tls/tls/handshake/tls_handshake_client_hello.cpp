@@ -37,6 +37,7 @@ namespace hotplace {
 namespace net {
 
 constexpr uint16 constexpr_session_client_supported_versions_key = 0x2005;
+constexpr uint16 constexpr_tls_empty_renegotiation_info_scsv = 0x00ff;
 
 constexpr char constexpr_version[] = "version";
 constexpr char constexpr_random[] = "random";
@@ -92,11 +93,11 @@ static void rollback_client_hello_early_data(tls_session* session, tls_flow_t or
     }
 }
 
-tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_handshake_type_t::client_hello, session) {}
+tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_handshake_type_t::client_hello, session), _reject_renegotiation(false) {}
 
 tls_handshake_client_hello::~tls_handshake_client_hello() {}
 
-return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (from_client != dir) {
@@ -106,6 +107,57 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto hsstatus = session->get_session_info(dir).get_status();
+
+        // RFC 5746: permit a new TLS 1.2 ClientHello only when both the
+        // local policy and the initial handshake's secure-renegotiation
+        // negotiation allow it. Keep the default-disabled rejection before
+        // touching active connection metadata.
+        _reject_renegotiation = false;
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls12() && (tls_handshake_type_t::finished == hsstatus) &&
+            (tls_flow_t::renegotiation != protection.get_flow())) {
+            bool scsv_in_local_offer = false;
+            if (tls_io_operation_t::write == opdir) {
+                for (const auto& suite : _cipher_suites) {
+                    if (constexpr_tls_empty_renegotiation_info_scsv == suite) {
+                        scsv_in_local_offer = true;
+                    }
+                }
+            }
+            if (scsv_in_local_offer) {
+                ret = errorcode_t::bad_request;
+                __leave2_trace(ret);
+            }
+            bool renegotiation_enabled = (0 != session->get_keyvalue().get(session_conf_enable_tls12_renegotiation));
+            bool secure_renegotiation = (0 != session->get_keyvalue().get(session_tls12_secure_renegotiation));
+            if ((false == renegotiation_enabled) || (false == secure_renegotiation)) {
+                if (tls_io_operation_t::read == opdir) {
+                    // RFC 5246 §7.2.2: decline a peer-initiated renegotiation
+                    // with the warning no_renegotiation. Do not reset the
+                    // established handshake cursors, record state, or secrets.
+                    _reject_renegotiation = true;
+                    __leave2;
+                }
+                // A local caller may not start a renegotiation that this
+                // endpoint does not support. No alert is sent and the active
+                // connection state remains untouched.
+                ret = errorcode_t::negotiation_failure;
+                __leave2_trace(ret);
+            }
+            session->reset_session_status();
+            protection.set_flow(tls_flow_t::renegotiation);
+            session->get_session_info(from_client).get_keyvalue().set(session_tls12_renegotiation_ccs, 0);
+            session->get_session_info(from_server).get_keyvalue().set(session_tls12_renegotiation_ccs, 0);
+        } else if ((false == protection.is_kindof_tls13()) && (tls_handshake_type_t::finished == hsstatus) && (tls_flow_t::renegotiation != protection.get_flow())) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+            session->reset_session_status();
+            ret = errorcode_t::negotiation_failure;
+            __leave2_trace(ret);
+        }
+        // A locally initiated renegotiation can still be declined by the peer.
+        // Keep active connection metadata until ServerHello proves that the
+        // peer accepted the new handshake; no_renegotiation must be reversible.
+        const bool defer_active_state_reset = (tls_io_operation_t::write == opdir) && (tls_flow_t::renegotiation == protection.get_flow());
         if (false == protection.is_kindof_tls13()) {
             // A fresh TLS 1.2 handshake/renegotiation must not activate a
             // ticket left pending by an earlier handshake that did not finish.
@@ -122,10 +174,14 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             const auto& hostname = static_cast<tls_extension_sni*>(ext_sni)->get_hostname();
             client_server_name.assign(hostname.begin(), hostname.end());
         }
-        session->set_client_server_name(client_server_name);
-        protection.get_secrets().erase(tls_secret_t::tls12_resumption_alpn);
+        if (false == defer_active_state_reset) {
+            session->set_client_server_name(client_server_name);
+            protection.get_secrets().erase(tls_secret_t::tls12_resumption_alpn);
+        }
         session->get_keyvalue().set(session_tls12_ticket_candidate, 0);
-        session->get_keyvalue().set(session_tls12_ticket_resumed, 0);
+        if (false == defer_active_state_reset) {
+            session->get_keyvalue().set(session_tls12_ticket_resumed, 0);
+        }
         session->get_keyvalue().set(session_tls12_ticket_cipher_suite, 0);
         session->get_keyvalue().set(session_tls12_ticket_identity_present, 0);
         session->get_keyvalue().set(session_tls12_ticket_ems, 0);
@@ -137,8 +193,10 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         session->clear_early_data_ticket();
         // A new ClientHello starts a fresh record_size_limit negotiation, including
         // renegotiation and resumption. Do not carry limits from the prior key epoch.
-        session->get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 0);
-        session->get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 0);
+        if (false == defer_active_state_reset) {
+            session->get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 0);
+            session->get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 0);
+        }
         auto& early_data_state = session->get_session_info(from_server).get_keyvalue();
         bool after_hrr = (tls_flow_t::hello_retry_request == protection.get_flow());
         if (false == after_hrr) {
@@ -166,7 +224,9 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             // ticket. Clear the previous connection's value before parsing or
             // composing a new ClientHello; the new EncryptedExtensions will
             // populate it again when ALPN is negotiated.
-            protection.get_secrets().assign(tls_secret_t::alpn, binary_t());
+            if (false == defer_active_state_reset) {
+                protection.get_secrets().assign(tls_secret_t::alpn, binary_t());
+            }
         }
         // auto& secrets = protection.get_secrets();
         // auto session_type = session->get_type();
@@ -196,9 +256,21 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             }
         }
 
-        // finished -> client_hello
-        auto hsstatus = session->get_session_info(dir).get_status();
-        if ((tls_handshake_type_t::finished == hsstatus) || after_hrr) {
+        // A duplicated session has a fresh negotiated-version field. Its
+        // ClientHello offer and cached TLS 1.3 tickets, not that field, identify
+        // an initial PSK resumption. The read-side peer offer is parsed later.
+        auto cached_tickets = session->get_resumption_tickets();
+        bool tls13_offered = protection.is_kindof_tls13();
+        auto supported_versions = static_cast<tls_extension_client_supported_versions*>(get_extensions().get(tls_extension_type_t::supported_versions));
+        if (nullptr != supported_versions) {
+            const auto& versions = supported_versions->get_versions();
+            tls13_offered = (versions.end() != std::find(versions.begin(), versions.end(), tls1_3));
+        }
+        bool initial_psk_resumption = (tls_handshake_type_t::client_hello == hsstatus) && tls13_offered &&
+                                      (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key)) && (false == cached_tickets.empty());
+
+        // finished -> client_hello, or a fresh-session PSK ClientHello
+        if ((tls_handshake_type_t::finished == hsstatus) || after_hrr || initial_psk_resumption) {
             // Client-side ticket policy applies to a new resumption ClientHello
             // and to ClientHello2 explicitly: the latter has ClientHello status
             // after ClientHello1 was serialized, but must re-evaluate tickets
@@ -207,7 +279,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             // extensions have not been parsed yet; applying this policy there
             // would erase the server's resumption secrets before RFC 8448
             // ClientHello processing.
-            if (protection.is_kindof_tls13() && (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key))) {
+            if ((protection.is_kindof_tls13() || initial_psk_resumption) && (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key))) {
                 // A TLS 1.3 resumption attempt is only usable while the cached
                 // ticket is within both its advertised lifetime and the
                 // RFC 8446 seven-day client maximum.
@@ -220,7 +292,6 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 uint64 first_ticket_early_data_limit = 0;
                 bool psk_extension_configured = (nullptr != get_extensions().get(tls_extension_type_t::pre_shared_key));
                 auto psk_extension = static_cast<tls_extension_client_psk*>(get_extensions().get(tls_extension_type_t::pre_shared_key));
-                auto cached_tickets = session->get_resumption_tickets();
                 auto alpn_extension = static_cast<tls_extension_alpn*>(get_extensions().get(tls_extension_type_t::application_layer_protocol_negotiation));
                 binary_t offered_alpn = alpn_extension ? alpn_extension->get_protocols() : binary_t();
                 auto ticket_alpn_is_offered = [](const binary_t& offered, const binary_t& ticket_alpn) -> bool {
@@ -252,7 +323,8 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                             continue;
                         }
                         bool metadata_valid = (false == ticket.identity.empty()) && (ticket.identity.size() <= 0xffff) && (false == ticket.psk.empty()) &&
-                                              (ticket.lifetime > 0) && (ticket.timestamp > 0) && (ticket.timestamp <= now_ms);
+                                              (ticket.lifetime > 0) && (ticket.timestamp > 0) && (ticket.timestamp <= now_ms) &&
+                                              (ticket.version == static_cast<uint16>(tls1_3));
                         if ((false == metadata_valid)) {
                             continue;
                         }
@@ -298,8 +370,20 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                             // still be offered by this ClientHello, and the
                             // ticket must advertise a nonzero data allowance.
                             bool ticket_alpn_compatible = ticket_alpn_is_offered(offered_alpn, ticket.alpn);
-                            bool ticket_version_compatible = (static_cast<uint16>(tls1_3) == ticket.version);
-                            first_ticket_early_data_limit = (ticket_alpn_compatible && ticket_version_compatible) ? ticket.max_early_data_size : 0;
+                            bool ticket_cipher_suite_offered = false;
+                            if (after_hrr) {
+                                ticket_cipher_suite_offered = (protection.get_cipher_suite() == ticket.cipher_suite);
+                            } else {
+                                for (const auto& offered_suite_code : _cipher_suites) {
+                                    if (offered_suite_code == ticket.cipher_suite) {
+                                        ticket_cipher_suite_offered = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            bool early_data_requested = (nullptr != get_extensions().get(tls_extension_type_t::early_data));
+                            first_ticket_early_data_limit =
+                                (false == after_hrr) && early_data_requested && ticket_alpn_compatible && ticket_cipher_suite_offered ? ticket.max_early_data_size : 0;
                             break;
                         }
                     }
@@ -320,7 +404,16 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                     // The legacy singleton ticket view has no ticket object,
                     // so retain its NewSessionTicket early_data allowance as
                     // separate metadata and restore it only for a valid PSK.
-                    if (metadata_valid && ticket_within_lifetime) {
+                    bool legacy_ticket_cipher_suite_offered = false;
+                    if ((false == after_hrr) && (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
+                        for (const auto& offered_suite_code : _cipher_suites) {
+                            if (offered_suite_code == protection.get_cipher_suite()) {
+                                legacy_ticket_cipher_suite_offered = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (metadata_valid && ticket_within_lifetime && legacy_ticket_cipher_suite_offered) {
                         first_ticket_early_data_limit = ticket_kv.get(session_ticket_max_early_data_size);
                     }
 
@@ -380,42 +473,6 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 if (tls_flow_t::hello_retry_request != protection.get_flow()) {
                     session->reset_session_status();
                 }
-            } else if ((false == protection.is_kindof_tls13())) {
-                // renegotiation
-                //   review
-                //     - tls12renogotiation.pcapng
-                //       - client finished 92d20ede5b77d916bb376397 (tls_secret_t::client_verifydata)
-                //       - server finished 522748448a013f75119810f6 (tls_secret_t::server_verifydata)
-                //       - client_hello renegotiation_info 92d20ede5b77d916bb376397
-                //         - must be (tls_secret_t::client_verifydata)
-                //       - server_hello renegotiation_info 92d20ede5b77d916bb376397522748448a013f75119810f6
-                //         - must be (tls_secret_t::client_verifydata || tls_secret_t::server_verifydata)
-                //     - tls12no_renogotiation.pcapng
-                //   tls_handshake_client_hello
-                //     - test the value of session_conf_enable_renegotiation
-                //       - if zero, renegotiation is prohibited
-                //         - alert(fatal, tls_alertdesc_t::no_renegotiation)
-                //       - else
-                //         - set_flow(tls_flow_t::renegotiation);
-                //         - renegotiation_info must be the verify data of finished
-                //         - key calcuration (TODO)
-                //   tls_handshake_server_hello
-                //     - if renegotiation allowed
-                //       - reply renegotiation_info
-                //       - key calcuration (TODO)
-                //
-#if 0
-                auto& kv = session->get_keyvalue();
-                if (kv.get(session_conf_enable_renegotiation)) {
-                    protection.set_flow(tls_flow_t::renegotiation);
-                } else
-#endif
-                {
-                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::no_renegotiation);
-                    session->reset_session_status();
-                    ret = errorcode_t::negotiation_failure;
-                    __leave2;
-                }
             }
         }
 
@@ -437,7 +494,8 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 tlskey.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
             } break;
             case tls_flow_t::renegotiation: {
-                // TODO
+                // Preserve the negotiated TLS 1.2 version and active directional
+                // protection until each direction receives its renegotiation CCS.
             } break;
             default: {
             } break;
@@ -453,6 +511,11 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        if (_reject_renegotiation && (tls_io_operation_t::read == opdir)) {
+            _reject_renegotiation = false;
+            session->push_alert(dir, tls_alertlevel_t::warning, tls_alertdesc_t::no_renegotiation);
+            __leave2;
+        }
         original_flow = protection.get_flow();
         auto& secrets = protection.get_secrets();
         auto tlsadvisor = tls_advisor::get_instance();
@@ -686,6 +749,18 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                 binary_t previous_psk = secrets.get(tls_secret_t::resumption_early);
                 uint16 previous_cipher_suite = protection.get_cipher_suite();
                 binary_t first_psk_early_secret;
+#if defined DEBUG
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                        dbs.println("* TLS 1.3 PSK binder - ClientHello");
+                        dbs.println(" > flow %i", static_cast<int>(protection.get_flow()));
+                        dbs.println(" > legacy singleton %s", legacy_singleton ? "yes" : "no");
+                        dbs.println(" > previous cipher suite 0x%04x (%s)", previous_cipher_suite, tlsadvisor->nameof_tls_cipher_suite(previous_cipher_suite).c_str());
+                        dbs.println(" > binder identities %u", static_cast<unsigned int>(binder_psks.size()));
+                        dbs.println(" > previous resumption_early length %u", static_cast<unsigned int>(previous_psk.size()));
+                    });
+                }
+#endif
                 size_t binder_offset = binder_list_offset + 2;
                 for (size_t i = 0; i < binder_psks.size(); ++i) {
                     if (binder_offset >= binders_end) {
@@ -709,12 +784,31 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                         ret = errorcode_t::bad_format;
                         break;
                     }
+#if defined DEBUG
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                            dbs.println(" > identity[%u] cipher suite 0x%04x (%s)", static_cast<unsigned int>(i), ticket_cipher_suite,
+                                        tlsadvisor->nameof_tls_cipher_suite(ticket_cipher_suite).c_str());
+                            dbs.println(" > identity[%u] digest %s (%u bytes)", static_cast<unsigned int>(i), ticket_hash->fetchname,
+                                        static_cast<unsigned int>(ticket_hash->digest_size));
+                            dbs.println(" > identity[%u] PSK length %u, binder length %u", static_cast<unsigned int>(i), static_cast<unsigned int>(binder_psks[i].size()),
+                                        static_cast<unsigned int>(binder_len));
+                        });
+                    }
+#endif
 
                     binary_t binder_hash;
                     ret = protection.calc_context_hash(session, ticket_suite->mac, stream + hspos, binder_list_offset - hspos, binder_hash);
                     if (errorcode_t::success != ret) {
                         break;
                     }
+#if defined DEBUG
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                            dbs.println(" > identity[%u] binder transcript hash %s", static_cast<unsigned int>(i), base16_encode(binder_hash).c_str());
+                        });
+                    }
+#endif
 
                     if (legacy_singleton) {
                         // Legacy singleton state already stores the early secret.
@@ -751,8 +845,20 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                 }
                 bool keep_first_psk_early_secret = (errorcode_t::success == ret) && (binder_offset == binders_end) && (tls_flow_t::zero_rtt == protection.get_flow()) &&
                                                    (false == first_psk_early_secret.empty());
+                size_t first_psk_early_secret_size = first_psk_early_secret.size();
                 secrets.assign(tls_secret_t::resumption_early, keep_first_psk_early_secret ? std::move(first_psk_early_secret) : previous_psk);
                 protection.set_cipher_suite(previous_cipher_suite);
+#if defined DEBUG
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                        dbs.println(" > early PSK source identity zero: %s", keep_first_psk_early_secret ? "selected" : "not selected");
+                        dbs.println(" > identity-zero early secret length %u", static_cast<unsigned int>(first_psk_early_secret_size));
+                        dbs.println(" > restored cipher suite 0x%04x (%s)", protection.get_cipher_suite(),
+                                    tlsadvisor->nameof_tls_cipher_suite(protection.get_cipher_suite()).c_str());
+                        dbs.println(" > binder processing result 0x%08x", static_cast<unsigned int>(ret));
+                    });
+                }
+#endif
                 if ((errorcode_t::success != ret) || (binder_offset != binders_end)) {
                     if (errorcode_t::success == ret) {
                         ret = errorcode_t::bad_format;
@@ -797,7 +903,9 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                 } break;
                 case tls_flow_t::renegotiation: {
-                    // TODO
+                    // ServerHello will seed the new transcript from this
+                    // ClientHello, just as it does for an initial handshake.
+                    secrets.assign(tls_secret_t::client_hello, stream + hspos, size_header_body);
                 } break;
             }
 
@@ -966,8 +1074,24 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, tls_io_
 
         auto& protection_context = protection.get_protection_context();
         {
+            bool secure_renegotiation_offered = (nullptr != get_extensions().get(tls_extension_type_t::renegotiation_info));
+            bool renegotiation_scsv_offered = false;
             for (const auto& cs : _cipher_suites) {
+                if (constexpr_tls_empty_renegotiation_info_scsv == cs) {
+                    secure_renegotiation_offered = true;
+                    renegotiation_scsv_offered = (tls_flow_t::renegotiation == protection.get_flow());
+                    continue;
+                }
                 protection_context.add_cipher_suite(cs);
+            }
+            if (renegotiation_scsv_offered) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+            if (tls_io_operation_t::read == opdir) {
+                session->get_keyvalue().set(session_tls12_secure_renegotiation_offered, secure_renegotiation_offered ? 1 : 0);
             }
 
             auto ext_ver = get_extensions().get(tls_extension_type_t::supported_versions);
@@ -1074,8 +1198,8 @@ void tls_handshake_client_hello::run_scheduled(tls_direction_t dir) {
     (void)dir;
     auto session = get_session();
     auto& protection = session->get_tls_protection();
-    if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (tls_flow_t::zero_rtt == protection.get_flow()) &&
-        (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
+    if ((session_type_t::tls == session->get_type()) && (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) &&
+        (tls_flow_t::zero_rtt == protection.get_flow()) && (nullptr != get_extensions().get(tls_extension_type_t::early_data))) {
         session->get_session_info(from_client).begin_protection();
         session->reset_recordno(from_client);
     }
@@ -1117,6 +1241,13 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             session->reset_session_status();
             ret = errorcode_t::bad_format;
             __leave2_trace(ret);
+        }
+        if (_reject_renegotiation) {
+            // The peer's renegotiation request is declined. Consume the
+            // bounded handshake message without parsing extensions or
+            // replacing any state belonging to the established connection.
+            pos = message_end;
+            __leave2;
         }
 
         auto legacy_version = protection.get_lagacy_version();
@@ -1276,7 +1407,18 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         }
 
         if (tls_flow_t::renegotiation == protection.get_flow()) {
-            // client renegotiation
+            // RFC 5746: TLS_EMPTY_RENEGOTIATION_INFO_SCSV is only valid in an
+            // initial ClientHello. During renegotiation it is a fatal
+            // handshake_failure, even when renegotiation_info is also absent.
+            const bool scsv_present = std::find(_cipher_suites.begin(), _cipher_suites.end(), constexpr_tls_empty_renegotiation_info_scsv) != _cipher_suites.end();
+            if (scsv_present) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+                session->reset_session_status();
+                ret = errorcode_t::handshake_failure;
+                __leave2_trace(ret);
+            }
+
+            // Every renegotiation ClientHello must carry the RFC 5746 binding.
             auto ext_renegotiationinfo = get_extensions().get(tls_extension_type_t::renegotiation_info);
             if (nullptr == ext_renegotiationinfo) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
@@ -1448,6 +1590,11 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             }
         }
 
+        if ((from_client == dir) && protection.is_kindof_tls12() && (tls_flow_t::renegotiation == protection.get_flow()) &&
+            (nullptr == get_extensions().get(tls_extension_type_t::renegotiation_info))) {
+            get_extensions().add(tls_extension_type_t::renegotiation_info, dir, this, nullptr);
+        }
+
         binary_t extensions;
         ret = get_extensions().write(dir, extensions);
         if (errorcode_t::success != ret) {
@@ -1456,9 +1603,29 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
         auto legacy_version = protection.get_lagacy_version();
         binary_t cipher_suites;
+        bool tls12_suite_offered = false;
+        bool scsv_offered = false;
         for (const auto& cs : _cipher_suites) {
             binary_append(cipher_suites, cs, hton16);
+            if (constexpr_tls_empty_renegotiation_info_scsv == cs) {
+                scsv_offered = true;
+            }
+            const tls_cipher_suite_t* suite_hint = tlsadvisor->hintof_cipher_suite(cs);
+            if ((nullptr != suite_hint) && (tls1_2 == suite_hint->spec)) {
+                tls12_suite_offered = true;
+            }
         }
+        bool renegotiation_extension_offered = (nullptr != get_extensions().get(tls_extension_type_t::renegotiation_info));
+        bool renegotiation_flow = (tls_flow_t::renegotiation == protection.get_flow());
+        if (renegotiation_flow && scsv_offered) {
+            ret = errorcode_t::bad_request;
+            __leave2_trace(ret);
+        }
+        if ((false == renegotiation_flow) && (false == renegotiation_extension_offered) && tls12_suite_offered && (false == scsv_offered)) {
+            binary_append(cipher_suites, constexpr_tls_empty_renegotiation_info_scsv, hton16);
+            scsv_offered = true;
+        }
+        session->get_keyvalue().set(session_tls12_secure_renegotiation_offered, (scsv_offered || renegotiation_extension_offered || renegotiation_flow) ? 1 : 0);
 
         binary_t compression_methods;
         compression_methods.resize(1);

@@ -91,10 +91,7 @@ static bool test_tls13_ticket_psk_issue_and_first_identity_resumption(const char
     resumed_client_protection.set_tls_version(tls1_3);
     resumed_client_protection.set_cipher_suite(0x1301);
     resumed_client.get_keyvalue().set(session_tls_version, tls1_3);
-    resumed_client.update_session_status(session_status_server_finished);
-    resumed_client.update_session_status(session_status_client_finished);
-    resumed_client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-    resumed_client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+    _test_case.assert(0 == resumed_client.get_session_status(), function_name, "begin first-identity client resumption with a fresh session status");
     for (const auto& ticket : client_tickets) {
         resumed_client.store_resumption_ticket(ticket);
     }
@@ -135,10 +132,7 @@ static bool test_tls13_ticket_psk_issue_and_first_identity_resumption(const char
     resumed_server_protection.set_cipher_suite(0x1301);
     resumed_server_protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
     resumed_server.get_keyvalue().set(session_tls_version, tls1_3);
-    resumed_server.update_session_status(session_status_server_finished);
-    resumed_server.update_session_status(session_status_client_finished);
-    resumed_server.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-    resumed_server.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+    _test_case.assert(0 == resumed_server.get_session_status(), function_name, "begin first-identity server resumption with a fresh session status");
     for (const auto& ticket : server_tickets) {
         resumed_server.store_resumption_ticket(ticket);
     }
@@ -185,10 +179,7 @@ static bool test_tls13_ticket_psk_second_identity_early_data_rejection(const cha
     resumed_client_second_protection.set_tls_version(tls1_3);
     resumed_client_second_protection.set_cipher_suite(0x1301);
     resumed_client_second.get_keyvalue().set(session_tls_version, tls1_3);
-    resumed_client_second.update_session_status(session_status_server_finished);
-    resumed_client_second.update_session_status(session_status_client_finished);
-    resumed_client_second.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-    resumed_client_second.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+    _test_case.assert(0 == resumed_client_second.get_session_status(), function_name, "begin second-identity client resumption with a fresh session status");
     auto early_data_tickets = context.client_tickets;
     early_data_tickets.front().max_early_data_size = 4096;
     for (const auto& ticket : early_data_tickets) {
@@ -223,10 +214,7 @@ static bool test_tls13_ticket_psk_second_identity_early_data_rejection(const cha
     resumed_server_second_protection.set_cipher_suite(0x1301);
     resumed_server_second_protection.get_secrets().assign(tls_secret_t::empty_hash, context.empty_hash);
     resumed_server_second.get_keyvalue().set(session_tls_version, tls1_3);
-    resumed_server_second.update_session_status(session_status_server_finished);
-    resumed_server_second.update_session_status(session_status_client_finished);
-    resumed_server_second.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-    resumed_server_second.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+    _test_case.assert(0 == resumed_server_second.get_session_status(), function_name, "begin second-identity server resumption with a fresh session status");
     resumed_server_second.set_early_data_discard_limit(4096);
     resumed_server_second.store_resumption_ticket(context.server_tickets[1]);
 
@@ -286,16 +274,13 @@ static bool test_tls13_ticket_psk_store_backed_early_data_decline(const char* fu
         client_ticket.max_early_data_size = 4096;
         server_ticket.max_early_data_size = 4096;
 
-        auto prepare_resumption_session = [](tls_session& session) {
+        auto prepare_resumption_session = [&](tls_session& session) {
             session.set_type(session_type_t::tls);
             auto& protection = session.get_tls_protection();
             protection.set_tls_version(tls1_3);
             protection.set_cipher_suite(0x1301);
             session.get_keyvalue().set(session_tls_version, tls1_3);
-            session.update_session_status(session_status_server_finished);
-            session.update_session_status(session_status_client_finished);
-            session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-            session.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+            _test_case.assert(0 == session.get_session_status(), function_name, "begin store-backed ticket resumption with a fresh session status");
         };
 
         tls_session early_client;
@@ -389,10 +374,6 @@ static bool test_tls13_ticket_psk_store_backed_early_data_decline(const char* fu
                                 // handshake, a delayed 0-RTT record must be
                                 // trial-decrypted with handshake keys and
                                 // discarded on authentication failure.
-                                // Keep the completed-session fixture state while constructing and
-                                // processing the handshake. Clear only the server's stale Finished
-                                // flags now, before reading a delayed record on the fresh connection.
-                                early_server.clear_session_status(session_status_client_finished | session_status_server_finished);
                                 tls_records rejected_after_server_hello_records;
                                 return_t rejected_after_server_hello_ret =
                                     rejected_after_server_hello_records.read(&early_server, from_client, in_flight_early_data_wire);
@@ -1016,15 +997,6 @@ static void test_tls13_psk_ke_key_schedule_roundtrip() {
         protection.set_tls_version(tls1_3);
         protection.set_cipher_suite(0x1301);
         session.get_keyvalue().set(session_tls_version, tls1_3);
-        session.update_session_status(session_status_server_finished);
-        session.update_session_status(session_status_client_finished);
-        session.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        session.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-        // Model a restored, fully completed handshake. The Finished
-        // postprocessor sets this session-wide flag in a live session; the
-        // resumption fixture must restore it alongside the per-direction
-        // Finished statuses so ServerHello keeps an eligible 0-RTT flow.
-        session.get_keyvalue().set(session_handshake_finished, 1);
         openssl_digest digest;
         binary_t empty;
         binary_t empty_hash;
@@ -1032,6 +1004,7 @@ static void test_tls13_psk_ke_key_schedule_roundtrip() {
         if (errorcode_t::success == ret) {
             protection.get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
             session.store_resumption_ticket(ticket);
+            _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "begin PSK resumption with a fresh session status");
         }
         return ret;
     };

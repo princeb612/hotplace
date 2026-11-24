@@ -148,12 +148,14 @@ class HOTPLACE_NET_API tls_protection {
      * @remarks after server_hello
      */
     uint16 get_cipher_suite();
+    uint16 get_cipher_suite(tls_session* session, tls_direction_t dir);
     void set_cipher_suite(uint16 ciphersuite);
     tls_version_t get_lagacy_version();
     bool is_kindof_tls();
     bool is_kindof_dtls();
     bool is_kindof_tls12();
     bool is_kindof_tls13();
+    bool is_kindof_tls13_early_data(tls_session* session);
     tls_version_t get_tls_version();
     void set_tls_version(tls_version_t version);
     protection_context& get_protection_context();
@@ -220,7 +222,8 @@ class HOTPLACE_NET_API tls_protection {
      * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
      */
     // decrypt_aead TLS 1.2 AAD
-    return_t build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no, uint8 size_nonce_explicit);
+    return_t build_tls12_aad_from_record(tls_session* session, tls_direction_t dir, binary_t& aad, const binary_t& record_header, uint64 record_no,
+                                         uint8 size_nonce_explicit);
     // tls_record::do_write_header
     return_t write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, tls_content_type_t content_type, tls_version_t version, uint64 recno, uint16 epoch,
                        uint64 dtlsseq, uint16 bodysize);
@@ -252,6 +255,7 @@ class HOTPLACE_NET_API tls_protection {
     ///////////////////////////////////////////////////////////////////////////
     return_t build_iv(tls_session* session, binary_t& nonce, const binary_t& iv, uint64 recordno);
     uint8 get_tag_size();
+    uint8 get_tag_size(tls_session* session, tls_direction_t dir);
 
     return_t get_aead_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& key, tls_secret_t& iv);
     return_t get_cbc_hmac_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);

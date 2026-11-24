@@ -47,7 +47,16 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
         }
 
         auto session_type = session->get_type();
-        uint16 cipher_suite = get_cipher_suite();
+        auto flow = get_flow();
+        tls_resumption_ticket early_data_ticket = session->get_early_data_ticket();
+        bool use_early_data_ticket_parameters = (tls_flow_t::zero_rtt == flow) && (false == early_data_ticket.identity.empty()) &&
+                                                (early_data_ticket.version == static_cast<uint16>(tls1_3)) && (0 != early_data_ticket.cipher_suite) &&
+                                                (0 != early_data_ticket.max_early_data_size);
+        // A fresh connection has no negotiated version yet. Early traffic
+        // keys use the version and cipher suite bound to identity zero's PSK;
+        // do not write those provisional parameters into _version.
+        uint16 cipher_suite = use_early_data_ticket_parameters ? early_data_ticket.cipher_suite : get_cipher_suite();
+        bool tls13_key_schedule = is_kindof_tls13() || use_early_data_ticket_parameters;
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -152,8 +161,6 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             }
         }
 
-        auto flow = get_flow();
-
         if (tls_handshake_type_t::client_hello == type) {
             /**
              *             0
@@ -185,7 +192,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             // exp master (see tls_secret_t::server_finished)
 
             if ((session_type_t::tls == session_type) || (session_type_t::dtls == session_type)) {
-                if (is_kindof_tls13()) {
+                if (tls13_key_schedule) {
                     if (tls_flow_t::zero_rtt == flow) {
                         // 0-RTT
                         const binary_t& secret_resumption_early = get_secrets().get(tls_secret_t::resumption_early);  // client finished
@@ -228,15 +235,17 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                         if (istraceable(trace_category_t::trace_category_net)) {
                             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                                 dbs.println("* TLS 1.3 key schedule - ClientHello (0-RTT)");
+                                dbs.println(" > session type %i, handshake type %i, direction %i", static_cast<int>(session_type), static_cast<int>(type),
+                                            static_cast<int>(dir));
                                 dbs.println(" > flow %i", static_cast<int>(flow));
                                 dbs.println(" > cipher suite 0x%04x (%s)", cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
-                                dbs.println(" > hash %s", hashalg);
-                                dbs.println(" > transcript hash %s", base16_encode(context_hash).c_str());
-                                dbs.println(" > resumption_early %s", base16_encode(secret_resumption_early).c_str());
-                                dbs.println(" > c e traffic %s", base16_encode(secret_c_e_traffic).c_str());
-                                dbs.println(" > e exp master %s", base16_encode(secret_e_exp_master).c_str());
-                                dbs.println(" > c e traffic key %s", base16_encode(secret_c_e_traffic_key).c_str());
-                                dbs.println(" > c e traffic iv %s", base16_encode(secret_c_e_traffic_iv).c_str());
+                                dbs.println(" > hash %s, digest length %u, key length %u", hashalg, static_cast<unsigned int>(dlen), static_cast<unsigned int>(keysize));
+                                dbs.println(" > transcript hash (%u bytes) %s", static_cast<unsigned int>(context_hash.size()), base16_encode(context_hash).c_str());
+                                dbs.println(" > resumption_early length %u", static_cast<unsigned int>(secret_resumption_early.size()));
+                                dbs.println(" > c e traffic length %u", static_cast<unsigned int>(secret_c_e_traffic.size()));
+                                dbs.println(" > e exp master length %u", static_cast<unsigned int>(secret_e_exp_master.size()));
+                                dbs.println(" > c e traffic key length %u", static_cast<unsigned int>(secret_c_e_traffic_key.size()));
+                                dbs.println(" > c e traffic iv length %u", static_cast<unsigned int>(secret_c_e_traffic_iv.size()));
                             });
                         }
 #endif

@@ -118,13 +118,14 @@ enum sessioninfo_conf_t : uint8 {
     session_ticket_pending = 22,                // RFC 5077: a received ticket awaits authenticated server Finished
     session_ticket_pending_lifetime = 23,       // RFC 5077: pending ticket lifetime_hint
     session_ticket_pending_timestamp = 24,      // Local receipt time for the pending TLS 1.2 ticket
+    session_tls12_renegotiation_ccs = 25,       // RFC 5746: this direction activated renegotiation keys at CCS
 };
 enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()
     // config
     session_conf_enable_encrypt_then_mac = 0x1001,        // TLS 1.2 EtM
     session_conf_enforce_key_share_group = 0x1002,        // TLS 1.3 key share group
-    session_conf_enable_renegotiation = 0x1003,           // TLS 1.2 renegotiation
+    session_conf_enable_tls12_renegotiation = 0x1003,     // TLS 1.2 renegotiation
     session_conf_enable_extended_master_secret = 0x1004,  // extended master secret
     // status
     session_tls_version = 0x2001,                           // TLS version
@@ -149,8 +150,14 @@ enum session_conf_t : uint16 {
     session_tls12_ticket_etm = 0x2015,                      // EtM state bound to the cached TLS 1.2 ticket
     session_tls12_ticket_acknowledged = 0x2016,             // ServerHello acknowledged ticket issuance
     session_client_session_ticket_offer_enabled = 0x2017,   // Client is prepared to receive TLS 1.2 tickets
+    session_tls12_secure_renegotiation_offered = 0x2018,    // RFC 5746: initial ClientHello signaled secure renegotiation
+    session_tls12_secure_renegotiation = 0x2019,            // RFC 5746: secure renegotiation was established
     // debug
     session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
+};
+
+enum class tls_session_copy_t {
+    resumption = 1,
 };
 
 class HOTPLACE_NET_API tls_session {
@@ -161,6 +168,9 @@ class HOTPLACE_NET_API tls_session {
      * @brief TLS/DTLS session
      */
     tls_session();
+    // Create a fresh connection session carrying only the state required for the selected copy purpose.
+    // The caller owns the returned session and must release it.
+    tls_session* duplicate(tls_session_copy_t type) const;
     tls_session(const tls_session& other) = delete;
     tls_session(tls_session&& other) = delete;
     ~tls_session();
@@ -183,7 +193,7 @@ class HOTPLACE_NET_API tls_session {
     session_type_t get_type() const;
     return_t generate_ticket_nonce(binary_t& nonce);
     void store_resumption_ticket(const tls_resumption_ticket& ticket);
-    std::vector<tls_resumption_ticket> get_resumption_tickets();
+    std::vector<tls_resumption_ticket> get_resumption_tickets() const;
     bool find_resumption_ticket(const binary_t& identity, tls_resumption_ticket& ticket);
     void remove_resumption_ticket(const binary_t& identity);
     void set_tls12_resumption_ticket_store(const std::shared_ptr<tls12_resumption_ticket_store>& store);
@@ -207,7 +217,7 @@ class HOTPLACE_NET_API tls_session {
      * TLSCiphertext per-record limits still apply.
      */
     void set_early_data_discard_limit(uint64 limit);
-    uint64 get_early_data_discard_limit();
+    uint64 get_early_data_discard_limit() const;
     void set_client_server_name(const binary_t& server_name);
     binary_t get_client_server_name();
 
@@ -235,7 +245,7 @@ class HOTPLACE_NET_API tls_session {
         void set_status(tls_handshake_type_t type);
         tls_handshake_type_t get_status() const;
 
-        uint64 get_recordno(bool inc = false, protection_space_t space = protection_space_t::tls);
+        uint64 get_recordno(protection_space_t space = protection_space_t::tls) const;
         void inc_recordno(protection_space_t space = protection_space_t::tls);
         void reset_recordno(protection_space_t space = protection_space_t::tls);
         void set_recordno(uint64 recordno, protection_space_t space = protection_space_t::tls);  // for test vector
@@ -243,6 +253,10 @@ class HOTPLACE_NET_API tls_session {
         void begin_protection();
         bool apply_protection() const;
         void reset_protection();
+
+        // TLS 1.2 keeps the active cipher suite per direction across renegotiation.
+        void set_active_cipher_suite(uint16 ciphersuite);
+        uint16 get_active_cipher_suite() const;
 
         void push_alert(tls_alertlevel_t level, tls_alertdesc_t desc);
         void get_alert(std::function<void(tls_alertlevel_t, tls_alertdesc_t)> func, uint8 flags = 0);
@@ -253,6 +267,7 @@ class HOTPLACE_NET_API tls_session {
        private:
         tls_handshake_type_t _hstype;
         bool _protection;
+        uint16 _active_cipher_suite;  // zero until this direction switches at CCS
         // RFC 9000 12.3.  Packet Numbers
         std::map<protection_space_t, uint64> _recordno_spaces;
 
@@ -265,7 +280,8 @@ class HOTPLACE_NET_API tls_session {
     void reset_certificate_request_contexts();
 
     session_info& get_session_info(tls_direction_t dir);
-    uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_space_t space = protection_space_t::tls);
+    uint64 get_recordno(tls_direction_t dir, protection_space_t space = protection_space_t::tls);
+    void inc_recordno(tls_direction_t dir, protection_space_t space = protection_space_t::tls);
     void reset_recordno(tls_direction_t dir, protection_space_t space = protection_space_t::tls);
 
     /*
@@ -313,7 +329,7 @@ class HOTPLACE_NET_API tls_session {
     secure_prosumer* get_secure_prosumer();
 
    private:
-    critical_section _lock;
+    mutable critical_section _lock;  // const snapshot accessors synchronize without copying the lock
     t_shared_reference<tls_session> _shared;
 
     std::map<tls_direction_t, session_info> _direction;

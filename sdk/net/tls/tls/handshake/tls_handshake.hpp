@@ -61,7 +61,7 @@ class HOTPLACE_NET_API tls_handshake {
      *            Protocol messages MUST be sent in the order
      *            A peer which receives a handshake message in an unexpected order MUST abort the handshake with an "unexpected_message" alert.
      */
-    virtual return_t do_preprocess(tls_direction_t dir);
+    virtual return_t do_preprocess(tls_direction_t dir, tls_io_operation_t opdir);
     /**
      * update transcript hash, key calcuration, ...
      */

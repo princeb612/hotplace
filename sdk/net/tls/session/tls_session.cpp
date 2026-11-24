@@ -46,6 +46,19 @@ tls_session::tls_session(session_type_t type)
     set_type(type);
 }
 
+tls_session* tls_session::duplicate(tls_session_copy_t type) const {
+    switch (type) {
+        case tls_session_copy_t::resumption: {
+            tls_session* duplicated = new tls_session(_type);
+            duplicated->_resumption_tickets = get_resumption_tickets();
+            return duplicated;
+        }
+        default: {
+            return nullptr;
+        }
+    }
+}
+
 tls_session::~tls_session() {
     if (_composer) {
         delete _composer;
@@ -130,7 +143,7 @@ void tls_session::store_resumption_ticket(const tls_resumption_ticket& ticket) {
     _resumption_tickets.emplace_back(ticket);
 }
 
-std::vector<tls_resumption_ticket> tls_session::get_resumption_tickets() {
+std::vector<tls_resumption_ticket> tls_session::get_resumption_tickets() const {
     critical_section_guard guard(_lock);
     return _resumption_tickets;
 }
@@ -318,7 +331,7 @@ void tls_session::set_early_data_discard_limit(uint64 limit) {
     _early_data_discard_limit = limit;
 }
 
-uint64 tls_session::get_early_data_discard_limit() {
+uint64 tls_session::get_early_data_discard_limit() const {
     critical_section_guard guard(_lock);
     return _early_data_discard_limit;
 }
@@ -483,7 +496,9 @@ tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) {
     return _direction[d];
 }
 
-uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_space_t space) { return get_session_info(dir).get_recordno(inc, space); }
+uint64 tls_session::get_recordno(tls_direction_t dir, protection_space_t space) { return get_session_info(dir).get_recordno(space); }
+
+void tls_session::inc_recordno(tls_direction_t dir, protection_space_t space) { get_session_info(dir).inc_recordno(space); }
 
 void tls_session::reset_recordno(tls_direction_t dir, protection_space_t space) {
     auto ver = get_tls_protection().get_tls_version();
@@ -522,7 +537,7 @@ void tls_session::addref() { _shared.addref(); }
 
 void tls_session::release() { _shared.delref(); }
 
-tls_session::session_info::session_info() : _hstype(tls_handshake_type_t::client_hello), _protection(false) {}
+tls_session::session_info::session_info() : _hstype(tls_handshake_type_t::client_hello), _protection(false), _active_cipher_suite(0) {}
 
 void tls_session::session_info::set_status(tls_handshake_type_t type) { _hstype = type; }
 
@@ -534,10 +549,11 @@ bool tls_session::session_info::apply_protection() const { return _protection; }
 
 void tls_session::session_info::reset_protection() { _protection = false; }
 
-uint64 tls_session::session_info::get_recordno(bool inc, protection_space_t space) {
-    if (inc) {
-        return _recordno_spaces[space]++;
-    }
+void tls_session::session_info::set_active_cipher_suite(uint16 ciphersuite) { _active_cipher_suite = ciphersuite; }
+
+uint16 tls_session::session_info::get_active_cipher_suite() const { return _active_cipher_suite; }
+
+uint64 tls_session::session_info::get_recordno(protection_space_t space) const {
     auto iter = _recordno_spaces.find(space);
     return (_recordno_spaces.end() != iter) ? iter->second : 0;
 }

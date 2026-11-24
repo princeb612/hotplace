@@ -8,16 +8,24 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/net/basic/trial/secure_client_socket.hpp>
 #include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
+#include <utility>
 
 namespace hotplace {
 namespace net {
 
-secure_client_socket::secure_client_socket(tls_version_t spec) : client_socket_prosumer(), _spec(spec) {}
+secure_client_socket::secure_client_socket(tls_version_t spec) : client_socket_prosumer(), _session(new tls_session()), _spec(spec) {}
+
+secure_client_socket::secure_client_socket(tls_version_t spec, tls_session_ptr session) : client_socket_prosumer(), _session(std::move(session)), _spec(spec) {
+    if (nullptr == _session) {
+        throw exception(errorcode_t::no_session);
+    }
+}
 
 secure_client_socket::~secure_client_socket() {}
 
@@ -106,7 +114,7 @@ return_t secure_client_socket::do_shutdown() {
 /* override */
 return_t secure_client_socket::do_send(binary_t& bin) { return errorcode_t::success; }
 
-tls_session* secure_client_socket::get_session() { return &_session; }
+tls_session* secure_client_socket::get_session() { return _session.get(); }
 
 tls_version_t secure_client_socket::get_version() { return _spec; }
 

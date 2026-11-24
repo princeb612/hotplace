@@ -19,8 +19,11 @@ class HOTPLACE_NET_API tls_handshake_unknown : public tls_handshake {
     tls_handshake_unknown(tls_handshake_type_t type, tls_session* session);
     virtual ~tls_handshake_unknown();
 
+    virtual return_t write(tls_direction_t dir, binary_t& bin);
+
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 

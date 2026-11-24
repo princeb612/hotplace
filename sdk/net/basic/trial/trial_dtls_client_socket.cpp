@@ -23,7 +23,7 @@ namespace hotplace {
 namespace net {
 
 trial_dtls_client_socket::trial_dtls_client_socket(tls_version_t spec) : secure_client_socket(spec) {
-    auto session = &_session;
+    auto session = get_session();
     session->set_type(session_type_t::dtls);
 }
 

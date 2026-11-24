@@ -22,7 +22,7 @@ tls_handshake_end_of_early_data::tls_handshake_end_of_early_data(tls_session* se
 
 tls_handshake_end_of_early_data::~tls_handshake_end_of_early_data() {}
 
-return_t tls_handshake_end_of_early_data::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_end_of_early_data::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto& early_state = session->get_session_info(from_server).get_keyvalue();
@@ -49,14 +49,14 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, tl
 
         {
             protection.calc(session, tls_handshake_type_t::end_of_early_data, dir);
-            // EndOfEarlyData switches only the client direction from early
-            // traffic keys to handshake traffic keys. It also marks the end
-            // of the client early-data phase; subsequent client application
-            // data is 1-RTT and must wait for the client's Finished.
             if (from_client == dir) {
+                // EndOfEarlyData is the final record in the client early-data
+                // protection epoch. Preserve that epoch's sequence through
+                // its decryption, then reset before the first handshake-key
+                // record (the client's Finished).
+                session->reset_recordno(from_client);
                 session->get_session_info(from_server).get_keyvalue().set(session_early_data_finished, 1);
             }
-            session->reset_recordno(from_client);
             session->get_session_info(dir).set_status(get_type());
 
             protection.update_transcript_hash(session, stream + hspos, get_size());

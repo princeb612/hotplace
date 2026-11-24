@@ -23,14 +23,14 @@ test_tls13_failing_client_hello::test_tls13_failing_client_hello(tls_session* se
 
 bool test_tls13_failing_client_hello::preprocess_called() const { return _preprocess_called; }
 
-return_t test_tls13_failing_client_hello::do_preprocess(tls_direction_t) {
+return_t test_tls13_failing_client_hello::do_preprocess(tls_direction_t, tls_io_operation_t opdir) {
     _preprocess_called = true;
     return errorcode_t::unexpected;
 }
 
 test_tls13_server_hello_phase_probe::test_tls13_server_hello_phase_probe(tls_session* session) : tls_handshake_server_hello(session) {}
 
-return_t test_tls13_server_hello_phase_probe::validate_phase(tls_direction_t dir) { return do_preprocess(dir); }
+return_t test_tls13_server_hello_phase_probe::validate_phase(tls_direction_t dir) { return do_preprocess(dir, tls_io_operation_t::read); }
 
 test_tls13_server_hello_postprocess_probe::test_tls13_server_hello_postprocess_probe(tls_session* session) : tls_handshake_server_hello(session) {}
 
@@ -293,13 +293,68 @@ bool test_find_tls_extension(const binary_t& message, size_t extensions_length_o
 
 bool test_find_client_hello_extension(const binary_t& message, uint16 extension_type, size_t& body_pos, size_t& body_size) {
     test_tls_client_hello_view hello;
-    if (false == test_parse_client_hello_view(message, hello) || (hello.record_end != message.size()) || (hello.handshake_end != hello.record_end) ||
-        (hello.extensions_end != hello.handshake_end)) {
-        return false;
+    size_t extensions_length_offset = 0;
+    size_t handshake_end = 0;
+
+    // tls_handshake::write() returns the encoded Handshake message, without
+    // the five-byte TLS record header. Other callers may provide a complete
+    // TLS Handshake record, so support both wire representations here.
+    if ((false == message.empty()) && (0x01 == message[0])) {
+        if ((message.size() < 4) || (test_read_u24(message, 1) != message.size() - 4)) {
+            return false;
+        }
+
+        handshake_end = message.size();
+        size_t pos = 4;
+        if (handshake_end - pos < 2 + 32 + 1) {
+            return false;
+        }
+        pos += 2 + 32;
+
+        size_t session_id_length = message[pos++];
+        if (session_id_length > handshake_end - pos) {
+            return false;
+        }
+        pos += session_id_length;
+
+        if (handshake_end - pos < sizeof(uint16)) {
+            return false;
+        }
+        size_t cipher_suites_length = test_read_u16(message, pos);
+        pos += sizeof(uint16);
+        if (cipher_suites_length > handshake_end - pos) {
+            return false;
+        }
+        pos += cipher_suites_length;
+
+        if (pos >= handshake_end) {
+            return false;
+        }
+        size_t compression_methods_length = message[pos++];
+        if (compression_methods_length > handshake_end - pos) {
+            return false;
+        }
+        pos += compression_methods_length;
+
+        if (handshake_end - pos < sizeof(uint16)) {
+            return false;
+        }
+        extensions_length_offset = pos;
+        size_t extensions_length = test_read_u16(message, pos);
+        if (extensions_length != handshake_end - (pos + sizeof(uint16))) {
+            return false;
+        }
+    } else {
+        if (false == test_parse_client_hello_view(message, hello) || (hello.record_end != message.size()) || (hello.handshake_end != hello.record_end) ||
+            (hello.extensions_end != hello.handshake_end)) {
+            return false;
+        }
+        extensions_length_offset = hello.extensions_length_offset;
+        handshake_end = hello.handshake_end;
     }
 
     test_tls_extension_view extension;
-    if (false == test_find_tls_extension(message, hello.extensions_length_offset, hello.handshake_end, extension_type, extension)) {
+    if (false == test_find_tls_extension(message, extensions_length_offset, handshake_end, extension_type, extension)) {
         return false;
     }
 

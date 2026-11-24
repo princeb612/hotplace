@@ -58,6 +58,7 @@ static void test_tls13_hrr_rejects_incompatible_server_ticket_hash(const char* f
     tls_resumption_ticket sha384_ticket;
     sha384_ticket.identity = binary_t{0xa1, 0xb2, 0xc3};
     sha384_ticket.psk = binary_t(48, 0x5a);
+    sha384_ticket.version = static_cast<uint16>(tls1_3);
     sha384_ticket.cipher_suite = 0x1302;  // ticket was established with SHA-384
     sha384_ticket.lifetime = 3600;
     sha384_ticket.age_add = 0x10203040;
@@ -191,6 +192,7 @@ static void test_tls13_hrr_client_suppresses_incompatible_ticket_hash(const char
     tls_resumption_ticket incompatible_ticket;
     incompatible_ticket.identity = legacy_sha256_identity;
     incompatible_ticket.psk = binary_t(32, 0x33);
+    incompatible_ticket.version = static_cast<uint16>(tls1_3);
     incompatible_ticket.cipher_suite = 0x1301;
     incompatible_ticket.lifetime = 3600;
     incompatible_ticket.age_add = 0x10203040;
@@ -724,18 +726,21 @@ static void test_tls13_hrr_filters_mixed_ticket_cache_by_selected_hash() {
         tls_resumption_ticket mixed_sha256_ticket;
         mixed_sha256_ticket.identity = binary_t{0x31, 0x32, 0x33};
         mixed_sha256_ticket.psk = binary_t(32, 0x44);
+        mixed_sha256_ticket.version = static_cast<uint16>(tls1_3);
         mixed_sha256_ticket.cipher_suite = 0x1301;
         mixed_sha256_ticket.lifetime = 3600;
         mixed_sha256_ticket.timestamp = mixed_now_ms - 25;
         tls_resumption_ticket mixed_unknown_sha384_ticket;
         mixed_unknown_sha384_ticket.identity = binary_t{0x51, 0x52, 0x53};
         mixed_unknown_sha384_ticket.psk = binary_t(48, 0x56);
+        mixed_unknown_sha384_ticket.version = static_cast<uint16>(tls1_3);
         mixed_unknown_sha384_ticket.cipher_suite = 0x1302;
         mixed_unknown_sha384_ticket.lifetime = 3600;
         mixed_unknown_sha384_ticket.timestamp = mixed_now_ms - 25;
         tls_resumption_ticket mixed_sha384_ticket;
         mixed_sha384_ticket.identity = binary_t{0x41, 0x42, 0x43};
         mixed_sha384_ticket.psk = binary_t(48, 0x55);
+        mixed_sha384_ticket.version = static_cast<uint16>(tls1_3);
         mixed_sha384_ticket.cipher_suite = 0x1302;
         mixed_sha384_ticket.lifetime = 3600;
         mixed_sha384_ticket.timestamp = mixed_now_ms - 25;

@@ -36,7 +36,7 @@ tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* 
 
 tls_handshake_certificate_verify::~tls_handshake_certificate_verify() {}
 
-return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();

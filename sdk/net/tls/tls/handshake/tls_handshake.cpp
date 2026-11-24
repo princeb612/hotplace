@@ -140,7 +140,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             }
         }
 
-        ret = do_preprocess(dir);
+        ret = do_preprocess(dir, tls_io_operation_t::read);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
@@ -229,7 +229,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
         }
 #endif
 
-        ret = do_preprocess(dir);
+        ret = do_preprocess(dir, tls_io_operation_t::write);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
@@ -280,7 +280,7 @@ return_t tls_handshake::prepare_fragment(const byte_t* stream, uint32 size, uint
     return ret;
 }
 
-return_t tls_handshake::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
+return_t tls_handshake::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) { return errorcode_t::success; }
 
 return_t tls_handshake::do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size) { return errorcode_t::success; }
 

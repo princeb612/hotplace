@@ -86,7 +86,7 @@ class test_tls13_failing_client_hello : public tls_handshake_client_hello {
     bool preprocess_called() const;
 
    protected:
-    virtual return_t do_preprocess(tls_direction_t dir);
+    virtual return_t do_preprocess(tls_direction_t dir, tls_io_operation_t opdir);
 
    private:
     bool _preprocess_called;

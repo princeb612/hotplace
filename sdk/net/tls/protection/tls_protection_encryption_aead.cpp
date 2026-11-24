@@ -114,7 +114,8 @@ return_t tls_protection::build_iv(tls_session* session, binary_t& nonce, const b
     return ret;
 }
 
-return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no, uint8 size_nonce_explicit) {
+return_t tls_protection::build_tls12_aad_from_record(tls_session* session, tls_direction_t dir, binary_t& aad, const binary_t& record_header, uint64 record_no,
+                                                     uint8 size_nonce_explicit) {
     return_t ret = errorcode_t::success;
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -178,7 +179,7 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
          * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
          */
 
-        len -= (size_nonce_explicit + get_tag_size());
+        len -= (size_nonce_explicit + get_tag_size(session, dir));
 
         payload pl;
         pl << new payload_member(uint64(record_no), true, constexpr_record_no, constexpr_group_tls)
@@ -210,8 +211,8 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
         auto& secrets = protection.get_secrets();
 
         auto record_version = protection.get_lagacy_version();
-        auto tagsize = protection.get_tag_size();
-        auto cs = protection.get_cipher_suite();
+        auto tagsize = protection.get_tag_size(session, dir);
+        auto cs = protection.get_cipher_suite(session, dir);
         auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
         if (nullptr == hint_blockcipher) {
             ret = errorcode_t::not_supported;
@@ -293,7 +294,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
 
         uint64 record_no = 0;
         if (is_tls) {
-            record_no = session->get_recordno(dir, false);
+            record_no = session->get_recordno(dir);
         } else {
             auto& kv = session->get_session_info(dir).get_keyvalue();
             key_epoch = t_narrow_cast(kv.get(session_dtls_epoch));
@@ -347,7 +348,10 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
         switch (session_type) {
             case session_type_t::tls:
             case session_type_t::dtls: {
-                if (is_kindof_tls13()) {
+                // A fresh resumption connection has not negotiated its version
+                // when it installs the ClientHello early-data keys. Select the
+                // TLS 1.3 traffic-secret slots from the ticket-bound parameters.
+                if (is_kindof_tls13() || is_kindof_tls13_early_data(session)) {
                     // TLS 1.3
                     if (is_clientinitiated(dir)) {
                         // TLS, DTLS
@@ -361,9 +365,10 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                                 secret_iv = tls_secret_t::handshake_client_iv;
                             }
                         } else {
-                            // 1-RTT
-                            // 0-RTT
-                            // client_hello         c e traffic
+                            // EndOfEarlyData itself is protected with the early
+                            // traffic key. The following client Finished switches
+                            // to the handshake traffic key.
+                            // client_hello         c e traffic (including EndOfEarlyData)
                             // end_of_early_data    c hs traffic
                             // finished             c ap traffic
                             switch (hsstatus) {
@@ -377,7 +382,6 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                                 } break;
                                 case tls_handshake_type_t::client_hello:
                                 default: {
-                                    // use early traffic
                                     secret_key = tls_secret_t::c_e_traffic_key;
                                     secret_iv = tls_secret_t::c_e_traffic_iv;
                                 } break;
@@ -459,7 +463,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
                 cs = 0x1301;
                 break;
             default:
-                cs = get_cipher_suite();
+                cs = get_cipher_suite(session, dir);
                 break;
         }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
@@ -470,8 +474,9 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
         tls_secret_t secret_iv;
         get_aead_key(session, dir, space, secret_key, secret_iv);
 
-        uint64 record_no = session->get_recordno(dir, false, space);
-        bool track_tls13_usage = (session_type_t::tls == session->get_type()) && is_kindof_tls13() && (protection_space_t::tls == space);
+        uint64 record_no = session->get_recordno(dir, space);
+        bool track_tls13_usage =
+            (session_type_t::tls == session->get_type()) && (is_kindof_tls13() || is_kindof_tls13_early_data(session)) && (protection_space_t::tls == space);
         bool track_tls13_plaintext = false;
         if (track_tls13_usage) {
             uint64 max_records = 0;
@@ -512,7 +517,8 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
             }
         }
 
-        record_no = session->get_recordno(dir, true, space);
+        record_no = session->get_recordno(dir, space);
+        session->inc_recordno(dir, space);
 
         const auto& key = get_secrets().get(secret_key);
         const auto& iv = get_secrets().get(secret_iv);
@@ -583,7 +589,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         }
 
         size_t aadlen = get_header_size();
-        uint8 tagsize = get_tag_size();
+        uint8 tagsize = get_tag_size(session, dir);
         // Validate the complete header and authentication tag before
         // calculating size - tagsize; truncated records must not underflow.
         if ((size < pos) || (size - pos < aadlen) || (0 == tagsize) || (size - pos - aadlen < tagsize)) {
@@ -630,7 +636,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 cs = 0x1301;
                 break;
             default:
-                cs = get_cipher_suite();
+                cs = get_cipher_suite(session, dir);
                 break;
         }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
@@ -655,7 +661,8 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         tls_secret_t secret_iv;
         get_aead_key(session, dir, space, secret_key, secret_iv);
 
-        uint64 record_no = session->get_recordno(dir, true, space);
+        uint64 record_no = session->get_recordno(dir, space);
+        session->inc_recordno(dir, space);
 
         const binary_t& key = get_secrets().get(secret_key);
         const binary_t& iv = get_secrets().get(secret_iv);
@@ -716,7 +723,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 pos += size_nonce_explicit;
             }
 
-            build_tls12_aad_from_record(session, tls12_aad, aad, record_no, size_nonce_explicit);
+            build_tls12_aad_from_record(session, dir, tls12_aad, aad, record_no, size_nonce_explicit);
 
             ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, tls12_aad, tag, options);
         } else {

@@ -55,7 +55,7 @@ namespace crypto {
  *      MtE mac-then-encrypt (w/o encrypt_then_mac extension)
  *          AAD = uint64(sequence) || uint8(type) || uint16(version)
  *          nested tag = MAC(AAD || uint16(plaintext.length) || plaintext)
- *          ciphertext = CBC(plaintext || tag || pad1)
+ *          ciphertext = CBC(plaintext || tag || TLS padding)
  *          image = ciphertext
  *
  *          for more details

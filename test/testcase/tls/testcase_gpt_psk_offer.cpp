@@ -10,6 +10,128 @@
 
 #include "testcase_gpt_common.hpp"
 
+class testable_tls13_client_hello_preprocess : public tls_handshake_client_hello {
+   public:
+    explicit testable_tls13_client_hello_preprocess(tls_session* session) : tls_handshake_client_hello(session) {}
+    return_t preprocess_for_test(tls_direction_t dir) { return do_preprocess(dir, tls_io_operation_t::read); }
+};
+
+static void test_tls13_resumption_session_duplicate_starts_fresh() {
+    // Scenario under test: duplicate a connection as a TLS 1.3 resumption session.
+    // Action: copy the resumption cache from a session with active connection state.
+    // Expected: retain only the TLS 1.3 ticket cache and start with fresh handshake state.
+    _test_case.begin("TLS 1.3 resumption session duplicate starts with fresh state");
+
+    tls_session source;
+    source.set_type(session_type_t::tls);
+
+    tls_resumption_ticket ticket;
+    ticket.identity = {0x11, 0x22, 0x33};
+    ticket.psk = binary_t(32, 0x5a);
+    ticket.version = static_cast<uint16>(tls1_3);
+    ticket.cipher_suite = 0x1301;
+    ticket.lifetime = 3600;
+    ticket.timestamp = static_cast<uint64>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    source.store_resumption_ticket(ticket);
+    source.set_offered_resumption_tickets({ticket});
+    source.set_early_data_ticket(ticket);
+    source.set_client_server_name(binary_t{'o', 'l', 'd', '.', 'e', 'x', 'a', 'm', 'p', 'l', 'e'});
+    source.update_session_status(session_status_client_hello);
+    source.update_session_status(session_status_server_hello);
+    source.update_session_status(session_status_client_finished);
+    source.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+    source.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+    const uint32 source_status = source.get_session_status();
+
+    tls_session* unsupported_duplicate = source.duplicate(static_cast<tls_session_copy_t>(0));
+    _test_case.assert(nullptr == unsupported_duplicate, __FUNCTION__, "return null for an unsupported session copy purpose");
+
+    tls_session* resumption_session = source.duplicate(tls_session_copy_t::resumption);
+    _test_case.assert(nullptr != resumption_session, __FUNCTION__, "create a distinct resumption session");
+    if (nullptr == resumption_session) {
+        return;
+    }
+
+    _test_case.assert(session_type_t::tls == resumption_session->get_type(), __FUNCTION__, "preserve the session transport type");
+    _test_case.assert(0 == resumption_session->get_session_status(), __FUNCTION__, "start resumption with an empty aggregate session status");
+    _test_case.assert(tls_handshake_type_t::client_hello == resumption_session->get_session_info(from_client).get_status(), __FUNCTION__,
+                      "start the client handshake cursor at ClientHello");
+    _test_case.assert(tls_handshake_type_t::client_hello == resumption_session->get_session_info(from_server).get_status(), __FUNCTION__,
+                      "start the server handshake cursor at ClientHello");
+
+    auto copied_tickets = resumption_session->get_resumption_tickets();
+    _test_case.assert(1 == copied_tickets.size(), __FUNCTION__, "copy the TLS 1.3 resumption ticket cache");
+    if (1 == copied_tickets.size()) {
+        _test_case.assert(ticket.identity == copied_tickets.front().identity, __FUNCTION__, "preserve the ticket identity");
+        _test_case.assert(ticket.psk == copied_tickets.front().psk, __FUNCTION__, "preserve the ticket PSK");
+        _test_case.assert(ticket.version == copied_tickets.front().version, __FUNCTION__, "preserve the ticket TLS version");
+    }
+
+    _test_case.assert(resumption_session->get_offered_resumption_tickets().empty(), __FUNCTION__, "do not copy the previous ClientHello offer snapshot");
+    _test_case.assert(resumption_session->get_early_data_ticket().identity.empty(), __FUNCTION__, "do not copy the previous connection's early-data ticket");
+    _test_case.assert(resumption_session->get_client_server_name().empty(), __FUNCTION__, "do not copy the previous connection's SNI");
+    _test_case.assert(source_status == source.get_session_status(), __FUNCTION__, "leave the source session handshake status unchanged");
+
+    // A fresh duplicate starts with aggregate status zero. ClientHello preprocess
+    // must recognize the cached ticket as an initial PSK resumption without
+    // duplicating or importing connection state inside the handshake object.
+    {
+        testable_tls13_client_hello_preprocess client_hello(resumption_session);
+        client_hello.add_ciphersuite(0x1301);
+        auto supported_versions = new tls_extension_client_supported_versions(&client_hello);
+        supported_versions->add(tls1_3);
+        client_hello.get_extensions().add(supported_versions);
+        auto psk_modes = new tls_extension_psk_key_exchange_modes(&client_hello);
+        psk_modes->add(1);
+        client_hello.get_extensions().add(psk_modes);
+        auto psk = new tls_extension_client_psk(&client_hello);
+        client_hello.get_extensions().add(psk);
+
+        return_t preprocess_ret = client_hello.preprocess_for_test(from_client);
+        _test_case.test(preprocess_ret, __FUNCTION__, "preprocess ClientHello on a fresh resumption duplicate");
+        if (errorcode_t::success == preprocess_ret) {
+            _test_case.assert(tls_flow_t::zero_rtt == resumption_session->get_tls_protection().get_flow(), __FUNCTION__,
+                              "recognize the cached TLS 1.3 ticket while aggregate session status is zero");
+            _test_case.assert(0 == resumption_session->get_session_status(), __FUNCTION__,
+                              "keep aggregate status zero until ClientHello postprocessing commits the message");
+        }
+    }
+
+    {
+        trial_tls_client_socket resumed_client(source);
+        auto client_session = resumed_client.get_session();
+        _test_case.assert(nullptr != client_session, __FUNCTION__, "construct a TLS client socket from the prior session");
+        if (nullptr != client_session) {
+            _test_case.assert(client_session != &source, __FUNCTION__, "use a distinct connection session");
+            _test_case.assert(session_type_t::tls == client_session->get_type(), __FUNCTION__, "retain the TLS transport type");
+            _test_case.assert(0 == client_session->get_session_status(), __FUNCTION__, "keep the client connection handshake state fresh");
+            _test_case.assert(tls_handshake_type_t::client_hello == client_session->get_session_info(from_client).get_status(), __FUNCTION__,
+                              "start the socket's client handshake cursor at ClientHello");
+            _test_case.assert(tls_handshake_type_t::client_hello == client_session->get_session_info(from_server).get_status(), __FUNCTION__,
+                              "start the socket's server handshake cursor at ClientHello");
+            auto socket_tickets = client_session->get_resumption_tickets();
+            _test_case.assert(1 == socket_tickets.size(), __FUNCTION__, "make the cached TLS 1.3 ticket available to the live client socket");
+            if (1 == socket_tickets.size()) {
+                _test_case.assert(ticket.identity == socket_tickets.front().identity, __FUNCTION__, "retain the ticket identity in the live client socket");
+            }
+        }
+    }
+
+    {
+        tls_session dtls_source(session_type_t::dtls);
+        bool rejected = false;
+        try {
+            trial_tls_client_socket invalid_client(dtls_source);
+            (void)invalid_client;
+        } catch (const exception&) {
+            rejected = true;
+        }
+        _test_case.assert(rejected, __FUNCTION__, "reject a DTLS source session for a TLS client socket");
+    }
+
+    resumption_session->release();
+}
+
 static void test_tls13_server_psk_selected_identity_encoding() {
     // Scenario under test: TLS 1.3 ServerHello PSK selected_identity encoding.
     // Action: read a two-byte selected_identity.
@@ -1572,6 +1694,7 @@ static void test_tls13_psk_ticket_sni_binding() {
     matching.psk = binary_t(32, 0x41);
     matching.lifetime = 3600;
     matching.timestamp = now_ms - 10;
+    matching.version = static_cast<uint16>(tls1_3);
     matching.cipher_suite = 0x1301;
 
     tls_resumption_ticket different;
@@ -1580,6 +1703,7 @@ static void test_tls13_psk_ticket_sni_binding() {
     different.psk = binary_t(32, 0x42);
     different.lifetime = 3600;
     different.timestamp = now_ms - 10;
+    different.version = static_cast<uint16>(tls1_3);
     different.cipher_suite = 0x1301;
 
     auto configure = [&](tls_session& session) {
@@ -1644,6 +1768,7 @@ static void test_tls13_client_psk_hrr_filters_mixed_hash_tickets() {
     sha256_first.psk = binary_t(32, 0x11);
     sha256_first.lifetime = 3600;
     sha256_first.timestamp = now_ms - 10;
+    sha256_first.version = static_cast<uint16>(tls1_3);
     sha256_first.cipher_suite = 0x1301;
 
     tls_resumption_ticket sha384_middle;
@@ -1651,6 +1776,7 @@ static void test_tls13_client_psk_hrr_filters_mixed_hash_tickets() {
     sha384_middle.psk = binary_t(48, 0x22);
     sha384_middle.lifetime = 3600;
     sha384_middle.timestamp = now_ms - 10;
+    sha384_middle.version = static_cast<uint16>(tls1_3);
     sha384_middle.cipher_suite = 0x1302;
 
     tls_resumption_ticket sha256_last = sha256_first;
@@ -1805,7 +1931,7 @@ static void test_tls13_early_data_uses_first_serializable_psk_identity() {
 
 static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
     // Scenario: ClientHello early-data key-schedule derivation fails locally.
-    // Action: run ClientHello postprocessing for both read and write operations with an invalid suite.
+    // Action: run ClientHello postprocessing for both read and write operations with an unsupported ticket cipher suite.
     // Expected: queue one fatal internal_error and clear all provisional PSK and early-data state.
     _test_case.begin("TLS 1.3 ClientHello early key-schedule failure terminates the session");
 
@@ -1836,7 +1962,7 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
         tls_resumption_ticket ticket;
         ticket.identity = {0xa1, 0xb2, 0xc3};
         ticket.psk = binary_t(32, 0x44);
-        ticket.cipher_suite = 0x1301;
+        ticket.cipher_suite = 0xffff;  // unsupported TLS cipher suite forces calc() to fail
         ticket.version = static_cast<uint16>(tls1_3);
         ticket.lifetime = 3600;
         ticket.timestamp = 1;
@@ -1845,7 +1971,7 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
         session.set_offered_resumption_tickets(std::vector<tls_resumption_ticket>{ticket});
         session.get_keyvalue().set(session_server_psk_selected_identity, 0);
         session.get_keyvalue().set(session_server_psk_key_exchange_mode, 1);
-        session.get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0x1301);
+        session.get_keyvalue().set(session_server_psk_ticket_cipher_suite, 0xffff);
         session.get_keyvalue().set(session_client_psk_identity_count, 1);
 
         auto& early_state = session.get_session_info(from_server).get_keyvalue();
@@ -1861,7 +1987,7 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
         hello.get_extensions().add(new tls_extension_early_data(&hello));
 
         ret = hello.run_postprocess(from_client, opdir, &marker, sizeof(marker));
-        _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "propagate the local ClientHello key-schedule failure");
+        _test_case.assert(errorcode_t::not_supported == ret, __FUNCTION__, "propagate the unsupported ticket cipher-suite failure");
 
         size_t fatal_internal_error_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::internal_error);
         _test_case.assert(1 == fatal_internal_error_count, __FUNCTION__, "queue exactly one fatal internal_error for the local key-schedule failure");
@@ -1974,6 +2100,7 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
 }
 
 void testcase_gpt_psk_offer() {
+    test_tls13_resumption_session_duplicate_starts_fresh();
     test_tls13_serverhello_key_schedule_failure_is_terminal();
     test_tls13_clienthello_early_key_schedule_failure_is_terminal();
     test_tls13_early_data_uses_first_serializable_psk_identity();

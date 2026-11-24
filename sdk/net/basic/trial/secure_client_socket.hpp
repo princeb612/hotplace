@@ -16,6 +16,7 @@
 #include <hotplace/sdk/net/basic/trial/client_socket_prosumer.hpp>
 #include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
+#include <memory>
 
 namespace hotplace {
 namespace net {
@@ -24,6 +25,16 @@ namespace net {
  * @brief   client
  * @sample
  */
+struct tls_session_releaser {
+    void operator()(tls_session* session) const {
+        if (nullptr != session) {
+            session->release();
+        }
+    }
+};
+
+using tls_session_ptr = std::unique_ptr<tls_session, tls_session_releaser>;
+
 class HOTPLACE_NET_API secure_client_socket : public client_socket_prosumer {
    public:
     virtual ~secure_client_socket();
@@ -35,6 +46,8 @@ class HOTPLACE_NET_API secure_client_socket : public client_socket_prosumer {
 
    protected:
     secure_client_socket(tls_version_t spec = tls1_2);
+    // Takes ownership of a fresh session supplied by a derived client constructor.
+    secure_client_socket(tls_version_t spec, tls_session_ptr session);
 
     virtual return_t do_handshake();
     virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
@@ -43,7 +56,7 @@ class HOTPLACE_NET_API secure_client_socket : public client_socket_prosumer {
     virtual return_t do_transport_disconnect();
     virtual return_t do_send(binary_t& bin);
 
-    tls_session _session;
+    tls_session_ptr _session;
     tls_version_t _spec;
 
     secure_prosumer _secure;

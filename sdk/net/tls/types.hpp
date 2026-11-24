@@ -269,6 +269,7 @@ struct tls_alert_t {
 #define TLS_SECRET_APPLICATION 0x0300
 #define TLS_SECRET_EXPORTER 0x0400
 #define TLS_SECRET_RESUMPTION 0x0500
+#define TLS_SECRET_RENEGOTIATION 0x0600  // TLS 1.2 renegotiation pending write keys
 #define TLS_SECRET_USERCONTEXT 0xf000
 #define TLS_SECRET_EARLY 0x0080
 
@@ -360,6 +361,14 @@ enum class tls_secret_t : uint16 {
     client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_IV),
     server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_KEY),
     server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_IV),
+
+    // TLS 1.2 RFC 5746 renegotiation key block; activated directionally at CCS.
+    client_mac_key_renegotiation = (TLS_SECRET_RENEGOTIATION | TLS_SECRET_CLIENT_MAC_KEY),
+    server_mac_key_renegotiation = (TLS_SECRET_RENEGOTIATION | TLS_SECRET_SERVER_MAC_KEY),
+    client_key_renegotiation = (TLS_SECRET_RENEGOTIATION | TLS_SECRET_CLIENT_KEY),
+    client_iv_renegotiation = (TLS_SECRET_RENEGOTIATION | TLS_SECRET_CLIENT_IV),
+    server_key_renegotiation = (TLS_SECRET_RENEGOTIATION | TLS_SECRET_SERVER_KEY),
+    server_iv_renegotiation = (TLS_SECRET_RENEGOTIATION | TLS_SECRET_SERVER_IV),
 
     initial_quic = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
     initial_quic_client = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT),

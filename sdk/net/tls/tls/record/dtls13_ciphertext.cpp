@@ -171,7 +171,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        auto sess_recno = session->get_recordno(dir, false);
+        auto sess_recno = session->get_recordno(dir);
 
         auto recpos = offsetof_header();
         auto sequence = _sequence;
@@ -353,7 +353,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
                 __leave2;
             }
         }
-        auto sess_recno = session->get_recordno(dir, false);
+        auto sess_recno = session->get_recordno(dir);
         uint8 cap = byte_capacity(sess_recno);
         if (cap > 2) {
             ret = errorcode_t::exceed;

@@ -34,6 +34,33 @@ void tls_protection::set_flow(tls_flow_t flow) { _flow = flow; }
 
 uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
+bool tls_protection::is_kindof_tls13_early_data(tls_session* session) {
+    if ((nullptr == session) || (session_type_t::tls != session->get_type()) || (tls_flow_t::zero_rtt != get_flow())) {
+        return false;
+    }
+
+    const tls_resumption_ticket ticket = session->get_early_data_ticket();
+    if (ticket.identity.empty() || (ticket.version != static_cast<uint16>(tls1_3)) || (0 == ticket.cipher_suite) || (0 == ticket.max_early_data_size)) {
+        return false;
+    }
+
+    const auto& early_state = session->get_session_info(from_server).get_keyvalue();
+    return (0 != early_state.get(session_early_data_offered_initial)) || (0 != early_state.get(session_early_data_offered));
+}
+
+uint16 tls_protection::get_cipher_suite(tls_session* session, tls_direction_t dir) {
+    if (is_kindof_tls13_early_data(session)) {
+        return session->get_early_data_ticket().cipher_suite;
+    }
+    if (session && is_kindof_tls12() && ((session_type_t::tls == session->get_type()) || (session_type_t::dtls == session->get_type()))) {
+        uint16 active = session->get_session_info(dir).get_active_cipher_suite();
+        if (0 != active) {
+            return active;
+        }
+    }
+    return get_cipher_suite();
+}
+
 void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     if (_ciphersuite != ciphersuite) {
         // The transcript hash algorithm is selected by the negotiated cipher

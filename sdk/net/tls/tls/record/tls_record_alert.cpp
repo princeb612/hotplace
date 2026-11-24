@@ -31,7 +31,31 @@ tls_record_alert::tls_record_alert(tls_session* session, tls_alertlevel_t level,
 
 tls_record_alert::~tls_record_alert() {}
 
-return_t tls_record_alert::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
+return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    if ((tls_alertlevel_t::warning == _level) && (tls_alertdesc_t::no_renegotiation == _desc) && (tls_flow_t::renegotiation == protection.get_flow())) {
+        const bool client_declined_hello_request = (from_client == dir) && (0 == (session->get_session_status() & session_status_client_hello));
+        const bool server_declined_client_hello = (from_server == dir) && (tls_handshake_type_t::client_hello == session->get_session_info(from_client).get_status()) &&
+                                                  (tls_handshake_type_t::server_hello != session->get_session_info(from_server).get_status());
+        if (client_declined_hello_request || server_declined_client_hello) {
+            // A server can decline a client-initiated ClientHello, and a client
+            // can decline a server HelloRequest. In either case no CCS has
+            // activated new keys, so restore the completed handshake without
+            // changing the active record protection or sequence numbers.
+            if (server_declined_client_hello) {
+                // Clear the ClientHello status left by the local writer before
+                // restoring the previously completed handshake.
+                session->reset_session_status();
+            }
+            session->update_session_status(static_cast<session_status_t>(session_status_client_finished | session_status_server_finished));
+            session->get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+            session->get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+            protection.set_flow(tls_flow_t::one_rtt);
+        }
+    }
+    return errorcode_t::success;
+}
 
 return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

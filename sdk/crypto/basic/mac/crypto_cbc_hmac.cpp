@@ -19,6 +19,43 @@
 namespace hotplace {
 namespace crypto {
 
+namespace {
+
+bool tls_mte_padding_valid(const binary_t& plaintext, size_t mac_size, size_t& data_size) {
+    const size_t plaintext_size = plaintext.size();
+    if (plaintext_size < mac_size + 1) {
+        data_size = 0;
+        return false;
+    }
+
+    const uint8 padding_value = plaintext.back();
+    const size_t padding_size = static_cast<size_t>(padding_value) + 1;
+    uint32 invalid = static_cast<uint32>(padding_size > plaintext_size - mac_size);
+
+    // Compare a fixed 256-byte window so the first mismatching padding byte does not
+    // determine how much validation work is performed.
+    byte_t actual_padding[256] = {};
+    byte_t expected_padding[256] = {};
+    for (size_t i = 0; i < 256; ++i) {
+        const byte_t value = (i < plaintext_size) ? plaintext[plaintext_size - 1 - i] : 0;
+        const byte_t mask = static_cast<byte_t>(0 - static_cast<byte_t>(i < padding_size));
+        actual_padding[i] = static_cast<byte_t>(value & mask);
+        expected_padding[i] = static_cast<byte_t>(padding_value & mask);
+    }
+    invalid |= static_cast<uint32>(0 != CRYPTO_memcmp(actual_padding, expected_padding, sizeof(actual_padding)));
+
+    const bool valid = (0 == invalid);
+    // Preserve the claimed padding length for HMAC when it fits, even if a padding
+    // byte is malformed. This keeps the MAC input length aligned with a valid record
+    // carrying the same padding_length. Use a one-byte fallback only when it cannot fit.
+    const size_t fits_mask = size_t(0) - static_cast<size_t>(padding_size <= plaintext_size - mac_size);
+    const size_t safe_padding_size = (padding_size & fits_mask) | (size_t(1) & ~fits_mask);
+    data_size = plaintext_size - mac_size - safe_padding_size;
+    return valid;
+}
+
+}  // namespace
+
 crypto_cbc_hmac::crypto_cbc_hmac() : _enc_alg(crypt_algorithm_t{}), _mac_alg(hash_algorithm_t{}), _flag(0) { _shared.make_share(this); }
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const char* enc_alg) {
@@ -172,7 +209,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
                 /*
                  * AAD = uint64(sequence) || uint8(type) || uint16(version)
                  * nested tag = MAC(AAD || uint16(plaintext.length) || plaintext)
-                 * ciphertext = CBC(plaintext || tag || pad1)
+                 * ciphertext = CBC(plaintext || tag || TLS padding)
                  * image = ciphertext
                  */
 
@@ -183,12 +220,11 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
                 uint32 imod = blocksize - mod;
                 uint8 padvalue = imod - 1;
 
-#if 1
-                temp.insert(temp.end(), padvalue);
-#else
                 temp.insert(temp.end(), imod, padvalue);
-                crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
-#endif
+                ret = crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
                 ret = crypt.encrypt(crypt_handle, temp, ciphertext);
                 if (errorcode_t::success != ret) {
                     __leave2;
@@ -258,6 +294,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
     crypto_hmac* hmac = nullptr;
     binary_t tag;
     binary_t mac;
+    plaintext.clear();
     __try2 {
         auto flag = get_flag();
         if (jose_encrypt_then_mac == flag) {
@@ -289,27 +326,33 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
 
         if (tls_mac_then_encrypt == flag) {
             {
-                // encrypt
+                // Decrypt the raw CBC blocks. TLS padding is not PKCS#7 padding.
+                ret = crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
                 ret = crypt.decrypt(crypt_handle, ciphertext, ciphersize, plaintext);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
 
-                size_t plainsize = plaintext.size();
-                if (size_t(dlen + 1) > plainsize) {
-                    ret = errorcode_t::bad_data;
-                    __leave2;
+                size_t data_size = 0;
+                bool padding_valid = tls_mte_padding_valid(plaintext, dlen, data_size);
+                if (plaintext.size() >= size_t(dlen + 1)) {
+                    binary_append(mac, &plaintext[data_size], dlen);
+                } else {
+                    // Keep the MAC operation on the failure path as well.
+                    mac.assign(dlen, 0);
                 }
+                datalen = t_narrow_cast(data_size);
+                plaintext.resize(data_size);
 
-                datalen = t_narrow_cast(plainsize - dlen - 1);  // pad1
-                binary_append(mac, &plaintext[datalen], dlen);
-                plaintext.resize(datalen);
-            }
-
-            {
-                // mac
+                // MAC work is performed before the padding result is acted upon.
                 (*hmac).update(aad).update(datalen, hton16).update(plaintext).finalize(tag);
-                if (tag != mac) {
+                bool mac_valid = (tag.size() == mac.size()) && (0 == CRYPTO_memcmp(tag.data(), mac.data(), mac.size()));
+                const bool verification_valid = padding_valid & mac_valid;
+                if (false == verification_valid) {
+                    plaintext.clear();
                     ret = errorcode_t::verification_failure;
                     __leave2;
                 }

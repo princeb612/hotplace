@@ -74,6 +74,52 @@ uint8 tls_protection::get_tag_size() {
     return ret_value;
 }
 
+uint8 tls_protection::get_tag_size(tls_session* session, tls_direction_t dir) {
+    uint8 ret_value = 0;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto cs = get_cipher_suite(session, dir);
+    auto hint = tlsadvisor->hintof_cipher_suite(cs);
+    auto hint_cipher = tlsadvisor->hintof_cipher(cs);
+    if (hint && hint_cipher) {
+        auto hmac_alg = hint->mac;
+        auto hint_digest = advisor->hintof_digest(hmac_alg);
+
+        // auto cipher = hint_cipher->algorithm;
+        auto mode = hint_cipher->mode;
+        auto dlen = sizeof_digest(hint_digest);
+
+        switch (mode) {
+            case crypt_mode_t::gcm:
+            case crypt_mode_t::poly1305:  // RFC 7905
+                ret_value = 16;
+                break;
+            case crypt_mode_t::ccm:
+                /**
+                 * RFC 6655 AES-CCM Cipher Suites for Transport Layer Security (TLS)
+                 *   3.  RSA-Based AES-CCM Cipher Suites
+                 *     AEAD_AES_128_CCM and AEAD_AES_256_CCM described in [RFC5116].
+                 *
+                 *     Each uses AES-CCM; those that end in "_8" have an 8-octet
+                 *     authentication tag, while the other ciphersuites have 16-octet
+                 *     authentication tags.
+                 *   6.1.  AES-128-CCM with an 8-Octet Integrity Check Value (ICV)
+                 *   6.2.  AES-256-CCM with a 8-Octet Integrity Check Value (ICV)
+                 *
+                 * RFC 5116
+                 *   5.3.  AEAD_AES_128_CCM
+                 *   5.4.  AEAD_AES_256_CCM
+                 */
+                ret_value = hint_cipher->tsize;  // CCM (16), CCM_8 (8)
+                break;
+            default:
+                ret_value = t_narrow_cast(dlen);
+                break;
+        }
+    }
+    return ret_value;
+}
+
 constexpr size_t tls12_plaintext_max_size = (1 << 14);
 constexpr size_t tls13_inner_plaintext_max_size = (1 << 14) + 1;
 constexpr size_t tls12_ciphertext_max_size = (1 << 14) + 2048;
@@ -90,7 +136,7 @@ return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, cons
         }
         size_t max_plaintext_size = dtls_legacy_protection_max_size;
         if (session_type_t::tls == session->get_type()) {
-            max_plaintext_size = is_kindof_tls13() ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
+            max_plaintext_size = (is_kindof_tls13() || is_kindof_tls13_early_data(session)) ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
         }
         if (plaintext.size() > max_plaintext_size) {
             ret = errorcode_t::exceed;
@@ -101,7 +147,7 @@ return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, cons
         // size_t content_header_size = 0;
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        auto cs = get_cipher_suite();
+        auto cs = get_cipher_suite(session, dir);
         auto is_cbc = tlsadvisor->is_kindof_cbc(cs);
 
         /**
@@ -140,7 +186,7 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
         size_t ciphertext_size = size - pos - header_size;
         size_t max_ciphertext_size = dtls_legacy_protection_max_size;
         if (session_type_t::tls == session->get_type()) {
-            max_ciphertext_size = is_kindof_tls13() ? tls13_ciphertext_max_size : tls12_ciphertext_max_size;
+            max_ciphertext_size = (is_kindof_tls13() || is_kindof_tls13_early_data(session)) ? tls13_ciphertext_max_size : tls12_ciphertext_max_size;
         }
         if (ciphertext_size > max_ciphertext_size) {
             ret = errorcode_t::exceed;
@@ -148,14 +194,14 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
+        bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite(session, dir));
         if (is_kindof_cbc) {
             ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
         } else {
             ret = decrypt_aead(session, dir, stream, size, pos, plaintext, space);
         }
         if (errorcode_t::success == ret && session_type_t::tls == session->get_type()) {
-            size_t max_plaintext_size = is_kindof_tls13() ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
+            size_t max_plaintext_size = (is_kindof_tls13() || is_kindof_tls13_early_data(session)) ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
             if (plaintext.size() > max_plaintext_size) {
                 ret = errorcode_t::overflow;
                 session->reset_session_status();
@@ -184,12 +230,12 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
             case session_type_t::tls:
             case session_type_t::dtls: {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
+                bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite(session, dir));
                 if (is_kindof_cbc) {
                     ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
                 } else {
                     auto aadlen = aad.size();
-                    auto tagsize = get_tag_size();
+                    auto tagsize = get_tag_size(session, dir);
                     binary_t tag;
 
                     // Validate the AAD and complete tag before extracting the trailing tag.
@@ -224,7 +270,7 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
+        bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite(session, dir));
 
         if (is_kindof_cbc) {
             ret = errorcode_t::not_supported;

@@ -706,8 +706,8 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                 const size_t minimum_psk_extension_size =
                     (nullptr != ticket_hash) ? (sizeof(uint16) * 3 + ticket.identity.size() + sizeof(uint32) + sizeof(uint8) + ticket_hash->digest_size) : 0;
                 if ((false == ticket.identity.empty()) && (ticket.identity.size() <= 0xffff) && (0 != lifetime) && (0 != ticket.timestamp) &&
-                    (ticket.timestamp <= now_ms) && (now_ms - ticket.timestamp <= lifetime_ms) && ticket_hash && offered_hash_compatible &&
-                    (ticket.psk.size() == ticket_hash->digest_size) && (minimum_psk_extension_size <= 0xffff)) {
+                    (ticket.timestamp <= now_ms) && (now_ms - ticket.timestamp <= lifetime_ms) && (ticket.version == static_cast<uint16>(tls1_3)) && ticket_hash &&
+                    offered_hash_compatible && (ticket.psk.size() == ticket_hash->digest_size) && (minimum_psk_extension_size <= 0xffff)) {
                     hint_tls_alg = provisional_suite;
                     break;
                 }
@@ -756,8 +756,8 @@ return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& 
                     }
                 }
                 if (ticket.identity.empty() || (ticket.identity.size() > 0xffff) || (0 == lifetime) || (0 == ticket.timestamp) || (ticket.timestamp > now_ms) ||
-                    (now_ms - ticket.timestamp > lifetime_ms) || (nullptr == ticket_hash) || (false == offered_hash_compatible) ||
-                    (ticket.psk.size() != ticket_hash->digest_size)) {
+                    (now_ms - ticket.timestamp > lifetime_ms) || (ticket.version != static_cast<uint16>(tls1_3)) || (nullptr == ticket_hash) ||
+                    (false == offered_hash_compatible) || (ticket.psk.size() != ticket_hash->digest_size)) {
                     continue;
                 }
 

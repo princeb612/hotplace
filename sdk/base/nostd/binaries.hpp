@@ -182,6 +182,41 @@ class t_binaries {
     }
 
     /**
+     * @brief   move an entry from one id to another
+     * @param   T from [in]
+     * @param   T to [in]
+     * @remarks The complete entry, including tag and flags, is transferred.
+     *          An existing destination entry is replaced. The source id is
+     *          removed even when bin_keep_entry is set; that flag moves with
+     *          the entry and applies to the destination id.
+     */
+    return_t moveto(T from, T to) {
+        return_t ret = errorcode_t::success;
+        __try2 {
+            critical_section_guard guard(_lock);
+            if (from == to) {
+                __leave2;
+            }
+
+            auto from_iter = _map.find(from);
+            if (_map.end() == from_iter) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            }
+
+            auto to_iter = _map.find(to);
+            if (_map.end() == to_iter) {
+                _map.emplace(to, std::move(from_iter->second));
+            } else {
+                to_iter->second = std::move(from_iter->second);
+            }
+            _map.erase(from_iter);
+        }
+        __finally2 {}
+        return ret;
+    }
+
+    /**
      * @brief   clear
      */
     void clear() { _map.clear(); }
@@ -396,7 +431,7 @@ class t_binaries {
      * @brief   exist
      * @param   T id [in]
      */
-    bool exist(uint64 id) const {
+    bool exist(T id) const {
         bool ret = false;
         critical_section_guard guard(_lock);
         auto iter = _map.find(id);

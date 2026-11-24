@@ -201,6 +201,15 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
         dump(p);
     }
     _test_case.assert(base16_decode(entry->p) == p, __FUNCTION__, "decrypt %s", entry->item.c_str());
+
+    if (false == t.empty()) {
+        binary_t tampered_tag = t;
+        tampered_tag[0] ^= 0x01;
+        binary_t rejected_plaintext;
+        ret = cbchmac.decrypt(enckey, mackey, iv, aad, q, rejected_plaintext, tampered_tag);
+        _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "reject a modified JOSE CBC-HMAC authentication tag");
+        _test_case.assert(rejected_plaintext.empty(), __FUNCTION__, "do not expose JOSE plaintext after authentication failure");
+    }
 }
 
 void test_yaml_testvector_cbc_hmac_jose() {

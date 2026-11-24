@@ -21,7 +21,7 @@ class HOTPLACE_NET_API tls_handshake_server_hello_done : public tls_handshake {
     virtual ~tls_handshake_server_hello_done();
 
    protected:
-    virtual return_t do_preprocess(tls_direction_t dir);
+    virtual return_t do_preprocess(tls_direction_t dir, tls_io_operation_t opdir);
     virtual return_t do_postprocess(tls_direction_t dir, tls_io_operation_t opdir, const byte_t* stream, size_t size);
 
    private:

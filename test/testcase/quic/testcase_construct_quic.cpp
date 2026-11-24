@@ -503,7 +503,7 @@ void testcase_construct_quic() {
         session_server.set_recordno(from_server, 30, protection_space_t::application);
 
         auto lambda_check_pkn = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
-            uint32 pkn = t_narrow_cast(session->get_recordno(dir, false, space));
+            uint32 pkn = t_narrow_cast(session->get_recordno(dir, space));
             _test_case.assert(pkn_expect == pkn, __FUNCTION__, "PKN %i", pkn);
         };
         auto lambda_test_ready_to_ack = [](tls_session* session, protection_space_t space, uint32 largest, uint32 range) -> void {

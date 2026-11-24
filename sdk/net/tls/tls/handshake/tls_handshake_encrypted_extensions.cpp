@@ -106,11 +106,28 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
             tls_resumption_ticket early_ticket = session->get_early_data_ticket();
             auto alpn_extension = static_cast<tls_extension_alpn*>(get_extensions().get(tls_extension_type_t::application_layer_protocol_negotiation));
             binary_t negotiated_alpn = (nullptr != alpn_extension) ? alpn_extension->get_protocols() : binary_t();
-            bool ticket_parameters_match = (tls_flow_t::zero_rtt == protection.get_flow()) && (false == early_ticket.identity.empty()) &&
-                                           (early_ticket.version == static_cast<uint16>(protection.get_tls_version())) &&
-                                           (early_ticket.cipher_suite == protection.get_cipher_suite()) && (early_ticket.alpn == negotiated_alpn) &&
-                                           (0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_limit)) &&
-                                           (session->get_session_info(from_server).get_keyvalue().get(session_early_data_limit) <= early_ticket.max_early_data_size);
+            const uint32 early_data_limit = session->get_session_info(from_server).get_keyvalue().get(session_early_data_limit);
+            const bool early_flow_match = (tls_flow_t::zero_rtt == protection.get_flow());
+            const bool ticket_identity_present = (false == early_ticket.identity.empty());
+            const bool ticket_version_match = (early_ticket.version == static_cast<uint16>(protection.get_tls_version()));
+            const bool ticket_cipher_suite_match = (early_ticket.cipher_suite == protection.get_cipher_suite());
+            const bool ticket_alpn_match = (early_ticket.alpn == negotiated_alpn);
+            const bool early_data_limit_valid = (0 != early_data_limit) && (early_data_limit <= early_ticket.max_early_data_size);
+            bool ticket_parameters_match =
+                early_flow_match && ticket_identity_present && ticket_version_match && ticket_cipher_suite_match && ticket_alpn_match && early_data_limit_valid;
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                    dbs.println(" > EncryptedExtensions early_data validation");
+                    dbs.println("   flow %u (zero_rtt=%u), offered %u, selected_identity %u", static_cast<uint32>(protection.get_flow()),
+                                static_cast<uint32>(tls_flow_t::zero_rtt), early_data_offered ? 1 : 0, selected_identity);
+                    dbs.println("   ticket identity present %u, version 0x%04x/0x%04x match %u", ticket_identity_present ? 1 : 0, early_ticket.version,
+                                static_cast<uint16>(protection.get_tls_version()), ticket_version_match ? 1 : 0);
+                    dbs.println("   cipher suite 0x%04x/0x%04x match %u", early_ticket.cipher_suite, protection.get_cipher_suite(), ticket_cipher_suite_match ? 1 : 0);
+                    dbs.println("   ALPN size %zu/%zu match %u", early_ticket.alpn.size(), negotiated_alpn.size(), ticket_alpn_match ? 1 : 0);
+                    dbs.println("   early data limit %u, ticket max %u, valid %u", early_data_limit, early_ticket.max_early_data_size, early_data_limit_valid ? 1 : 0);
+                    dbs.println("   ticket parameters match %u", ticket_parameters_match ? 1 : 0);
+                });
+            }
             if ((false == early_data_offered) || (0 != selected_identity) || (false == ticket_parameters_match)) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
                 session->reset_session_status();

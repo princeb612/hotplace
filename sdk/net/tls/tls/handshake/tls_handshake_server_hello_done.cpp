@@ -38,7 +38,7 @@ tls_handshake_server_hello_done::tls_handshake_server_hello_done(tls_session* se
 
 tls_handshake_server_hello_done::~tls_handshake_server_hello_done() {}
 
-return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (from_server != dir) {

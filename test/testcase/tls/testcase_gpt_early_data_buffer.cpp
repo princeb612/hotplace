@@ -840,7 +840,7 @@ static void test_tls13_server_defers_inflight_early_data_until_encrypted_extensi
 class test_tls13_client_hello_preprocess_probe : public tls_handshake_client_hello {
    public:
     using tls_handshake_client_hello::tls_handshake_client_hello;
-    return_t preprocess(tls_direction_t dir) { return do_preprocess(dir); }
+    return_t preprocess(tls_direction_t dir, tls_io_operation_t opdir = tls_io_operation_t::read) { return do_preprocess(dir, opdir); }
 };
 
 static void test_tls13_fresh_client_hello_resets_rejected_early_data_counters(const char* test_name) {
@@ -1353,7 +1353,7 @@ static void test_tls13_server_discards_rejected_early_data_records() {
     _test_case.assert(false == session.has_alert(from_client, tls_alertlevel_t::fatal), __FUNCTION__,
                       "do not raise bad_record_mac for intentionally rejected 0-RTT data");
     _test_case.assert(16 == early_state.get(session_early_data_discarded), __FUNCTION__, "count discarded ciphertext against the configured early-data skip bound");
-    uint64 recordno_after_rejected_record = session.get_session_info(from_client).get_recordno(false);
+    uint64 recordno_after_rejected_record = session.get_session_info(from_client).get_recordno();
     _test_case.assert(0 == recordno_after_rejected_record, __FUNCTION__, "restore the handshake record sequence after failed trial decryption");
 
     test_tls13_rejected_early_data_precedes_client_finished();
@@ -1551,7 +1551,7 @@ static void test_tls13_rejected_early_data_trial_decryption_sequence() {
         tls_records rejected_records;
         ret = rejected_records.read(&server, from_client, rejected_early_wire);
         _test_case.test(ret, __FUNCTION__, "discard a real 0-RTT record that fails handshake-key trial decryption");
-        uint64 recordno_after_rejected_early_data = server.get_session_info(from_client).get_recordno(false);
+        uint64 recordno_after_rejected_early_data = server.get_session_info(from_client).get_recordno();
         _test_case.assert(0 == recordno_after_rejected_early_data, __FUNCTION__, "restore the client record number after failed trial decryption");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__, "count the rejected 0-RTT record after authentication failure");
         _test_case.assert(rejected_early_wire.size() - 5 == early_state.get(session_early_data_discarded), __FUNCTION__, "account only the rejected ciphertext fragment");
@@ -1564,7 +1564,7 @@ static void test_tls13_rejected_early_data_trial_decryption_sequence() {
         ret = handshake_records.read(&server, from_client, handshake_wire);
         _test_case.assert(errorcode_t::success != ret, __FUNCTION__,
                           "reject application_data before the client's Finished after successful handshake-key authentication");
-        uint64 recordno_after_handshake_trial = server.get_session_info(from_client).get_recordno(false);
+        uint64 recordno_after_handshake_trial = server.get_session_info(from_client).get_recordno();
         _test_case.assert(1 == recordno_after_handshake_trial, __FUNCTION__, "keep the record number consumed by successful handshake-key trial decryption");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__,
                           "do not count an authenticated handshake-key record as discarded early data");
@@ -1653,7 +1653,7 @@ static void test_tls13_rejected_early_data_ccm_authentication() {
         tls_records rejected_records;
         ret = rejected_records.read(&server, from_client, rejected_early_wire);
         _test_case.test(ret, __FUNCTION__, "discard rejected 0-RTT ciphertext after CCM handshake-key authentication fails");
-        uint64 recordno_after_failed_ccm_trial = server.get_session_info(from_client).get_recordno(false);
+        uint64 recordno_after_failed_ccm_trial = server.get_session_info(from_client).get_recordno();
         _test_case.assert(0 == recordno_after_failed_ccm_trial, __FUNCTION__, "restore the record number after failed CCM trial authentication");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__, "count the rejected CCM 0-RTT record");
         _test_case.assert(rejected_early_wire.size() - 5 == early_state.get(session_early_data_discarded), __FUNCTION__, "account the rejected CCM ciphertext fragment");
@@ -1665,7 +1665,7 @@ static void test_tls13_rejected_early_data_ccm_authentication() {
         tls_records handshake_records;
         ret = handshake_records.read(&server, from_client, handshake_wire);
         _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "authenticate a handshake-key CCM record before rejecting its premature application_data message");
-        uint64 recordno_after_successful_ccm_trial = server.get_session_info(from_client).get_recordno(false);
+        uint64 recordno_after_successful_ccm_trial = server.get_session_info(from_client).get_recordno();
         _test_case.assert(1 == recordno_after_successful_ccm_trial, __FUNCTION__, "consume the record number after successful CCM handshake-key authentication");
         _test_case.assert(1 == early_state.get(session_early_data_discarded_records), __FUNCTION__,
                           "do not count authenticated CCM handshake ciphertext as discarded early data");

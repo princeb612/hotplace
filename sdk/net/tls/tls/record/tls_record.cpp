@@ -286,7 +286,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         if (session_type_t::tls == session->get_type()) {
             auto& protection = session->get_tls_protection();
             bool protected_record = session->get_session_info(dir).apply_protection();
-            if (protection.is_kindof_tls13()) {
+            if (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) {
                 protected_record = protected_record && (tls_content_type_t::application_data == t_enum_type<tls_content_type_t>(content_type));
                 max_record_size = protected_record ? tls13_ciphertext_max_size : tls_plaintext_max_size;
             } else {
@@ -383,7 +383,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 
             auto& protection = session->get_tls_protection();
             auto record_version = protection.get_lagacy_version();
-            auto cs = protection.get_cipher_suite();
+            auto cs = protection.get_cipher_suite(session, dir);
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
             if (nullptr == hint) {
@@ -400,7 +400,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             uint16 keyepoch = 0;
             uint64 dtlsrecordseq = 0;
             if (tlsadvisor->is_kindof_tls(record_version)) {
-                record_no = session->get_recordno(dir, false);
+                record_no = session->get_recordno(dir);
             } else {
                 keyepoch = get_key_epoch();
                 dtlsrecordseq = get_dtls_record_seq();
@@ -444,7 +444,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
             auto& protection = session->get_tls_protection();
             bool protected_record = apply_protection() && session->get_session_info(dir).apply_protection();
             size_t max_record_size = tls_plaintext_max_size;
-            if (protection.is_kindof_tls13()) {
+            if (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) {
                 if (protected_record) {
                     max_record_size = tls13_ciphertext_max_size;
                 }

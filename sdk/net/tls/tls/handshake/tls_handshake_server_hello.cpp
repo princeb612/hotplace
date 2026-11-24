@@ -31,8 +31,6 @@
 namespace hotplace {
 namespace net {
 
-constexpr uint16 constexpr_session_client_supported_versions_key = 0x2005;
-
 constexpr char constexpr_version[] = "version";
 constexpr char constexpr_random[] = "random";
 constexpr char constexpr_session_id_len[] = "session id len";
@@ -60,6 +58,15 @@ static bool is_hello_retry_request_random(const binary_t& random) {
         }
     }
     return true;
+}
+
+// ClientHello supported_versions presence identifies a client that understands
+// TLS 1.3 downgrade sentinels, even when its configured offer contains only TLS 1.2.
+constexpr uint16 constexpr_session_client_supported_versions_key = 0x2005;
+
+static bool local_tls13_supported(tls_advisor* advisor) {
+    const tls_version_hint_t* hint = advisor ? advisor->hintof_tls_version(tls1_3) : nullptr;
+    return (nullptr != hint) && (0 != hint->support);
 }
 
 static bool is_tls_downgrade_sentinel(const binary_t& random) {
@@ -212,7 +219,7 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
 
 uint8 tls_handshake_server_hello::get_compression_method() { return _compression_method; }
 
-return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (from_server != dir) {
@@ -263,6 +270,45 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
         bool activate_tls13_protection = false;
         auto ext_selected_psk = get_extensions().get(tls_extension_type_t::pre_shared_key);
         bool server_selected_psk = (nullptr != ext_selected_psk);
+
+        if (from_server == dir) {
+            auto ext_renego = get_extensions().get(tls_extension_type_t::renegotiation_info);
+            bool renegotiation_info_present = (nullptr != ext_renego);
+            if (protection.is_kindof_tls13()) {
+                if (renegotiation_info_present) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+                kv.set(session_tls12_secure_renegotiation, 0);
+            } else if (protection.is_kindof_tls12()) {
+                bool secure_renegotiation_offered = (0 != kv.get(session_tls12_secure_renegotiation_offered));
+                if ((tls_flow_t::renegotiation == protection.get_flow()) && (false == renegotiation_info_present)) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+                if ((tls_io_operation_t::read == opdir) && renegotiation_info_present && (false == secure_renegotiation_offered)) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unsupported_extension);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+                // RFC 5746 §3.4: a client that signaled secure renegotiation
+                // must reject an initial TLS 1.2 ServerHello that omits the
+                // renegotiation_info response.
+                if ((tls_io_operation_t::read == opdir) && (tls_flow_t::renegotiation != protection.get_flow()) && secure_renegotiation_offered &&
+                    (false == renegotiation_info_present)) {
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
+                    session->reset_session_status();
+                    ret = errorcode_t::handshake_failure;
+                    __leave2_trace(ret);
+                }
+                kv.set(session_tls12_secure_renegotiation, renegotiation_info_present ? 1 : 0);
+            }
+        }
         if ((tls_io_operation_t::read == opdir) && (from_server == dir) && (false == protection.is_kindof_tls13())) {
             // RFC 5077 §3.2: a server may acknowledge SessionTicket only
             // when the ClientHello offered the extension. Its parser already
@@ -458,12 +504,11 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
                 // selects (or declines) PSK resumption.
                 session->set_offered_resumption_tickets(std::vector<tls_resumption_ticket>());
 
-                // RFC 9846 4.2.3: a TLS 1.3 client must reject the downgrade
-                // sentinels when a ServerHello selects TLS 1.2 or an earlier version.
-                auto tls13_hint = tlsadvisor->hintof_tls_version(tls1_3);
-                // A TLS 1.2-only supported_versions offer is still from a modern client; legacy ClientHello omits the extension.
-                if ((session_type_t::tls == session_type) && kv.get(constexpr_session_client_supported_versions_key) && tls13_hint && tls13_hint->support &&
-                    false == tlsadvisor->is_specof_tls13_or_later(ver) && is_tls_downgrade_sentinel(secrets.get(tls_secret_t::server_hello_random))) {
+                // Downgrade sentinels protect the initial version negotiation.
+                // A TLS 1.2 renegotiation cannot change the established protocol version.
+                if ((session_type_t::tls == session_type) && (tls_flow_t::renegotiation != protection.get_flow()) &&
+                    (0 != session->get_keyvalue().get(constexpr_session_client_supported_versions_key)) && false == tlsadvisor->is_specof_tls13_or_later(ver) &&
+                    is_tls_downgrade_sentinel(secrets.get(tls_secret_t::server_hello_random))) {
                     session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
                     session->reset_session_status();
                     ret = errorcode_t::handshake_failure;
@@ -548,17 +593,23 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, tls_io_
                     const binary_t& client_hello = secrets.get(tls_secret_t::client_hello);
                     protection.update_transcript_hash(session, client_hello.data(), client_hello.size());  // client_hello
                 } break;
+                case tls_flow_t::renegotiation: {
+                    // RFC 5746 starts a fresh handshake transcript while the
+                    // old directional record states remain active until CCS.
+                    protection.reset_transcript_hash(session);
+                    const binary_t& client_hello = secrets.get(tls_secret_t::client_hello);
+                    protection.update_transcript_hash(session, client_hello.data(), client_hello.size());
+                } break;
                 case tls_flow_t::zero_rtt:
                 case tls_flow_t::hello_retry_request: {
                     if (server_hello_is_hrr) {
                         protection.set_flow(tls_flow_t::hello_retry_request);
                     } else if (server_selected_psk) {
-                        auto hs_finished = kv.get(session_handshake_finished);
                         bool after_hrr = (tls_flow_t::hello_retry_request == protection.get_flow());
                         // RFC 8446 4.2.10: early_data is not permitted after
                         // HelloRetryRequest, even when the final ServerHello
                         // selects the same PSK.
-                        protection.set_flow((hs_finished && (false == after_hrr)) ? tls_flow_t::zero_rtt : tls_flow_t::one_rtt);
+                        protection.set_flow((false == after_hrr) ? tls_flow_t::zero_rtt : tls_flow_t::one_rtt);
                     } else if (tls_flow_t::zero_rtt == protection.get_flow()) {
                         protection.set_flow(tls_flow_t::one_rtt);
                     }
@@ -826,6 +877,16 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 ret = errorcode_t::bad_format;
                 __leave2_trace(ret);
             }
+            if ((from_server == dir) && protection.is_kindof_tls12() && (tls_flow_t::renegotiation == protection.get_flow())) {
+                // The peer has accepted the renegotiation by sending ServerHello.
+                // Retire the previous negotiated ALPN/record-size values now,
+                // rather than before ClientHello, so no_renegotiation can
+                // preserve the still-active connection.
+                secrets.assign(tls_secret_t::alpn, binary_t());
+                session->get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 0);
+                session->get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 0);
+                kv.set(session_tls12_ticket_resumed, 0);
+            }
             auto legacy_version = protection.get_lagacy_version();
             uint16 version = 0;
 
@@ -937,25 +998,24 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 __leave2_trace(ret);
             }
 
-            if (0 == extension_len) {
-                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
-                session->reset_session_status();
-                ret = errorcode_t::handshake_failure;
-                __leave2_trace(ret);
-            }
-
-            ret = get_extensions().read(this, dir, stream, body_end, pos);
-            if (errorcode_t::no_more == ret) {
-                // The ServerHello body is already complete and bounded by
-                // body_end. A short trailing extension header is malformed
-                // wire input, not an incomplete transport fragment.
-                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
-                session->reset_session_status();
-                ret = errorcode_t::bad_format;
-                __leave2_trace(ret);
-            }
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
+            // TLS 1.2 ServerHello may omit extensions entirely. In
+            // particular, RFC 5746 permits a server that did not negotiate
+            // secure renegotiation to omit renegotiation_info on the initial
+            // handshake. A zero-length extension vector is therefore valid.
+            if (0 != extension_len) {
+                ret = get_extensions().read(this, dir, stream, body_end, pos);
+                if (errorcode_t::no_more == ret) {
+                    // The ServerHello body is already complete and bounded by
+                    // body_end. A short trailing extension header is malformed
+                    // wire input, not an incomplete transport fragment.
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
+                    session->reset_session_status();
+                    ret = errorcode_t::bad_format;
+                    __leave2_trace(ret);
+                }
+                if (errorcode_t::success != ret) {
+                    __leave2_trace(ret);
+                }
             }
             if (pos != body_end) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
@@ -1064,6 +1124,10 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         auto legacy_version = protection.get_lagacy_version();
         auto cs = get_cipher_suite();
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
+        if (protection.is_kindof_tls13() && get_extensions().get(tls_extension_type_t::renegotiation_info)) {
+            ret = errorcode_t::bad_request;
+            __leave2;
+        }
 
         // RFC 5077 §3.2: acknowledge a ClientHello SessionTicket offer
         // with an empty ServerHello extension. This only negotiates ticket
@@ -1165,11 +1229,17 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             session->get_keyvalue().set(session_extended_master_secret, (request_ems && ext_ems) ? 1 : 0);
         }
         if (tls1_2 == hint->spec) {
-            // fatal:handshake_failure
-            // avoid final_renegotiate:unsafe legacy renegotiation disabled
+            // RFC 5746: answer the initial ClientHello SCSV or empty extension,
+            // and preserve the binding extension on an established secure renegotiation.
             auto ext_renego = get_extensions().get(tls_extension_type_t::renegotiation_info);
-            if (nullptr == ext_renego) {
-                get_extensions().add(tls_extension_type_t::renegotiation_info, dir, this, nullptr);
+            bool secure_renegotiation_offered = (0 != session->get_keyvalue().get(session_tls12_secure_renegotiation_offered));
+            if (secure_renegotiation_offered) {
+                if (nullptr == ext_renego) {
+                    get_extensions().add(tls_extension_type_t::renegotiation_info, dir, this, nullptr);
+                }
+            } else if (nullptr != ext_renego) {
+                ret = errorcode_t::bad_request;
+                __leave2;
             }
 
             // TLS 1.2 server_hello
@@ -1253,15 +1323,14 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             _random = std::move(random);
         }
 
-        // RFC 9846 4.2.3: a TLS 1.3 server negotiating TLS 1.2 marks
-        // ServerHello.random so a TLS 1.3 client can detect a downgrade.
-        if ((session_type_t::tls == session->get_type()) && (tls1_2 == hint->spec)) {
-            auto tls13_hint = tlsadvisor->hintof_tls_version(tls1_3);
-            if (tls13_hint && tls13_hint->support) {
-                static const byte_t downgrade_tls12[8] = {0x44, 0x4f, 0x57, 0x4e, 0x47, 0x52, 0x44, 0x01};
-                for (size_t i = 0; i < 8; ++i) {
-                    _random[24 + i] = downgrade_tls12[i];
-                }
+        // RFC 8446 4.1.3: a server that supports TLS 1.3 marks an initial
+        // lower-version ServerHello, independently of the peer's version offer.
+        // Renegotiation retains the already-established TLS version.
+        if ((session_type_t::tls == session->get_type()) && (tls_flow_t::renegotiation != protection.get_flow()) && (tls1_2 == hint->spec) &&
+            local_tls13_supported(tlsadvisor)) {
+            static const byte_t downgrade_tls12[8] = {0x44, 0x4f, 0x57, 0x4e, 0x47, 0x52, 0x44, 0x01};
+            for (size_t i = 0; i < 8; ++i) {
+                _random[24 + i] = downgrade_tls12[i];
             }
         }
 

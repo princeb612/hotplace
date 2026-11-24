@@ -211,12 +211,25 @@ static void test_tls13_end_of_early_data_usage_reset() {
     session.set_recordno(from_server, 7);
     auto& client_usage = session.get_session_info(from_client).get_keyvalue();
     auto& server_usage = session.get_session_info(from_server).get_keyvalue();
+    // Before Server Finished, client records still use early traffic keys.
+    tls_secret_t client_key;
+    tls_secret_t client_iv;
+    return_t key_ret = protection.get_aead_key(&session, from_client, protection_space_t::tls, client_key, client_iv);
+    _test_case.test(key_ret, __FUNCTION__, "select client early traffic keys before Server Finished");
+    _test_case.assert(tls_secret_t::c_e_traffic_key == client_key, __FUNCTION__, "use the early traffic key before Server Finished");
+
     // Model the EncryptedExtensions acceptance and the preceding Server Finished.
+    server_usage.set(session_early_data_offered, 1);
     server_usage.set(session_early_data_accepted, 1);
-    session.update_session_status(session_status_server_finished);
     client_usage.set(session_tls13_key_usage_bytes, 100);
     server_usage.set(session_tls13_key_usage_bytes, 200);
-
+    session.update_session_status(session_status_server_finished);
+    // Server Finished does not end the client's early-data record epoch.
+    // EndOfEarlyData is still protected with the early traffic key.
+    key_ret = protection.get_aead_key(&session, from_client, protection_space_t::tls, client_key, client_iv);
+    _test_case.test(key_ret, __FUNCTION__, "select client early traffic keys after Server Finished and before EndOfEarlyData");
+    _test_case.assert(tls_secret_t::c_e_traffic_key == client_key, __FUNCTION__, "protect EndOfEarlyData with the early traffic key");
+    _test_case.assert(5 == session.get_recordno(from_client), __FUNCTION__, "preserve the early-data sequence until EndOfEarlyData is consumed");
     tls_handshake_end_of_early_data end_of_early_data(&session);
     binary_t handshake;
     return_t ret = end_of_early_data.write(from_client, handshake);
@@ -229,7 +242,7 @@ static void test_tls13_end_of_early_data_usage_reset() {
         uint64 server_recordno = session.get_recordno(from_server);
         uint64 client_usage_bytes = client_usage.get(session_tls13_key_usage_bytes);
         uint64 server_usage_bytes = server_usage.get(session_tls13_key_usage_bytes);
-        _test_case.assert(0 == client_recordno, __FUNCTION__, "reset the client sequence for the handshake traffic key");
+        _test_case.assert(0 == client_recordno, __FUNCTION__, "reset the client sequence after EndOfEarlyData for handshake traffic keys");
         _test_case.assert(7 == server_recordno, __FUNCTION__, "preserve the server sequence because its traffic key did not change");
         _test_case.assert(0 == client_usage_bytes, __FUNCTION__, "reset client key usage when leaving early data");
         _test_case.assert(200 == server_usage_bytes, __FUNCTION__, "preserve server key usage across the client EndOfEarlyData message");
@@ -1086,7 +1099,7 @@ static void test_tls13_server_requires_early_data_ticket_permission() {
                           "retain early traffic keys only when the server accepts early data");
         _test_case.assert(expect_success ? (1 == early_state.get(session_early_data_accepted)) : (0 == early_state.get(session_early_data_accepted)), __FUNCTION__,
                           "record the EncryptedExtensions acceptance decision");
-        _test_case.assert(expect_success ? (7 == session.get_recordno(from_client, false)) : (0 == session.get_recordno(from_client, false)), __FUNCTION__,
+        _test_case.assert(expect_success ? (7 == session.get_recordno(from_client)) : (0 == session.get_recordno(from_client)), __FUNCTION__,
                           "reset the client record sequence only when switching away from early traffic keys");
     };
 
@@ -1512,7 +1525,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     return_t rejected_ret = rejected_extensions.read(from_server, rejected_ee.data(), rejected_ee.size(), rejected_pos);
     _test_case.test(rejected_ret, __FUNCTION__, "read EncryptedExtensions that declines early data");
     _test_case.assert(tls_flow_t::one_rtt == rejected_protection.get_flow(), __FUNCTION__, "switch to handshake traffic keys after early-data rejection");
-    _test_case.assert(0 == rejected_session.get_recordno(from_client, false), __FUNCTION__, "reset the client record sequence for handshake keys");
+    _test_case.assert(0 == rejected_session.get_recordno(from_client), __FUNCTION__, "reset the client record sequence for handshake keys");
     _test_case.assert(0 == rejected_client_usage.get(session_tls13_key_usage_bytes), __FUNCTION__,
                       "reset client AEAD usage when switching from early-data to handshake traffic keys");
     _test_case.assert(0 == rejected_session.get_keyvalue().get(session_server_psk_selected_identity), __FUNCTION__,
@@ -1571,8 +1584,7 @@ static void test_tls13_client_validates_early_data_acceptance_parameters() {
     if (failed_alert_record) {
         failed_alert_record->release();
     }
-    _test_case.assert(0 == failed_acceptance_session.get_recordno(from_client, false), __FUNCTION__,
-                      "reset the client record sequence for the handshake-protected fatal alert");
+    _test_case.assert(0 == failed_acceptance_session.get_recordno(from_client), __FUNCTION__, "reset the client record sequence for the handshake-protected fatal alert");
     size_t failed_acceptance_alert_count = test_count_fatal_alert(failed_acceptance_session, from_server, tls_alertdesc_t::illegal_parameter);
     _test_case.assert(1 == failed_acceptance_alert_count, __FUNCTION__, "queue exactly one fatal illegal_parameter alert");
 

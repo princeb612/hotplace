@@ -34,6 +34,8 @@ namespace net {
 class HOTPLACE_NET_API trial_tls_client_socket : public secure_client_socket {
    public:
     trial_tls_client_socket(tls_version_t spec = tls1_3);
+    // Start a new TLS connection with only the source session's resumption-ticket cache.
+    trial_tls_client_socket(const tls_session& resumption_source, tls_version_t spec = tls1_3);
     virtual ~trial_tls_client_socket();
 
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);

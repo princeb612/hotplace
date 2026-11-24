@@ -15,6 +15,8 @@
  *  RFC 2246
  */
 
+#include <chrono>
+
 #include "sample.hpp"
 
 // RFC 8448 4.  Resumed 0-RTT Handshake
@@ -24,8 +26,48 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
     return_t ret = errorcode_t::success;
     // size_t pos = 0;
     crypto_keychain keychain;
+
+    tls_session* previous_session = rfc8448_session;
+    auto previous_tickets = previous_session->get_resumption_tickets();
+    // RFC 8448's captured ClientHello reports an obfuscated ticket age equal
+    // to ticket_age_add, i.e. a ticket age of zero milliseconds. The replay
+    // fixture must not inherit wall-clock time spent between Section 3 and
+    // Section 4 (or while stopped in a debugger), so anchor the cached ticket
+    // receipt time immediately before constructing the resumed connection.
+    if (false == previous_tickets.empty()) {
+        auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        previous_tickets.front().timestamp = static_cast<uint64>(now_ms);
+        previous_session->store_resumption_ticket(previous_tickets.front());
+    }
+    tls_session* resumed_session = previous_session->duplicate(tls_session_copy_t::resumption);
+    rfc8448_session = resumed_session;
     auto& protection = rfc8448_session->get_tls_protection();
     binary_t bin;
+
+    bool copied_ticket = false;
+    if (false == previous_tickets.empty()) {
+        tls_resumption_ticket copied;
+        copied_ticket = resumed_session->find_resumption_ticket(previous_tickets.front().identity, copied) && (copied.psk == previous_tickets.front().psk);
+    }
+    _test_case.assert(copied_ticket, __FUNCTION__, "copy the Section 3 resumption ticket into a fresh session");
+    bool section3_ticket_metadata = false;
+    if (false == previous_tickets.empty()) {
+        const auto& ticket = previous_tickets.front();
+        section3_ticket_metadata =
+            (static_cast<uint16>(tls1_3) == ticket.version) && (0x1301 == ticket.cipher_suite) && (0xfad6aac5 == ticket.age_add) && (0x400 == ticket.max_early_data_size);
+    }
+    _test_case.assert(section3_ticket_metadata, __FUNCTION__, "retain the RFC 8448 ticket's TLS 1.3, AES-128-GCM, age_add, and 1024-byte early-data metadata");
+    _test_case.assert(protection.get_secrets().get(tls_secret_t::res_master).empty(), __FUNCTION__, "do not copy the previous resumption master secret");
+    _test_case.assert(protection.get_secrets().get(tls_secret_t::resumption).empty(), __FUNCTION__, "do not copy the previous resumption secret");
+    _test_case.assert(protection.get_secrets().get(tls_secret_t::shared_secret).empty(), __FUNCTION__, "do not copy the previous handshake shared secret");
+    _test_case.assert(protection.get_secrets().get(tls_secret_t::application_client).empty(), __FUNCTION__, "do not copy the previous client application traffic secret");
+    _test_case.assert(protection.get_secrets().get(tls_secret_t::application_server).empty(), __FUNCTION__, "do not copy the previous server application traffic secret");
+    _test_case.assert(tls_handshake_type_t::client_hello == rfc8448_session->get_session_info(from_client).get_status(), __FUNCTION__, "fresh client handshake cursor");
+    _test_case.assert(tls_handshake_type_t::client_hello == rfc8448_session->get_session_info(from_server).get_status(), __FUNCTION__, "fresh server handshake cursor");
+    _test_case.assert(false == rfc8448_session->get_session_info(from_client).apply_protection(), __FUNCTION__, "fresh client protection state");
+    _test_case.assert(false == rfc8448_session->get_session_info(from_server).apply_protection(), __FUNCTION__, "fresh server protection state");
+    _test_case.assert(0 == rfc8448_session->get_recordno(from_client), __FUNCTION__, "fresh client record sequence");
+    _test_case.assert(0 == rfc8448_session->get_recordno(from_server), __FUNCTION__, "fresh server record sequence");
 
     // {client}  create an ephemeral x25519 key pair:
     {
@@ -37,12 +79,6 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "e4 ff b6 8a c0 5f 8d 96 c9 9d a2 66 98 34"
             "6c 6b e1 64 82 ba dd da fe 05 1a 66 b4 f1 8d 66 8f 0b";
         crypto_key& key = protection.get_key();
-        // RFC 8448 section 4 reuses the session from section 3. Remove
-        // the previous handshake's key shares before installing this vector.
-        key.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-        key.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
-        key.erase(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
-        key.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);
@@ -80,17 +116,31 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "4a e4 d3 57 fa d6 aa cb 00 21 20 3a dd 4f b2 d8 fd f8 22 a0 ca"
             "3c f7 67 8e f5 e8 8d ae 99 01 41 c5 92 4d 57 bb 6f a3 1b 9e 5f"
             "9d";
+        // This vector is a peer-supplied ClientHello. The fresh session's
+        // handshake cursor is intentionally client_hello, so it cannot infer
+        // the locally generated PSK offer in do_preprocess(). Select the
+        // resumption flow for this RFC vector before parsing the message.
+        protection.set_flow(tls_flow_t::zero_rtt);
+
         // verify PSK binder == finished
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("client_hello", rfc8448_session, from_client, bin_record);
+        tls_resumption_ticket early_data_ticket = rfc8448_session->get_early_data_ticket();
+        _test_case.assert(tls1_0 == protection.get_tls_version(), __FUNCTION__, "keep the fresh connection's negotiated version unset");
+        _test_case.assert(static_cast<uint16>(tls1_3) == early_data_ticket.version, __FUNCTION__, "take the early-data version from the selected PSK ticket");
+        _test_case.assert(0x1301 == early_data_ticket.cipher_suite, __FUNCTION__, "take the early-data cipher suite from the selected PSK ticket");
+        _test_case.assert(0 != early_data_ticket.max_early_data_size, __FUNCTION__, "selected PSK ticket permits early data");
+        // RFC 8448 Section 4: SHA-256(ClientHello) is the context for the 0-RTT traffic secrets.
+        test_transcript_hash(rfc8448_session, base16_decode("08ad0fa05d7c7233b1775ba2ff9f4c5b8b59276b7f227f13a976245f5d960913"));
     }
     {
         openssl_kdf kdf;
         binary_t context;
 
         binary_t bin;
-        test_keycalc(rfc8448_session, tls_secret_t::res_master, bin, "secret_resumption_master", "7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c");
-        test_keycalc(rfc8448_session, tls_secret_t::resumption, bin, "secret_resumption", "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
+        // The resumption master secret and its resumption secret belong to
+        // Section 3's completed connection. Section 4 derives only the new
+        // connection's early secret from the copied ticket PSK.
         test_keycalc(rfc8448_session, tls_secret_t::resumption_early, bin, "secret_resumption_early", "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
 
         // tls_extension_pre_shared_key
@@ -253,4 +303,12 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("alert", rfc8448_session, from_server, bin_record);
     }
+
+    _test_case.assert(false == previous_session->get_tls_protection().get_secrets().get(tls_secret_t::res_master).empty(), __FUNCTION__,
+                      "keep the previous connection's resumption master secret isolated");
+    _test_case.assert(false == previous_session->get_tls_protection().get_secrets().get(tls_secret_t::application_client).empty(), __FUNCTION__,
+                      "keep the previous connection's application traffic secret isolated");
+    _test_case.assert(false == previous_session->get_resumption_tickets().empty(), __FUNCTION__, "keep the source ticket cache independent");
+
+    resumed_session->release();
 }

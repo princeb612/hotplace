@@ -49,7 +49,7 @@ void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     }
 }
 
-return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
+return_t tls_handshake_finished::do_preprocess(tls_direction_t dir, tls_io_operation_t opdir) {
     return_t ret = errorcode_t::success;
     __try2 {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -229,6 +229,17 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                 // phase before any subsequent 1-RTT application data.
                 if (protection.is_kindof_tls13() && (tls_flow_t::zero_rtt == protection.get_flow())) {
                     session->get_session_info(from_server).get_keyvalue().set(session_early_data_finished, 1);
+                }
+            }
+
+            if (tls_flow_t::renegotiation == protection.get_flow()) {
+                const uint32 finished_status = session_status_client_finished | session_status_server_finished;
+                if (finished_status == (session->get_session_status() & finished_status)) {
+                    // The new handshake is complete. The next renegotiation,
+                    // if enabled, must start from the freshly stored verify_data.
+                    protection.set_flow(tls_flow_t::one_rtt);
+                    session->get_session_info(from_client).get_keyvalue().set(session_tls12_renegotiation_ccs, 0);
+                    session->get_session_info(from_server).get_keyvalue().set(session_tls12_renegotiation_ccs, 0);
                 }
             }
             session->schedule(this);  // run_scheduled
