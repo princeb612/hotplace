@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 #define __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 
+#include <atomic>
 #include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
@@ -153,9 +154,9 @@ class HOTPLACE_NET_API tls_protection {
     tls_version_t get_lagacy_version();
     bool is_kindof_tls();
     bool is_kindof_dtls();
-    bool is_kindof_tls12();
-    bool is_kindof_tls13();
-    bool is_kindof_tls13_early_data(tls_session* session);
+    bool is_kindof_tls1_2();
+    bool is_kindof_tls1_3();
+    bool is_kindof_tls1_3_early_data(tls_session* session);
     tls_version_t get_tls_version();
     void set_tls_version(tls_version_t version);
     protection_context& get_protection_context();
@@ -222,8 +223,8 @@ class HOTPLACE_NET_API tls_protection {
      * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
      */
     // decrypt_aead TLS 1.2 AAD
-    return_t build_tls12_aad_from_record(tls_session* session, tls_direction_t dir, binary_t& aad, const binary_t& record_header, uint64 record_no,
-                                         uint8 size_nonce_explicit);
+    return_t build_tls1_2_aad_from_record(tls_session* session, tls_direction_t dir, binary_t& aad, const binary_t& record_header, uint64 record_no,
+                                          uint8 size_nonce_explicit);
     // tls_record::do_write_header
     return_t write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, tls_content_type_t content_type, tls_version_t version, uint64 recno, uint16 epoch,
                        uint64 dtlsseq, uint16 bodysize);
@@ -331,6 +332,7 @@ class HOTPLACE_NET_API tls_protection {
                              protection_space_t space = protection_space_t::tls);
 
    protected:
+    return_t advance_recordno(tls_session* session, tls_direction_t dir, uint64& record_no, protection_space_t space = protection_space_t::tls);
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag,
                           protection_space_t space = protection_space_t::tls);
     return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& iv, binary_t& maced);
@@ -343,7 +345,7 @@ class HOTPLACE_NET_API tls_protection {
 
    private:
     tls_session* _session;              //
-    tls_flow_t _flow;                   // TLS flow
+    std::atomic<tls_flow_t> _flow;      // TLS flow
     uint16 _ciphersuite;                // cipher suite negotiated
     tls_version_t _version;             // negotiated version
     transcript_hash* _transcript_hash;  // transcript hash

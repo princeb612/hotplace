@@ -44,14 +44,18 @@ return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
             // activated new keys, so restore the completed handshake without
             // changing the active record protection or sequence numbers.
             if (server_declined_client_hello) {
-                // Clear the ClientHello status left by the local writer before
-                // restoring the previously completed handshake.
-                session->reset_session_status();
+                // Replace the transient ClientHello status with the completed
+                // state in one publication; reset_session_status() would wake
+                // the composer while the session is temporarily empty.
+                session->restore_session_after_renegotiation_refusal();
+            } else {
+                // Publish the completed status only after both directional
+                // handshake cursors and the flow have been restored.
+                session->get_session_info(from_client).set_status(tls_handshake_type_t::finished);
+                session->get_session_info(from_server).set_status(tls_handshake_type_t::finished);
+                protection.set_flow(tls_flow_t::one_rtt);
+                session->update_session_status(static_cast<session_status_t>(session_status_client_finished | session_status_server_finished));
             }
-            session->update_session_status(static_cast<session_status_t>(session_status_client_finished | session_status_server_finished));
-            session->get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-            session->get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-            protection.set_flow(tls_flow_t::one_rtt);
         }
     }
     return errorcode_t::success;
@@ -124,6 +128,10 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
 
         if (tls_alertlevel_t::fatal == etlevel) {
             auto session = get_session();
+            // Publish terminal state before reset_session_status() wakes
+            // handshake waiters; otherwise they can observe an empty status
+            // snapshot and return mismatch before the read path retires TLS.
+            session->mark_terminal();
             session->reset_session_status();
             session->push_alert(dir, etlevel, etdesc);
         }

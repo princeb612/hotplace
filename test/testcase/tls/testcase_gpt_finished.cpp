@@ -485,7 +485,7 @@ static void test_tls12_finished_record_sequence_integration() {
     _test_case.assert(3600 == reader_ticket_state.get(session_ticket_lifetime), __FUNCTION__, "publish ticket lifetime metadata after Server Finished");
     _test_case.assert(0 == reader_ticket_state.get(session_ticket_pending), __FUNCTION__, "clear pending ticket state after activation");
 
-    const auto cached_tls12_tickets = reader.get_tls12_resumption_tickets();
+    const auto cached_tls12_tickets = reader.get_tls1_2_resumption_tickets();
     _test_case.assert(1 == cached_tls12_tickets.size(), __FUNCTION__, "cache the received TLS 1.2 ticket after Server Finished authentication");
     if (1 == cached_tls12_tickets.size()) {
         _test_case.assert(ticket_identity == cached_tls12_tickets[0].identity, __FUNCTION__, "retain the received opaque ticket identity");
@@ -567,11 +567,11 @@ static void test_finished_calculation_propagates_invalid_algorithm() {
     _test_case.assert(verify_data.empty(), __FUNCTION__, "do not produce verify_data after a calculation error");
 }
 
-static void test_tls13_finished_postprocess_key_schedule_failure_is_terminal() {
-    // Scenario under test: TLS 1.3 Finished post-processing fails while deriving the application key schedule.
-    // Action: force a key-schedule failure after Finished verification reaches post-processing.
-    // Expected: terminate the session and do not continue with partially installed traffic secrets.
-    _test_case.begin("TLS 1.3 Finished key-schedule failure terminates the session");
+static void test_tls13_finished_postprocess_unsupported_local_cipher_suite_is_terminal() {
+    // Scenario under test: TLS 1.3 Finished cannot initialize transcript hashing from the unsupported local cipher suite.
+    // Action: run Finished post-processing with no usable local cipher-suite hash.
+    // Expected: terminate the session with internal_error before committing Finished state.
+    _test_case.begin("TLS 1.3 Finished rejects an unsupported local cipher suite");
 
     class finished_postprocess_probe : public tls_handshake_finished {
        public:
@@ -600,7 +600,7 @@ static void test_tls13_finished_postprocess_key_schedule_failure_is_terminal() {
     finished_postprocess_probe finished(&session);
     const byte_t marker = 0;
     return_t ret = finished.run_postprocess(from_server, &marker, sizeof(marker));
-    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "return the local key-schedule failure");
+    _test_case.assert(errorcode_t::internal_error == ret, __FUNCTION__, "map an unsupported local cipher suite to internal_error");
 
     _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "reset handshake status after local Finished processing failure");
     _test_case.assert(tls_handshake_type_t::client_hello == session.get_session_info(from_server).get_status(), __FUNCTION__,
@@ -631,9 +631,11 @@ static void test_tls13_finished_requires_cipher_suite() {
     tls_handshake_finished finished(&session);
     binary_t wire;
     return_t ret = finished.write(from_server, wire);
-    _test_case.assert(errorcode_t::not_supported == ret, __FUNCTION__, "reject Finished when no cipher suite has been negotiated");
+    _test_case.assert(errorcode_t::internal_error == ret, __FUNCTION__, "report internal_error when local Finished state has no negotiated cipher suite");
     _test_case.assert(wire.empty(), __FUNCTION__, "emit no partial or empty Finished handshake message");
     _test_case.assert(0 == session.get_keyvalue().get(session_handshake_finished), __FUNCTION__, "do not commit Finished status after the write failure");
+    _test_case.assert(1 == test_count_fatal_alert(session, from_server, tls_alertdesc_t::internal_error), __FUNCTION__,
+                      "queue exactly one fatal internal_error for the missing local cipher suite");
 }
 
 static void test_tls12_finished_rejects_invalid_verify_data_without_ticket_activation() {
@@ -733,7 +735,7 @@ static void test_tls12_abbreviated_finished_rejects_invalid_client_verify_data_w
         protection.set_cipher_suite(0xc02f);
         protection.get_secrets().assign(tls_secret_t::master, binary_t(48, 0x55));
         protection.reset_transcript_hash(&session);
-        session.get_keyvalue().set(session_tls12_ticket_resumed, 1);
+        session.get_keyvalue().set(session_tls1_2_ticket_resumed, 1);
         session.update_session_status(session_status_server_hello);
         session.update_session_status(session_status_server_key_exchange);
         session.update_session_status(session_status_client_key_exchange);
@@ -746,19 +748,19 @@ static void test_tls12_abbreviated_finished_rejects_invalid_client_verify_data_w
     configure(writer);
     configure(reader);
 
-    tls12_resumption_ticket active_ticket;
+    tls1_2_resumption_ticket active_ticket;
     active_ticket.identity = binary_t{0x01, 0x02};
     active_ticket.master_secret = binary_t(48, 0x55);
     active_ticket.version = static_cast<uint16>(tls1_2);
     active_ticket.cipher_suite = 0xc02f;
-    reader.stage_tls12_resumption_ticket(active_ticket);
-    bool active_ticket_confirmed = reader.confirm_tls12_resumption_ticket(active_ticket.identity);
+    reader.stage_tls1_2_resumption_ticket(active_ticket);
+    bool active_ticket_confirmed = reader.confirm_tls1_2_resumption_ticket(active_ticket.identity);
     _test_case.assert(active_ticket_confirmed, __FUNCTION__, "retain an older confirmed ticket before the failed abbreviated handshake");
 
-    tls12_resumption_ticket pending_ticket = active_ticket;
+    tls1_2_resumption_ticket pending_ticket = active_ticket;
     pending_ticket.identity = binary_t{0x03, 0x04};
-    reader.stage_tls12_resumption_ticket(pending_ticket);
-    _test_case.assert(1 == reader.get_pending_tls12_resumption_tickets().size(), __FUNCTION__, "stage the replacement ticket until Client Finished authentication");
+    reader.stage_tls1_2_resumption_ticket(pending_ticket);
+    _test_case.assert(1 == reader.get_pending_tls1_2_resumption_tickets().size(), __FUNCTION__, "stage the replacement ticket until Client Finished authentication");
 
     tls_handshake_finished outgoing_finished(&writer);
     binary_t finished_wire;
@@ -775,14 +777,14 @@ static void test_tls12_abbreviated_finished_rejects_invalid_client_verify_data_w
     size_t pos = 0;
     ret = incoming_finished.read(from_client, finished_wire.data(), finished_wire.size(), pos);
     _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "reject abbreviated Client Finished with mismatched verify_data");
-    _test_case.assert(reader.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__,
+    _test_case.assert(reader.get_pending_tls1_2_resumption_tickets().empty(), __FUNCTION__,
                       "discard the unconfirmed server renewal after Client Finished verification failure");
 
-    tls12_resumption_ticket cached_ticket;
-    bool active_ticket_found = reader.find_tls12_resumption_ticket(active_ticket.identity, cached_ticket);
+    tls1_2_resumption_ticket cached_ticket;
+    bool active_ticket_found = reader.find_tls1_2_resumption_ticket(active_ticket.identity, cached_ticket);
     _test_case.assert(active_ticket_found, __FUNCTION__, "preserve the older confirmed server ticket after the failed renewal");
-    tls12_resumption_ticket unconfirmed_ticket;
-    bool pending_ticket_found = reader.find_tls12_resumption_ticket(pending_ticket.identity, unconfirmed_ticket);
+    tls1_2_resumption_ticket unconfirmed_ticket;
+    bool pending_ticket_found = reader.find_tls1_2_resumption_ticket(pending_ticket.identity, unconfirmed_ticket);
     _test_case.assert(false == pending_ticket_found, __FUNCTION__, "keep the failed renewal unavailable for future resumption");
     _test_case.assert(0 == (reader.get_session_status() & session_status_client_finished), __FUNCTION__,
                       "do not mark Client Finished successful after verify_data mismatch");
@@ -793,7 +795,7 @@ static void test_tls12_abbreviated_finished_rejects_invalid_client_verify_data_w
 
 void testcase_gpt_finished() {
     test_finished_calculation_propagates_invalid_algorithm();
-    test_tls13_finished_postprocess_key_schedule_failure_is_terminal();
+    test_tls13_finished_postprocess_unsupported_local_cipher_suite_is_terminal();
     test_tls13_finished_requires_cipher_suite();
     test_finished_record_sequence_transition();
     test_tls13_finished_record_boundary();

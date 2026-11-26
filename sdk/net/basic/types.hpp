@@ -55,9 +55,9 @@ enum socket_scheme_t : uint32 {
     socket_scheme_server = 0x00200000,
     // 0xFF000000
     // socket_scheme_tls, socket_scheme_dtls
-    socket_scheme_tls12 = 0x01000000,
-    socket_scheme_tls13 = 0x02000000,
-    socket_scheme_tls12_13 = socket_scheme_tls12 | socket_scheme_tls13,
+    socket_scheme_tls1_2 = 0x01000000,
+    socket_scheme_tls1_3 = 0x02000000,
+    socket_scheme_tls1 = socket_scheme_tls1_2 | socket_scheme_tls1_3,
     // mask
     socket_scheme_mask = 0x0000ffff,
     socket_scheme_mask_secure = 0x00008000,

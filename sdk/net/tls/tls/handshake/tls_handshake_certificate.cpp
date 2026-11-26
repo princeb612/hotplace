@@ -44,7 +44,7 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir, tls_io_op
         auto& protection = session->get_tls_protection();
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = session_status_client_hello | session_status_server_hello;
-        if (protection.is_kindof_tls13()) {
+        if (protection.is_kindof_tls1_3()) {
             session_status_prerequisite |= session_status_encrypted_extensions;
         }
         if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
@@ -68,7 +68,12 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, tls_io_o
         auto hssize = get_size();
 
         {
-            protection.update_transcript_hash(session, stream + hspos, hssize);
+            ret = protection.update_transcript_hash(session, stream + hspos, hssize);
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                __leave2_trace(ret);
+            }
             if (from_server == dir) {
                 session->update_session_status(session_status_server_cert);
             } else if (from_client == dir) {
@@ -112,7 +117,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto tls_version = protection.get_tls_version();
-        auto is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
+        auto is_tls13 = tlsadvisor->is_kindof_tls1_3(tls_version);
 
         const size_t body_end = offsetof_body() + get_body_size();
         if ((body_end > size) || (pos > body_end)) {
@@ -346,7 +351,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
 
         {
             auto tls_version = session->get_tls_protection().get_tls_version();
-            bool is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
+            bool is_tls13 = tlsadvisor->is_kindof_tls1_3(tls_version);
 
             binary_t extensions;
             uint32 certificate_len = t_narrow_cast(certificate.size());

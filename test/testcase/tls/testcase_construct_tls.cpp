@@ -468,7 +468,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
         do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::server_hello_random, "server_hello_random");
         do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::empty_hash, "empty_hash");
         do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
-        if (server_session.get_tls_protection().is_kindof_tls13()) {
+        if (server_session.get_tls_protection().is_kindof_tls1_3()) {
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::shared_secret, "shared_secret");
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::early_secret, "early_secret");
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_derived, "handshake_derived");
@@ -642,7 +642,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
         }
 
         do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
-        if (server_session.get_tls_protection().is_kindof_tls13()) {
+        if (server_session.get_tls_protection().is_kindof_tls1_3()) {
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_derived, "application_derived");
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application, "application");
             do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::c_ap_traffic, "c_ap_traffic");

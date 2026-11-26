@@ -36,10 +36,10 @@ uint16 toprot(OPTION& o, const char* source) {
         type = netclient_scheme_tls;
     } else if ("tls13" == text) {
         type = netclient_scheme_tls;
-        o.flags |= option_flag_allow_tls13;
+        o.flags |= option_flag_allow_tls1_3;
     } else if ("tls12" == text) {
         type = netclient_scheme_tls;
-        o.flags |= option_flag_allow_tls12;
+        o.flags |= option_flag_allow_tls1_2;
     } else if (("dtls" == text) || ("4" == text)) {
         type = netclient_scheme_dtls;
     } else if ("quic" == text) {

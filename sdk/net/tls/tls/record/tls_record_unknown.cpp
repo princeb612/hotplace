@@ -25,7 +25,7 @@ return_t tls_record_unknown::do_read_body(tls_direction_t dir, const byte_t* str
     auto session = get_session();
     if (session && (session_type_t::dtls == session->get_type())) {
         auto type = static_cast<uint8>(get_type());
-        bool is_dtls13 = session->get_tls_protection().is_kindof_tls13();
+        bool is_dtls13 = session->get_tls_protection().is_kindof_tls1_3();
         bool is_reserved_unified_range = ((type & 0xe0) == TLS_CONTENT_TYPE_MASK_CIPHERTEXT);
         if (is_dtls13 || is_reserved_unified_range) {
             // RFC 9147 §4.1 permits only plaintext alert, handshake, and ACK; 0x20..0x3f is reserved for DTLS 1.3 ciphertext.

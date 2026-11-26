@@ -45,7 +45,7 @@ return_t tls_handshake_new_session_ticket::do_preprocess(tls_direction_t dir, tl
             __leave2;
         }
         auto session = get_session();
-        if (session->get_tls_protection().is_kindof_tls12() && (0 != (session->get_session_status() & session_status_server_finished))) {
+        if (session->get_tls_protection().is_kindof_tls1_2() && (0 != (session->get_session_status() & session_status_server_finished))) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;
@@ -69,11 +69,11 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, t
         // Retain the TLS 1.2 state associated with a ticket only after its
         // complete NewSessionTicket handshake message has been serialized.
         // A 48-byte master_secret is required for RFC 5077 resumption.
-        if ((tls_io_operation_t::write == opdir) && (from_server == dir) && protection.is_kindof_tls12()) {
+        if ((tls_io_operation_t::write == opdir) && (from_server == dir) && protection.is_kindof_tls1_2()) {
             const binary_t& identity = secrets.get(tls_secret_t::new_session_ticket);
             const binary_t& master_secret = secrets.get(tls_secret_t::master);
             if ((false == identity.empty()) && (48 == master_secret.size())) {
-                tls12_resumption_ticket ticket;
+                tls1_2_resumption_ticket ticket;
                 ticket.identity = identity;
                 ticket.master_secret = master_secret;
                 ticket.server_name = session->get_client_server_name();
@@ -87,13 +87,13 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, t
                 ticket.extended_master_secret = (0 != session_values.get(session_extended_master_secret));
                 ticket.encrypt_then_mac = (0 != session_values.get(session_encrypt_then_mac));
 
-                session->stage_tls12_resumption_ticket(ticket);
+                session->stage_tls1_2_resumption_ticket(ticket);
                 // The existing full-handshake writer is permitted only after
                 // Client Finished. Confirm immediately in that case. Once the
                 // abbreviated-handshake path is enabled, its ticket remains
                 // pending until the peer's Client Finished is verified.
                 if (0 != (session->get_session_status() & session_status_client_finished)) {
-                    session->confirm_tls12_resumption_ticket(ticket.identity);
+                    session->confirm_tls1_2_resumption_ticket(ticket.identity);
                 }
             }
         }
@@ -128,10 +128,10 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
         // in an abbreviated handshake, it may arrive after ServerHello and
         // before Server Finished. In both cases, keep it pending until the
         // server Finished has been authenticated.
-        if (false == protection.is_kindof_tls13()) {
+        if (false == protection.is_kindof_tls1_3()) {
             uint32 status = session->get_session_status();
             bool abbreviated_renewal =
-                protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) && (0 != (status & session_status_server_hello));
+                protection.is_kindof_tls1_2() && (0 != session->get_keyvalue().get(session_tls1_2_ticket_resumed)) && (0 != (status & session_status_server_hello));
             if ((0 != (status & session_status_server_finished)) || ((0 == (status & session_status_client_finished)) && (false == abbreviated_renewal))) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                 session->reset_session_status();
@@ -322,7 +322,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         // RFC 5077 §3.3: TLS 1.2 NewSessionTicket contains only
         // ticket_lifetime_hint followed by an opaque, uint16-length ticket.
         // Keep this serializer separate from the RFC 8446 TLS 1.3 format.
-        if (false == protection.is_kindof_tls13()) {
+        if (false == protection.is_kindof_tls1_3()) {
             if (from_server != dir) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2;
@@ -332,7 +332,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
             // send a replacement ticket after ServerHello and before its own
             // Finished; the pending ticket is confirmed only after Client Finished.
             uint32 status = session->get_session_status();
-            bool abbreviated_renewal = protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) &&
+            bool abbreviated_renewal = protection.is_kindof_tls1_2() && (0 != session->get_keyvalue().get(session_tls1_2_ticket_resumed)) &&
                                        (0 != (status & session_status_server_hello)) && (0 == (status & session_status_server_finished));
             if ((0 == (status & session_status_client_finished)) && (false == abbreviated_renewal)) {
                 ret = errorcode_t::bad_request;

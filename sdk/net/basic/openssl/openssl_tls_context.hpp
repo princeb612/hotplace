@@ -20,8 +20,8 @@ namespace net {
 enum tlscontext_flag_t : uint32 {
     tlscontext_flag_tls = (1 << 0),            // using TLS_method
     tlscontext_flag_dtls = (1 << 1),           // using DTLS_method
-    tlscontext_flag_allow_tls13 = (1 << 2),    // SSL_CTX_set_max_proto_version(context, TLS1_3_VERSION)
-    tlscontext_flag_allow_tls12 = (1 << 3),    // SSL_CTX_set_min_proto_version(context, TLS1_2_VERSION)
+    tlscontext_flag_allow_tls1_3 = (1 << 2),   // SSL_CTX_set_max_proto_version(context, TLS1_3_VERSION)
+    tlscontext_flag_allow_tls1_2 = (1 << 3),   // SSL_CTX_set_min_proto_version(context, TLS1_2_VERSION)
     tlscontext_flag_allow_expired = (1 << 5),  // reserved
 };
 
@@ -33,11 +33,11 @@ enum tlscontext_flag_t : uint32 {
  *          tlscontext_flag_tls
  *              to support TLS 1.3 and TLS 1.2
  *                  tlscontext_open_simple(&context, tlscontext_flag_tls);
- *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls13 | tlscontext_flag_allow_tls12);
+ *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls1_3 | tlscontext_flag_allow_tls1_2);
  *              to support only TLS 1.3
- *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls13);
+ *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls1_3);
  *              to support only TLS 1.2
- *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls12);
+ *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls1_2);
  *          tlscontext_flag_dtls
  *              openssl not support DTLS 1.3 yet
  *              only works DTLS 1.2

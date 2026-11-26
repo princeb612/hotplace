@@ -572,6 +572,21 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
             auto record = builder.set(session).set(content_type).build();
             if (record) {
                 ret = record->read(dir, stream, size, pos);
+                constexpr uint64 tls12_record_sequence_max = ~static_cast<uint64>(0);
+                constexpr uint64 tls12_record_sequence_reserve = 65535;
+                constexpr uint64 tls12_record_sequence_reserve_start = tls12_record_sequence_max - (tls12_record_sequence_reserve - 1);
+                const bool inbound_tls12_application_data_reserve_refusal =
+                    (errorcode_t::exceed == ret) && (tls_content_type_t::application_data == content_type) && (session_type_t::tls == session->get_type()) &&
+                    session->get_tls_protection().is_kindof_tls1_2() && session->get_session_info(dir).apply_protection() &&
+                    (session->get_recordno(dir) >= tls12_record_sequence_reserve_start);
+                if (true == inbound_tls12_application_data_reserve_refusal) {
+                    // A peer cannot retry this buffered application-data record after the local
+                    // receive reserve is reached. Retire the secure transport and wake readers;
+                    // this local policy refusal is not itself a TLS alert.
+                    session->mark_terminal();
+                    pos = size;
+                    notify_transport_closed();
+                }
                 if ((errorcode_t::success == ret) && session->has_alert(dir, tls_alertlevel_t::fatal)) {
                     // A received fatal alert makes the transport terminal:
                     // wake application readers and discard coalesced records.

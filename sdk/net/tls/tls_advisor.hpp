@@ -186,8 +186,8 @@ class HOTPLACE_NET_API tls_advisor {
     std::string nameof_quic_streamid_type(uint64 streamid);
     std::string nameof_protection_space(protection_space_t code);
 
-    bool is_kindof_tls13(tls_version_t ver);
-    bool is_kindof_tls12(tls_version_t ver);
+    bool is_kindof_tls1_3(tls_version_t ver);
+    bool is_kindof_tls1_2(tls_version_t ver);
     bool is_kindof_tls(tls_version_t ver);
     bool is_kindof_dtls(tls_version_t ver);
     /**
@@ -196,8 +196,8 @@ class HOTPLACE_NET_API tls_advisor {
      */
     bool is_kindof(tls_version_t lhs, tls_version_t rhs);
 
-    bool is_specof_tls13_or_later(tls_version_t ver);
-    bool is_specof_tls12_or_later(tls_version_t ver);
+    bool is_specof_tls1_3_or_later(tls_version_t ver);
+    bool is_specof_tls1_2_or_later(tls_version_t ver);
 
     std::string nameof_tls_flow(tls_flow_t flow);
 

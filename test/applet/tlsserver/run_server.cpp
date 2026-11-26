@@ -66,11 +66,11 @@ return_t echo_server(void*) {
 
     __try2 {
         uint32 flags = socket_scheme_tls;
-        if (option.flags & option_flag_allow_tls13) {
-            flags |= socket_scheme_tls13;
+        if (option.flags & option_flag_allow_tls1_3) {
+            flags |= socket_scheme_tls1_3;
         }
-        if (option.flags & option_flag_allow_tls12) {
-            flags |= socket_scheme_tls12;
+        if (option.flags & option_flag_allow_tls1_2) {
+            flags |= socket_scheme_tls1_2;
         }
 
         if (option_flag_trial & option.flags) {

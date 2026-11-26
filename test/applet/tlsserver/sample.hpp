@@ -13,8 +13,8 @@
 #include <hotplace/test/test.hpp>
 
 enum option_flag_t {
-    option_flag_allow_tls13 = (1 << 0),
-    option_flag_allow_tls12 = (1 << 1),
+    option_flag_allow_tls1_3 = (1 << 0),
+    option_flag_allow_tls1_2 = (1 << 1),
     option_flag_trial = (1 << 2),
     option_flag_keylog = (1 << 3),
     option_flag_cert_rsa = (1 << 4),

@@ -101,7 +101,7 @@ return_t sslkeylog_importer::add(const std::string& secret) {
     return ret;
 }
 
-void sslkeylog_importer::session_status_changed(tls_session* session, uint32 status) {
+return_t sslkeylog_importer::session_status_changed(tls_session* session, uint32 status) {
     if (session_status_client_hello == status) {
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
@@ -135,6 +135,7 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
 #endif
         }
     }
+    return errorcode_t::success;
 }
 
 return_t sslkeylog_importer::attach(tls_session* session) {

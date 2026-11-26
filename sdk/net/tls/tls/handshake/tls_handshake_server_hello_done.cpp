@@ -48,7 +48,7 @@ return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir, tls
 
         auto session = get_session();
 
-        if (session->get_tls_protection().is_kindof_tls12()) {
+        if (session->get_tls_protection().is_kindof_tls1_2()) {
             auto session_status = session->get_session_status();
             if (0 == (session_status_server_key_exchange & session_status)) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
@@ -70,7 +70,12 @@ return_t tls_handshake_server_hello_done::do_postprocess(tls_direction_t dir, tl
         auto& protection = session->get_tls_protection();
 
         {
-            protection.update_transcript_hash(session, stream + hspos, get_size());
+            ret = protection.update_transcript_hash(session, stream + hspos, get_size());
+            if (errorcode_t::success != ret) {
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                __leave2_trace(ret);
+            }
             session->update_session_status(session_status_server_hello_done);
         }
     }

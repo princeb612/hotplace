@@ -28,13 +28,13 @@ tls_protection::~tls_protection() {
     }
 }
 
-tls_flow_t tls_protection::get_flow() { return _flow; }
+tls_flow_t tls_protection::get_flow() { return _flow.load(std::memory_order_acquire); }
 
-void tls_protection::set_flow(tls_flow_t flow) { _flow = flow; }
+void tls_protection::set_flow(tls_flow_t flow) { _flow.store(flow, std::memory_order_release); }
 
 uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
-bool tls_protection::is_kindof_tls13_early_data(tls_session* session) {
+bool tls_protection::is_kindof_tls1_3_early_data(tls_session* session) {
     if ((nullptr == session) || (session_type_t::tls != session->get_type()) || (tls_flow_t::zero_rtt != get_flow())) {
         return false;
     }
@@ -49,10 +49,10 @@ bool tls_protection::is_kindof_tls13_early_data(tls_session* session) {
 }
 
 uint16 tls_protection::get_cipher_suite(tls_session* session, tls_direction_t dir) {
-    if (is_kindof_tls13_early_data(session)) {
+    if (is_kindof_tls1_3_early_data(session)) {
         return session->get_early_data_ticket().cipher_suite;
     }
-    if (session && is_kindof_tls12() && ((session_type_t::tls == session->get_type()) || (session_type_t::dtls == session->get_type()))) {
+    if (session && is_kindof_tls1_2() && ((session_type_t::tls == session->get_type()) || (session_type_t::dtls == session->get_type()))) {
         uint16 active = session->get_session_info(dir).get_active_cipher_suite();
         if (0 != active) {
             return active;
@@ -96,9 +96,30 @@ bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instanc
 
 bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(get_lagacy_version()); }
 
-bool tls_protection::is_kindof_tls12() { return tls_advisor::get_instance()->is_kindof_tls12(_version); }
+bool tls_protection::is_kindof_tls1_2() { return tls_advisor::get_instance()->is_kindof_tls1_2(_version); }
 
-bool tls_protection::is_kindof_tls13() { return tls_advisor::get_instance()->is_kindof_tls13(_version); }
+return_t tls_protection::advance_recordno(tls_session* session, tls_direction_t dir, uint64& record_no, protection_space_t space) {
+    if (nullptr == session) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    record_no = session->get_recordno(dir, space);
+    const bool tls12_stream = (session_type_t::tls == session->get_type()) && is_kindof_tls1_2() && (protection_space_t::tls == space);
+    if (tls12_stream && (~static_cast<uint64>(0) == record_no)) {
+        // Do not increment UINT64_MAX: TLS 1.2 sequence numbers must never wrap.
+        // There is no TLS 1.2 KeyUpdate; the caller must terminate this connection.
+        auto& session_info = session->get_session_info(dir);
+        if (false == session_info.has_alert(tls_alertlevel_t::fatal)) {
+            session_info.push_alert(tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+        }
+        return errorcode_t::exceed;
+    }
+
+    session->inc_recordno(dir, space);
+    return errorcode_t::success;
+}
+
+bool tls_protection::is_kindof_tls1_3() { return tls_advisor::get_instance()->is_kindof_tls1_3(_version); }
 
 tls_version_t tls_protection::get_tls_version() { return _version; }
 

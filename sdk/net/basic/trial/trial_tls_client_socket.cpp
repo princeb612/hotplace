@@ -20,16 +20,16 @@ namespace hotplace {
 namespace net {
 
 trial_tls_client_socket::trial_tls_client_socket(tls_version_t spec)
-    : secure_client_socket(spec), _tls12_ticket_store(std::make_shared<tls12_resumption_ticket_store>()) {
+    : secure_client_socket(spec), _tls12_ticket_store(std::make_shared<tls1_2_resumption_ticket_store>()) {
     auto session = get_session();
     session->set_type(session_type_t::tls);
-    session->set_tls12_resumption_ticket_store(_tls12_ticket_store);
+    session->set_tls1_2_resumption_ticket_store(_tls12_ticket_store);
     session->get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
 }
 
 trial_tls_client_socket::trial_tls_client_socket(const tls_session& resumption_source, tls_version_t spec)
     : secure_client_socket(spec, tls_session_ptr(resumption_source.duplicate(tls_session_copy_t::resumption))),
-      _tls12_ticket_store(std::make_shared<tls12_resumption_ticket_store>()) {
+      _tls12_ticket_store(std::make_shared<tls1_2_resumption_ticket_store>()) {
     auto session = get_session();
     if (session_type_t::tls != session->get_type()) {
         throw exception(errorcode_t::bad_request);
@@ -38,7 +38,7 @@ trial_tls_client_socket::trial_tls_client_socket(const tls_session& resumption_s
         (tls_handshake_type_t::client_hello != session->get_session_info(from_server).get_status())) {
         throw exception(errorcode_t::bad_request);
     }
-    session->set_tls12_resumption_ticket_store(_tls12_ticket_store);
+    session->set_tls1_2_resumption_ticket_store(_tls12_ticket_store);
     session->get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
 }
 
@@ -46,6 +46,7 @@ trial_tls_client_socket::~trial_tls_client_socket() {}
 
 return_t trial_tls_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
+    critical_section_guard send_guard(_send_lock);
     __try2 {
         if (nullptr == ptr_data || nullptr == cbsent) {
             ret = errorcode_t::invalid_parameter;
@@ -55,19 +56,81 @@ return_t trial_tls_client_socket::send(const char* ptr_data, size_t size_data, s
         *cbsent = 0;
 
         auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        const bool tls12_stream = (session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_2();
+        const auto flow = protection.get_flow();
+        const bool peer_requested_renegotiation = tls12_stream && (tls_flow_t::renegotiation == flow);
+        bool renegotiation_attempted = peer_requested_renegotiation;
+
+        // A received HelloRequest has already moved the session into the
+        // renegotiation flow. Answer it before attempting application data.
+        if (true == peer_requested_renegotiation) {
+            tls_composer composer(session);
+            composer.set_minver(tls1_2);
+            composer.set_maxver(tls1_2);
+            ret = composer.handshake(from_client, get_wto(), [this](tls_session*, binary_t& wire) -> return_t { return do_send(wire); });
+            if (errorcode_t::success != ret) {
+                retire_transport();
+                __leave2;
+            }
+        }
+
+        auto serialize_application_data = [session, ptr_data, size_data](binary_t& wire) -> return_t {
+            tls_record_application_data record(session, (byte_t*)ptr_data, size_data);
+            return record.write(from_client, wire);
+        };
 
         binary_t bin;
-        tls_record_application_data record(session, (byte_t*)ptr_data, size_data);
-        record.write(from_client, bin);
+        ret = serialize_application_data(bin);
+        if ((errorcode_t::exceed == ret) && (true == tls12_stream) && (false == peer_requested_renegotiation)) {
+            constexpr uint64 sequence_max = ~static_cast<uint64>(0);
+            constexpr uint64 sequence_reserve = 65535;
+            constexpr uint64 sequence_reserve_start = sequence_max - (sequence_reserve - 1);
+            const bool reserve_reached = session->get_recordno(from_client) >= sequence_reserve_start;
+            const uint32 completed_status = session_status_client_finished | session_status_server_finished;
+            const uint32 session_status = session->get_session_status();
+            const bool established = (tls_flow_t::one_rtt == flow) && (completed_status == (session_status & completed_status));
+            if (true == reserve_reached && true == established) {
+                renegotiation_attempted = true;
+                tls_composer composer(session);
+                composer.set_minver(tls1_2);
+                composer.set_maxver(tls1_2);
+                ret = composer.handshake(from_client, get_wto(), [this](tls_session*, binary_t& wire) -> return_t { return do_send(wire); });
+                if (errorcode_t::success != ret) {
+                    retire_transport();
+                    __leave2;
+                }
 
-        size_t sent = 0;
-        ret = client_socket_prosumer::send((char*)bin.data(), bin.size(), &sent);
-        if (errorcode_t::success == ret) {
-            *cbsent = size_data;
+                bin.clear();
+                ret = serialize_application_data(bin);
+                if (errorcode_t::success != ret) {
+                    retire_transport();
+                    __leave2;
+                }
+            }
         }
+
+        if (errorcode_t::success != ret) {
+            if (session->is_terminal() || renegotiation_attempted) {
+                retire_transport();
+            }
+            __leave2;
+        }
+
+        ret = do_send(bin);
+        if (errorcode_t::success != ret) {
+            retire_transport();
+            __leave2;
+        }
+        *cbsent = size_data;
     }
     __finally2 {}
     return ret;
+}
+
+return_t trial_tls_client_socket::close() {
+    critical_section_guard send_guard(_send_lock);
+    return client_socket_prosumer::close();
 }
 
 return_t trial_tls_client_socket::do_send(binary_t& bin) {
@@ -77,6 +140,34 @@ return_t trial_tls_client_socket::do_send(binary_t& bin) {
     } else {
         size_t sent = 0;
         ret = secure_client_socket::send((char*)bin.data(), bin.size(), &sent);
+        if (errorcode_t::success == ret && sent != bin.size()) {
+            ret = errorcode_t::send_failure;
+        }
+        if (errorcode_t::success != ret) {
+            get_session()->mark_terminal();
+        }
+    }
+    return ret;
+}
+
+return_t trial_tls_client_socket::retire_transport() {
+    return_t ret = errorcode_t::success;
+    return_t test = errorcode_t::success;
+    get_session()->mark_terminal();
+
+    test = do_transport_disconnect();
+    if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+        ret = test;
+    }
+
+    test = stop_consumer();
+    if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+        ret = test;
+    }
+
+    test = do_close();
+    if ((errorcode_t::success == ret) && (errorcode_t::success != test)) {
+        ret = test;
     }
     return ret;
 }

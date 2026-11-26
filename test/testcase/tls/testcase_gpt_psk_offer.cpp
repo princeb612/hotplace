@@ -2008,11 +2008,11 @@ static void test_tls13_clienthello_early_key_schedule_failure_is_terminal() {
     }
 }
 
-static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
-    // Scenario: ServerHello key-schedule derivation fails locally after HRR.
-    // Action: run ServerHello postprocessing with a TLS 1.3 HRR transcript and an invalid suite.
-    // Expected: preserve the failure, queue one fatal internal_error, and clear provisional state.
-    _test_case.begin("TLS 1.3 ServerHello key-schedule failure is terminal");
+static void test_tls13_serverhello_unsupported_local_cipher_suite_is_terminal() {
+    // Scenario: ServerHello transcript hashing cannot initialize from the unsupported local cipher suite after HRR.
+    // Action: run ServerHello postprocessing with a TLS 1.3 HRR transcript and no usable local cipher-suite hash.
+    // Expected: map the local failure to internal_error, queue one fatal alert, and clear provisional state.
+    _test_case.begin("TLS 1.3 ServerHello rejects an unsupported local cipher suite");
 
     class server_hello_postprocess_probe : public tls_handshake_server_hello {
        public:
@@ -2073,8 +2073,7 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
     _test_case.assert(tls1_3 == protection.get_tls_version(), __FUNCTION__, "keep TLS 1.3 selected by the ServerHello supported_versions extension");
     const byte_t marker = 0;
     ret = hello.run_postprocess(from_server, tls_io_operation_t::write, &marker, sizeof(marker));
-    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__,
-                      "preserve the local key-schedule failure instead of overwriting it while resuming pending records");
+    _test_case.assert(errorcode_t::internal_error == ret, __FUNCTION__, "map an unsupported local cipher suite to the fatal internal_error result");
 
     std::set<tls_alertdesc_t> fatal_alerts;
     size_t fatal_alert_count = test_collect_fatal_alerts(session, from_server, fatal_alerts);
@@ -2101,7 +2100,7 @@ static void test_tls13_serverhello_key_schedule_failure_is_terminal() {
 
 void testcase_gpt_psk_offer() {
     test_tls13_resumption_session_duplicate_starts_fresh();
-    test_tls13_serverhello_key_schedule_failure_is_terminal();
+    test_tls13_serverhello_unsupported_local_cipher_suite_is_terminal();
     test_tls13_clienthello_early_key_schedule_failure_is_terminal();
     test_tls13_early_data_uses_first_serializable_psk_identity();
     test_tls13_client_psk_hrr_filters_mixed_hash_tickets();

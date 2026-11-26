@@ -55,7 +55,7 @@ return_t echo_server(void*) {
     // nproc_threads = 2;
 #endif
     __try2 {
-        uint32 flags = socket_scheme_dtls | socket_scheme_tls12;  // DTLS 1.2
+        uint32 flags = socket_scheme_dtls | socket_scheme_tls1_2;  // DTLS 1.2
         if (option_flag_trial & option.flags) {
             // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
             load_certificate("server-rsa.crt", "server-rsa.key", nullptr);

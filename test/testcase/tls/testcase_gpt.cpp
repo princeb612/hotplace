@@ -9,6 +9,8 @@ void testcase_gpt_helloretryrequest();
 void testcase_gpt_negotiation();
 void testcase_gpt_certificate();
 void testcase_gpt_record();
+void testcase_gpt_record_sequence();
+void testcase_gpt_loopback_tcp();
 void testcase_gpt_renegotiation();
 void testcase_gpt_early_data();
 void testcase_gpt_early_data_ccs();
@@ -28,6 +30,8 @@ void testcase_gpt() {
     testcase_gpt_negotiation();
     testcase_gpt_certificate();
     testcase_gpt_record();
+    testcase_gpt_record_sequence();
+    testcase_gpt_loopback_tcp();
     testcase_gpt_renegotiation();
     testcase_gpt_early_data();
     testcase_gpt_early_data_ccs();

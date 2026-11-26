@@ -30,7 +30,7 @@ static return_t validate_change_cipher_spec_phase(tls_session* session, tls_dire
 
     auto& protection = session->get_tls_protection();
     auto negotiated_version = (tls_version_t)session->get_keyvalue().get(session_tls_version);
-    bool tls13 = protection.is_kindof_tls13() || (tls1_3 == negotiated_version) || (dtls1_3 == negotiated_version);
+    bool tls13 = protection.is_kindof_tls1_3() || (tls1_3 == negotiated_version) || (dtls1_3 == negotiated_version);
     if ((false == tls13) && (tls_version_t{} == negotiated_version)) {
         auto& context = protection.get_protection_context();
         context.for_each_supported_versions([&tls13](tls_version_t version, bool* stop) -> void {
@@ -59,7 +59,7 @@ static return_t validate_change_cipher_spec_phase(tls_session* session, tls_dire
         uint32 status = session->get_session_status();
         uint32 prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
         bool sender_is_client = (from_client == dir);
-        bool abbreviated = protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed));
+        bool abbreviated = protection.is_kindof_tls1_2() && (0 != session->get_keyvalue().get(session_tls1_2_ticket_resumed));
         if (false == sender_is_client) {
             if (false == abbreviated) {
                 prerequisite |= session_status_client_finished;
@@ -149,7 +149,7 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
         auto& protection = session->get_tls_protection();
         auto negotiated_version = (tls_version_t)session->get_keyvalue().get(session_tls_version);
         bool negotiated = (tls_version_t{} != negotiated_version);
-        bool tls13 = protection.is_kindof_tls13() || (tls1_3 == negotiated_version) || (dtls1_3 == negotiated_version);
+        bool tls13 = protection.is_kindof_tls1_3() || (tls1_3 == negotiated_version) || (dtls1_3 == negotiated_version);
         if ((false == negotiated) && (false == tls13)) {
             // Before ServerHello, a TLS 1.3 offer may be followed by a
             // compatibility CCS. Do not infer the negotiated version from the
@@ -255,7 +255,7 @@ return_t tls_record_change_cipher_spec::do_write_body(tls_direction_t dir, binar
 
 bool tls_record_change_cipher_spec::apply_protection() const {
     auto session = get_session();
-    return (nullptr != session) && (session_type_t::tls == session->get_type()) && session->get_tls_protection().is_kindof_tls12();
+    return (nullptr != session) && (session_type_t::tls == session->get_type()) && session->get_tls_protection().is_kindof_tls1_2();
 }
 
 }  // namespace net

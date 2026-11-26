@@ -68,7 +68,12 @@ return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, 
         auto& protection = session->get_tls_protection();
         auto hssize = get_size();
 
-        protection.update_transcript_hash(session, stream + hspos, hssize);
+        ret = protection.update_transcript_hash(session, stream + hspos, hssize);
+        if (errorcode_t::success != ret) {
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+            session->reset_session_status();
+            __leave2_trace(ret);
+        }
         session->update_session_status(session_status_server_key_exchange);
     }
     __finally2 {}

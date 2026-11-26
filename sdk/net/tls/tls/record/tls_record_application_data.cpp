@@ -100,7 +100,7 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
     uint32 session_status_prerequisite = 0;
 
     if (tls_flow_t::one_rtt == flow) {
-        if (protection.is_kindof_tls13()) {
+        if (protection.is_kindof_tls1_3()) {
             session_status_prerequisite = session_status_server_hello;
             if ((from_client == dir) &&
                 ((0 != session->get_session_info(from_server).get_keyvalue().get(session_early_data_offered_initial)) ||
@@ -130,6 +130,20 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
         session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
         session->reset_session_status();
         ret = errorcode_t::handshake_failure;
+    }
+
+    // RFC 5246 §6.1: stop ordinary TLS 1.2 stream application data while
+    // the fixed per-direction sequence reserve is still available for control
+    // traffic and renegotiation. The next record number is checked before
+    // parsing or serializing the application-data record.
+    constexpr uint64 tls12_record_sequence_max = ~static_cast<uint64>(0);
+    constexpr uint64 tls12_record_sequence_reserve = 65535;
+    constexpr uint64 tls12_record_sequence_reserve_start = tls12_record_sequence_max - (tls12_record_sequence_reserve - 1);
+    if ((errorcode_t::success == ret) && (session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_2() &&
+        session->get_session_info(dir).apply_protection() && (session->get_recordno(dir) >= tls12_record_sequence_reserve_start)) {
+        // This is an intentional application-data refusal, not a damaged
+        // record state. Keep the session usable for a control handshake.
+        ret = errorcode_t::exceed;
     }
     return ret;
 }
@@ -202,7 +216,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
         };
 
         bool trial_decrypt_rejected_early_data = false;
-        if (protection.is_kindof_tls13() && (from_client == dir) &&
+        if (protection.is_kindof_tls1_3() && (from_client == dir) &&
             ((0 != early_state.get(session_early_data_offered_initial)) || (0 != early_state.get(session_early_data_offered))) &&
             (0 == early_state.get(session_early_data_accepted))) {
             auto flow = protection.get_flow();
@@ -267,7 +281,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-            if (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) {
+            if (protection.is_kindof_tls1_3() || protection.is_kindof_tls1_3_early_data(session)) {
                 // RFC 9846 5.2 / 5.4: TLSInnerPlaintext is content || type || zero padding.
                 // The generic decrypt path has already enforced its 2^14+1 size limit.
                 // Scan only the AEAD-decrypted plaintext and locate the last non-zero octet.
@@ -421,7 +435,7 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     auto& records = get_records();
     auto session = get_session();
     auto& protection = session->get_tls_protection();
-    auto is_tls13 = protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session);
+    auto is_tls13 = protection.is_kindof_tls1_3() || protection.is_kindof_tls1_3_early_data(session);
     if (handshakes.size()) {
         if (is_tls13) {
             bool finished_seen = false;

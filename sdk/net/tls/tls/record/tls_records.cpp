@@ -86,6 +86,10 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (session->is_terminal()) {
+            ret = errorcode_t::disconnect;
+            __leave2;
+        }
 
         if (session_type_t::dtls == session->get_type()) {
             ret = session->get_dtls_record_publisher().publish(this, dir, func);
@@ -97,6 +101,11 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
                 __leave2;
             }
             ret = func(session, bin);
+            if ((errorcode_t::success != ret) && (session_type_t::tls == session->get_type()) && session->get_tls_protection().is_kindof_tls1_2()) {
+                // A transport callback may have written a prefix of the batch.
+                // Retire the TLS 1.2 stream rather than retrying the serialized records.
+                session->mark_terminal();
+            }
         }
     }
     __finally2 {}

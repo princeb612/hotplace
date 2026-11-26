@@ -69,7 +69,7 @@ tls_handshake* tls_handshake_builder::build() {
             handshake = new tls_handshake_certificate(session);
         } break;
         case tls_handshake_type_t::certificate_request: {
-            if (session && session->get_tls_protection().is_kindof_tls13()) {
+            if (session && session->get_tls_protection().is_kindof_tls1_3()) {
                 handshake = new tls_handshake_certificate_request(session);
             } else {
                 handshake = new tls_handshake_unknown(hstype, session);

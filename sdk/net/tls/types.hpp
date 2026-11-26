@@ -505,7 +505,7 @@ enum class tls_secret_t : uint16 {
     nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),
     hello_retry_request_transcript_prefix = (TLS_SECRET_USERCONTEXT | 0x10),  // RFC 9846: synthetic message_hash + HRR               //
     alpn = (TLS_SECRET_USERCONTEXT | 0x11),                                   //
-    tls12_resumption_alpn = (TLS_SECRET_USERCONTEXT | 0x38),                  // RFC 5077: ALPN bound to a cached TLS 1.2 ticket
+    tls1_2_resumption_alpn = (TLS_SECRET_USERCONTEXT | 0x38),                 // RFC 5077: ALPN bound to a cached TLS 1.2 ticket
     client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),                      //
     server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),                      //
     segment = (TLS_SECRET_USERCONTEXT | 0x1a),                                //

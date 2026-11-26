@@ -63,8 +63,12 @@ tls_record::~tls_record() {
 
 return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
+    auto session = get_session();
     __try2 {
-        // auto session = get_session();
+        if (session->is_terminal()) {
+            ret = errorcode_t::disconnect;
+            __leave2;
+        }
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
@@ -93,7 +97,12 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     auto session = get_session();
     auto snapshot = bin.size();
+    bool write_body_started = false;
     __try2 {
+        if (session->is_terminal()) {
+            ret = errorcode_t::disconnect;
+            __leave2;
+        }
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
@@ -110,6 +119,10 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             __leave2_trace(ret);
         }
 
+        // Preprocess refusal occurs before serialization and cannot consume
+        // record protection state. From the body writer onward, failures may
+        // leave sequence/key state advanced and must fail closed.
+        write_body_started = true;
         binary_t body;
         ret = do_write_body(dir, body);
         if (errorcode_t::success != ret) {
@@ -162,6 +175,19 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     __finally2 {
         if (errorcode_t::success != ret) {
             bin.resize(snapshot);  // rollback
+            constexpr uint64 tls12_record_sequence_max = ~static_cast<uint64>(0);
+            constexpr uint64 tls12_record_sequence_reserve = 65535;
+            constexpr uint64 tls12_record_sequence_reserve_start = tls12_record_sequence_max - (tls12_record_sequence_reserve - 1);
+            const bool tls12_application_data_reserve_refusal = (false == write_body_started) && (errorcode_t::exceed == ret) &&
+                                                                (tls_content_type_t::application_data == get_type()) && (session_type_t::tls == session->get_type()) &&
+                                                                session->get_tls_protection().is_kindof_tls1_2() && session->get_session_info(dir).apply_protection() &&
+                                                                (session->get_recordno(dir) >= tls12_record_sequence_reserve_start);
+            if ((false == tls12_application_data_reserve_refusal) && (session_type_t::tls == session->get_type()) && session->get_tls_protection().is_kindof_tls1_2()) {
+                // Only the explicit pre-serialization application-data reserve
+                // refusal is non-terminal. All other TLS 1.2 write failures
+                // retain fail-closed handling.
+                session->mark_terminal();
+            }
         }
     }
     return ret;
@@ -286,7 +312,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         if (session_type_t::tls == session->get_type()) {
             auto& protection = session->get_tls_protection();
             bool protected_record = session->get_session_info(dir).apply_protection();
-            if (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) {
+            if (protection.is_kindof_tls1_3() || protection.is_kindof_tls1_3_early_data(session)) {
                 protected_record = protected_record && (tls_content_type_t::application_data == t_enum_type<tls_content_type_t>(content_type));
                 max_record_size = protected_record ? tls13_ciphertext_max_size : tls_plaintext_max_size;
             } else {
@@ -444,7 +470,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
             auto& protection = session->get_tls_protection();
             bool protected_record = apply_protection() && session->get_session_info(dir).apply_protection();
             size_t max_record_size = tls_plaintext_max_size;
-            if (protection.is_kindof_tls13() || protection.is_kindof_tls13_early_data(session)) {
+            if (protection.is_kindof_tls1_3() || protection.is_kindof_tls1_3_early_data(session)) {
                 if (protected_record) {
                     max_record_size = tls13_ciphertext_max_size;
                 }

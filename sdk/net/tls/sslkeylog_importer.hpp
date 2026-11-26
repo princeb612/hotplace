@@ -47,7 +47,7 @@ class HOTPLACE_NET_API sslkeylog_importer {
     void load();
 
     return_t add(const std::string& secret);
-    static void session_status_changed(tls_session* session, uint32 status);
+    static return_t session_status_changed(tls_session* session, uint32 status);
 
     typedef std::map<tls_secret_t, binary_t> secret_map_t;
     typedef std::map<binary_t, secret_map_t> keylogs_t;

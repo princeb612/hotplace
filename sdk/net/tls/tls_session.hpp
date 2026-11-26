@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 #define __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 
+#include <atomic>
 #include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
@@ -50,7 +51,7 @@ struct tls_resumption_ticket {
  * TLS 1.2 RFC 5077 state referenced by an opaque SessionTicket identity.
  * Active and pending entries are isolated from the TLS 1.3 PSK cache.
  */
-struct tls12_resumption_ticket {
+struct tls1_2_resumption_ticket {
     binary_t identity;
     binary_t master_secret;
     binary_t server_name;
@@ -62,19 +63,19 @@ struct tls12_resumption_ticket {
     bool extended_master_secret;
     bool encrypt_then_mac;
 
-    tls12_resumption_ticket() : lifetime(0), timestamp(0), version(0), cipher_suite(0), extended_master_secret(false), encrypt_then_mac(false) {}
+    tls1_2_resumption_ticket() : lifetime(0), timestamp(0), version(0), cipher_suite(0), extended_master_secret(false), encrypt_then_mac(false) {}
 };
 
-class HOTPLACE_NET_API tls12_resumption_ticket_store {
+class HOTPLACE_NET_API tls1_2_resumption_ticket_store {
    public:
-    void store(const tls12_resumption_ticket& ticket);
-    std::vector<tls12_resumption_ticket> get();
-    bool find(const binary_t& identity, tls12_resumption_ticket& ticket);
+    void store(const tls1_2_resumption_ticket& ticket);
+    std::vector<tls1_2_resumption_ticket> get();
+    bool find(const binary_t& identity, tls1_2_resumption_ticket& ticket);
     void remove(const binary_t& identity);
 
    private:
     critical_section _lock;
-    std::vector<tls12_resumption_ticket> _tickets;
+    std::vector<tls1_2_resumption_ticket> _tickets;
 };
 
 enum session_type_t {
@@ -142,13 +143,13 @@ enum session_conf_t : uint16 {
     session_server_psk_key_exchange_mode = 0x200D,          // RFC 8446 4.2.9: selected psk_ke (0) or psk_dhe_ke (1) mode
     session_client_session_ticket_offered = 0x200E,         // RFC 5077: SessionTicket extension was offered in ClientHello
     session_client_session_ticket_offer_observed = 0x200F,  // RFC 5077: ClientHello offer state was observed
-    session_tls12_ticket_candidate = 0x2010,                // RFC 5077: locally validated ticket candidate
-    session_tls12_ticket_resumed = 0x2011,                  // RFC 5077: abbreviated handshake selected
-    session_tls12_ticket_cipher_suite = 0x2012,             // Cipher suite bound to the candidate ticket
-    session_tls12_ticket_identity_present = 0x2013,         // ClientHello carried a non-empty ticket identity
-    session_tls12_ticket_ems = 0x2014,                      // EMS state bound to the cached TLS 1.2 ticket
-    session_tls12_ticket_etm = 0x2015,                      // EtM state bound to the cached TLS 1.2 ticket
-    session_tls12_ticket_acknowledged = 0x2016,             // ServerHello acknowledged ticket issuance
+    session_tls1_2_ticket_candidate = 0x2010,               // RFC 5077: locally validated ticket candidate
+    session_tls1_2_ticket_resumed = 0x2011,                 // RFC 5077: abbreviated handshake selected
+    session_tls1_2_ticket_cipher_suite = 0x2012,            // Cipher suite bound to the candidate ticket
+    session_tls1_2_ticket_identity_present = 0x2013,        // ClientHello carried a non-empty ticket identity
+    session_tls1_2_ticket_ems = 0x2014,                     // EMS state bound to the cached TLS 1.2 ticket
+    session_tls1_2_ticket_etm = 0x2015,                     // EtM state bound to the cached TLS 1.2 ticket
+    session_tls1_2_ticket_acknowledged = 0x2016,            // ServerHello acknowledged ticket issuance
     session_client_session_ticket_offer_enabled = 0x2017,   // Client is prepared to receive TLS 1.2 tickets
     session_tls12_secure_renegotiation_offered = 0x2018,    // RFC 5746: initial ClientHello signaled secure renegotiation
     session_tls12_secure_renegotiation = 0x2019,            // RFC 5746: secure renegotiation was established
@@ -196,15 +197,15 @@ class HOTPLACE_NET_API tls_session {
     std::vector<tls_resumption_ticket> get_resumption_tickets() const;
     bool find_resumption_ticket(const binary_t& identity, tls_resumption_ticket& ticket);
     void remove_resumption_ticket(const binary_t& identity);
-    void set_tls12_resumption_ticket_store(const std::shared_ptr<tls12_resumption_ticket_store>& store);
-    void stage_tls12_resumption_ticket(const tls12_resumption_ticket& ticket);
-    bool confirm_tls12_resumption_ticket(const binary_t& identity);
+    void set_tls1_2_resumption_ticket_store(const std::shared_ptr<tls1_2_resumption_ticket_store>& store);
+    void stage_tls1_2_resumption_ticket(const tls1_2_resumption_ticket& ticket);
+    bool confirm_tls1_2_resumption_ticket(const binary_t& identity);
     void discard_tls12_pending_resumption_ticket(const binary_t& identity);
-    void discard_all_pending_tls12_resumption_tickets();
-    std::vector<tls12_resumption_ticket> get_tls12_resumption_tickets();
-    std::vector<tls12_resumption_ticket> get_pending_tls12_resumption_tickets();
-    bool find_tls12_resumption_ticket(const binary_t& identity, tls12_resumption_ticket& ticket);
-    void remove_tls12_resumption_ticket(const binary_t& identity);
+    void discard_all_pending_tls1_2_resumption_tickets();
+    std::vector<tls1_2_resumption_ticket> get_tls1_2_resumption_tickets();
+    std::vector<tls1_2_resumption_ticket> get_pending_tls1_2_resumption_tickets();
+    bool find_tls1_2_resumption_ticket(const binary_t& identity, tls1_2_resumption_ticket& ticket);
+    void remove_tls1_2_resumption_ticket(const binary_t& identity);
     void set_offered_resumption_tickets(const std::vector<tls_resumption_ticket>& tickets);
     std::vector<tls_resumption_ticket> get_offered_resumption_tickets();
     void set_early_data_ticket(const tls_resumption_ticket& ticket);
@@ -221,12 +222,17 @@ class HOTPLACE_NET_API tls_session {
     void set_client_server_name(const binary_t& server_name);
     binary_t get_client_server_name();
 
-    void update_session_status(session_status_t status);
+    return_t update_session_status(session_status_t status);
     void clear_session_status(uint32 status);
     void reset_session_status();
+    void restore_session_after_renegotiation_refusal();
     uint32 get_session_status() const;
+
+    // A failed TLS 1.2 record serialization/transport attempt can leave the directional record state unusable.
+    void mark_terminal();
+    bool is_terminal() const;
     return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);
-    void set_hook_change_session_status(std::function<void(tls_session*, uint32)> func);
+    void set_hook_change_session_status(std::function<return_t(tls_session*, uint32)> func);
     void set_hook_param(void* param);
     void* get_hook_param();
 
@@ -265,7 +271,7 @@ class HOTPLACE_NET_API tls_session {
         t_key_value<uint8, uint64>& get_keyvalue();
 
        private:
-        tls_handshake_type_t _hstype;
+        std::atomic<tls_handshake_type_t> _hstype;
         bool _protection;
         uint16 _active_cipher_suite;  // zero until this direction switches at CCS
         // RFC 9000 12.3.  Packet Numbers
@@ -328,8 +334,17 @@ class HOTPLACE_NET_API tls_session {
     tls_composer* get_tls_composer();
     secure_prosumer* get_secure_prosumer();
 
+    // Serialize TLS record I/O with receive-side handshake composition.
+    critical_section& get_tls_io_lock();
+    // Serialize application sends across a reserve-triggered renegotiation wait.
+    critical_section& get_application_send_lock();
+
    private:
+    void discard_pending_handshake_state();
+
     mutable critical_section _lock;  // const snapshot accessors synchronize without copying the lock
+    critical_section _tls_io_lock;
+    critical_section _application_send_lock;
     t_shared_reference<tls_session> _shared;
 
     std::map<tls_direction_t, session_info> _direction;
@@ -339,10 +354,11 @@ class HOTPLACE_NET_API tls_session {
     std::list<tls_extension*> _extension_list;
     tls_protection _tls_protection;
     session_type_t _type;
-    uint32 _status;
+    std::atomic<uint32> _status;
+    std::atomic<bool> _terminal;
     std::vector<tls_resumption_ticket> _resumption_tickets;  // TLS 1.3 PSK tickets
-    std::shared_ptr<tls12_resumption_ticket_store> _tls12_ticket_store;
-    std::vector<tls12_resumption_ticket> _pending_tls12_resumption_tickets;
+    std::shared_ptr<tls1_2_resumption_ticket_store> _tls12_ticket_store;
+    std::vector<tls1_2_resumption_ticket> _pending_tls1_2_resumption_tickets;
     std::vector<tls_resumption_ticket> _offered_resumption_tickets;
     tls_resumption_ticket _early_data_ticket;
     uint64 _early_data_discard_limit = 1024 * 1024;
@@ -351,7 +367,7 @@ class HOTPLACE_NET_API tls_session {
 
     t_key_value<uint16, uint16> _kv;  // session_conf_t
 
-    std::function<void(tls_session*, uint32)> _change_status_hook;
+    std::function<return_t(tls_session*, uint32)> _change_status_hook;
     void* _hook_param;
 
     /**

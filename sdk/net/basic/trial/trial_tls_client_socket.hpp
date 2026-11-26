@@ -39,6 +39,7 @@ class HOTPLACE_NET_API trial_tls_client_socket : public secure_client_socket {
     virtual ~trial_tls_client_socket();
 
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t close() override;
 
     virtual int socket_type() const;
 
@@ -48,7 +49,10 @@ class HOTPLACE_NET_API trial_tls_client_socket : public secure_client_socket {
     virtual return_t do_send(binary_t& bin);
 
    private:
-    std::shared_ptr<tls12_resumption_ticket_store> _tls12_ticket_store;
+    return_t retire_transport();
+
+    critical_section _send_lock;
+    std::shared_ptr<tls1_2_resumption_ticket_store> _tls12_ticket_store;
 };
 
 }  // namespace net

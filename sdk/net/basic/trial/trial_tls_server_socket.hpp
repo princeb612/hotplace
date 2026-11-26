@@ -74,7 +74,8 @@ class HOTPLACE_NET_API trial_tls_server_socket : public naive_tcp_server_socket 
     secure_prosumer _secure;
     tls_version_t _minspec;
     tls_version_t _maxspec;
-    std::shared_ptr<tls12_resumption_ticket_store> _tls12_ticket_store;
+    std::shared_ptr<tls1_2_resumption_ticket_store> _tls12_ticket_store;
+    return_t retire_transport(socket_context_t* handle);
 };
 
 }  // namespace net

@@ -70,14 +70,14 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
         int minver = 0;
         int maxver = 0;
         if (tlscontext_flag_tls & flags) {
-            if (tlscontext_flag_allow_tls12 & flags) {
+            if (tlscontext_flag_allow_tls1_2 & flags) {
                 minver = TLS1_2_VERSION;
-                if (tlscontext_flag_allow_tls13 & flags) {
+                if (tlscontext_flag_allow_tls1_3 & flags) {
                     maxver = TLS1_3_VERSION;
                 } else {
                     maxver = TLS1_2_VERSION;
                 }
-            } else if (tlscontext_flag_allow_tls13 & flags) {
+            } else if (tlscontext_flag_allow_tls1_3 & flags) {
                 minver = TLS1_3_VERSION;
                 maxver = TLS1_3_VERSION;
             } else {

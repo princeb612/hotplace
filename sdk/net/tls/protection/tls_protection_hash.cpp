@@ -74,8 +74,12 @@ return_t tls_protection::update_transcript_hash(tls_session* session, const byte
         // records.
 
         auto hash = get_transcript_hash();
+        if (nullptr == hash) {
+            ret = errorcode_t::not_supported;
+            __leave2_trace(ret);
+        }
         if (hash) {
-            if (is_kindof_dtls() && is_kindof_tls13()) {
+            if (is_kindof_dtls() && is_kindof_tls1_3()) {
                 // RFC 9147 5.2.  DTLS Handshake Message Format
                 // In DTLS 1.3, the message transcript is computed over the original TLS 1.3-style Handshake messages
                 // without the message_seq, fragment_offset, and fragment_length values.
@@ -83,11 +87,19 @@ return_t tls_protection::update_transcript_hash(tls_session* session, const byte
                 basic_stream bs;
                 size_t offset_body = sizeof(dtls_handshake_t);
                 //  0.. 3 handshake header
-                hash->update(stream, sizeof(tls_handshake_t));
+                ret = hash->update(stream, sizeof(tls_handshake_t));
+                if (errorcode_t::success != ret) {
+                    hash->release();
+                    __leave2_trace(ret);
+                }
                 //  4..11 handshake reconstruction data (8 bytes)
                 //
                 // 12.. $ handshake, extension
-                hash->update(stream + offset_body, size - offset_body);
+                ret = hash->update(stream + offset_body, size - offset_body);
+                if (errorcode_t::success != ret) {
+                    hash->release();
+                    __leave2_trace(ret);
+                }
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
                     trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
@@ -109,7 +121,11 @@ return_t tls_protection::update_transcript_hash(tls_session* session, const byte
                 // Hash calculations include entire handshake messages, including DTLS-specific fields: message_seq, fragment_offset, and fragment_length.
                 // the initial ClientHello and HelloVerifyRequest MUST NOT be included in the CertificateVerify or Finished MAC computations.
 
-                hash->update(stream, size);
+                ret = hash->update(stream, size);
+                if (errorcode_t::success != ret) {
+                    hash->release();
+                    __leave2_trace(ret);
+                }
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
                     trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
@@ -149,16 +165,26 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
             __leave2;
         }
 
-        update_transcript_hash(session, stream, size);
+        ret = update_transcript_hash(session, stream, size);
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
 
         // The hash does not include DTLS-only bytes in the records.
         // --> The hash does not include handshake reconstruction data bytes in the
         // records.
 
         auto hash = get_transcript_hash();
+        if (nullptr == hash) {
+            ret = errorcode_t::not_supported;
+            __leave2_trace(ret);
+        }
         if (hash) {
-            hash->digest(digest);
+            ret = hash->digest(digest);
             hash->release();
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
     }
     __finally2 {}

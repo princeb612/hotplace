@@ -59,22 +59,22 @@ server_socket* server_socket_builder::build() {
 
         switch (powered_by) {
             case socket_scheme_openssl: {
-                if (socket_scheme_tls12 & scheme) {
-                    ossl_flags |= tlscontext_flag_allow_tls12;
+                if (socket_scheme_tls1_2 & scheme) {
+                    ossl_flags |= tlscontext_flag_allow_tls1_2;
                 }
-                if (socket_scheme_tls13 & scheme) {
-                    ossl_flags |= tlscontext_flag_allow_tls13;
+                if (socket_scheme_tls1_3 & scheme) {
+                    ossl_flags |= tlscontext_flag_allow_tls1_3;
                 }
             } break;
             case socket_scheme_trial: {
-                if (socket_scheme_tls12 & scheme) {
+                if (socket_scheme_tls1_2 & scheme) {
                     trial_minspec = tls1_2;
-                    if (socket_scheme_tls13 & scheme) {
+                    if (socket_scheme_tls1_3 & scheme) {
                         trial_maxspec = tls1_3;
                     } else {
                         trial_maxspec = tls1_2;
                     }
-                } else if (socket_scheme_tls13 & scheme) {
+                } else if (socket_scheme_tls1_3 & scheme) {
                     trial_minspec = tls1_3;
                     trial_maxspec = tls1_3;
                 } else {

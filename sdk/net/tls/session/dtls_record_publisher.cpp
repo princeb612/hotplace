@@ -89,7 +89,7 @@ return_t dtls_record_publisher::get_record_expansion(tls_direction_t dir, size_t
             __leave2;
         }
 
-        if (protection.is_kindof_tls13()) {
+        if (protection.is_kindof_tls1_3()) {
             auto mode = typeof_mode(hint_cipher);
             if ((crypt_mode_t::gcm != mode) && (crypt_mode_t::ccm != mode) && (crypt_mode_t::poly1305 != mode)) {
                 expansion = 0;

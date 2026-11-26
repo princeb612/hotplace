@@ -31,19 +31,19 @@ namespace net {
 
 namespace {
 
-constexpr uint64 tls13_aes_gcm_max_records = 23726566ULL;        // floor(2^24.5)
-constexpr uint64 tls13_aes_gcm_max_plaintext = 388736063996ULL;  // floor(2^38.5) bytes
-constexpr uint64 tls13_aes_ccm_max_records = (1ULL << 21);       // conservative multi-key profile bound
-constexpr uint64 tls13_aes_ccm_max_plaintext = (1ULL << 35);     // 2^35 bytes per key
+constexpr uint64 tls1_3_aes_gcm_max_records = 23726566ULL;        // floor(2^24.5)
+constexpr uint64 tls1_3_aes_gcm_max_plaintext = 388736063996ULL;  // floor(2^38.5) bytes
+constexpr uint64 tls1_3_aes_ccm_max_records = (1ULL << 21);       // conservative multi-key profile bound
+constexpr uint64 tls1_3_aes_ccm_max_plaintext = (1ULL << 35);     // 2^35 bytes per key
 
-static bool tls13_key_usage_limit(uint16 cipher_suite, uint64& max_records, uint64& max_plaintext) {
+static bool tls1_3_key_usage_limit(uint16 cipher_suite, uint64& max_records, uint64& max_plaintext) {
     switch (cipher_suite) {
         case 0x1301:  // TLS_AES_128_GCM_SHA256
         case 0x1302:  // TLS_AES_256_GCM_SHA384
             // RFC 9846 §5.5: 2^24.5 full-size records; the byte ceiling is
             // derived from the corresponding 2^38.5-byte full-size volume.
-            max_records = tls13_aes_gcm_max_records;
-            max_plaintext = tls13_aes_gcm_max_plaintext;
+            max_records = tls1_3_aes_gcm_max_records;
+            max_plaintext = tls1_3_aes_gcm_max_plaintext;
             return true;
         case 0x1304:  // TLS_AES_128_CCM_SHA256
         case 0x1305:  // TLS_AES_128_CCM_8_SHA256
@@ -51,8 +51,8 @@ static bool tls13_key_usage_limit(uint16 cipher_suite, uint64& max_records, uint
             // target AEA <= 2^-57, at most five traffic keys, L <= 2^11 blocks,
             // C <= 2^33 blocks per key, q <= 5 * 2^21, v = 1, and o <= 2^64.
             // This is a work-in-progress profile bound, not a TLS RFC numeric limit.
-            max_records = tls13_aes_ccm_max_records;
-            max_plaintext = tls13_aes_ccm_max_plaintext;
+            max_records = tls1_3_aes_ccm_max_records;
+            max_plaintext = tls1_3_aes_ccm_max_plaintext;
             return true;
         case 0x1303:  // TLS_CHACHA20_POLY1305_SHA256
             // ChaCha20-Poly1305's TLS sequence number is the limiting bound.
@@ -64,7 +64,7 @@ static bool tls13_key_usage_limit(uint16 cipher_suite, uint64& max_records, uint
     }
 }
 
-static bool tls13_is_alert_plaintext(const binary_t& plaintext) {
+static bool tls1_3_is_alert_plaintext(const binary_t& plaintext) {
     size_t type_pos = plaintext.size();
     while (type_pos && (0 == plaintext[type_pos - 1])) {
         --type_pos;
@@ -114,8 +114,8 @@ return_t tls_protection::build_iv(tls_session* session, binary_t& nonce, const b
     return ret;
 }
 
-return_t tls_protection::build_tls12_aad_from_record(tls_session* session, tls_direction_t dir, binary_t& aad, const binary_t& record_header, uint64 record_no,
-                                                     uint8 size_nonce_explicit) {
+return_t tls_protection::build_tls1_2_aad_from_record(tls_session* session, tls_direction_t dir, binary_t& aad, const binary_t& record_header, uint64 record_no,
+                                                      uint8 size_nonce_explicit) {
     return_t ret = errorcode_t::success;
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -223,7 +223,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
         auto mode = typeof_mode(hint_cipher);
         auto is_tls = protection.is_kindof_tls();
-        auto is_tls12 = protection.is_kindof_tls12();
+        auto is_tls12 = protection.is_kindof_tls1_2();
         auto is_cbc = false;
         bool etm = false;
         uint16 key_epoch = 0;
@@ -351,7 +351,7 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                 // A fresh resumption connection has not negotiated its version
                 // when it installs the ClientHello early-data keys. Select the
                 // TLS 1.3 traffic-secret slots from the ticket-bound parameters.
-                if (is_kindof_tls13() || is_kindof_tls13_early_data(session)) {
+                if (is_kindof_tls1_3() || is_kindof_tls1_3_early_data(session)) {
                     // TLS 1.3
                     if (is_clientinitiated(dir)) {
                         // TLS, DTLS
@@ -476,12 +476,12 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
 
         uint64 record_no = session->get_recordno(dir, space);
         bool track_tls13_usage =
-            (session_type_t::tls == session->get_type()) && (is_kindof_tls13() || is_kindof_tls13_early_data(session)) && (protection_space_t::tls == space);
+            (session_type_t::tls == session->get_type()) && (is_kindof_tls1_3() || is_kindof_tls1_3_early_data(session)) && (protection_space_t::tls == space);
         bool track_tls13_plaintext = false;
         if (track_tls13_usage) {
             uint64 max_records = 0;
             uint64 max_plaintext = 0;
-            if (false == tls13_key_usage_limit(cs, max_records, max_plaintext)) {
+            if (false == tls1_3_key_usage_limit(cs, max_records, max_plaintext)) {
                 auto& session_info = session->get_session_info(dir);
                 if (false == session_info.has_alert(tls_alertlevel_t::fatal)) {
                     session_info.push_alert(tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
@@ -494,7 +494,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
             auto& usage = session->get_session_info(dir).get_keyvalue();
             uint64 used_plaintext = usage.get(session_tls13_key_usage_bytes);
             // Early-data traffic keys cannot use the reserved Alert record.
-            bool alert_record = (tls_secret_t::c_e_traffic_key != secret_key) && tls13_is_alert_plaintext(plaintext);
+            bool alert_record = (tls_secret_t::c_e_traffic_key != secret_key) && tls1_3_is_alert_plaintext(plaintext);
             uint64 record_limit = alert_record ? (max_records - 1) : (max_records - 2);
             bool record_limit_reached = (record_no >= record_limit);
             bool plaintext_limit_reached = false;
@@ -517,8 +517,10 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
             }
         }
 
-        record_no = session->get_recordno(dir, space);
-        session->inc_recordno(dir, space);
+        ret = advance_recordno(session, dir, record_no, space);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         const auto& key = get_secrets().get(secret_key);
         const auto& iv = get_secrets().get(secret_iv);
@@ -527,7 +529,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
 
         auto alg = typeof_alg(hint_cipher);
         auto mode = typeof_mode(hint_cipher);
-        if (is_kindof_tls12()) {
+        if (is_kindof_tls1_2()) {
             if (crypt_mode_t::poly1305 == mode) {
                 if (is_kindof_dtls()) {
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
@@ -648,7 +650,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
 
         // TLS 1.2 AES-GCM and AES-CCM records carry an 8-byte explicit nonce
         // before the encrypted fragment. Validate it before consuming a record number.
-        if (is_kindof_tls12() && (crypt_mode_t::gcm == mode || crypt_mode_t::ccm == mode) && (size - pos < 8)) {
+        if (is_kindof_tls1_2() && (crypt_mode_t::gcm == mode || crypt_mode_t::ccm == mode) && (size - pos < 8)) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
@@ -661,8 +663,11 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         tls_secret_t secret_iv;
         get_aead_key(session, dir, space, secret_key, secret_iv);
 
-        uint64 record_no = session->get_recordno(dir, space);
-        session->inc_recordno(dir, space);
+        uint64 record_no = 0;
+        ret = advance_recordno(session, dir, record_no, space);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         const binary_t& key = get_secrets().get(secret_key);
         const binary_t& iv = get_secrets().get(secret_iv);
@@ -670,7 +675,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         binary_t nonce;
         auto alg = typeof_alg(hint_cipher);
 
-        if (is_kindof_tls12()) {
+        if (is_kindof_tls1_2()) {
             uint8 size_nonce_explicit = 8;
 
             if (crypt_mode_t::poly1305 == mode) {
@@ -723,7 +728,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 pos += size_nonce_explicit;
             }
 
-            build_tls12_aad_from_record(session, dir, tls12_aad, aad, record_no, size_nonce_explicit);
+            build_tls1_2_aad_from_record(session, dir, tls12_aad, aad, record_no, size_nonce_explicit);
 
             ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, tls12_aad, tag, options);
         } else {
@@ -745,7 +750,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
                 dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->nameof_protection_space(space).c_str());
                 dbs.println(" > nonce %s", base16_encode(nonce).c_str());
-                if (is_kindof_tls12()) {
+                if (is_kindof_tls1_2()) {
                     dbs.println(" > aad %s", base16_encode(tls12_aad).c_str());
                 } else {
                     dbs.println(" > aad %s", base16_encode(aad).c_str());

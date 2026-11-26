@@ -222,6 +222,7 @@ static void test_tls13_certificate_request_signature_algorithms() {
 
     tls_session writer;
     writer.get_tls_protection().set_tls_version(tls1_3);
+    writer.get_tls_protection().set_cipher_suite(0x1301);  // TLS_AES_128_GCM_SHA256 selects SHA-256 for the transcript.
     writer.get_tls_protection().get_protection_context().add_signature_algorithm(tls_sigscheme_t::ecdsa_secp256r1_sha256);
     tls_handshake_certificate_request request(&writer);
     auto algorithms = new tls_extension_signature_algorithms(&request);
@@ -242,6 +243,7 @@ static void test_tls13_certificate_request_signature_algorithms() {
 
     tls_session reader;
     reader.get_tls_protection().set_tls_version(tls1_3);
+    reader.get_tls_protection().set_cipher_suite(0x1301);
     reader.get_tls_protection().get_protection_context().add_signature_algorithm(tls_sigscheme_t::ecdsa_secp256r1_sha256);
     size_t pos = 0;
     auto parsed = tls_handshake::read(&reader, from_server, encoded.data(), encoded.size(), pos);
@@ -360,6 +362,7 @@ static void test_tls13_empty_certificate_list_direction_policy() {
 
     tls_session request_writer;
     request_writer.get_tls_protection().set_tls_version(tls1_3);
+    request_writer.get_tls_protection().set_cipher_suite(0x1301);
     tls_handshake_certificate_request request(&request_writer);
     auto algorithms = new tls_extension_signature_algorithms(&request);
     algorithms->add(tls_sigscheme_t::rsa_pss_rsae_sha256);
@@ -373,6 +376,7 @@ static void test_tls13_empty_certificate_list_direction_policy() {
 
     tls_session client_reader;
     client_reader.get_tls_protection().set_tls_version(tls1_3);
+    client_reader.get_tls_protection().set_cipher_suite(0x1301);
     client_reader.update_session_status(session_status_client_hello);
     client_reader.update_session_status(session_status_server_hello);
     client_reader.update_session_status(session_status_encrypted_extensions);
@@ -419,6 +423,10 @@ static void test_tls13_client_hello2_pha_offer_consistency(const char* function_
     tls_session client;
     client.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_3);
+    // The ClientHello's offered suite does not configure the local transcript
+    // hash. This fixture exercises HRR consistency, so initialize the selected
+    // TLS 1.3 suite explicitly before either ClientHello is serialized.
+    client.get_tls_protection().set_cipher_suite(0x1301);
 
     return_t ret = write_tls13_client_hello_with_pha_offer(client, initial_offer);
     _test_case.test(ret, function_name, initial_description);
@@ -472,6 +480,7 @@ static void test_tls13_post_handshake_certificate_request_timing_gate(const char
     tls_session request_writer;
     request_writer.set_type(session_type_t::tls);
     request_writer.get_tls_protection().set_tls_version(tls1_3);
+    request_writer.get_tls_protection().set_cipher_suite(0x1301);
     request_writer.update_session_status(session_status_server_finished);
     request_writer.update_session_status(session_status_client_finished);
     request_writer.get_keyvalue().set(session_client_post_handshake_auth, 1);
@@ -523,6 +532,7 @@ static void test_tls13_post_handshake_certificate_request_timing_gate(const char
         tls_session main_handshake_reader;
         main_handshake_reader.set_type(session_type_t::tls);
         main_handshake_reader.get_tls_protection().set_tls_version(tls1_3);
+        main_handshake_reader.get_tls_protection().set_cipher_suite(0x1301);
         main_handshake_reader.update_session_status(session_status_client_hello);
         main_handshake_reader.update_session_status(session_status_server_hello);
         main_handshake_reader.update_session_status(session_status_encrypted_extensions);
@@ -606,6 +616,7 @@ static void test_tls13_post_handshake_certificate_request_timing_gate(const char
         tls_session offered_reader;
         offered_reader.set_type(session_type_t::tls);
         offered_reader.get_tls_protection().set_tls_version(tls1_3);
+        offered_reader.get_tls_protection().set_cipher_suite(0x1301);
         offered_reader.get_keyvalue().set(session_client_post_handshake_auth, 1);
         offered_reader.update_session_status(session_status_server_finished);
         offered_reader.update_session_status(session_status_client_finished);
@@ -633,6 +644,7 @@ static void test_tls13_post_handshake_certificate_request_context_rules(const ch
         tls_session empty_context_writer;
         empty_context_writer.set_type(session_type_t::tls);
         empty_context_writer.get_tls_protection().set_tls_version(tls1_3);
+        empty_context_writer.get_tls_protection().set_cipher_suite(0x1301);
         empty_context_writer.update_session_status(session_status_server_finished);
         empty_context_writer.update_session_status(session_status_client_finished);
         empty_context_writer.get_keyvalue().set(session_client_post_handshake_auth, 1);
@@ -646,6 +658,7 @@ static void test_tls13_post_handshake_certificate_request_context_rules(const ch
             tls_session reader;
             reader.set_type(session_type_t::tls);
             reader.get_tls_protection().set_tls_version(tls1_3);
+            reader.get_tls_protection().set_cipher_suite(0x1301);
             reader.get_keyvalue().set(session_client_post_handshake_auth, 1);
             reader.update_session_status(session_status_server_finished);
             reader.update_session_status(session_status_client_finished);
@@ -664,6 +677,7 @@ static void test_tls13_post_handshake_certificate_request_context_rules(const ch
         tls_session duplicate_writer;
         duplicate_writer.set_type(session_type_t::tls);
         duplicate_writer.get_tls_protection().set_tls_version(tls1_3);
+        duplicate_writer.get_tls_protection().set_cipher_suite(0x1301);
         tls_handshake_certificate_request first(&duplicate_writer);
         auto first_algorithms = new tls_extension_signature_algorithms(&first);
         first_algorithms->add(tls_sigscheme_t::rsa_pss_rsae_sha256);
@@ -687,6 +701,7 @@ static void test_tls13_post_handshake_certificate_request_context_rules(const ch
         tls_session duplicate_reader;
         duplicate_reader.set_type(session_type_t::tls);
         duplicate_reader.get_tls_protection().set_tls_version(tls1_3);
+        duplicate_reader.get_tls_protection().set_cipher_suite(0x1301);
         duplicate_reader.update_session_status(session_status_client_hello);
         duplicate_reader.update_session_status(session_status_server_hello);
         duplicate_reader.update_session_status(session_status_encrypted_extensions);
@@ -945,6 +960,7 @@ static void test_tls13_post_handshake_certificate_request_gate() {
     tls_session request_writer;
     request_writer.set_type(session_type_t::tls);
     request_writer.get_tls_protection().set_tls_version(tls1_3);
+    request_writer.get_tls_protection().set_cipher_suite(0x1301);
     tls_handshake_certificate_request request(&request_writer);
     auto algorithms = new tls_extension_signature_algorithms(&request);
     algorithms->add(tls_sigscheme_t::rsa_pss_rsae_sha256);

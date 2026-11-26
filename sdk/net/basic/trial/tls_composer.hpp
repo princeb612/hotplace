@@ -39,7 +39,7 @@ class HOTPLACE_NET_API tls_composer {
         return handshake(dir, wto, std::function<return_t(tls_session*, binary_t&)>(std::forward<F>(func)));
     }
     // from_server
-    return_t session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func);
+    return_t session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<return_t(tls_session*, binary_t&)> func);
 
     tls_session* get_session();
     void set_minver(tls_version_t version);
@@ -57,9 +57,10 @@ class HOTPLACE_NET_API tls_composer {
      * TLS handshake
      */
     return_t do_tls_client_handshake(unsigned wto, std::function<return_t(tls_session*, binary_t&)> func);
+    return_t do_tls_server_handshake(unsigned wto, std::function<return_t(tls_session*, binary_t&)> func);
     return_t do_tls_client_hello(std::function<return_t(tls_session*, binary_t&)> func);
-    return_t do_tls_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func);
-    return_t do_tls_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_server_handshake_phase1(std::function<return_t(tls_session*, binary_t&)> func);
+    return_t do_tls_server_handshake_phase2(std::function<return_t(tls_session*, binary_t&)> func);
 
     /**
      * TLS

@@ -842,9 +842,9 @@ static void test_tls12_new_session_ticket_wire_format() {
     const binary_t expected_wire{0x04, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x0e, 0x10, 0x00, 0x04, 0x10, 0x20, 0x30, 0x40};
     _test_case.assert(expected_wire == wire, __FUNCTION__, "encode lifetime_hint and uint16-length opaque ticket without TLS 1.3 fields");
 
-    const auto server_tickets = server_session.get_tls12_resumption_tickets();
+    const auto server_tickets = server_session.get_tls1_2_resumption_tickets();
     _test_case.assert(1 == server_tickets.size(), __FUNCTION__, "retain the issued TLS 1.2 ticket in the server cache");
-    _test_case.assert(server_session.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__,
+    _test_case.assert(server_session.get_pending_tls1_2_resumption_tickets().empty(), __FUNCTION__,
                       "activate a full-handshake ticket after Client Finished was already authenticated");
     if (1 == server_tickets.size()) {
         const auto& issued = server_tickets.front();
@@ -987,7 +987,7 @@ static void test_tls12_server_ticket_confirmation_store() {
     tls_session session;
     session.set_type(session_type_t::tls);
 
-    tls12_resumption_ticket initial;
+    tls1_2_resumption_ticket initial;
     initial.identity = binary_t{0x10, 0x20};
     initial.master_secret = binary_t(48, 0x11);
     initial.server_name = binary_t{'a', '.', 'e', 'x', 'a', 'm', 'p', 'l', 'e'};
@@ -999,19 +999,19 @@ static void test_tls12_server_ticket_confirmation_store() {
     initial.extended_master_secret = true;
     initial.encrypt_then_mac = true;
 
-    session.stage_tls12_resumption_ticket(initial);
-    _test_case.assert(session.get_tls12_resumption_tickets().empty(), __FUNCTION__, "keep a newly staged TLS 1.2 ticket out of the active cache");
-    _test_case.assert(1 == session.get_pending_tls12_resumption_tickets().size(), __FUNCTION__, "retain the staged TLS 1.2 ticket as pending");
-    tls12_resumption_ticket cached;
-    bool cached_found_at_937 = session.find_tls12_resumption_ticket(initial.identity, cached);
+    session.stage_tls1_2_resumption_ticket(initial);
+    _test_case.assert(session.get_tls1_2_resumption_tickets().empty(), __FUNCTION__, "keep a newly staged TLS 1.2 ticket out of the active cache");
+    _test_case.assert(1 == session.get_pending_tls1_2_resumption_tickets().size(), __FUNCTION__, "retain the staged TLS 1.2 ticket as pending");
+    tls1_2_resumption_ticket cached;
+    bool cached_found_at_937 = session.find_tls1_2_resumption_ticket(initial.identity, cached);
     _test_case.assert(false == cached_found_at_937, __FUNCTION__, "do not expose an unconfirmed TLS 1.2 ticket to lookup");
 
     const binary_t initial_identity{0x10, 0x20};
-    bool ticket_confirmed = session.confirm_tls12_resumption_ticket(initial_identity);
+    bool ticket_confirmed = session.confirm_tls1_2_resumption_ticket(initial_identity);
     _test_case.assert(ticket_confirmed, __FUNCTION__, "activate the TLS 1.2 ticket after confirmation");
-    _test_case.assert(session.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__, "remove the confirmed ticket from pending state");
+    _test_case.assert(session.get_pending_tls1_2_resumption_tickets().empty(), __FUNCTION__, "remove the confirmed ticket from pending state");
 
-    bool found = session.find_tls12_resumption_ticket(initial_identity, cached);
+    bool found = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(found, __FUNCTION__, "find the confirmed TLS 1.2 ticket by opaque identity");
     if (found) {
         _test_case.assert(binary_t(48, 0x11) == cached.master_secret, __FUNCTION__, "retain the original 48-byte master secret");
@@ -1023,15 +1023,15 @@ static void test_tls12_server_ticket_confirmation_store() {
         _test_case.assert(3600 == cached.lifetime && 1000 == cached.timestamp, __FUNCTION__, "retain ticket lifetime and issuance timestamp");
     }
 
-    tls12_resumption_ticket renewal = cached;
+    tls1_2_resumption_ticket renewal = cached;
     // Reuse the same opaque bytes deliberately: pending TLS 1.2 state must
     // not overwrite the active TLS 1.2 record before confirmation.
     renewal.identity = initial_identity;
     renewal.master_secret = binary_t(48, 0x22);
-    session.stage_tls12_resumption_ticket(renewal);
+    session.stage_tls1_2_resumption_ticket(renewal);
     session.discard_tls12_pending_resumption_ticket(renewal.identity);
-    _test_case.assert(session.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__, "discard an unconfirmed TLS 1.2 ticket with a colliding identity");
-    bool cached_found_at_964 = session.find_tls12_resumption_ticket(initial_identity, cached);
+    _test_case.assert(session.get_pending_tls1_2_resumption_tickets().empty(), __FUNCTION__, "discard an unconfirmed TLS 1.2 ticket with a colliding identity");
+    bool cached_found_at_964 = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(cached_found_at_964, __FUNCTION__, "preserve the active TLS 1.2 ticket when a colliding renewal is discarded");
     _test_case.assert(binary_t(48, 0x11) == cached.master_secret, __FUNCTION__, "retain the prior Master Secret after discarding a colliding renewal");
 
@@ -1040,56 +1040,56 @@ static void test_tls12_server_ticket_confirmation_store() {
     tls13.psk = binary_t(32, 0x33);
     session.store_resumption_ticket(tls13);
     _test_case.assert(1 == session.get_resumption_tickets().size(), __FUNCTION__, "retain the TLS 1.3 PSK ticket with the same opaque identity bytes");
-    _test_case.assert(1 == session.get_tls12_resumption_tickets().size(), __FUNCTION__, "keep TLS 1.2 and TLS 1.3 ticket stores independent despite identity collision");
+    _test_case.assert(1 == session.get_tls1_2_resumption_tickets().size(), __FUNCTION__, "keep TLS 1.2 and TLS 1.3 ticket stores independent despite identity collision");
     tls_resumption_ticket cached_tls13;
     bool cached_tls13_found_at_975 = session.find_resumption_ticket(initial_identity, cached_tls13);
     _test_case.assert(cached_tls13_found_at_975, __FUNCTION__, "look up the TLS 1.3 ticket independently by the colliding identity");
     _test_case.assert(binary_t(32, 0x33) == cached_tls13.psk, __FUNCTION__, "retain the TLS 1.3 PSK under its own ticket-store namespace");
-    bool cached_found_at_977 = session.find_tls12_resumption_ticket(initial_identity, cached);
+    bool cached_found_at_977 = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(cached_found_at_977, __FUNCTION__, "retain the TLS 1.2 ticket under its own ticket-store namespace");
     _test_case.assert(binary_t(48, 0x11) == cached.master_secret, __FUNCTION__, "preserve the TLS 1.2 Master Secret beside the TLS 1.3 PSK");
 
     session.remove_resumption_ticket(initial_identity);
     bool cached_tls13_found_at_981 = session.find_resumption_ticket(initial_identity, cached_tls13);
     _test_case.assert(false == cached_tls13_found_at_981, __FUNCTION__, "remove only the TLS 1.3 ticket from its own store");
-    bool cached_found_at_982 = session.find_tls12_resumption_ticket(initial_identity, cached);
+    bool cached_found_at_982 = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(cached_found_at_982, __FUNCTION__, "do not remove a TLS 1.2 ticket when the TLS 1.3 identity matches");
     session.store_resumption_ticket(tls13);
 
-    session.stage_tls12_resumption_ticket(renewal);
+    session.stage_tls1_2_resumption_ticket(renewal);
     session.reset_session_status();
-    _test_case.assert(session.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__, "discard pending TLS 1.2 server tickets on handshake reset");
-    bool cached_found_at_988 = session.find_tls12_resumption_ticket(initial_identity, cached);
+    _test_case.assert(session.get_pending_tls1_2_resumption_tickets().empty(), __FUNCTION__, "discard pending TLS 1.2 server tickets on handshake reset");
+    bool cached_found_at_988 = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(cached_found_at_988, __FUNCTION__, "preserve confirmed TLS 1.2 tickets across handshake reset");
     _test_case.assert(binary_t(48, 0x11) == cached.master_secret, __FUNCTION__, "do not let colliding pending state replace the confirmed TLS 1.2 Master Secret");
     _test_case.assert(1 == session.get_resumption_tickets().size(), __FUNCTION__, "preserve TLS 1.3 PSK tickets across TLS 1.2 pending-state cleanup");
     bool cached_tls13_found_at_991 = session.find_resumption_ticket(initial_identity, cached_tls13);
     _test_case.assert(cached_tls13_found_at_991, __FUNCTION__, "preserve the same-identity TLS 1.3 ticket across TLS 1.2 cleanup");
 
-    auto shared_store = std::make_shared<tls12_resumption_ticket_store>();
+    auto shared_store = std::make_shared<tls1_2_resumption_ticket_store>();
     tls_session issuing_connection;
     tls_session resuming_connection;
-    issuing_connection.set_tls12_resumption_ticket_store(shared_store);
-    resuming_connection.set_tls12_resumption_ticket_store(shared_store);
+    issuing_connection.set_tls1_2_resumption_ticket_store(shared_store);
+    resuming_connection.set_tls1_2_resumption_ticket_store(shared_store);
 
-    tls12_resumption_ticket cross_connection_ticket = initial;
+    tls1_2_resumption_ticket cross_connection_ticket = initial;
     cross_connection_ticket.identity = binary_t{0x50, 0x60};
-    issuing_connection.stage_tls12_resumption_ticket(cross_connection_ticket);
-    bool ticket_published = issuing_connection.confirm_tls12_resumption_ticket(cross_connection_ticket.identity);
+    issuing_connection.stage_tls1_2_resumption_ticket(cross_connection_ticket);
+    bool ticket_published = issuing_connection.confirm_tls1_2_resumption_ticket(cross_connection_ticket.identity);
     _test_case.assert(ticket_published, __FUNCTION__, "publish a confirmed ticket to the server-wide store");
 
-    tls12_resumption_ticket resumed_ticket;
-    bool resumed_ticket_found_at_1006 = resuming_connection.find_tls12_resumption_ticket(cross_connection_ticket.identity, resumed_ticket);
+    tls1_2_resumption_ticket resumed_ticket;
+    bool resumed_ticket_found_at_1006 = resuming_connection.find_tls1_2_resumption_ticket(cross_connection_ticket.identity, resumed_ticket);
     _test_case.assert(resumed_ticket_found_at_1006, __FUNCTION__, "find a ticket issued by a different TLS connection");
     _test_case.assert(cross_connection_ticket.master_secret == resumed_ticket.master_secret, __FUNCTION__,
                       "retain the master secret across independent TLS connection sessions");
 
     tls_session isolated_connection;
-    bool resumed_ticket_found_at_1012 = isolated_connection.find_tls12_resumption_ticket(cross_connection_ticket.identity, resumed_ticket);
+    bool resumed_ticket_found_at_1012 = isolated_connection.find_tls1_2_resumption_ticket(cross_connection_ticket.identity, resumed_ticket);
     _test_case.assert(false == resumed_ticket_found_at_1012, __FUNCTION__, "keep the default per-session ticket store isolated from another server store");
 
-    issuing_connection.remove_tls12_resumption_ticket(cross_connection_ticket.identity);
-    bool resumed_ticket_found_at_1016 = resuming_connection.find_tls12_resumption_ticket(cross_connection_ticket.identity, resumed_ticket);
+    issuing_connection.remove_tls1_2_resumption_ticket(cross_connection_ticket.identity);
+    bool resumed_ticket_found_at_1016 = resuming_connection.find_tls1_2_resumption_ticket(cross_connection_ticket.identity, resumed_ticket);
     _test_case.assert(false == resumed_ticket_found_at_1016, __FUNCTION__, "remove a TLS 1.2 ticket from the shared server store across connection sessions");
     _test_case.assert(1 == session.get_resumption_tickets().size(), __FUNCTION__, "keep the independent TLS 1.3 ticket when removing a TLS 1.2 identity");
 
@@ -1097,15 +1097,146 @@ static void test_tls12_server_ticket_confirmation_store() {
     // when a renewed opaque identity happens to collide with the old bytes.
     renewal.master_secret = binary_t(48, 0x22);
     renewal.lifetime = 1800;
-    session.stage_tls12_resumption_ticket(renewal);
-    bool cached_found_at_1025 = session.find_tls12_resumption_ticket(initial_identity, cached);
+    session.stage_tls1_2_resumption_ticket(renewal);
+    bool cached_found_at_1025 = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(cached_found_at_1025, __FUNCTION__, "keep the old TLS 1.2 ticket visible while a colliding renewal is pending");
     _test_case.assert(binary_t(48, 0x11) == cached.master_secret, __FUNCTION__, "retain the old Master Secret until the colliding renewal is confirmed");
-    bool renewal_confirmed = session.confirm_tls12_resumption_ticket(initial_identity);
+    bool renewal_confirmed = session.confirm_tls1_2_resumption_ticket(initial_identity);
     _test_case.assert(renewal_confirmed, __FUNCTION__, "confirm a renewed TLS 1.2 ticket with the same opaque identity");
-    bool cached_found_at_1030 = session.find_tls12_resumption_ticket(initial_identity, cached);
+    bool cached_found_at_1030 = session.find_tls1_2_resumption_ticket(initial_identity, cached);
     _test_case.assert(cached_found_at_1030, __FUNCTION__, "look up the confirmed replacement under its opaque identity");
     _test_case.assert(binary_t(48, 0x22) == cached.master_secret && 1800 == cached.lifetime, __FUNCTION__, "replace the active TLS 1.2 ticket only after confirmation");
+}
+
+static void test_tls12_extended_master_secret_extension_wire_validation() {
+    // Scenario under test: RFC 7627 EMS extension wire shape and handshake context.
+    // Action: parse valid empty ClientHello/ServerHello extensions and malformed variants.
+    // Expected: accept only the empty extension in its two permitted TLS 1.2 handshake messages.
+
+    _test_case.begin("TLS 1.2 Extended Master Secret extension wire validation");
+
+    const binary_t ems_extension{0x00, 0x17, 0x00, 0x00};
+
+    tls_session client_session;
+    client_session.set_type(session_type_t::tls);
+    client_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_client_hello client_hello(&client_session);
+    return_t ret = client_hello.get_extensions().read(&client_hello, from_client, ems_extension);
+    _test_case.test(ret, __FUNCTION__, "accept an empty EMS extension in ClientHello");
+
+    tls_session server_session;
+    server_session.set_type(session_type_t::tls);
+    server_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_server_hello server_hello(&server_session);
+    ret = server_hello.get_extensions().read(&server_hello, from_server, ems_extension);
+    _test_case.test(ret, __FUNCTION__, "accept an empty EMS extension in ServerHello");
+
+    tls_session client_write_session;
+    client_write_session.set_type(session_type_t::tls);
+    client_write_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_client_hello outgoing_client_hello(&client_write_session);
+    outgoing_client_hello.get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, &outgoing_client_hello);
+    binary_t client_wire;
+    ret = outgoing_client_hello.get_extensions().write(from_client, client_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize an empty EMS extension in ClientHello");
+    _test_case.assert(ems_extension == client_wire, __FUNCTION__, "encode the exact RFC 7627 EMS extension bytes");
+
+    tls_session server_write_session;
+    server_write_session.set_type(session_type_t::tls);
+    server_write_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_server_hello outgoing_server_hello(&server_write_session);
+    outgoing_server_hello.get_extensions().add(tls_extension_type_t::extended_master_secret, from_server, &outgoing_server_hello);
+    binary_t server_wire;
+    ret = outgoing_server_hello.get_extensions().write(from_server, server_wire);
+    _test_case.test(ret, __FUNCTION__, "serialize an empty EMS extension in ServerHello");
+    _test_case.assert(ems_extension == server_wire, __FUNCTION__, "encode the exact RFC 7627 EMS acknowledgement bytes");
+
+    tls_session malformed_session;
+    malformed_session.set_type(session_type_t::tls);
+    malformed_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_client_hello malformed_client_hello(&malformed_session);
+    const binary_t non_empty_ems_extension{0x00, 0x17, 0x00, 0x01, 0x00};
+    ret = malformed_client_hello.get_extensions().read(&malformed_client_hello, from_client, non_empty_ems_extension);
+    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject non-empty EMS extension_data");
+    size_t decode_error_count = test_count_fatal_alert(malformed_session, from_client, tls_alertdesc_t::decode_error);
+    _test_case.assert(1 == decode_error_count, __FUNCTION__, "queue exactly one fatal decode_error for non-empty EMS extension_data");
+
+    tls_session context_session;
+    context_session.set_type(session_type_t::tls);
+    context_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_client_key_exchange client_key_exchange(&context_session);
+    ret = client_key_exchange.get_extensions().read(&client_key_exchange, from_client, ems_extension);
+    _test_case.assert(errorcode_t::bad_format == ret, __FUNCTION__, "reject EMS in ClientKeyExchange");
+    size_t illegal_parameter_count = test_count_fatal_alert(context_session, from_client, tls_alertdesc_t::illegal_parameter);
+    _test_case.assert(1 == illegal_parameter_count, __FUNCTION__, "queue exactly one fatal illegal_parameter for EMS in an invalid handshake context");
+
+    tls_session write_session;
+    write_session.set_type(session_type_t::tls);
+    write_session.get_tls_protection().set_tls_version(tls1_2);
+    tls_handshake_client_key_exchange invalid_write(&write_session);
+    invalid_write.get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, &invalid_write);
+    binary_t invalid_wire;
+    ret = invalid_write.get_extensions().write(from_client, invalid_wire);
+    _test_case.assert(errorcode_t::invalid_parameter == ret, __FUNCTION__, "refuse to serialize EMS outside ClientHello or ServerHello");
+    _test_case.assert(invalid_wire.empty(), __FUNCTION__, "do not emit bytes for an EMS extension in an invalid context");
+}
+
+static void test_tls12_client_key_exchange_postprocess_failure() {
+    // Scenario under test: TLS 1.2 ClientKeyExchange key-schedule failure.
+    // Action: process a structurally valid ClientKeyExchange without the negotiated
+    //         key-exchange keys required to derive the pre-master secret.
+    // Expected: propagate the calculation error, send fatal internal_error, and
+    //           do not advance the handshake state.
+
+    class testable_client_key_exchange : public tls_handshake_client_key_exchange {
+       public:
+        using tls_handshake_client_key_exchange::tls_handshake_client_key_exchange;
+
+        return_t prepare_header(const byte_t* stream, size_t size) {
+            size_t pos = 0;
+            return do_read_header(from_client, stream, size, pos);
+        }
+
+        return_t run_postprocess(const byte_t* stream, size_t size) { return do_postprocess(from_client, tls_io_operation_t::read, stream, size); }
+    };
+
+    _test_case.begin("TLS 1.2 ClientKeyExchange postprocess failure");
+
+    // A transcript hash cannot be created before a cipher suite selects its hash.
+    // The protection API must report that condition instead of silently succeeding.
+    tls_session no_suite_session;
+    no_suite_session.set_type(session_type_t::tls);
+    no_suite_session.get_tls_protection().set_tls_version(tls1_2);
+    const byte_t transcript_probe[] = {static_cast<byte_t>(tls_handshake_type_t::client_hello)};
+    return_t transcript_ret = no_suite_session.get_tls_protection().update_transcript_hash(&no_suite_session, transcript_probe, sizeof(transcript_probe));
+    _test_case.assert(errorcode_t::not_supported == transcript_ret, __FUNCTION__, "report unavailable transcript hash when no cipher suite is selected");
+    binary_t transcript_digest;
+    transcript_ret = no_suite_session.get_tls_protection().calc_transcript_hash(&no_suite_session, transcript_probe, sizeof(transcript_probe), transcript_digest);
+    _test_case.assert(errorcode_t::not_supported == transcript_ret, __FUNCTION__, "propagate transcript update failure from calc_transcript_hash");
+
+    tls_session session;
+    session.set_type(session_type_t::tls);
+    auto& protection = session.get_tls_protection();
+    protection.set_tls_version(tls1_2);
+    protection.set_cipher_suite(0xc02f);  // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    session.update_session_status(session_status_server_hello_done);
+
+    const binary_t client_key_exchange_message{
+        static_cast<byte_t>(tls_handshake_type_t::client_key_exchange),
+        0x00,
+        0x00,
+        0x00,
+    };
+    testable_client_key_exchange client_key_exchange(&session);
+    return_t ret = client_key_exchange.prepare_header(client_key_exchange_message.data(), client_key_exchange_message.size());
+    _test_case.test(ret, __FUNCTION__, "parse the ClientKeyExchange handshake header");
+
+    ret = client_key_exchange.run_postprocess(client_key_exchange_message.data(), client_key_exchange_message.size());
+    _test_case.assert(errorcode_t::not_found == ret, __FUNCTION__, "propagate missing key-exchange material instead of reporting success");
+    _test_case.assert(0 == session.get_session_status(), __FUNCTION__, "do not advance ClientKeyExchange status after key-schedule failure");
+
+    size_t internal_error_count = test_count_fatal_alert(session, from_client, tls_alertdesc_t::internal_error);
+    _test_case.assert(1 == internal_error_count, __FUNCTION__, "queue exactly one fatal internal_error for local key-schedule failure");
 }
 
 static void test_tls12_session_ticket_extension_wire_behavior() {
@@ -1389,8 +1520,8 @@ static void test_tls12_client_does_not_offer_non_ems_ticket() {
 
     _test_case.begin("TLS 1.2 client declines non-EMS ticket resumption");
 
-    auto store = std::make_shared<tls12_resumption_ticket_store>();
-    tls12_resumption_ticket ticket;
+    auto store = std::make_shared<tls1_2_resumption_ticket_store>();
+    tls1_2_resumption_ticket ticket;
     ticket.identity = binary_t{0x31, 0x32, 0x33, 0x34};
     ticket.master_secret = binary_t(48, 0x5a);
     ticket.lifetime = 3600;
@@ -1402,7 +1533,7 @@ static void test_tls12_client_does_not_offer_non_ems_ticket() {
     tls_session client;
     client.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_2);
-    client.set_tls12_resumption_ticket_store(store);
+    client.set_tls1_2_resumption_ticket_store(store);
     client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
 
     auto client_hello = new tls_handshake_client_hello(&client);
@@ -1426,7 +1557,7 @@ static void test_tls12_client_does_not_offer_non_ems_ticket() {
     if (nullptr != ticket_extension) {
         _test_case.assert(ticket_extension->get_ticket().empty(), __FUNCTION__, "send an empty ticket request instead of the non-EMS identity");
     }
-    _test_case.assert(0 == client.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "do not mark a non-EMS ticket as a resumption candidate");
+    _test_case.assert(0 == client.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "do not mark a non-EMS ticket as a resumption candidate");
     _test_case.assert(client.get_tls_protection().get_secrets().get(tls_secret_t::master).empty(), __FUNCTION__, "do not restore the non-EMS ticket Master Secret");
     _test_case.assert(client_hello->get_session_id().empty(), __FUNCTION__, "do not generate a resumption Session ID");
 }
@@ -1438,8 +1569,8 @@ static void test_tls12_client_suppresses_ticket_identity_in_mixed_version_offer(
 
     _test_case.begin("TLS 1.2 client suppresses cached ticket identity in mixed-version ClientHello");
 
-    auto store = std::make_shared<tls12_resumption_ticket_store>();
-    tls12_resumption_ticket ticket;
+    auto store = std::make_shared<tls1_2_resumption_ticket_store>();
+    tls1_2_resumption_ticket ticket;
     ticket.identity = binary_t{0x41, 0x42, 0x43, 0x44};
     ticket.master_secret = binary_t(48, 0x6b);
     ticket.lifetime = 3600;
@@ -1452,7 +1583,7 @@ static void test_tls12_client_suppresses_ticket_identity_in_mixed_version_offer(
     tls_session client;
     client.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_2);
-    client.set_tls12_resumption_ticket_store(store);
+    client.set_tls1_2_resumption_ticket_store(store);
     client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
 
     auto client_hello = new tls_handshake_client_hello(&client);
@@ -1484,7 +1615,7 @@ static void test_tls12_client_suppresses_ticket_identity_in_mixed_version_offer(
     auto ticket_extension = static_cast<tls_extension_session_ticket*>(client_hello->get_extensions().get(tls_extension_type_t::session_ticket));
     _test_case.assert((nullptr != ticket_extension) && ticket_extension->get_ticket().empty(), __FUNCTION__,
                       "clear a preconfigured TLS 1.2 ticket identity from the mixed-version offer");
-    _test_case.assert(0 == client.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "do not select a TLS 1.2 ticket for a mixed-version offer");
+    _test_case.assert(0 == client.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "do not select a TLS 1.2 ticket for a mixed-version offer");
     _test_case.assert(client.get_tls_protection().get_secrets().get(tls_secret_t::master).empty(), __FUNCTION__,
                       "do not restore the TLS 1.2 Master Secret for a mixed-version offer");
 
@@ -1513,8 +1644,8 @@ static void test_tls12_ticket_context_binding() {
 
     auto run_case = [](bool mismatch_sni, bool mismatch_alpn, bool mismatch_cipher, bool ticket_etm, bool offered_etm, uint16 ticket_cipher_suite, bool expect_candidate,
                        const char* description) {
-        auto store = std::make_shared<tls12_resumption_ticket_store>();
-        tls12_resumption_ticket ticket;
+        auto store = std::make_shared<tls1_2_resumption_ticket_store>();
+        tls1_2_resumption_ticket ticket;
         ticket.identity = binary_t{0x71, 0x72, 0x73, 0x74};
         ticket.master_secret = binary_t(48, 0x5a);
         ticket.server_name = {'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'};
@@ -1533,7 +1664,7 @@ static void test_tls12_ticket_context_binding() {
         server.set_type(session_type_t::tls);
         client.get_tls_protection().set_tls_version(tls1_2);
         server.get_tls_protection().set_tls_version(tls1_2);
-        server.set_tls12_resumption_ticket_store(store);
+        server.set_tls1_2_resumption_ticket_store(store);
 
         auto client_hello = new tls_handshake_client_hello(&client);
         client_hello->set_session_id(binary_t(32, 0x44));
@@ -1578,7 +1709,7 @@ static void test_tls12_ticket_context_binding() {
             return;
         }
 
-        _test_case.assert(expect_candidate == (1 == server.get_keyvalue().get(session_tls12_ticket_candidate)), __FUNCTION__,
+        _test_case.assert(expect_candidate == (1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate)), __FUNCTION__,
                           "accept a TLS 1.2 ticket only when all cached session bindings match");
         if (expect_candidate) {
             _test_case.assert(ticket.master_secret == server.get_tls_protection().get_secrets().get(tls_secret_t::master), __FUNCTION__,
@@ -1603,7 +1734,7 @@ static void test_tls12_ticket_context_binding() {
                 _test_case.test(ret, __FUNCTION__, "write ServerHello after rejecting a context-mismatched ticket");
                 if (errorcode_t::success == ret) {
                     _test_case.assert(server_hello->get_session_id().empty(), __FUNCTION__, "do not echo the offered Session ID when cached session context differs");
-                    _test_case.assert(0 == server.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__,
+                    _test_case.assert(0 == server.get_keyvalue().get(session_tls1_2_ticket_resumed), __FUNCTION__,
                                       "keep the server on the full-handshake path after declining the ticket");
                 }
             }
@@ -1628,8 +1759,8 @@ static void test_tls12_server_enforces_ticket_ems_transitions() {
     _test_case.begin("TLS 1.2 server enforces SessionTicket EMS transitions");
 
     auto run_case = [](bool original_ems, bool offered_ems, bool expect_abort, bool expect_candidate, const char* description) {
-        auto store = std::make_shared<tls12_resumption_ticket_store>();
-        tls12_resumption_ticket ticket;
+        auto store = std::make_shared<tls1_2_resumption_ticket_store>();
+        tls1_2_resumption_ticket ticket;
         ticket.identity = binary_t{0x61, 0x62, 0x63, static_cast<byte_t>(original_ems ? 0x01 : 0x00)};
         ticket.master_secret = binary_t(48, 0x5a);
         ticket.lifetime = 3600;
@@ -1645,7 +1776,7 @@ static void test_tls12_server_enforces_ticket_ems_transitions() {
         server.set_type(session_type_t::tls);
         client.get_tls_protection().set_tls_version(tls1_2);
         server.get_tls_protection().set_tls_version(tls1_2);
-        server.set_tls12_resumption_ticket_store(store);
+        server.set_tls1_2_resumption_ticket_store(store);
 
         auto client_hello = new tls_handshake_client_hello(&client);
         client_hello->set_session_id(binary_t(32, 0x44));
@@ -1681,7 +1812,7 @@ static void test_tls12_server_enforces_ticket_ems_transitions() {
             _test_case.test(ret, __FUNCTION__, description);
         }
 
-        _test_case.assert(expect_candidate == (1 == server.get_keyvalue().get(session_tls12_ticket_candidate)), __FUNCTION__,
+        _test_case.assert(expect_candidate == (1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate)), __FUNCTION__,
                           "only an EMS-to-EMS offer may become a TLS 1.2 resumption candidate");
         if (expect_candidate) {
             _test_case.assert(ticket.master_secret == server.get_tls_protection().get_secrets().get(tls_secret_t::master), __FUNCTION__,
@@ -1728,8 +1859,8 @@ static void test_tls12_client_rejects_server_ems_mismatch() {
 
     _test_case.begin("TLS 1.2 client aborts when resumed ServerHello changes EMS state");
 
-    auto store = std::make_shared<tls12_resumption_ticket_store>();
-    tls12_resumption_ticket ticket;
+    auto store = std::make_shared<tls1_2_resumption_ticket_store>();
+    tls1_2_resumption_ticket ticket;
     ticket.identity = binary_t{0x71, 0x72, 0x73, 0x74};
     ticket.master_secret = binary_t(48, 0x5a);
     ticket.lifetime = 3600;
@@ -1745,8 +1876,8 @@ static void test_tls12_client_rejects_server_ems_mismatch() {
     server.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_2);
     server.get_tls_protection().set_tls_version(tls1_2);
-    client.set_tls12_resumption_ticket_store(store);
-    server.set_tls12_resumption_ticket_store(store);
+    client.set_tls1_2_resumption_ticket_store(store);
+    server.set_tls1_2_resumption_ticket_store(store);
 
     auto client_hello = new tls_handshake_client_hello(&client);
     client_hello->get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, client_hello, nullptr);
@@ -1773,14 +1904,14 @@ static void test_tls12_client_rejects_server_ems_mismatch() {
         return;
     }
     server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-    _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "retain the client's confirmed EMS ticket candidate");
-    _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "recognize the same ticket on the server");
+    _test_case.assert(1 == client.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "retain the client's confirmed EMS ticket candidate");
+    _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "recognize the same ticket on the server");
 
     // Simulate a non-conforming server that echoes the resumption Session ID
     // but omits EMS from ServerHello. Model the server as having incorrectly
     // classified the ticket as non-EMS so its own writer emits the echo.
     server.get_keyvalue().set(session_extended_master_secret, 0);
-    server.get_keyvalue().set(session_tls12_ticket_ems, 0);
+    server.get_keyvalue().set(session_tls1_2_ticket_ems, 0);
     auto server_hello = new tls_handshake_server_hello(&server);
     server_hello->set_version(tls1_2);
     ret = server_hello->set_cipher_suite(ticket.cipher_suite);
@@ -1801,8 +1932,8 @@ static void test_tls12_client_rejects_server_ems_mismatch() {
     size_t server_hello_pos = 0;
     ret = incoming_server_hello.read(from_server, server_hello_wire.data(), server_hello_wire.size(), server_hello_pos);
     _test_case.assert(errorcode_t::handshake_failure == ret, __FUNCTION__, "abort instead of silently falling back when resumed ServerHello omits EMS");
-    _test_case.assert(0 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__, "do not mark the mismatched EMS session as resumed");
-    _test_case.assert(0 == client.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "retire the incompatible ticket candidate");
+    _test_case.assert(0 == client.get_keyvalue().get(session_tls1_2_ticket_resumed), __FUNCTION__, "do not mark the mismatched EMS session as resumed");
+    _test_case.assert(0 == client.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "retire the incompatible ticket candidate");
     _test_case.assert(client.get_tls_protection().get_secrets().get(tls_secret_t::master).empty(), __FUNCTION__,
                       "clear the cached Master Secret after the fatal mismatch");
 
@@ -2047,11 +2178,11 @@ static void test_tls12_session_id_length_bounds() {
 }
 
 struct tls12_abbreviated_ticket_test_context {
-    std::shared_ptr<tls12_resumption_ticket_store> client_store;
-    std::shared_ptr<tls12_resumption_ticket_store> server_store;
-    tls12_resumption_ticket ticket;
+    std::shared_ptr<tls1_2_resumption_ticket_store> client_store;
+    std::shared_ptr<tls1_2_resumption_ticket_store> server_store;
+    tls1_2_resumption_ticket ticket;
     binary_t renewal_identity;
-    tls12_resumption_ticket client_renewal;
+    tls1_2_resumption_ticket client_renewal;
 };
 
 static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function_name, tls12_abbreviated_ticket_test_context& context) {
@@ -2077,9 +2208,9 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     _test_case.assert((nullptr != empty_ticket_offer) && empty_ticket_offer->get_ticket().empty(), function_name,
                       "request ticket issuance when the client has no cached identity");
 
-    context.client_store = std::make_shared<tls12_resumption_ticket_store>();
+    context.client_store = std::make_shared<tls1_2_resumption_ticket_store>();
     auto& client_store = context.client_store;
-    context.server_store = std::make_shared<tls12_resumption_ticket_store>();
+    context.server_store = std::make_shared<tls1_2_resumption_ticket_store>();
     auto& server_store = context.server_store;
     auto& ticket = context.ticket;
     ticket.identity = binary_t{0x91, 0x92, 0x93, 0x94};
@@ -2096,13 +2227,13 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     server.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_2);
     server.get_tls_protection().set_tls_version(tls1_2);
-    client.set_tls12_resumption_ticket_store(client_store);
-    server.set_tls12_resumption_ticket_store(server_store);
-    client.stage_tls12_resumption_ticket(ticket);
-    server.stage_tls12_resumption_ticket(ticket);
-    bool client_ticket_confirmed = client.confirm_tls12_resumption_ticket(ticket.identity);
+    client.set_tls1_2_resumption_ticket_store(client_store);
+    server.set_tls1_2_resumption_ticket_store(server_store);
+    client.stage_tls1_2_resumption_ticket(ticket);
+    server.stage_tls1_2_resumption_ticket(ticket);
+    bool client_ticket_confirmed = client.confirm_tls1_2_resumption_ticket(ticket.identity);
     _test_case.assert(client_ticket_confirmed, function_name, "activate the client-side cached ticket");
-    bool server_ticket_confirmed = server.confirm_tls12_resumption_ticket(ticket.identity);
+    bool server_ticket_confirmed = server.confirm_tls1_2_resumption_ticket(ticket.identity);
     _test_case.assert(server_ticket_confirmed, function_name, "activate the server-side cached ticket");
 
     auto client_hello = new tls_handshake_client_hello(&client);
@@ -2122,7 +2253,7 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     _test_case.assert((nullptr != offered_ticket) && (ticket.identity == offered_ticket->get_ticket()), function_name,
                       "automatically offer the cached opaque ticket identity");
     _test_case.assert((false == client_hello->get_session_id().empty()), function_name, "generate a non-empty Session ID for RFC 5077 resumption");
-    _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_candidate), function_name, "retain the local ticket candidate");
+    _test_case.assert(1 == client.get_keyvalue().get(session_tls1_2_ticket_candidate), function_name, "retain the local ticket candidate");
 
     tls_record_handshake incoming_client_hello(&server);
     size_t client_hello_pos = 0;
@@ -2133,7 +2264,7 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     }
     _test_case.assert(client_hello_wire.size() == client_hello_pos, function_name, "consume the complete ticket-bearing ClientHello");
     server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-    _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_candidate), function_name, "validate the server-side ticket candidate");
+    _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate), function_name, "validate the server-side ticket candidate");
     _test_case.assert(ticket.master_secret == server.get_tls_protection().get_secrets().get(tls_secret_t::master), function_name,
                       "restore the cached Master Secret on the server");
 
@@ -2163,10 +2294,10 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
         return false;
     }
     _test_case.assert(server_hello_wire.size() == server_hello_pos, function_name, "consume the complete ServerHello");
-    _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_resumed), function_name, "recognize the abbreviated handshake on the client");
-    _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_resumed), function_name, "commit ticket acceptance on the server");
-    _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_acknowledged), function_name, "observe the separate ticket-issuance acknowledgement");
-    _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_acknowledged), function_name, "record the ticket-issuance acknowledgement on the server");
+    _test_case.assert(1 == client.get_keyvalue().get(session_tls1_2_ticket_resumed), function_name, "recognize the abbreviated handshake on the client");
+    _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_resumed), function_name, "commit ticket acceptance on the server");
+    _test_case.assert(1 == client.get_keyvalue().get(session_tls1_2_ticket_acknowledged), function_name, "observe the separate ticket-issuance acknowledgement");
+    _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_acknowledged), function_name, "record the ticket-issuance acknowledgement on the server");
     _test_case.assert(ticket.master_secret == client.get_tls_protection().get_secrets().get(tls_secret_t::master), function_name,
                       "retain the cached Master Secret on the client");
     _test_case.assert(client.get_tls_protection().get_secrets().get(tls_secret_t::client_key) == server.get_tls_protection().get_secrets().get(tls_secret_t::client_key),
@@ -2181,7 +2312,7 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     if (errorcode_t::success != ret) {
         return false;
     }
-    _test_case.assert(1 == server.get_pending_tls12_resumption_tickets().size(), function_name, "keep the server's replacement ticket pending");
+    _test_case.assert(1 == server.get_pending_tls1_2_resumption_tickets().size(), function_name, "keep the server's replacement ticket pending");
 
     tls_handshake_new_session_ticket incoming_ticket(&client);
     size_t ticket_pos = 0;
@@ -2192,8 +2323,8 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     }
     _test_case.assert(renewal_identity == client.get_tls_protection().get_secrets().get(tls_secret_t::new_session_ticket_pending), function_name,
                       "keep the replacement ticket pending until Server Finished authentication");
-    tls12_resumption_ticket client_ticket_before_finished;
-    bool client_ticket_before_finished_found_at_2055 = client.find_tls12_resumption_ticket(renewal_identity, client_ticket_before_finished);
+    tls1_2_resumption_ticket client_ticket_before_finished;
+    bool client_ticket_before_finished_found_at_2055 = client.find_tls1_2_resumption_ticket(renewal_identity, client_ticket_before_finished);
     _test_case.assert(false == client_ticket_before_finished_found_at_2055, function_name,
                       "do not expose the client's replacement ticket before Server Finished authentication");
 
@@ -2219,9 +2350,9 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     if (errorcode_t::success != ret) {
         return false;
     }
-    tls12_resumption_ticket not_yet_confirmed;
-    _test_case.assert(1 == server.get_pending_tls12_resumption_tickets().size(), function_name, "keep the server's renewed ticket pending after its own Finished");
-    bool not_yet_confirmed_found_at_2082 = server.find_tls12_resumption_ticket(renewal_identity, not_yet_confirmed);
+    tls1_2_resumption_ticket not_yet_confirmed;
+    _test_case.assert(1 == server.get_pending_tls1_2_resumption_tickets().size(), function_name, "keep the server's renewed ticket pending after its own Finished");
+    bool not_yet_confirmed_found_at_2082 = server.find_tls1_2_resumption_ticket(renewal_identity, not_yet_confirmed);
     _test_case.assert(false == not_yet_confirmed_found_at_2082, function_name, "do not expose the server's renewed ticket before Client Finished authentication");
     tls_records incoming_server_finished;
     ret = incoming_server_finished.read(&client, from_server, server_finished_wire);
@@ -2235,7 +2366,7 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     _test_case.assert(client.get_tls_protection().get_secrets().get(tls_secret_t::new_session_ticket_pending).empty(), function_name,
                       "clear pending replacement ticket bytes");
     auto& client_renewal = context.client_renewal;
-    bool client_renewal_found_at_2096 = client.find_tls12_resumption_ticket(renewal_identity, client_renewal);
+    bool client_renewal_found_at_2096 = client.find_tls1_2_resumption_ticket(renewal_identity, client_renewal);
     _test_case.assert(client_renewal_found_at_2096, function_name, "publish the replacement ticket in the client cache after Server Finished");
 
     tls_record_change_cipher_spec client_ccs(&client);
@@ -2266,10 +2397,10 @@ static bool test_tls12_abbreviated_ticket_initial_handshake(const char* function
     if (errorcode_t::success != ret) {
         return false;
     }
-    _test_case.assert(0 == server.get_pending_tls12_resumption_tickets().size(), function_name,
+    _test_case.assert(0 == server.get_pending_tls1_2_resumption_tickets().size(), function_name,
                       "activate the server's replacement ticket after Client Finished authentication");
-    tls12_resumption_ticket cached_renewal;
-    bool cached_renewal_found_at_2130 = server.find_tls12_resumption_ticket(renewal_identity, cached_renewal);
+    tls1_2_resumption_ticket cached_renewal;
+    bool cached_renewal_found_at_2130 = server.find_tls1_2_resumption_ticket(renewal_identity, cached_renewal);
     _test_case.assert(cached_renewal_found_at_2130, function_name, "publish the replacement ticket in the shared server cache");
 
     return true;
@@ -2286,7 +2417,7 @@ static bool test_tls12_abbreviated_ticket_renewed_resumption(const char* functio
     // Reuse the renewed identity from a separate connection. The client-side
     // cache was populated by authenticated Server Finished above; the server
     // cache was populated only after authenticated Client Finished.
-    auto renewed_client_store = std::make_shared<tls12_resumption_ticket_store>();
+    auto renewed_client_store = std::make_shared<tls1_2_resumption_ticket_store>();
     renewed_client_store->store(client_renewal);
     tls_session renewed_client;
     tls_session renewed_server;
@@ -2294,8 +2425,8 @@ static bool test_tls12_abbreviated_ticket_renewed_resumption(const char* functio
     renewed_server.set_type(session_type_t::tls);
     renewed_client.get_tls_protection().set_tls_version(tls1_2);
     renewed_server.get_tls_protection().set_tls_version(tls1_2);
-    renewed_client.set_tls12_resumption_ticket_store(renewed_client_store);
-    renewed_server.set_tls12_resumption_ticket_store(server_store);
+    renewed_client.set_tls1_2_resumption_ticket_store(renewed_client_store);
+    renewed_server.set_tls1_2_resumption_ticket_store(server_store);
     renewed_client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
 
     auto renewed_client_hello = new tls_handshake_client_hello(&renewed_client);
@@ -2322,7 +2453,7 @@ static bool test_tls12_abbreviated_ticket_renewed_resumption(const char* functio
         return false;
     }
     renewed_server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-    _test_case.assert(1 == renewed_server.get_keyvalue().get(session_tls12_ticket_candidate), function_name, "accept the renewed ticket from the shared server cache");
+    _test_case.assert(1 == renewed_server.get_keyvalue().get(session_tls1_2_ticket_candidate), function_name, "accept the renewed ticket from the shared server cache");
     _test_case.assert(client_renewal.master_secret == renewed_server.get_tls_protection().get_secrets().get(tls_secret_t::master), function_name,
                       "restore the renewed ticket's original Master Secret");
 
@@ -2347,7 +2478,7 @@ static bool test_tls12_abbreviated_ticket_renewed_resumption(const char* functio
     if (errorcode_t::success != ret) {
         return false;
     }
-    _test_case.assert(1 == renewed_client.get_keyvalue().get(session_tls12_ticket_resumed), function_name, "resume the subsequent connection with the renewed identity");
+    _test_case.assert(1 == renewed_client.get_keyvalue().get(session_tls1_2_ticket_resumed), function_name, "resume the subsequent connection with the renewed identity");
     _test_case.assert(client_renewal.master_secret == renewed_client.get_tls_protection().get_secrets().get(tls_secret_t::master), function_name,
                       "restore the renewed Master Secret on the client");
     _test_case.assert(renewed_client.get_tls_protection().get_secrets().get(tls_secret_t::client_key) ==
@@ -2375,7 +2506,7 @@ static bool test_tls12_abbreviated_ticket_unknown_identity_fallback(const char* 
     fallback_server.set_type(session_type_t::tls);
     fallback_client.get_tls_protection().set_tls_version(tls1_2);
     fallback_server.get_tls_protection().set_tls_version(tls1_2);
-    fallback_client.set_tls12_resumption_ticket_store(client_store);
+    fallback_client.set_tls1_2_resumption_ticket_store(client_store);
 
     auto fallback_client_hello = new tls_handshake_client_hello(&fallback_client);
     fallback_client_hello->get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, fallback_client_hello, nullptr);
@@ -2398,7 +2529,7 @@ static bool test_tls12_abbreviated_ticket_unknown_identity_fallback(const char* 
         return false;
     }
     fallback_server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-    _test_case.assert(0 == fallback_server.get_keyvalue().get(session_tls12_ticket_candidate), function_name, "decline a ticket identity absent from the server cache");
+    _test_case.assert(0 == fallback_server.get_keyvalue().get(session_tls1_2_ticket_candidate), function_name, "decline a ticket identity absent from the server cache");
 
     auto fallback_server_hello = new tls_handshake_server_hello(&fallback_server);
     fallback_server_hello->set_version(tls1_2);
@@ -2419,9 +2550,9 @@ static bool test_tls12_abbreviated_ticket_unknown_identity_fallback(const char* 
     size_t fallback_server_hello_pos = 0;
     ret = fallback_incoming_server_hello.read(from_server, fallback_server_hello_wire.data(), fallback_server_hello_wire.size(), fallback_server_hello_pos);
     _test_case.test(ret, function_name, "read ServerHello and fall back from the unknown ticket");
-    _test_case.assert(0 == fallback_client.get_keyvalue().get(session_tls12_ticket_resumed), function_name,
+    _test_case.assert(0 == fallback_client.get_keyvalue().get(session_tls1_2_ticket_resumed), function_name,
                       "keep the client on the full-handshake path after ticket rejection");
-    _test_case.assert(0 == fallback_client.get_keyvalue().get(session_tls12_ticket_acknowledged), function_name,
+    _test_case.assert(0 == fallback_client.get_keyvalue().get(session_tls1_2_ticket_acknowledged), function_name,
                       "do not mistake ticket rejection for a ticket-issuance acknowledgement");
     _test_case.assert(fallback_client.get_tls_protection().get_secrets().get(tls_secret_t::master).empty(), function_name,
                       "discard the cached Master Secret after ticket rejection");
@@ -2436,10 +2567,10 @@ static bool test_tls12_abbreviated_ticket_expired_server_identity(const char* fu
     return_t ret = errorcode_t::success;
     auto& client_store = context.client_store;
     auto& ticket = context.ticket;
-    tls12_resumption_ticket expired_ticket = ticket;
+    tls1_2_resumption_ticket expired_ticket = ticket;
     expired_ticket.timestamp = 1;
     expired_ticket.lifetime = 1;
-    auto expired_server_store = std::make_shared<tls12_resumption_ticket_store>();
+    auto expired_server_store = std::make_shared<tls1_2_resumption_ticket_store>();
     expired_server_store->store(expired_ticket);
 
     tls_session expired_client;
@@ -2448,9 +2579,9 @@ static bool test_tls12_abbreviated_ticket_expired_server_identity(const char* fu
     expired_server.set_type(session_type_t::tls);
     expired_client.get_tls_protection().set_tls_version(tls1_2);
     expired_server.get_tls_protection().set_tls_version(tls1_2);
-    expired_client.set_tls12_resumption_ticket_store(client_store);
+    expired_client.set_tls1_2_resumption_ticket_store(client_store);
     expired_client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
-    expired_server.set_tls12_resumption_ticket_store(expired_server_store);
+    expired_server.set_tls1_2_resumption_ticket_store(expired_server_store);
 
     auto expired_client_hello = new tls_handshake_client_hello(&expired_client);
     expired_client_hello->get_extensions().add(tls_extension_type_t::extended_master_secret, from_client, expired_client_hello, nullptr);
@@ -2472,9 +2603,9 @@ static bool test_tls12_abbreviated_ticket_expired_server_identity(const char* fu
     if (errorcode_t::success != ret) {
         return false;
     }
-    _test_case.assert(0 == expired_server.get_keyvalue().get(session_tls12_ticket_candidate), function_name, "decline an expired TLS 1.2 ticket");
-    tls12_resumption_ticket evicted_ticket;
-    bool evicted_ticket_found_at_2302 = expired_server.find_tls12_resumption_ticket(expired_ticket.identity, evicted_ticket);
+    _test_case.assert(0 == expired_server.get_keyvalue().get(session_tls1_2_ticket_candidate), function_name, "decline an expired TLS 1.2 ticket");
+    tls1_2_resumption_ticket evicted_ticket;
+    bool evicted_ticket_found_at_2302 = expired_server.find_tls1_2_resumption_ticket(expired_ticket.identity, evicted_ticket);
     _test_case.assert(false == evicted_ticket_found_at_2302, function_name, "evict an expired TLS 1.2 ticket from the shared server-side store");
 
     return true;
@@ -2514,11 +2645,11 @@ static void test_tls12_composer_abbreviated_handshake_records() {
     // notification must not cause a second Server Finished.
     _test_case.begin("TLS 1.2 composer emits abbreviated SessionTicket record sequence");
 
-    auto run_case = [](bool issue_ticket, bool defer_ticket_until_after_server_hello) -> void {
-        auto client_store = std::make_shared<tls12_resumption_ticket_store>();
-        auto server_store = std::make_shared<tls12_resumption_ticket_store>();
+    auto run_case = [](bool issue_ticket, bool defer_ticket_until_after_server_hello, bool fail_first_send) -> void {
+        auto client_store = std::make_shared<tls1_2_resumption_ticket_store>();
+        auto server_store = std::make_shared<tls1_2_resumption_ticket_store>();
 
-        tls12_resumption_ticket ticket;
+        tls1_2_resumption_ticket ticket;
         ticket.identity = binary_t{0x91, 0x92, 0x93, 0x94};
         ticket.master_secret = binary_t(48, 0x5a);
         ticket.lifetime = 3600;
@@ -2533,14 +2664,14 @@ static void test_tls12_composer_abbreviated_handshake_records() {
         server.set_type(session_type_t::tls);
         client.get_tls_protection().set_tls_version(tls1_2);
         server.get_tls_protection().set_tls_version(tls1_2);
-        client.set_tls12_resumption_ticket_store(client_store);
-        server.set_tls12_resumption_ticket_store(server_store);
+        client.set_tls1_2_resumption_ticket_store(client_store);
+        server.set_tls1_2_resumption_ticket_store(server_store);
         client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
-        client.stage_tls12_resumption_ticket(ticket);
-        server.stage_tls12_resumption_ticket(ticket);
-        bool client_ticket_confirmed = client.confirm_tls12_resumption_ticket(ticket.identity);
+        client.stage_tls1_2_resumption_ticket(ticket);
+        server.stage_tls1_2_resumption_ticket(ticket);
+        bool client_ticket_confirmed = client.confirm_tls1_2_resumption_ticket(ticket.identity);
         _test_case.assert(client_ticket_confirmed, __FUNCTION__, "activate the client-side ticket for composer coverage");
-        bool server_ticket_confirmed = server.confirm_tls12_resumption_ticket(ticket.identity);
+        bool server_ticket_confirmed = server.confirm_tls1_2_resumption_ticket(ticket.identity);
         _test_case.assert(server_ticket_confirmed, __FUNCTION__, "activate the server-side ticket for composer coverage");
 
         auto client_hello = new tls_handshake_client_hello(&client);
@@ -2569,20 +2700,20 @@ static void test_tls12_composer_abbreviated_handshake_records() {
             return;
         }
         server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-        _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__,
+        _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__,
                           "retain the validated ticket candidate before composer negotiation");
         const auto& server_secrets = server.get_tls_protection().get_secrets();
         const auto& server_ticket_state = server.get_keyvalue();
-        _test_case.assert(1 == server_ticket_state.get(session_tls12_ticket_identity_present), __FUNCTION__, "retain the non-empty ticket identity from ClientHello");
+        _test_case.assert(1 == server_ticket_state.get(session_tls1_2_ticket_identity_present), __FUNCTION__, "retain the non-empty ticket identity from ClientHello");
         _test_case.assert(false == server_secrets.get(tls_secret_t::session_id).empty(), __FUNCTION__,
                           "retain the non-empty ClientHello Session ID required for RFC 5077 resumption");
-        _test_case.assert(ticket.cipher_suite == server_ticket_state.get(session_tls12_ticket_cipher_suite), __FUNCTION__,
+        _test_case.assert(ticket.cipher_suite == server_ticket_state.get(session_tls1_2_ticket_cipher_suite), __FUNCTION__,
                           "retain the ticket cipher suite for ServerHello negotiation");
-        _test_case.assert(server_secrets.get(tls_secret_t::tls12_resumption_alpn) == server_secrets.get(tls_secret_t::alpn), __FUNCTION__,
+        _test_case.assert(server_secrets.get(tls_secret_t::tls1_2_resumption_alpn) == server_secrets.get(tls_secret_t::alpn), __FUNCTION__,
                           "match the ticket ALPN state against the negotiated ALPN state");
-        _test_case.assert(ticket.extended_master_secret == (0 != server_ticket_state.get(session_tls12_ticket_ems)), __FUNCTION__,
+        _test_case.assert(ticket.extended_master_secret == (0 != server_ticket_state.get(session_tls1_2_ticket_ems)), __FUNCTION__,
                           "retain the ticket Extended Master Secret setting");
-        _test_case.assert(ticket.encrypt_then_mac == (0 != server_ticket_state.get(session_tls12_ticket_etm)), __FUNCTION__,
+        _test_case.assert(ticket.encrypt_then_mac == (0 != server_ticket_state.get(session_tls1_2_ticket_etm)), __FUNCTION__,
                           "retain the ticket Encrypt-then-MAC setting");
         if (issue_ticket && (false == defer_ticket_until_after_server_hello)) {
             server.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, binary_t{0xa1, 0xa2, 0xa3, 0xa4});
@@ -2594,7 +2725,7 @@ static void test_tls12_composer_abbreviated_handshake_records() {
         composer.set_maxver(tls1_2);
 
         std::vector<binary_t> chunks;
-        auto capture = [&](tls_session*, binary_t& wire) {
+        auto capture = [&](tls_session*, binary_t& wire) -> return_t {
             chunks.push_back(wire);
             // A ticket made available only after ServerHello cannot be
             // acknowledged in that ServerHello. The composer must therefore
@@ -2603,19 +2734,28 @@ static void test_tls12_composer_abbreviated_handshake_records() {
                 server.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, binary_t{0xa1, 0xa2, 0xa3, 0xa4});
                 server.get_session_info(from_server).get_keyvalue().set(session_ticket_lifetime, 1800);
             }
+            if (fail_first_send && (1 == chunks.size())) {
+                return errorcode_t::send_failure;
+            }
+            return errorcode_t::success;
         };
 
         ret = composer.session_status_changed(session_status_client_hello, from_server, 0, capture);
+        if (fail_first_send) {
+            _test_case.assert(errorcode_t::send_failure == ret, __FUNCTION__, "propagate a failed ServerHello transport callback");
+            _test_case.assert(1 == chunks.size(), __FUNCTION__, "do not append the remaining server flight after a failed first send");
+            return;
+        }
         _test_case.test(ret, __FUNCTION__, "compose the ServerHello and abbreviated server flight");
         if (errorcode_t::success != ret) {
             _test_case.assert(0 != chunks.size(), __FUNCTION__, "capture the ServerHello callback before the composer failure");
-            _test_case.assert(0 == server.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__,
+            _test_case.assert(0 == server.get_keyvalue().get(session_tls1_2_ticket_resumed), __FUNCTION__,
                               "identify whether ticket resumption was rejected before the composer failure");
             // The composer drains queued fatal alerts while serializing the
             // alert record, so querying the session alert queue here is too late.
             return;
         }
-        _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__, "select abbreviated resumption in the composed ServerHello");
+        _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_resumed), __FUNCTION__, "select abbreviated resumption in the composed ServerHello");
         _test_case.assert(2 == chunks.size(), __FUNCTION__, "emit ServerHello and the remaining abbreviated flight separately");
         if (2 != chunks.size()) {
             return;
@@ -2660,7 +2800,7 @@ static void test_tls12_composer_abbreviated_handshake_records() {
         _test_case.assert(flight_records_valid, __FUNCTION__, "parse complete TLS record boundaries in the abbreviated server flight");
 
         bool expect_ticket = issue_ticket && (false == defer_ticket_until_after_server_hello);
-        _test_case.assert((expect_ticket ? 1 : 0) == server.get_keyvalue().get(session_tls12_ticket_acknowledged), __FUNCTION__,
+        _test_case.assert((expect_ticket ? 1 : 0) == server.get_keyvalue().get(session_tls1_2_ticket_acknowledged), __FUNCTION__,
                           "record whether ServerHello acknowledged the SessionTicket extension");
         const std::vector<uint8> expected_types = expect_ticket ? std::vector<uint8>{0x16, 0x14, 0x16} : std::vector<uint8>{0x14, 0x16};
         _test_case.assert(expected_types == flight_types, __FUNCTION__, "emit optional NewSessionTicket before CCS and protected Server Finished");
@@ -2691,9 +2831,10 @@ static void test_tls12_composer_abbreviated_handshake_records() {
         _test_case.assert(callback_count == chunks.size(), __FUNCTION__, "do not compose a duplicate Server Finished after Client Finished in abbreviated resumption");
     };
 
-    run_case(false, false);  // no renewal ticket configured
-    run_case(true, false);   // renewal ticket acknowledged
-    run_case(true, true);    // renewal ticket appears after ServerHello and was not acknowledged
+    run_case(false, false, false);  // no renewal ticket configured
+    run_case(true, false, false);   // renewal ticket acknowledged
+    run_case(true, true, false);    // renewal ticket appears after ServerHello and was not acknowledged
+    run_case(false, false, true);   // first ServerHello transport callback fails
 }
 
 class tls12_invalid_finished_handshake : public tls_handshake {
@@ -2717,10 +2858,10 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_server_fin
     // remain pending until Server Finished has been authenticated.
     _test_case.begin("TLS 1.2 abbreviated renewal is discarded after invalid Server Finished");
 
-    auto client_store = std::make_shared<tls12_resumption_ticket_store>();
-    auto server_store = std::make_shared<tls12_resumption_ticket_store>();
+    auto client_store = std::make_shared<tls1_2_resumption_ticket_store>();
+    auto server_store = std::make_shared<tls1_2_resumption_ticket_store>();
 
-    tls12_resumption_ticket original_ticket;
+    tls1_2_resumption_ticket original_ticket;
     original_ticket.identity = binary_t{0x91, 0x92, 0x93, 0x94};
     original_ticket.master_secret = binary_t(48, 0x5a);
     original_ticket.lifetime = 3600;
@@ -2735,13 +2876,13 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_server_fin
     server.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_2);
     server.get_tls_protection().set_tls_version(tls1_2);
-    client.set_tls12_resumption_ticket_store(client_store);
-    server.set_tls12_resumption_ticket_store(server_store);
-    client.stage_tls12_resumption_ticket(original_ticket);
-    server.stage_tls12_resumption_ticket(original_ticket);
-    bool client_original_ticket_confirmed = client.confirm_tls12_resumption_ticket(original_ticket.identity);
+    client.set_tls1_2_resumption_ticket_store(client_store);
+    server.set_tls1_2_resumption_ticket_store(server_store);
+    client.stage_tls1_2_resumption_ticket(original_ticket);
+    server.stage_tls1_2_resumption_ticket(original_ticket);
+    bool client_original_ticket_confirmed = client.confirm_tls1_2_resumption_ticket(original_ticket.identity);
     _test_case.assert(client_original_ticket_confirmed, __FUNCTION__, "activate the client's original ticket");
-    bool server_original_ticket_confirmed = server.confirm_tls12_resumption_ticket(original_ticket.identity);
+    bool server_original_ticket_confirmed = server.confirm_tls1_2_resumption_ticket(original_ticket.identity);
     _test_case.assert(server_original_ticket_confirmed, __FUNCTION__, "activate the server's original ticket");
 
     client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
@@ -2771,7 +2912,7 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_server_fin
         return;
     }
     server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-    _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "select the original ticket for abbreviated resumption");
+    _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "select the original ticket for abbreviated resumption");
 
     auto server_hello = new tls_handshake_server_hello(&server);
     server_hello->set_version(tls1_2);
@@ -2794,7 +2935,7 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_server_fin
     if (errorcode_t::success != ret) {
         return;
     }
-    _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__, "recognize abbreviated resumption on the client");
+    _test_case.assert(1 == client.get_keyvalue().get(session_tls1_2_ticket_resumed), __FUNCTION__, "recognize abbreviated resumption on the client");
 
     const binary_t renewal_identity{0xa1, 0xa2, 0xa3, 0xa4};
     server.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, renewal_identity);
@@ -2854,11 +2995,11 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_server_fin
                       "clear pending replacement lifetime after Server Finished authentication fails");
     _test_case.assert(0 == pending_state.get(session_ticket_pending_timestamp), __FUNCTION__,
                       "clear pending replacement timestamp after Server Finished authentication fails");
-    tls12_resumption_ticket unconfirmed_renewal;
-    bool unconfirmed_renewal_found_at_2650 = client.find_tls12_resumption_ticket(renewal_identity, unconfirmed_renewal);
+    tls1_2_resumption_ticket unconfirmed_renewal;
+    bool unconfirmed_renewal_found_at_2650 = client.find_tls1_2_resumption_ticket(renewal_identity, unconfirmed_renewal);
     _test_case.assert(false == unconfirmed_renewal_found_at_2650, __FUNCTION__, "do not publish the unauthenticated replacement ticket");
-    tls12_resumption_ticket retained_original;
-    bool retained_original_found_at_2653 = client.find_tls12_resumption_ticket(original_ticket.identity, retained_original);
+    tls1_2_resumption_ticket retained_original;
+    bool retained_original_found_at_2653 = client.find_tls1_2_resumption_ticket(original_ticket.identity, retained_original);
     _test_case.assert(retained_original_found_at_2653, __FUNCTION__, "preserve the previously confirmed client ticket");
     if (retained_original_found_at_2653) {
         _test_case.assert(original_ticket.master_secret == retained_original.master_secret, __FUNCTION__,
@@ -2878,10 +3019,10 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     // handshake's Client Finished has been authenticated.
     _test_case.begin("TLS 1.2 abbreviated renewal is discarded after invalid Client Finished");
 
-    auto client_store = std::make_shared<tls12_resumption_ticket_store>();
-    auto server_store = std::make_shared<tls12_resumption_ticket_store>();
+    auto client_store = std::make_shared<tls1_2_resumption_ticket_store>();
+    auto server_store = std::make_shared<tls1_2_resumption_ticket_store>();
 
-    tls12_resumption_ticket original_ticket;
+    tls1_2_resumption_ticket original_ticket;
     original_ticket.identity = binary_t{0x91, 0x92, 0x93, 0x94};
     original_ticket.master_secret = binary_t(48, 0x5a);
     original_ticket.lifetime = 3600;
@@ -2896,13 +3037,13 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     server.set_type(session_type_t::tls);
     client.get_tls_protection().set_tls_version(tls1_2);
     server.get_tls_protection().set_tls_version(tls1_2);
-    client.set_tls12_resumption_ticket_store(client_store);
-    server.set_tls12_resumption_ticket_store(server_store);
-    client.stage_tls12_resumption_ticket(original_ticket);
-    server.stage_tls12_resumption_ticket(original_ticket);
-    bool client_original_ticket_confirmed = client.confirm_tls12_resumption_ticket(original_ticket.identity);
+    client.set_tls1_2_resumption_ticket_store(client_store);
+    server.set_tls1_2_resumption_ticket_store(server_store);
+    client.stage_tls1_2_resumption_ticket(original_ticket);
+    server.stage_tls1_2_resumption_ticket(original_ticket);
+    bool client_original_ticket_confirmed = client.confirm_tls1_2_resumption_ticket(original_ticket.identity);
     _test_case.assert(client_original_ticket_confirmed, __FUNCTION__, "activate the client's original ticket");
-    bool server_original_ticket_confirmed = server.confirm_tls12_resumption_ticket(original_ticket.identity);
+    bool server_original_ticket_confirmed = server.confirm_tls1_2_resumption_ticket(original_ticket.identity);
     _test_case.assert(server_original_ticket_confirmed, __FUNCTION__, "retain the server's original confirmed ticket");
 
     client.get_keyvalue().set(session_client_session_ticket_offer_enabled, 1);
@@ -2927,7 +3068,7 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
         return;
     }
     server.get_session_info(from_server).set_status(tls_handshake_type_t::client_hello);
-    _test_case.assert(1 == server.get_keyvalue().get(session_tls12_ticket_candidate), __FUNCTION__, "select the original ticket for abbreviated resumption");
+    _test_case.assert(1 == server.get_keyvalue().get(session_tls1_2_ticket_candidate), __FUNCTION__, "select the original ticket for abbreviated resumption");
 
     const binary_t renewal_identity{0xa1, 0xa2, 0xa3, 0xa4};
     server.get_tls_protection().get_secrets().assign(tls_secret_t::new_session_ticket, renewal_identity);
@@ -2954,7 +3095,7 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     if (errorcode_t::success != ret) {
         return;
     }
-    _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__, "recognize abbreviated resumption on the client");
+    _test_case.assert(1 == client.get_keyvalue().get(session_tls1_2_ticket_resumed), __FUNCTION__, "recognize abbreviated resumption on the client");
 
     tls_handshake_new_session_ticket outgoing_ticket(&server);
     binary_t ticket_wire;
@@ -2963,7 +3104,7 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     if (errorcode_t::success != ret) {
         return;
     }
-    _test_case.assert(1 == server.get_pending_tls12_resumption_tickets().size(), __FUNCTION__, "keep the server's replacement ticket pending");
+    _test_case.assert(1 == server.get_pending_tls1_2_resumption_tickets().size(), __FUNCTION__, "keep the server's replacement ticket pending");
 
     tls_handshake_new_session_ticket incoming_ticket(&client);
     size_t ticket_pos = 0;
@@ -3001,9 +3142,9 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     if (errorcode_t::success != ret) {
         return;
     }
-    _test_case.assert(1 == server.get_pending_tls12_resumption_tickets().size(), __FUNCTION__, "keep the server's replacement pending after its own Finished");
-    tls12_resumption_ticket unconfirmed_renewal;
-    bool unconfirmed_renewal_found_at_2793 = server.find_tls12_resumption_ticket(renewal_identity, unconfirmed_renewal);
+    _test_case.assert(1 == server.get_pending_tls1_2_resumption_tickets().size(), __FUNCTION__, "keep the server's replacement pending after its own Finished");
+    tls1_2_resumption_ticket unconfirmed_renewal;
+    bool unconfirmed_renewal_found_at_2793 = server.find_tls1_2_resumption_ticket(renewal_identity, unconfirmed_renewal);
     _test_case.assert(false == unconfirmed_renewal_found_at_2793, __FUNCTION__, "do not expose the replacement before Client Finished authentication");
 
     tls_record_change_cipher_spec client_ccs(&client);
@@ -3035,12 +3176,12 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     ret = incoming_invalid_client_finished.read(&server, from_client, invalid_client_finished_wire);
     _test_case.assert(errorcode_t::verification_failure == ret, __FUNCTION__, "reject Client Finished whose verify_data does not authenticate the abbreviated handshake");
 
-    _test_case.assert(server.get_pending_tls12_resumption_tickets().empty(), __FUNCTION__,
+    _test_case.assert(server.get_pending_tls1_2_resumption_tickets().empty(), __FUNCTION__,
                       "discard the unconfirmed renewal immediately after Client Finished authentication fails");
-    bool unconfirmed_renewal_found_at_2827 = server.find_tls12_resumption_ticket(renewal_identity, unconfirmed_renewal);
+    bool unconfirmed_renewal_found_at_2827 = server.find_tls1_2_resumption_ticket(renewal_identity, unconfirmed_renewal);
     _test_case.assert(false == unconfirmed_renewal_found_at_2827, __FUNCTION__, "keep the failed renewal out of the active server ticket store");
-    tls12_resumption_ticket retained_original;
-    bool retained_original_found_at_2830 = server.find_tls12_resumption_ticket(original_ticket.identity, retained_original);
+    tls1_2_resumption_ticket retained_original;
+    bool retained_original_found_at_2830 = server.find_tls1_2_resumption_ticket(original_ticket.identity, retained_original);
     _test_case.assert(retained_original_found_at_2830, __FUNCTION__, "preserve the previously confirmed ticket after failed renewal");
     if (retained_original_found_at_2830) {
         _test_case.assert(original_ticket.master_secret == retained_original.master_secret, __FUNCTION__,
@@ -3052,10 +3193,27 @@ static void test_tls12_abbreviated_ticket_discards_renewal_on_invalid_client_fin
     _test_case.assert(1 == handshake_failure_count, __FUNCTION__, "queue exactly one fatal handshake_failure for invalid Client Finished");
 }
 
+static void test_tls_session_status_hook_propagates_error() {
+    // Scenario under test: a synchronous session-status observer fails while composing a server flight.
+    // Action: return send_failure from the installed status hook.
+    // Expected: preserve the status update and return the observer's transport error to the caller.
+    _test_case.begin("TLS session status hook propagates transport failure");
+
+    tls_session session;
+    session.set_hook_change_session_status([](tls_session*, uint32) -> return_t { return errorcode_t::send_failure; });
+
+    return_t ret = session.update_session_status(session_status_client_hello);
+    _test_case.assert(errorcode_t::send_failure == ret, __FUNCTION__, "return the status-hook transport failure");
+    _test_case.assert(0 != (session.get_session_status() & session_status_client_hello), __FUNCTION__, "retain the status update before notifying the hook");
+}
+
 void testcase_gpt_session_ticket() {
+    test_tls_session_status_hook_propagates_error();
     test_tls12_new_session_ticket_wire_format();
     test_tls12_new_session_ticket_requires_client_finished();
     test_tls12_server_ticket_confirmation_store();
+    test_tls12_extended_master_secret_extension_wire_validation();
+    test_tls12_client_key_exchange_postprocess_failure();
     test_tls12_session_ticket_extension_wire_behavior();
     test_tls12_session_ticket_handshake_negotiation();
     test_tls12_client_does_not_offer_non_ems_ticket();

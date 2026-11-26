@@ -56,7 +56,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
         // keys use the version and cipher suite bound to identity zero's PSK;
         // do not write those provisional parameters into _version.
         uint16 cipher_suite = use_early_data_ticket_parameters ? early_data_ticket.cipher_suite : get_cipher_suite();
-        bool tls13_key_schedule = is_kindof_tls13() || use_early_data_ticket_parameters;
+        bool tls13_key_schedule = is_kindof_tls1_3() || use_early_data_ticket_parameters;
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -379,7 +379,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
              *             v
              */
 
-            if (is_kindof_tls13()) {
+            if (is_kindof_tls1_3()) {
                 binary_t secret_handshake_client;
                 binary_t secret_handshake_server;
                 auto lambda_clear_server_hello_outputs = [this](bool preserve_injected_traffic_secrets) -> void {
@@ -753,7 +753,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                     __leave2_trace(ret);
                 }
 
-                if (is_kindof_tls13()) {
+                if (is_kindof_tls1_3()) {
                     auto sslkeylog = sslkeylog_exporter::get_instance();
                     sslkeylog->log(session, tls_secret_t::c_ap_traffic);
                     sslkeylog->log(session, tls_secret_t::s_ap_traffic);

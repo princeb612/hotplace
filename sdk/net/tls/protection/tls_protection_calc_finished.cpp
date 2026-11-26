@@ -53,7 +53,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
         // finished == maced
 
         binary_t fin_key;
-        if (is_kindof_tls13()) {
+        if (is_kindof_tls1_3()) {
             if (is_serverinitiated(dir)) {
                 typeof_secret = tls_secret_t::s_hs_traffic;
             } else if (is_clientinitiated(dir)) {

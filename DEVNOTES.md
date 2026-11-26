@@ -1,7 +1,5 @@
 ## Notes
 
-> Source base : Revision 1132
-
 ![hotplace](hotplace.png)
 
 ### Status

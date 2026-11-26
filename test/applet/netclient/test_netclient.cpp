@@ -119,11 +119,11 @@ void tls_client() {
     return_t ret = errorcode_t::success;
     SSL_CTX* sslctx = nullptr;
     uint32 tlscontext_flags = tlscontext_flag_tls;
-    if (option.flags & option_flag_allow_tls12) {
-        tlscontext_flags |= tlscontext_flag_allow_tls12;
+    if (option.flags & option_flag_allow_tls1_2) {
+        tlscontext_flags |= tlscontext_flag_allow_tls1_2;
     }
-    if (option.flags & option_flag_allow_tls13) {
-        tlscontext_flags |= tlscontext_flag_allow_tls13;
+    if (option.flags & option_flag_allow_tls1_3) {
+        tlscontext_flags |= tlscontext_flag_allow_tls1_3;
     }
     tlscontext_open_simple(&sslctx, tlscontext_flags);
     openssl_tls tls(sslctx);
@@ -180,7 +180,7 @@ void tls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    auto minver = (option.flags & option_flag_allow_tls12) ? tls1_2 : tls1_3;
+    auto minver = (option.flags & option_flag_allow_tls1_2) ? tls1_2 : tls1_3;
     trial_tls_client_socket cli(minver);
 
 #if defined __GNUC__

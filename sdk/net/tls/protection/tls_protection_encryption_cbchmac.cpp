@@ -108,8 +108,10 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session* session, tls_direction_t 
             record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
         } else {
             // TLS, QUIC, QUIC2
-            record_no = session->get_recordno(dir);
-            session->inc_recordno(dir);
+            ret = advance_recordno(session, dir, record_no);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, additional.data(), 3);       // rechdr (content_type, version)
@@ -204,8 +206,10 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
             uint64 seq = kv.get(session_dtls_seq);
             record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
         } else {
-            record_no = session->get_recordno(dir);
-            session->inc_recordno(dir);
+            ret = advance_recordno(session, dir, record_no);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, stream + pos, 3);            // rechdr (content_type, version)

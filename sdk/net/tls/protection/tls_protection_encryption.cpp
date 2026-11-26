@@ -120,10 +120,10 @@ uint8 tls_protection::get_tag_size(tls_session* session, tls_direction_t dir) {
     return ret_value;
 }
 
-constexpr size_t tls12_plaintext_max_size = (1 << 14);
-constexpr size_t tls13_inner_plaintext_max_size = (1 << 14) + 1;
-constexpr size_t tls12_ciphertext_max_size = (1 << 14) + 2048;
-constexpr size_t tls13_ciphertext_max_size = (1 << 14) + 256;
+constexpr size_t tls1_2_plaintext_max_size = (1 << 14);
+constexpr size_t tls1_3_inner_plaintext_max_size = (1 << 14) + 1;
+constexpr size_t tls1_2_ciphertext_max_size = (1 << 14) + 2048;
+constexpr size_t tls1_3_ciphertext_max_size = (1 << 14) + 256;
 constexpr size_t dtls_legacy_protection_max_size = (2 << 14) + 2048;
 
 return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag,
@@ -136,7 +136,7 @@ return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, cons
         }
         size_t max_plaintext_size = dtls_legacy_protection_max_size;
         if (session_type_t::tls == session->get_type()) {
-            max_plaintext_size = (is_kindof_tls13() || is_kindof_tls13_early_data(session)) ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
+            max_plaintext_size = (is_kindof_tls1_3() || is_kindof_tls1_3_early_data(session)) ? tls1_3_inner_plaintext_max_size : tls1_2_plaintext_max_size;
         }
         if (plaintext.size() > max_plaintext_size) {
             ret = errorcode_t::exceed;
@@ -186,7 +186,7 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
         size_t ciphertext_size = size - pos - header_size;
         size_t max_ciphertext_size = dtls_legacy_protection_max_size;
         if (session_type_t::tls == session->get_type()) {
-            max_ciphertext_size = (is_kindof_tls13() || is_kindof_tls13_early_data(session)) ? tls13_ciphertext_max_size : tls12_ciphertext_max_size;
+            max_ciphertext_size = (is_kindof_tls1_3() || is_kindof_tls1_3_early_data(session)) ? tls1_3_ciphertext_max_size : tls1_2_ciphertext_max_size;
         }
         if (ciphertext_size > max_ciphertext_size) {
             ret = errorcode_t::exceed;
@@ -201,11 +201,11 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
             ret = decrypt_aead(session, dir, stream, size, pos, plaintext, space);
         }
         if (errorcode_t::success == ret && session_type_t::tls == session->get_type()) {
-            size_t max_plaintext_size = (is_kindof_tls13() || is_kindof_tls13_early_data(session)) ? tls13_inner_plaintext_max_size : tls12_plaintext_max_size;
+            size_t max_plaintext_size = (is_kindof_tls1_3() || is_kindof_tls1_3_early_data(session)) ? tls1_3_inner_plaintext_max_size : tls1_2_plaintext_max_size;
             if (plaintext.size() > max_plaintext_size) {
                 ret = errorcode_t::overflow;
                 session->reset_session_status();
-                if (is_kindof_tls13()) {
+                if (is_kindof_tls1_3()) {
                     session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
                 } else {
                     session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);

@@ -1,7 +1,5 @@
 # hotplace
 
-> Source base : Revision 1132
-
 ````
  _   _           _             _
 | | | |   ___   | |_   _ __   | |   __ _    ___    ___

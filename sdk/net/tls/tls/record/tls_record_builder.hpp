@@ -40,7 +40,7 @@ class HOTPLACE_NET_API tls_record_builder {
      *          TLS 1.2 activates it at ChangeCipherSpec. TLS 1.3 ignores compatibility CCS:
      *          early data activates the client direction after ClientHello; handshake protection activates after ServerHello.
      *          auto apply_protection = session->get_session_info(dir).apply_protection();
-     *          if (is_kindof_tls13 && apply_protection) {
+     *          if (is_kindof_tls1_3 && apply_protection) {
      *              // new tls_record_application_data
      *          } else {
      *              // new tls_record_handshake or new tls_record_alert

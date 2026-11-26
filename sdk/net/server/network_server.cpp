@@ -815,8 +815,10 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
             }
             dgram_session->release(); /* find, refcount-- */
         }
+    } else if (multiplexer_event_type_t::mux_disconnect == type) {
+        int sockcli = (int)(long)data_array[1];
+        svr.session_closed(context, sockcli);
     }
-    // else if (multiplexer_event_type_t::mux_disconnect == type) /* no event catchable */
 
 #elif defined _WIN32 || defined _WIN64
 

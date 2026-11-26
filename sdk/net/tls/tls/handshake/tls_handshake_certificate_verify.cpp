@@ -95,9 +95,9 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
         hint_advisor_t key_hint;
         advisor->hintof_pkey(pkey, key_hint);
         if (from_client == dir) {
-            scheme = protection_context.select_certificate_request_signature_algorithm(key_hint.kty, key_hint.nid, protection.is_kindof_tls13());
+            scheme = protection_context.select_certificate_request_signature_algorithm(key_hint.kty, key_hint.nid, protection.is_kindof_tls1_3());
         } else {
-            scheme = protection_context.select_signature_algorithm(key_hint.kty, key_hint.nid, protection.is_kindof_tls13());
+            scheme = protection_context.select_signature_algorithm(key_hint.kty, key_hint.nid, protection.is_kindof_tls1_3());
         }
         if (tls_sigscheme_t::unknown == scheme) {
             ret = errorcode_t::not_supported;
@@ -135,7 +135,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
         auto& protection = session->get_tls_protection();
         auto& protection_context = protection.get_protection_context();
 
-        if (protection.is_kindof_tls13()) {
+        if (protection.is_kindof_tls1_3()) {
             bool has_offer = (from_client == dir) ? protection_context.has_certificate_request_signature_algorithms() : protection_context.has_signature_algorithms();
             if (false == has_offer) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);

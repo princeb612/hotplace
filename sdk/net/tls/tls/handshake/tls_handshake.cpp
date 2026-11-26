@@ -31,7 +31,7 @@ constexpr char constexpr_fragment[] = "fragment";
 constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
-static bool tls12_abbreviated_forbidden_message(tls_handshake_type_t type) {
+static bool tls1_2_abbreviated_forbidden_message(tls_handshake_type_t type) {
     switch (type) {
         case tls_handshake_type_t::supplemental_data:
         case tls_handshake_type_t::certificate:
@@ -112,8 +112,8 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (session->get_tls_protection().is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) &&
-            (0 != (session->get_session_status() & session_status_server_hello)) && tls12_abbreviated_forbidden_message(get_type())) {
+        if (session->get_tls_protection().is_kindof_tls1_2() && (0 != session->get_keyvalue().get(session_tls1_2_ticket_resumed)) &&
+            (0 != (session->get_session_status() & session_status_server_hello)) && tls1_2_abbreviated_forbidden_message(get_type())) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;
@@ -210,8 +210,8 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (session->get_tls_protection().is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed)) &&
-            (0 != (session->get_session_status() & session_status_server_hello)) && tls12_abbreviated_forbidden_message(get_type())) {
+        if (session->get_tls_protection().is_kindof_tls1_2() && (0 != session->get_keyvalue().get(session_tls1_2_ticket_resumed)) &&
+            (0 != (session->get_session_status() & session_status_server_hello)) && tls1_2_abbreviated_forbidden_message(get_type())) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;

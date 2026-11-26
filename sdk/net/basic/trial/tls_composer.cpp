@@ -50,7 +50,7 @@ return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::functio
     }
     auto session = get_session();
     auto session_type = session->get_type();
-    if ((session_type_t::tls == session_type || session_type_t::dtls == session_type) && (from_client == dir)) {
+    if ((session_type_t::tls == session_type || session_type_t::dtls == session_type) && (from_client == dir || from_server == dir)) {
         return handshake(dir, wto, std::function<return_t(tls_session*, binary_t&)>([func](tls_session* session, binary_t& bin) -> return_t {
                              func(session, bin);
                              return errorcode_t::success;
@@ -68,15 +68,25 @@ return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::functio
     }
     auto session = get_session();
     auto session_type = session->get_type();
-    if ((session_type_t::tls != session_type && session_type_t::dtls != session_type) || (from_client != dir)) {
+    if (session_type_t::tls != session_type && session_type_t::dtls != session_type) {
         return errorcode_t::not_supported;
     }
-    return do_tls_client_handshake(wto, func);
+    if (from_client == dir) {
+        return do_tls_client_handshake(wto, func);
+    }
+    if (from_server == dir) {
+        return do_tls_server_handshake(wto, func);
+    }
+    return errorcode_t::not_supported;
 }
 
-return_t tls_composer::session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<return_t(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
@@ -116,7 +126,7 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
                             // Full TLS 1.2 handshakes send Server Finished after
                             // Client Finished. Abbreviated handshakes already sent
                             // Server Finished in phase 1.
-                            if (protection.is_kindof_tls12() && (0 == session->get_keyvalue().get(session_tls12_ticket_resumed))) {
+                            if (protection.is_kindof_tls1_2() && (0 == session->get_keyvalue().get(session_tls1_2_ticket_resumed))) {
                                 ret = do_tls_server_handshake_phase2(func);
                             }
                         } break;
@@ -126,7 +136,13 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
                 case session_type_t::quic2: {
                     switch (session_status) {
                         case session_status_client_hello: {
-                            ret = do_quic_server_handshake(func);
+                            return_t callback_ret = errorcode_t::success;
+                            return_t compose_ret = do_quic_server_handshake([&](tls_session* current, binary_t& packet) -> void {
+                                if (errorcode_t::success == callback_ret) {
+                                    callback_ret = func(current, packet);
+                                }
+                            });
+                            ret = (errorcode_t::success == compose_ret) ? callback_ret : compose_ret;
                         } break;
                     }
                 } break;

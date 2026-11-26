@@ -205,62 +205,71 @@ int main(int argc, char** argv) {
         sslkeylog->set(lambda);
     }
 
-    openssl_startup();
+    __try2 {
+#if defined _WIN32 || defined _WIN64
+        winsock_startup();
+#endif
+        openssl_startup();
 
-    if (option.clienthello.empty()) {
+        if (option.clienthello.empty()) {
 #if defined DEBUG
-        auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
-        if (check_trace_level(loglevel_t::loglevel_debug) && istraceable()) {
-            auto sslkeylog = sslkeylog_exporter::get_instance();
-            sslkeylog->set(lambda);
-        }
+            auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
+            if (check_trace_level(loglevel_t::loglevel_debug) && istraceable()) {
+                auto sslkeylog = sslkeylog_exporter::get_instance();
+                sslkeylog->set(lambda);
+            }
 #endif
 
-        testcase_resource();  // resource validation
+            testcase_resource();  // resource validation
 
-        testcase_understand_tls13();  // https://tls13.xargs.org/
-        testcase_understand_tls12();  // https://tls12.xargs.org/
-        testcase_understand_dtls();   // https://dtls.xargs.org/
+            testcase_understand_tls13();  // https://tls13.xargs.org/
+            testcase_understand_tls12();  // https://tls12.xargs.org/
+            testcase_understand_dtls();   // https://dtls.xargs.org/
 
-        // RFC 8448 Example Handshake Traces for TLS 1.3
-        testcase_rfc8448_2();
+            // RFC 8448 Example Handshake Traces for TLS 1.3
+            testcase_rfc8448_2();
 
-        tls_session rfc8448_session;
-        testcase_rfc8448_3(&rfc8448_session);
-        testcase_rfc8448_4(&rfc8448_session);
+            tls_session rfc8448_session;
+            testcase_rfc8448_3(&rfc8448_session);
+            testcase_rfc8448_4(&rfc8448_session);
 
-        testcase_rfc8448_5();
-        testcase_rfc8448_6();
-        testcase_rfc8448_7();
+            testcase_rfc8448_5();
+            testcase_rfc8448_6();
+            testcase_rfc8448_7();
 
-        testcase_pre_master_secret();  // https://github.com/syncsynchalt/illustrated-tls13/captures/
+            testcase_pre_master_secret();  // https://github.com/syncsynchalt/illustrated-tls13/captures/
 
-        load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
-        load_certificate("server-rsapss.crt", "server-rsapss.key", nullptr);
-        load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
-        load_certificate("server-eddsa.crt", "server-eddsa.key", nullptr);
-        load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
+            load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
+            load_certificate("server-rsapss.crt", "server-rsapss.key", nullptr);
+            load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
+            load_certificate("server-eddsa.crt", "server-eddsa.key", nullptr);
+            load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
 
-        testcase_tls12_aead();
-        testcase_mlkem_encoding();
+            testcase_tls12_aead();
+            testcase_mlkem_encoding();
 
-        testcase_testvector_pcap();
+            testcase_testvector_pcap();
 
-        testcase_alert();
+            testcase_alert();
 
-        testcase_construct_tls();
-        testcase_construct_dtls13();
-        testcase_dtls_record_arrange();
-        testcase_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
-        testcase_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
+            testcase_construct_tls();
+            testcase_construct_dtls13();
+            testcase_dtls_record_arrange();
+            testcase_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
+            testcase_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
 
-        testcase_rfc();
-        testcase_gpt();
-    } else {
-        dump_clienthello();
+            testcase_rfc();
+            testcase_gpt();
+        } else {
+            dump_clienthello();
+        }
     }
-
-    openssl_cleanup();
+    __finally2 {
+        openssl_cleanup();
+#if defined _WIN32 || defined _WIN64
+        winsock_cleanup();
+#endif
+    }
 
     _logger->flush();
 

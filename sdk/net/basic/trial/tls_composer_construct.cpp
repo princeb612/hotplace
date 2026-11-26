@@ -298,7 +298,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
 
                 hs->set_cipher_suite(cs);
 
-                if (tlsadvisor->is_kindof_tls13(tlsver)) {
+                if (tlsadvisor->is_kindof_tls1_3(tlsver)) {
                     hs->get_extensions().add(tls_extension_type_t::supported_versions, dir, hs, [&](tls_extension* extension) -> return_t {
                         (*(tls_extension_server_supported_versions*)extension).set(tlsver);
                         return errorcode_t::success;

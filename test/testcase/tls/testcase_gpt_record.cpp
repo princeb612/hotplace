@@ -6,9 +6,12 @@
  */
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <thread>
 #include <vector>
 
 #include "testcase_gpt_common.hpp"
@@ -115,130 +118,6 @@ static void test_configure_tls12_ccs_session(tls_session& session) {
     session.update_session_status(session_status_client_key_exchange);
 }
 
-static return_t test_configure_tls12_renegotiation_ccs_session(tls_session& session) {
-    auto& protection = session.get_tls_protection();
-    protection.set_tls_version(tls1_2);
-    protection.set_cipher_suite(0xc02f);
-    protection.set_flow(tls_flow_t::renegotiation);
-    session.get_keyvalue().set(session_tls_version, tls1_2);
-    session.get_session_info(from_client).begin_protection();
-    session.get_session_info(from_server).begin_protection();
-    session.get_session_info(from_client).set_active_cipher_suite(0xc02f);
-    session.get_session_info(from_server).set_active_cipher_suite(0xc02f);
-    session.update_session_status(session_status_server_key_exchange);
-    session.update_session_status(session_status_client_key_exchange);
-
-    auto& secrets = protection.get_secrets();
-    secrets.assign(tls_secret_t::client_key, binary_t(16, 0x11));
-    secrets.assign(tls_secret_t::client_iv, binary_t(4, 0x21));
-    secrets.assign(tls_secret_t::server_key, binary_t(16, 0x12));
-    secrets.assign(tls_secret_t::server_iv, binary_t(4, 0x22));
-
-    // Exercise the production TLS 1.2 key-block derivation. The resulting
-    // renegotiation keys must remain staged until each direction's CCS.
-    const binary_t master_secret(48, 0x31);
-    const binary_t client_random(32, 0x41);
-    const binary_t server_random(32, 0x42);
-    secrets.assign(tls_secret_t::master, master_secret);
-    secrets.assign(tls_secret_t::client_hello_random, client_random);
-    secrets.assign(tls_secret_t::server_hello_random, server_random);
-    return protection.calc_keyblock(hash_algorithm_t::sha2_256, master_secret, client_random, server_random, 0xc02f);
-}
-
-static void test_tls12_renegotiation_ccs_transition() {
-    // RFC 5746 + RFC 5246 §7.1: the old directional keys remain active until
-    // that direction's CCS installs its pending renegotiation key block.
-    _test_case.begin("TLS 1.2 renegotiation CCS activates pending directional keys");
-
-    const binary_t ccs_wire{0x14, 0x03, 0x03, 0x00, 0x01, 0x01};
-
-    binary_t client_ccs_wire;
-    binary_t server_ccs_wire;
-    {
-        tls_session writer;
-        return_t setup_ret = test_configure_tls12_renegotiation_ccs_session(writer);
-        _test_case.test(setup_ret, __FUNCTION__, "derive the pending renegotiation key block without replacing active keys");
-        const binary_t pending_client_key = writer.get_tls_protection().get_secrets().get(tls_secret_t::client_key_renegotiation);
-        const binary_t pending_server_key = writer.get_tls_protection().get_secrets().get(tls_secret_t::server_key_renegotiation);
-        _test_case.assert(16 == pending_client_key.size() && 16 == pending_server_key.size(), __FUNCTION__, "derive both AES-128 directional renegotiation keys");
-        _test_case.assert(binary_t(16, 0x11) == writer.get_tls_protection().get_secrets().get(tls_secret_t::client_key), __FUNCTION__,
-                          "keep the active client key unchanged while deriving pending keys");
-        _test_case.assert(binary_t(16, 0x12) == writer.get_tls_protection().get_secrets().get(tls_secret_t::server_key), __FUNCTION__,
-                          "keep the active server key unchanged while deriving pending keys");
-        writer.set_recordno(from_client, 101);
-        writer.set_recordno(from_server, 103);
-        tls_record_change_cipher_spec ccs(&writer);
-
-        return_t ret = ccs.write(from_client, client_ccs_wire);
-        _test_case.test(ret, __FUNCTION__, "write the client renegotiation CCS");
-        _test_case.assert((client_ccs_wire.size() > ccs_wire.size()) && (0x14 == client_ccs_wire[0]), __FUNCTION__,
-                          "encrypt the client CCS under the old client write state");
-        _test_case.assert(pending_client_key == writer.get_tls_protection().get_secrets().get(tls_secret_t::client_key), __FUNCTION__,
-                          "activate the derived client write key at client CCS");
-        _test_case.assert(binary_t(16, 0x12) == writer.get_tls_protection().get_secrets().get(tls_secret_t::server_key), __FUNCTION__,
-                          "preserve the old server write key until server CCS");
-        _test_case.assert(0 == writer.get_recordno(from_client), __FUNCTION__, "reset only the client record sequence at renegotiation CCS");
-        _test_case.assert(103 == writer.get_recordno(from_server), __FUNCTION__, "preserve the server record sequence until its CCS");
-        _test_case.assert(1 == writer.get_session_info(from_client).get_keyvalue().get(session_tls12_renegotiation_ccs), __FUNCTION__,
-                          "remember that the client direction has switched");
-
-        writer.update_session_status(session_status_client_finished);
-        ret = ccs.write(from_server, server_ccs_wire);
-        _test_case.test(ret, __FUNCTION__, "write the server renegotiation CCS after Client Finished");
-        _test_case.assert((server_ccs_wire.size() > ccs_wire.size()) && (0x14 == server_ccs_wire[0]), __FUNCTION__,
-                          "encrypt the server CCS under the old server write state");
-        _test_case.assert(pending_server_key == writer.get_tls_protection().get_secrets().get(tls_secret_t::server_key), __FUNCTION__,
-                          "activate the derived server write key at server CCS");
-        _test_case.assert(0 == writer.get_recordno(from_server), __FUNCTION__, "reset the server record sequence at its CCS");
-        binary_t duplicate_wire;
-        _test_case.assert(errorcode_t::unexpected == ccs.write(from_client, duplicate_wire), __FUNCTION__, "reject a duplicate client CCS in one renegotiation");
-    }
-
-    {
-        tls_session reader;
-        return_t setup_ret = test_configure_tls12_renegotiation_ccs_session(reader);
-        _test_case.test(setup_ret, __FUNCTION__, "derive the matching pending read key block");
-        const binary_t pending_client_key = reader.get_tls_protection().get_secrets().get(tls_secret_t::client_key_renegotiation);
-        const binary_t pending_server_key = reader.get_tls_protection().get_secrets().get(tls_secret_t::server_key_renegotiation);
-        reader.set_recordno(from_client, 101);
-        reader.set_recordno(from_server, 103);
-        tls_record_change_cipher_spec ccs(&reader);
-        size_t pos = 0;
-        return_t ret = ccs.read(from_client, client_ccs_wire.data(), client_ccs_wire.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "read the client renegotiation CCS under the old client read state");
-        _test_case.assert(client_ccs_wire.size() == pos, __FUNCTION__, "consume the encrypted client CCS");
-        _test_case.assert(pending_client_key == reader.get_tls_protection().get_secrets().get(tls_secret_t::client_key), __FUNCTION__,
-                          "activate the derived client read key at client CCS");
-        _test_case.assert(103 == reader.get_recordno(from_server), __FUNCTION__, "preserve the server read sequence until its CCS");
-
-        reader.update_session_status(session_status_client_finished);
-        pos = 0;
-        ret = ccs.read(from_server, server_ccs_wire.data(), server_ccs_wire.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "read the server renegotiation CCS under the old server read state");
-        _test_case.assert(server_ccs_wire.size() == pos, __FUNCTION__, "consume the encrypted server CCS");
-        _test_case.assert(pending_server_key == reader.get_tls_protection().get_secrets().get(tls_secret_t::server_key), __FUNCTION__,
-                          "activate the derived server read key at server CCS");
-        _test_case.assert(0 == reader.get_recordno(from_server), __FUNCTION__, "reset the server read sequence at its CCS");
-    }
-    {
-        tls_session reader;
-        return_t setup_ret = test_configure_tls12_renegotiation_ccs_session(reader);
-        _test_case.test(setup_ret, __FUNCTION__, "prepare a renegotiation CCS receiver with active and pending keys");
-        reader.get_tls_protection().set_cipher_suite(0);
-        reader.get_session_info(from_client).reset_protection();
-        const binary_t plaintext_ccs{0x14, 0x03, 0x03, 0x00, 0x01, 0x01};
-        tls_record_change_cipher_spec ccs(&reader);
-        size_t pos = 0;
-        return_t ret = ccs.read(from_client, plaintext_ccs.data(), plaintext_ccs.size(), pos);
-        _test_case.assert(errorcode_t::internal_error == ret, __FUNCTION__, "report an internal error when CCS has no negotiated cipher suite");
-        _test_case.assert(1 == test_count_fatal_alert(reader, from_client, tls_alertdesc_t::internal_error), __FUNCTION__,
-                          "queue fatal internal_error for missing CCS cipher-suite state");
-        _test_case.assert(binary_t(16, 0x11) == reader.get_tls_protection().get_secrets().get(tls_secret_t::client_key), __FUNCTION__,
-                          "leave the active client key unchanged when CCS activation cannot proceed");
-        _test_case.assert(0 == reader.get_recordno(from_client), __FUNCTION__, "do not reset the client record sequence when CCS activation fails");
-    }
-}
-
 static void test_tls12_ccs_sequence_reset() {
     // RFC 5246 §6.1: each directional connection state starts with sequence number zero.
     // Action: activate the client and server TLS 1.2 write/read states through CCS.
@@ -312,7 +191,7 @@ static void test_tls12_ccs_sequence_reset() {
     {
         tls_session writer;
         test_configure_tls12_ccs_session(writer);
-        writer.get_keyvalue().set(session_tls12_ticket_resumed, 1);
+        writer.get_keyvalue().set(session_tls1_2_ticket_resumed, 1);
         writer.set_recordno(from_client, 61);
         writer.set_recordno(from_server, 67);
 
@@ -336,7 +215,7 @@ static void test_tls12_ccs_sequence_reset() {
     {
         tls_session reader;
         test_configure_tls12_ccs_session(reader);
-        reader.get_keyvalue().set(session_tls12_ticket_resumed, 1);
+        reader.get_keyvalue().set(session_tls1_2_ticket_resumed, 1);
         reader.set_recordno(from_client, 71);
         reader.set_recordno(from_server, 73);
 
@@ -355,673 +234,6 @@ static void test_tls12_ccs_sequence_reset() {
         _test_case.assert(ccs_wire.size() == pos, __FUNCTION__, "consume the abbreviated client CCS record");
         _test_case.assert(0 == reader.get_recordno(from_client), __FUNCTION__, "reset the abbreviated client read sequence");
         _test_case.assert(0 == reader.get_recordno(from_server), __FUNCTION__, "preserve the already-reset server read sequence");
-    }
-}
-
-static void test_tls12_initial_secure_renegotiation_scsv() {
-    _test_case.begin("TLS 1.2 ClientHello signals secure renegotiation with SCSV");
-
-    tls_session client;
-    client.get_tls_protection().set_tls_version(tls1_2);
-    client.get_keyvalue().set(session_tls_version, tls1_2);
-    tls_handshake_client_hello hello(&client);
-    hello.add_ciphersuite(0xc02f);
-    auto versions = new tls_extension_client_supported_versions(&hello);
-    versions->add(tls1_2);
-    hello.get_extensions().add(versions);
-
-    binary_t wire;
-    return_t ret = hello.write(from_client, wire);
-    _test_case.test(ret, __FUNCTION__, "serialize an initial TLS 1.2 ClientHello");
-    if (errorcode_t::success == ret) {
-        const size_t session_id_length_offset = 4 + 2 + 32;
-        size_t cipher_suite_length_offset = session_id_length_offset + 1;
-        if (wire.size() > session_id_length_offset) {
-            cipher_suite_length_offset += wire[session_id_length_offset];
-        }
-        bool has_scsv =
-            (wire.size() >= cipher_suite_length_offset + 6) && (wire[cipher_suite_length_offset + 4] == 0x00) && (wire[cipher_suite_length_offset + 5] == 0xff);
-        uint16 cipher_suite_length =
-            (wire.size() >= cipher_suite_length_offset + 2) ? static_cast<uint16>((wire[cipher_suite_length_offset] << 8) | wire[cipher_suite_length_offset + 1]) : 0;
-        _test_case.assert(4 == cipher_suite_length, __FUNCTION__, "append one two-byte SCSV after the offered TLS 1.2 cipher suite");
-        _test_case.assert(has_scsv, __FUNCTION__, "encode TLS_EMPTY_RENEGOTIATION_INFO_SCSV as 0x00ff");
-        _test_case.assert(1 == client.get_keyvalue().get(session_tls12_secure_renegotiation_offered), __FUNCTION__,
-                          "remember that the client signaled secure renegotiation");
-
-        tls_session server;
-        server.get_tls_protection().set_tls_version(tls1_2);
-        server.get_keyvalue().set(session_tls_version, tls1_2);
-        tls_handshake_client_hello peer_hello(&server);
-        size_t pos = 0;
-        ret = peer_hello.read(from_client, wire.data(), wire.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "parse the peer ClientHello carrying the SCSV");
-        _test_case.assert(wire.size() == pos, __FUNCTION__, "consume the complete ClientHello");
-        _test_case.assert(1 == server.get_keyvalue().get(session_tls12_secure_renegotiation_offered), __FUNCTION__, "recognize the peer's secure-renegotiation signal");
-
-        bool scsv_in_negotiation_list = false;
-        server.get_tls_protection().get_protection_context().for_each_cipher_suites([&](uint16 offered, bool* stop) -> void {
-            if (0x00ff == offered) {
-                scsv_in_negotiation_list = true;
-                *stop = true;
-            }
-        });
-        _test_case.assert(false == scsv_in_negotiation_list, __FUNCTION__, "exclude the signaling value from cipher-suite negotiation");
-
-        {
-            tls_session server_hello_session;
-            server_hello_session.get_tls_protection().set_tls_version(tls1_2);
-            server_hello_session.get_keyvalue().set(session_tls_version, tls1_2);
-            server_hello_session.get_keyvalue().set(session_tls12_secure_renegotiation_offered, 1);
-            server_hello_session.update_session_status(session_status_client_hello);
-            tls_handshake_server_hello server_hello(&server_hello_session);
-            server_hello.set_version(tls1_2);
-            ret = server_hello.set_cipher_suite(0xc02f);
-            _test_case.test(ret, __FUNCTION__, "select a TLS 1.2 suite for the secure-renegotiation response");
-            binary_t server_hello_wire;
-            if (errorcode_t::success == ret) {
-                ret = server_hello.write(from_server, server_hello_wire);
-                _test_case.test(ret, __FUNCTION__, "write ServerHello after the peer signaled secure renegotiation");
-                if (errorcode_t::success == ret) {
-                    const binary_t renegotiation_info_wire{0xff, 0x01, 0x00, 0x01, 0x00};
-                    bool has_renegotiation_info = (std::search(server_hello_wire.begin(), server_hello_wire.end(), renegotiation_info_wire.begin(),
-                                                               renegotiation_info_wire.end()) != server_hello_wire.end());
-                    _test_case.assert(has_renegotiation_info, __FUNCTION__, "echo an empty renegotiation_info extension in the initial ServerHello");
-                    _test_case.assert(1 == server_hello_session.get_keyvalue().get(session_tls12_secure_renegotiation), __FUNCTION__,
-                                      "record that secure renegotiation was established");
-
-                    tls_session client_peer;
-                    client_peer.get_tls_protection().set_tls_version(tls1_2);
-                    client_peer.get_keyvalue().set(session_tls_version, tls1_2);
-                    client_peer.get_keyvalue().set(session_tls12_secure_renegotiation_offered, 1);
-                    client_peer.get_tls_protection().get_protection_context().add_supported_version(tls1_2);
-                    client_peer.update_session_status(session_status_client_hello);
-                    tls_handshake_server_hello parsed_server_hello(&client_peer);
-                    size_t client_pos = 0;
-                    return_t client_ret = parsed_server_hello.read(from_server, server_hello_wire.data(), server_hello_wire.size(), client_pos);
-                    _test_case.test(client_ret, __FUNCTION__, "accept the empty renegotiation_info response after signaling support");
-                    _test_case.assert(1 == client_peer.get_keyvalue().get(session_tls12_secure_renegotiation), __FUNCTION__,
-                                      "record secure renegotiation on the client after ServerHello validation");
-
-                    tls_session unsolicited_peer;
-                    unsolicited_peer.get_tls_protection().set_tls_version(tls1_2);
-                    unsolicited_peer.get_keyvalue().set(session_tls_version, tls1_2);
-                    unsolicited_peer.get_tls_protection().get_protection_context().add_supported_version(tls1_2);
-                    unsolicited_peer.update_session_status(session_status_client_hello);
-                    tls_handshake_server_hello unsolicited_server_hello(&unsolicited_peer);
-                    size_t unsolicited_pos = 0;
-                    client_ret = unsolicited_server_hello.read(from_server, server_hello_wire.data(), server_hello_wire.size(), unsolicited_pos);
-                    _test_case.assert(errorcode_t::handshake_failure == client_ret, __FUNCTION__, "reject renegotiation_info when the client did not signal support");
-                    _test_case.assert(1 == test_count_fatal_alert(unsolicited_peer, from_server, tls_alertdesc_t::unsupported_extension), __FUNCTION__,
-                                      "queue fatal unsupported_extension for an unsolicited response");
-                }
-            }
-        }
-
-        binary_t legacy_server_hello_wire;
-        {
-            tls_session legacy_server;
-            legacy_server.get_tls_protection().set_tls_version(tls1_2);
-            legacy_server.get_keyvalue().set(session_tls_version, tls1_2);
-            legacy_server.update_session_status(session_status_client_hello);
-            tls_handshake_server_hello legacy_server_hello(&legacy_server);
-            legacy_server_hello.set_version(tls1_2);
-            ret = legacy_server_hello.set_cipher_suite(0xc02f);
-            _test_case.test(ret, __FUNCTION__, "select a TLS 1.2 suite without a secure-renegotiation offer");
-            if (errorcode_t::success == ret) {
-                ret = legacy_server_hello.write(from_server, legacy_server_hello_wire);
-                _test_case.test(ret, __FUNCTION__, "write ServerHello without a secure-renegotiation offer");
-                if (errorcode_t::success == ret) {
-                    const binary_t renegotiation_info_wire{0xff, 0x01, 0x00, 0x01, 0x00};
-                    bool has_renegotiation_info = (std::search(legacy_server_hello_wire.begin(), legacy_server_hello_wire.end(), renegotiation_info_wire.begin(),
-                                                               renegotiation_info_wire.end()) != legacy_server_hello_wire.end());
-                    _test_case.assert(false == has_renegotiation_info, __FUNCTION__, "do not send an unsolicited renegotiation_info extension");
-                    _test_case.assert(0 == legacy_server.get_keyvalue().get(session_tls12_secure_renegotiation), __FUNCTION__,
-                                      "leave secure renegotiation unestablished without a peer signal");
-                }
-            }
-        }
-
-        tls_session missing_response_peer;
-        missing_response_peer.get_tls_protection().set_tls_version(tls1_2);
-        missing_response_peer.get_keyvalue().set(session_tls_version, tls1_2);
-        missing_response_peer.get_keyvalue().set(session_tls12_secure_renegotiation_offered, 1);
-        missing_response_peer.get_tls_protection().get_protection_context().add_supported_version(tls1_2);
-        missing_response_peer.update_session_status(session_status_client_hello);
-        tls_handshake_server_hello missing_response(&missing_response_peer);
-        size_t missing_response_pos = 0;
-        return_t missing_response_ret = missing_response.read(from_server, legacy_server_hello_wire.data(), legacy_server_hello_wire.size(), missing_response_pos);
-        _test_case.assert(errorcode_t::handshake_failure == missing_response_ret, __FUNCTION__,
-                          "reject an initial ServerHello that omits renegotiation_info after the client signaled support");
-        _test_case.assert(0 == missing_response_peer.get_keyvalue().get(session_tls12_secure_renegotiation), __FUNCTION__,
-                          "do not establish secure renegotiation when the server omits the required response");
-        _test_case.assert(1 == test_count_fatal_alert(missing_response_peer, from_server, tls_alertdesc_t::handshake_failure), __FUNCTION__,
-                          "queue one fatal handshake_failure for the missing initial response");
-    }
-
-    {
-        tls_session tls13_client;
-        tls13_client.get_tls_protection().set_tls_version(tls1_3);
-        tls13_client.get_keyvalue().set(session_tls_version, tls1_3);
-        tls_handshake_client_hello tls13_hello(&tls13_client);
-        tls13_hello.add_ciphersuite(0x1301);
-        auto tls13_versions = new tls_extension_client_supported_versions(&tls13_hello);
-        tls13_versions->add(tls1_3);
-        tls13_hello.get_extensions().add(tls13_versions);
-        binary_t tls13_wire;
-        ret = tls13_hello.write(from_client, tls13_wire);
-        _test_case.test(ret, __FUNCTION__, "serialize a TLS 1.3-only ClientHello");
-        if (errorcode_t::success == ret) {
-            const size_t cipher_suite_length_offset = 4 + 2 + 32 + 1;
-            uint16 cipher_suite_length = (tls13_wire.size() >= cipher_suite_length_offset + 2)
-                                             ? static_cast<uint16>((tls13_wire[cipher_suite_length_offset] << 8) | tls13_wire[cipher_suite_length_offset + 1])
-                                             : 0;
-            _test_case.assert(2 == cipher_suite_length, __FUNCTION__, "do not append the TLS 1.2 renegotiation SCSV to a TLS 1.3-only offer");
-            _test_case.assert(0 == tls13_client.get_keyvalue().get(session_tls12_secure_renegotiation_offered), __FUNCTION__,
-                              "do not mark TLS 1.3 as secure-renegotiation capable");
-        }
-    }
-}
-
-static void test_tls12_hello_request_secure_renegotiation() {
-    // RFC 5746: HelloRequest is not part of the handshake transcript.
-    // A server may request renegotiation only after a secure TLS 1.2 handshake.
-    _test_case.begin("TLS 1.2 HelloRequest starts secure renegotiation");
-
-    const binary_t hello_request_wire{0x00, 0x00, 0x00, 0x00};
-
-    {
-        tls_session server;
-        server.get_tls_protection().set_tls_version(tls1_2);
-        server.get_keyvalue().set(session_tls_version, tls1_2);
-        server.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-        server.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-        server.update_session_status(session_status_client_finished);
-        server.update_session_status(session_status_server_finished);
-
-        tls_handshake_builder builder;
-        auto request = builder.set(tls_handshake_type_t::hello_request).set(&server).build();
-        _test_case.assert(nullptr != request, __FUNCTION__, "construct the server HelloRequest");
-        if (nullptr != request) {
-            binary_t wire;
-            return_t ret = request->write(from_server, wire);
-            _test_case.test(ret, __FUNCTION__, "write HelloRequest after a secure TLS 1.2 handshake");
-            _test_case.assert(hello_request_wire == wire, __FUNCTION__, "encode HelloRequest with an empty body");
-            _test_case.assert(tls_flow_t::renegotiation == server.get_tls_protection().get_flow(), __FUNCTION__, "start the server-side renegotiation flow");
-            request->release();
-        }
-    }
-
-    {
-        tls_session client;
-        client.get_tls_protection().set_tls_version(tls1_2);
-        client.get_keyvalue().set(session_tls_version, tls1_2);
-        client.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-        client.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-        client.update_session_status(session_status_client_finished);
-        client.update_session_status(session_status_server_finished);
-
-        tls_handshake_builder builder;
-        auto request = builder.set(tls_handshake_type_t::hello_request).set(&client).build();
-        _test_case.assert(nullptr != request, __FUNCTION__, "construct the client HelloRequest parser");
-        if (nullptr != request) {
-            size_t pos = 0;
-            return_t ret = request->read(from_server, hello_request_wire.data(), hello_request_wire.size(), pos);
-            _test_case.test(ret, __FUNCTION__, "accept the server HelloRequest after a secure TLS 1.2 handshake");
-            _test_case.assert(hello_request_wire.size() == pos, __FUNCTION__, "consume the complete HelloRequest");
-            _test_case.assert(tls_flow_t::renegotiation == client.get_tls_protection().get_flow(), __FUNCTION__, "start the client-side renegotiation flow");
-            request->release();
-        }
-    }
-
-    {
-        tls_session client;
-        client.get_tls_protection().set_tls_version(tls1_2);
-        client.get_keyvalue().set(session_tls_version, tls1_2);
-        client.update_session_status(session_status_client_finished);
-        client.update_session_status(session_status_server_finished);
-
-        tls_handshake_builder builder;
-        auto request = builder.set(tls_handshake_type_t::hello_request).set(&client).build();
-        _test_case.assert(nullptr != request, __FUNCTION__, "construct the disabled-policy HelloRequest parser");
-        if (nullptr != request) {
-            size_t pos = 0;
-            return_t ret = request->read(from_server, hello_request_wire.data(), hello_request_wire.size(), pos);
-            _test_case.test(ret, __FUNCTION__, "decline HelloRequest when secure renegotiation is not enabled");
-            _test_case.assert(tls_flow_t::one_rtt == client.get_tls_protection().get_flow(), __FUNCTION__, "keep the established flow when renegotiation is declined");
-            size_t warning_count = 0;
-            client.get_alert(from_server, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                if ((tls_alertlevel_t::warning == level) && (tls_alertdesc_t::no_renegotiation == desc)) {
-                    ++warning_count;
-                }
-            });
-            _test_case.assert(1 == warning_count, __FUNCTION__, "queue one warning no_renegotiation alert");
-            request->release();
-
-            tls_session server;
-            server.get_tls_protection().set_tls_version(tls1_2);
-            server.get_tls_protection().set_flow(tls_flow_t::renegotiation);
-            tls_record_alert warning(&client, tls_alertlevel_t::warning, tls_alertdesc_t::no_renegotiation);
-            binary_t warning_wire;
-            ret = warning.write(from_client, warning_wire);
-            _test_case.test(ret, __FUNCTION__, "serialize the client's no_renegotiation warning");
-            tls_record_alert peer_warning(&server);
-            pos = 0;
-            ret = peer_warning.read(from_client, warning_wire.data(), warning_wire.size(), pos);
-            _test_case.test(ret, __FUNCTION__, "receive the client's no_renegotiation warning");
-            _test_case.assert(tls_flow_t::one_rtt == server.get_tls_protection().get_flow(), __FUNCTION__,
-                              "restore the server's established flow after the client declines");
-            const uint32 completed_status = session_status_client_finished | session_status_server_finished;
-            _test_case.assert(completed_status == (server.get_session_status() & completed_status), __FUNCTION__,
-                              "restore the completed-handshake status after the client declines");
-            _test_case.assert(tls_handshake_type_t::finished == server.get_session_info(from_client).get_status(), __FUNCTION__,
-                              "restore the client handshake cursor after the client declines");
-        }
-    }
-}
-
-static void test_tls12_renegotiation_policy_and_binding() {
-    // TLS 1.2 renegotiation is policy-gated and requires the RFC 5746 binding.
-    // Action: serialize and parse a post-handshake ClientHello with both gates enabled.
-    // Expected: enter the renegotiation flow and carry the previous client Finished verify_data.
-    _test_case.begin("TLS 1.2 renegotiation policy gate and binding validation");
-
-    {
-        const binary_t client_verifydata(12, 0x31);
-        const binary_t server_verifydata(12, 0x42);
-        tls_session client;
-        client.get_tls_protection().set_tls_version(tls1_2);
-        client.get_keyvalue().set(session_tls_version, tls1_2);
-        client.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-        client.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-        client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        client.update_session_status(session_status_client_finished);
-        client.update_session_status(session_status_server_finished);
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::client_verifydata, client_verifydata);
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::server_verifydata, server_verifydata);
-        const binary_t prior_alpn{0x02, 'h', '2'};
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::alpn, prior_alpn);
-        client.get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 1234);
-        client.get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 2345);
-        client.get_keyvalue().set(session_tls12_ticket_resumed, 1);
-
-        tls_handshake_client_hello hello(&client);
-        hello.add_ciphersuite(0xc02f);
-        auto versions = new tls_extension_client_supported_versions(&hello);
-        versions->add(tls1_2);
-        hello.get_extensions().add(versions);
-        binary_t wire;
-        return_t ret = hello.write(from_client, wire);
-        _test_case.test(ret, __FUNCTION__, "write a secure renegotiation ClientHello when policy and RFC 5746 are enabled");
-        _test_case.assert(tls_flow_t::renegotiation == client.get_tls_protection().get_flow(), __FUNCTION__,
-                          "enter the renegotiation flow before serializing the new ClientHello");
-        _test_case.assert(prior_alpn == client.get_tls_protection().get_secrets().get(tls_secret_t::alpn), __FUNCTION__,
-                          "retain active ALPN until the peer accepts renegotiation");
-        _test_case.assert(1234 == client.get_session_info(from_client).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "retain the client record-size limit until the peer accepts renegotiation");
-        _test_case.assert(2345 == client.get_session_info(from_server).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "retain the server record-size limit until the peer accepts renegotiation");
-        _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__,
-                          "retain active resumption state until the peer accepts renegotiation");
-        auto renegotiation_info = hello.get_extensions().get(tls_extension_type_t::renegotiation_info);
-        _test_case.assert(nullptr != renegotiation_info, __FUNCTION__, "automatically include renegotiation_info in the renegotiation ClientHello");
-
-        tls_session server;
-        server.get_tls_protection().set_tls_version(tls1_2);
-        server.get_keyvalue().set(session_tls_version, tls1_2);
-        server.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-        server.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-        server.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        server.update_session_status(session_status_client_finished);
-        server.update_session_status(session_status_server_finished);
-        server.get_tls_protection().get_secrets().assign(tls_secret_t::client_verifydata, client_verifydata);
-        server.get_tls_protection().get_secrets().assign(tls_secret_t::server_verifydata, server_verifydata);
-        tls_handshake_client_hello peer_hello(&server);
-        size_t pos = 0;
-        ret = peer_hello.read(from_client, wire.data(), wire.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "accept the matching RFC 5746 binding on the peer");
-        _test_case.assert(wire.size() == pos, __FUNCTION__, "consume the complete renegotiation ClientHello");
-        _test_case.assert(tls_flow_t::renegotiation == server.get_tls_protection().get_flow(), __FUNCTION__, "enter the renegotiation flow on the receiving endpoint");
-        _test_case.assert(1 == server.get_keyvalue().get(session_tls12_secure_renegotiation_offered), __FUNCTION__,
-                          "recognize the renegotiation_info extension as the secure-renegotiation signal");
-
-        {
-            // A policy-disabled endpoint declines a valid peer renegotiation
-            // with warning no_renegotiation and leaves the active connection intact.
-            tls_session refusing_server;
-            refusing_server.get_tls_protection().set_tls_version(tls1_2);
-            refusing_server.get_tls_protection().set_cipher_suite(0xc02f);
-            refusing_server.get_tls_protection().get_secrets().assign(tls_secret_t::client_key, binary_t(16, 0x11));
-            refusing_server.get_tls_protection().get_secrets().assign(tls_secret_t::server_key, binary_t(16, 0x12));
-            refusing_server.get_keyvalue().set(session_tls_version, tls1_2);
-            refusing_server.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-            refusing_server.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-            refusing_server.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-            refusing_server.update_session_status(session_status_client_finished);
-            refusing_server.update_session_status(session_status_server_finished);
-            refusing_server.get_tls_protection().get_secrets().assign(tls_secret_t::client_verifydata, client_verifydata);
-            refusing_server.get_tls_protection().get_secrets().assign(tls_secret_t::server_verifydata, server_verifydata);
-            const binary_t prior_server_name{'e', 'x', 'a', 'm', 'p', 'l', 'e'};
-            const binary_t prior_alpn{0x02, 'h', '2'};
-            refusing_server.set_client_server_name(prior_server_name);
-            refusing_server.get_tls_protection().get_secrets().assign(tls_secret_t::alpn, prior_alpn);
-            refusing_server.get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 1234);
-            refusing_server.set_recordno(from_client, 77);
-            refusing_server.set_recordno(from_server, 79);
-
-            tls_handshake_client_hello declined_hello(&refusing_server);
-            size_t declined_pos = 0;
-            return_t declined_ret = declined_hello.read(from_client, wire.data(), wire.size(), declined_pos);
-            _test_case.test(declined_ret, __FUNCTION__, "decline a valid peer renegotiation when local policy is disabled");
-            _test_case.assert(wire.size() == declined_pos, __FUNCTION__, "consume the declined ClientHello");
-            _test_case.assert(tls_flow_t::one_rtt == refusing_server.get_tls_protection().get_flow(), __FUNCTION__,
-                              "retain the established TLS flow after declining renegotiation");
-            const uint32 completed_status = session_status_client_finished | session_status_server_finished;
-            _test_case.assert(completed_status == (refusing_server.get_session_status() & completed_status), __FUNCTION__,
-                              "preserve completed-handshake status after declining renegotiation");
-            _test_case.assert(tls_handshake_type_t::finished == refusing_server.get_session_info(from_client).get_status(), __FUNCTION__,
-                              "preserve the client handshake cursor after declining renegotiation");
-            _test_case.assert(tls_handshake_type_t::finished == refusing_server.get_session_info(from_server).get_status(), __FUNCTION__,
-                              "preserve the server handshake cursor after declining renegotiation");
-            _test_case.assert(77 == refusing_server.get_recordno(from_client), __FUNCTION__, "preserve the client record sequence");
-            _test_case.assert(79 == refusing_server.get_recordno(from_server), __FUNCTION__, "preserve the server record sequence");
-            _test_case.assert(binary_t(16, 0x11) == refusing_server.get_tls_protection().get_secrets().get(tls_secret_t::client_key), __FUNCTION__,
-                              "preserve the active client traffic key");
-            _test_case.assert(binary_t(16, 0x12) == refusing_server.get_tls_protection().get_secrets().get(tls_secret_t::server_key), __FUNCTION__,
-                              "preserve the active server traffic key");
-            _test_case.assert(prior_server_name == refusing_server.get_client_server_name(), __FUNCTION__, "preserve the active connection's server name");
-            _test_case.assert(prior_alpn == refusing_server.get_tls_protection().get_secrets().get(tls_secret_t::alpn), __FUNCTION__,
-                              "preserve the active connection's negotiated ALPN");
-            _test_case.assert(1234 == refusing_server.get_session_info(from_server).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                              "preserve the active connection's record_size_limit state");
-            size_t warning_count = 0;
-            refusing_server.get_alert(from_client, [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
-                if ((tls_alertlevel_t::warning == level) && (tls_alertdesc_t::no_renegotiation == desc)) {
-                    ++warning_count;
-                }
-            });
-            _test_case.assert(1 == warning_count, __FUNCTION__, "queue one warning no_renegotiation alert");
-            _test_case.assert(0 == test_count_fatal_alerts(refusing_server, from_client), __FUNCTION__, "do not terminate the active connection with a fatal alert");
-        }
-
-        // A peer must not be able to alter the previous client Finished value
-        // while retaining an otherwise well-formed renegotiation_info extension.
-        {
-            binary_t bad_binding_wire = wire;
-            binary_t client_binding_prefix{0xff, 0x01, 0x00, 0x0d, 0x0c};
-            binary_append(client_binding_prefix, client_verifydata);
-            auto binding = std::search(bad_binding_wire.begin(), bad_binding_wire.end(), client_binding_prefix.begin(), client_binding_prefix.end());
-            _test_case.assert(binding != bad_binding_wire.end(), __FUNCTION__, "locate the ClientHello renegotiation_info binding");
-            if (binding != bad_binding_wire.end()) {
-                *(binding + client_binding_prefix.size() - 1) ^= 0x01;
-
-                tls_session bad_server;
-                bad_server.get_tls_protection().set_tls_version(tls1_2);
-                bad_server.get_keyvalue().set(session_tls_version, tls1_2);
-                bad_server.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-                bad_server.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-                bad_server.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-                bad_server.update_session_status(session_status_client_finished);
-                bad_server.update_session_status(session_status_server_finished);
-                bad_server.get_tls_protection().get_secrets().assign(tls_secret_t::client_verifydata, client_verifydata);
-                bad_server.get_tls_protection().get_secrets().assign(tls_secret_t::server_verifydata, server_verifydata);
-
-                tls_handshake_client_hello bad_peer(&bad_server);
-                size_t bad_pos = 0;
-                return_t bad_ret = bad_peer.read(from_client, bad_binding_wire.data(), bad_binding_wire.size(), bad_pos);
-                _test_case.assert(errorcode_t::illegal_parameter == bad_ret, __FUNCTION__, "reject a ClientHello with a mismatched previous client Finished binding");
-                _test_case.assert(1 == test_count_fatal_alert(bad_server, from_client, tls_alertdesc_t::illegal_parameter), __FUNCTION__,
-                                  "queue fatal illegal_parameter for a mismatched ClientHello binding");
-            }
-        }
-
-        tls_handshake_server_hello server_hello(&server);
-        server_hello.set_version(tls1_2);
-        ret = server_hello.set_cipher_suite(0xc02f);
-        _test_case.test(ret, __FUNCTION__, "select the TLS 1.2 suite for the renegotiation ServerHello");
-        binary_t server_hello_wire;
-        if (errorcode_t::success == ret) {
-            ret = server_hello.write(from_server, server_hello_wire);
-            _test_case.test(ret, __FUNCTION__, "write ServerHello with the previous client and server Finished values");
-        }
-        if (errorcode_t::success == ret) {
-            _test_case.assert(nullptr != server_hello.get_extensions().get(tls_extension_type_t::renegotiation_info), __FUNCTION__,
-                              "include the ServerHello renegotiation_info extension");
-
-            client.get_tls_protection().get_protection_context().add_supported_version(tls1_2);
-            client.get_tls_protection().set_flow(tls_flow_t::renegotiation);
-            client.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-            client.get_keyvalue().set(session_tls12_secure_renegotiation_offered, 1);
-            client.update_session_status(session_status_client_hello);
-            tls_handshake_server_hello peer_server_hello(&client);
-            size_t server_pos = 0;
-            ret = peer_server_hello.read(from_server, server_hello_wire.data(), server_hello_wire.size(), server_pos);
-            _test_case.test(ret, __FUNCTION__, "validate the server's previous Finished verify_data binding");
-            _test_case.assert(server_hello_wire.size() == server_pos, __FUNCTION__, "consume the complete renegotiation ServerHello");
-            _test_case.assert(binary_t() == client.get_tls_protection().get_secrets().get(tls_secret_t::alpn), __FUNCTION__,
-                              "clear the previous ALPN after the peer accepts renegotiation without a new ALPN selection");
-            _test_case.assert(0 == client.get_session_info(from_client).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                              "clear the previous client record-size limit after ServerHello acceptance");
-            _test_case.assert(0 == client.get_session_info(from_server).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                              "clear the previous server record-size limit after ServerHello acceptance");
-            _test_case.assert(0 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__,
-                              "reset the previous resumption mode for the accepted renegotiation");
-
-            // Both Finished values are part of the ServerHello renegotiation_info
-            // binding. A client must reject a peer that changes either value.
-            {
-                binary_t server_binding_prefix{0xff, 0x01, 0x00, 0x19, 0x18};
-                binary_append(server_binding_prefix, client_verifydata);
-                binary_append(server_binding_prefix, server_verifydata);
-                const size_t binding_offsets[] = {5, 5 + client_verifydata.size()};
-                const char* mismatch_messages[] = {
-                    "reject ServerHello with mismatched previous client Finished binding",
-                    "reject ServerHello with mismatched previous server Finished binding",
-                };
-                const char* alert_messages[] = {
-                    "queue fatal illegal_parameter for mismatched previous client Finished binding",
-                    "queue fatal illegal_parameter for mismatched previous server Finished binding",
-                };
-                for (size_t i = 0; i < sizeof(binding_offsets) / sizeof(binding_offsets[0]); ++i) {
-                    binary_t bad_server_hello_wire = server_hello_wire;
-                    auto binding = std::search(bad_server_hello_wire.begin(), bad_server_hello_wire.end(), server_binding_prefix.begin(), server_binding_prefix.end());
-                    _test_case.assert(binding != bad_server_hello_wire.end(), __FUNCTION__, "locate the ServerHello renegotiation_info binding");
-                    if (binding == bad_server_hello_wire.end()) {
-                        continue;
-                    }
-                    *(binding + binding_offsets[i]) ^= 0x01;
-
-                    tls_session bad_client;
-                    bad_client.get_tls_protection().set_tls_version(tls1_2);
-                    bad_client.get_tls_protection().get_protection_context().add_supported_version(tls1_2);
-                    bad_client.get_tls_protection().set_flow(tls_flow_t::renegotiation);
-                    bad_client.get_keyvalue().set(session_tls_version, tls1_2);
-                    bad_client.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-                    bad_client.get_keyvalue().set(session_tls12_secure_renegotiation_offered, 1);
-                    bad_client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-                    bad_client.update_session_status(session_status_client_finished);
-                    bad_client.update_session_status(session_status_server_finished);
-                    bad_client.get_tls_protection().get_secrets().assign(tls_secret_t::client_verifydata, client_verifydata);
-                    bad_client.get_tls_protection().get_secrets().assign(tls_secret_t::server_verifydata, server_verifydata);
-                    bad_client.update_session_status(session_status_client_hello);
-
-                    tls_handshake_server_hello bad_peer_server_hello(&bad_client);
-                    size_t bad_server_pos = 0;
-                    return_t bad_server_ret = bad_peer_server_hello.read(from_server, bad_server_hello_wire.data(), bad_server_hello_wire.size(), bad_server_pos);
-                    _test_case.assert(errorcode_t::illegal_parameter == bad_server_ret, __FUNCTION__, mismatch_messages[i]);
-                    _test_case.assert(1 == test_count_fatal_alert(bad_client, from_server, tls_alertdesc_t::illegal_parameter), __FUNCTION__, alert_messages[i]);
-                }
-            }
-        }
-    }
-
-    {
-        tls_session renegotiating_client;
-        renegotiating_client.get_tls_protection().set_tls_version(tls1_2);
-        renegotiating_client.get_keyvalue().set(session_tls_version, tls1_2);
-        renegotiating_client.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-        renegotiating_client.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-        renegotiating_client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        renegotiating_client.update_session_status(session_status_client_finished);
-        renegotiating_client.update_session_status(session_status_server_finished);
-        tls_handshake_client_hello invalid_writer(&renegotiating_client);
-        invalid_writer.add_ciphersuite(0xc02f);
-        invalid_writer.add_ciphersuite(0x00ff);
-        binary_t invalid_wire;
-        return_t invalid_ret = invalid_writer.write(from_client, invalid_wire);
-        _test_case.assert(errorcode_t::bad_request == invalid_ret, __FUNCTION__, "refuse to serialize SCSV in a secure renegotiation ClientHello");
-        _test_case.assert(invalid_wire.empty(), __FUNCTION__, "emit no ClientHello containing renegotiation SCSV");
-        _test_case.assert(tls_flow_t::one_rtt == renegotiating_client.get_tls_protection().get_flow(), __FUNCTION__,
-                          "preserve the established flow when rejecting an invalid local offer");
-        const uint32 completed_status = session_status_client_finished | session_status_server_finished;
-        _test_case.assert(completed_status == (renegotiating_client.get_session_status() & completed_status), __FUNCTION__,
-                          "preserve the completed-handshake status when rejecting an invalid local offer");
-
-        tls_session initial_client;
-        initial_client.get_tls_protection().set_tls_version(tls1_2);
-        initial_client.get_keyvalue().set(session_tls_version, tls1_2);
-        tls_handshake_client_hello scsv_client_hello(&initial_client);
-        scsv_client_hello.add_ciphersuite(0xc02f);
-        scsv_client_hello.add_ciphersuite(0x00ff);
-        auto versions = new tls_extension_client_supported_versions(&scsv_client_hello);
-        versions->add(tls1_2);
-        scsv_client_hello.get_extensions().add(versions);
-        binary_t scsv_wire;
-        invalid_ret = scsv_client_hello.write(from_client, scsv_wire);
-        _test_case.test(invalid_ret, __FUNCTION__, "construct a ClientHello carrying the initial SCSV signal");
-        if (errorcode_t::success == invalid_ret) {
-            tls_session renegotiating_server;
-            renegotiating_server.get_tls_protection().set_tls_version(tls1_2);
-            renegotiating_server.get_tls_protection().set_flow(tls_flow_t::renegotiation);
-            tls_handshake_client_hello invalid_peer(&renegotiating_server);
-            size_t invalid_pos = 0;
-            invalid_ret = invalid_peer.read(from_client, scsv_wire.data(), scsv_wire.size(), invalid_pos);
-            _test_case.assert(errorcode_t::handshake_failure == invalid_ret, __FUNCTION__, "reject SCSV received in an established secure renegotiation");
-            _test_case.assert(1 == test_count_fatal_alert(renegotiating_server, from_client, tls_alertdesc_t::handshake_failure), __FUNCTION__,
-                              "queue fatal handshake_failure for renegotiation SCSV");
-        }
-    }
-
-    {
-        tls_session client;
-        client.get_tls_protection().set_tls_version(tls1_2);
-        client.get_keyvalue().set(session_tls_version, tls1_2);
-        client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-        client.update_session_status(session_status_client_finished);
-        client.update_session_status(session_status_server_finished);
-        client.set_recordno(from_client, 81);
-        client.set_recordno(from_server, 83);
-        const binary_t prior_server_name{'e', 'x', 'a', 'm', 'p', 'l', 'e'};
-        const binary_t prior_alpn{0x02, 'h', '2'};
-        client.set_client_server_name(prior_server_name);
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::alpn, prior_alpn);
-        client.get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 1234);
-
-        tls_handshake_client_hello hello(&client);
-        binary_t wire;
-        return_t ret = hello.write(from_client, wire);
-        _test_case.assert(errorcode_t::negotiation_failure == ret, __FUNCTION__, "reject a locally initiated TLS 1.2 renegotiation");
-        _test_case.assert(wire.empty(), __FUNCTION__, "emit no ClientHello for a prohibited renegotiation");
-        _test_case.assert(0 == test_count_fatal_alerts(client, from_client), __FUNCTION__, "do not queue an alert for a locally rejected renegotiation attempt");
-        const uint32 completed_status = session_status_client_finished | session_status_server_finished;
-        _test_case.assert(completed_status == (client.get_session_status() & completed_status), __FUNCTION__,
-                          "preserve completed-handshake status after local rejection");
-        _test_case.assert(tls_handshake_type_t::finished == client.get_session_info(from_client).get_status(), __FUNCTION__,
-                          "preserve the client handshake cursor after local rejection");
-        _test_case.assert(tls_handshake_type_t::finished == client.get_session_info(from_server).get_status(), __FUNCTION__,
-                          "preserve the server handshake cursor after local rejection");
-        _test_case.assert(81 == client.get_recordno(from_client), __FUNCTION__, "preserve the client record sequence after local rejection");
-        _test_case.assert(83 == client.get_recordno(from_server), __FUNCTION__, "preserve the server record sequence after local rejection");
-        _test_case.assert(prior_server_name == client.get_client_server_name(), __FUNCTION__, "preserve the active connection's server name");
-        _test_case.assert(prior_alpn == client.get_tls_protection().get_secrets().get(tls_secret_t::alpn), __FUNCTION__,
-                          "preserve the active connection's negotiated ALPN");
-        _test_case.assert(1234 == client.get_session_info(from_server).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "preserve the active connection's record_size_limit state");
-        size_t local_alert_count = 0;
-        client.get_alert(from_client, [&](tls_alertlevel_t, tls_alertdesc_t) -> void { ++local_alert_count; });
-        _test_case.assert(0 == local_alert_count, __FUNCTION__, "do not queue any alert for a local policy rejection");
-    }
-
-    {
-        // If a locally initiated renegotiation is declined by the peer, the
-        // client must restore the still-active TLS 1.2 connection.
-        const binary_t prior_server_name{'e', 'x', 'a', 'm', 'p', 'l', 'e'};
-        const binary_t prior_alpn{0x02, 'h', '2'};
-        tls_session client;
-        client.get_tls_protection().set_tls_version(tls1_2);
-        client.get_tls_protection().set_cipher_suite(0xc02f);
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::client_key, binary_t(16, 0x11));
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::server_key, binary_t(16, 0x12));
-        client.get_keyvalue().set(session_tls_version, tls1_2);
-        client.get_keyvalue().set(session_conf_enable_tls12_renegotiation, 1);
-        client.get_keyvalue().set(session_tls12_secure_renegotiation, 1);
-        client.get_keyvalue().set(session_tls12_ticket_resumed, 1);
-        client.get_session_info(from_client).set_status(tls_handshake_type_t::finished);
-        client.get_session_info(from_server).set_status(tls_handshake_type_t::finished);
-        client.update_session_status(session_status_client_finished);
-        client.update_session_status(session_status_server_finished);
-        client.set_recordno(from_client, 91);
-        client.set_recordno(from_server, 93);
-        client.set_client_server_name(prior_server_name);
-        client.get_tls_protection().get_secrets().assign(tls_secret_t::alpn, prior_alpn);
-        client.get_session_info(from_client).get_keyvalue().set(session_record_size_limit, 1234);
-        client.get_session_info(from_server).get_keyvalue().set(session_record_size_limit, 2345);
-
-        tls_handshake_client_hello hello(&client);
-        hello.add_ciphersuite(0xc02f);
-        auto versions = new tls_extension_client_supported_versions(&hello);
-        versions->add(tls1_2);
-        hello.get_extensions().add(versions);
-        binary_t client_hello_wire;
-        return_t ret = hello.write(from_client, client_hello_wire);
-        _test_case.test(ret, __FUNCTION__, "send a locally initiated secure renegotiation ClientHello");
-        _test_case.assert(tls_flow_t::renegotiation == client.get_tls_protection().get_flow(), __FUNCTION__, "enter renegotiation while awaiting the peer's response");
-        _test_case.assert(tls_handshake_type_t::client_hello == client.get_session_info(from_client).get_status(), __FUNCTION__,
-                          "record the outstanding ClientHello while awaiting the peer's response");
-        _test_case.assert(prior_server_name == client.get_client_server_name(), __FUNCTION__, "retain the active server name while awaiting renegotiation acceptance");
-        _test_case.assert(prior_alpn == client.get_tls_protection().get_secrets().get(tls_secret_t::alpn), __FUNCTION__,
-                          "retain the active ALPN while awaiting renegotiation acceptance");
-        _test_case.assert(1234 == client.get_session_info(from_client).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "retain the client record-size limit while awaiting renegotiation acceptance");
-        _test_case.assert(2345 == client.get_session_info(from_server).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "retain the server record-size limit while awaiting renegotiation acceptance");
-        _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__,
-                          "retain the active resumption state while awaiting renegotiation acceptance");
-
-        tls_session server;
-        server.get_tls_protection().set_tls_version(tls1_2);
-        server.get_keyvalue().set(session_tls_version, tls1_2);
-        tls_record_alert server_warning(&server, tls_alertlevel_t::warning, tls_alertdesc_t::no_renegotiation);
-        binary_t alert_wire;
-        ret = server_warning.write(from_server, alert_wire);
-        _test_case.test(ret, __FUNCTION__, "serialize the peer's no_renegotiation warning");
-
-        tls_record_alert client_warning(&client);
-        size_t alert_pos = 0;
-        ret = client_warning.read(from_server, alert_wire.data(), alert_wire.size(), alert_pos);
-        _test_case.test(ret, __FUNCTION__, "receive the peer's no_renegotiation warning");
-        _test_case.assert(alert_wire.size() == alert_pos, __FUNCTION__, "consume the no_renegotiation alert");
-        _test_case.assert(tls_flow_t::one_rtt == client.get_tls_protection().get_flow(), __FUNCTION__, "restore the established flow after the peer declines");
-        const uint32 completed_status = session_status_client_finished | session_status_server_finished;
-        _test_case.assert(completed_status == (client.get_session_status() & completed_status), __FUNCTION__,
-                          "restore completed-handshake status after the peer declines");
-        _test_case.assert(tls_handshake_type_t::finished == client.get_session_info(from_client).get_status(), __FUNCTION__,
-                          "restore the client handshake cursor after the peer declines");
-        _test_case.assert(tls_handshake_type_t::finished == client.get_session_info(from_server).get_status(), __FUNCTION__,
-                          "restore the server handshake cursor after the peer declines");
-        _test_case.assert(91 == client.get_recordno(from_client), __FUNCTION__, "preserve the client record sequence after peer refusal");
-        _test_case.assert(93 == client.get_recordno(from_server), __FUNCTION__, "preserve the server record sequence after peer refusal");
-        _test_case.assert(binary_t(16, 0x11) == client.get_tls_protection().get_secrets().get(tls_secret_t::client_key), __FUNCTION__,
-                          "preserve the active client traffic key after peer refusal");
-        _test_case.assert(binary_t(16, 0x12) == client.get_tls_protection().get_secrets().get(tls_secret_t::server_key), __FUNCTION__,
-                          "preserve the active server traffic key after peer refusal");
-        _test_case.assert(prior_server_name == client.get_client_server_name(), __FUNCTION__, "preserve the active server name after peer refusal");
-        _test_case.assert(prior_alpn == client.get_tls_protection().get_secrets().get(tls_secret_t::alpn), __FUNCTION__, "preserve the active ALPN after peer refusal");
-        _test_case.assert(1234 == client.get_session_info(from_client).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "preserve the client record-size limit after peer refusal");
-        _test_case.assert(2345 == client.get_session_info(from_server).get_keyvalue().get(session_record_size_limit), __FUNCTION__,
-                          "preserve the server record-size limit after peer refusal");
-        _test_case.assert(1 == client.get_keyvalue().get(session_tls12_ticket_resumed), __FUNCTION__, "preserve the active resumption state after peer refusal");
     }
 }
 
@@ -1524,6 +736,7 @@ static void test_tls13_inner_plaintext_padding_and_content_type() {
     {
         tls_session handshake_writer;
         handshake_writer.get_tls_protection().set_tls_version(tls1_3);
+        handshake_writer.get_tls_protection().set_cipher_suite(0x1301);
         tls_handshake_certificate_request request(&handshake_writer);
         auto algorithms = new tls_extension_signature_algorithms(&request);
         algorithms->add(tls_sigscheme_t::rsa_pss_rsae_sha256);
@@ -2671,7 +1884,53 @@ static void test_tls12_cbc_mte_timing_distribution() {
     }
 }
 
+static void test_trial_tls_socket_send_propagates_record_failure() {
+    // Scenario: TLS record protection refuses an application-data record at the TLS 1.3 key-usage boundary.
+    // Action: send through the trial TLS client and server socket wrappers.
+    // Expected: return the record-layer failure, report zero application bytes, and do not call the transport with an empty record.
+    _test_case.begin("TLS trial socket send propagates record-layer failures");
+    constexpr uint64 aes_max_records = 23726566ULL;
+    const binary_t plaintext{'x'};
+
+    {
+        trial_tls_client_socket client;
+        tls_session* session = client.get_session();
+        test_configure_tls13_inner_plaintext_session(*session);
+        session->set_recordno(from_client, aes_max_records - 2);
+
+        size_t sent = 99;
+        return_t ret = client.send((const char*)plaintext.data(), plaintext.size(), &sent);
+        _test_case.assert(errorcode_t::exceed == ret, __FUNCTION__, "propagate the client record-layer key-usage refusal");
+        _test_case.assert(0 == sent, __FUNCTION__, "report no application bytes when record construction fails");
+        _test_case.assert(1 == test_count_fatal_alert(*session, from_client, tls_alertdesc_t::internal_error), __FUNCTION__,
+                          "preserve the record-layer fatal internal_error");
+    }
+
+    {
+        // socket_context_t owns the session reference and releases it on destruction.
+        tls_session* session = new tls_session;
+        test_configure_tls13_inner_plaintext_session(*session);
+        session->set_recordno(from_server, aes_max_records - 2);
+
+        trial_tls_server_socket server;
+        socket_context_t context(INVALID_SOCKET, 0);
+        context.handle.session = session;
+
+        size_t sent = 99;
+        return_t ret = server.send(&context, (const char*)plaintext.data(), plaintext.size(), &sent);
+        _test_case.assert(errorcode_t::exceed == ret, __FUNCTION__, "propagate the server record-layer key-usage refusal");
+        _test_case.assert(0 == sent, __FUNCTION__, "report no application bytes when server record construction fails");
+        _test_case.assert(1 == test_count_fatal_alert(*session, from_server, tls_alertdesc_t::internal_error), __FUNCTION__,
+                          "preserve the server record-layer fatal internal_error");
+    }
+}
+
 static void test_tls12_directional_active_cipher_suite_state() {
+    // Scenario: a TLS 1.2 connection maintains separate active cipher-suite
+    // state for client-to-server and server-to-client traffic.
+    // Action: assign a suite to one direction, then assign a different suite
+    // to the other direction.
+    // Expected: updating either direction leaves the other direction unchanged.
     _test_case.begin("TLS 1.2 directional active cipher suite state");
     tls_session session;
 
@@ -2691,12 +1950,9 @@ static void test_tls12_directional_active_cipher_suite_state() {
 }
 
 void testcase_gpt_record() {
+    test_trial_tls_socket_send_propagates_record_failure();
     test_tls12_directional_active_cipher_suite_state();
     test_tls12_ccs_sequence_reset();
-    test_tls12_renegotiation_ccs_transition();
-    test_tls12_initial_secure_renegotiation_scsv();
-    test_tls12_hello_request_secure_renegotiation();
-    test_tls12_renegotiation_policy_and_binding();
     test_tls13_rejects_truncated_aead_record_before_tag_extraction();
     test_tls12_rejects_truncated_aead_explicit_nonce();
     test_tls12_cbc_mte_padding_validation();

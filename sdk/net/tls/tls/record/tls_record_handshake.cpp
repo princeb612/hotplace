@@ -75,7 +75,7 @@ return_t tls_record_handshake::do_preprocess(tls_direction_t dir) {
     // TLS 1.3 plaintext Handshake records are phase-checked in the body read/write
     // paths, once their message types are available. Keep directional protection
     // active until the actual message type is known.
-    if (protection.is_kindof_tls13() && (session_type_t::tls != session->get_type())) {
+    if (protection.is_kindof_tls1_3() && (session_type_t::tls != session->get_type())) {
         session->get_session_info(dir).reset_protection();
     }
     return ret;
@@ -93,7 +93,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
 
         auto& protection_state = session->get_session_info(dir);
         auto& protection = session->get_tls_protection();
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13()) {
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3()) {
             // TLS 1.3 permits only ClientHello and ServerHello in plaintext Handshake
             // records. Protected Handshake records are decrypted by the regular
             // record-protection path below.
@@ -215,7 +215,7 @@ return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin)
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& protection_state = session->get_session_info(dir);
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13()) {
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3()) {
             if (false == protection_state.apply_protection()) {
                 // Validate the permitted plaintext message types and their connection
                 // phase before serializing.

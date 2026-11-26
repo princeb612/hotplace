@@ -81,7 +81,7 @@ tls_record* tls_record_builder::build() {
         t_enum_type<tls_content_type_t> ettype(get_type());
         switch (ettype.get()) {
             case tls_content_type_t::change_cipher_spec: {
-                if ((session_type_t::dtls == session_type) && session->get_tls_protection().is_kindof_tls13()) {
+                if ((session_type_t::dtls == session_type) && session->get_tls_protection().is_kindof_tls1_3()) {
                     record = new tls_record_unknown(get_type(), session);
                 } else {
                     record = new tls_record_change_cipher_spec(session);
@@ -90,7 +90,7 @@ tls_record* tls_record_builder::build() {
             case tls_content_type_t::alert: {
                 if (is_construct()) {
                     // bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
-                    bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
+                    bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls1_3();
                     bool apply_protection = session->get_session_info(get_direction()).apply_protection();
                     if (is_kind_of_tls13 && (apply_protection || is_protected())) {
                         record = new tls_record_application_data(session);  // encapsulation
@@ -104,7 +104,7 @@ tls_record* tls_record_builder::build() {
             case tls_content_type_t::handshake: {
                 if (is_construct()) {
                     // bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
-                    bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
+                    bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls1_3();
                     bool apply_protection = session->get_session_info(get_direction()).apply_protection();
                     if (is_kind_of_tls13 && (apply_protection || is_protected())) {
                         record = new tls_record_application_data(session);  // encapsulation
@@ -116,7 +116,7 @@ tls_record* tls_record_builder::build() {
                 }
             } break;
             case tls_content_type_t::application_data: {
-                if ((session_type_t::dtls == session_type) && session->get_tls_protection().is_kindof_tls13()) {
+                if ((session_type_t::dtls == session_type) && session->get_tls_protection().is_kindof_tls1_3()) {
                     record = new tls_record_unknown(get_type(), session);
                 } else {
                     record = new tls_record_application_data(session);
@@ -130,7 +130,7 @@ tls_record* tls_record_builder::build() {
             default: {
                 uint8 first_byte = static_cast<uint8>(ettype.get());
                 if (((first_byte & 0xe0) == TLS_CONTENT_TYPE_MASK_CIPHERTEXT) && (session_type_t::dtls == session_type) &&
-                    session->get_tls_protection().is_kindof_tls13()) {
+                    session->get_tls_protection().is_kindof_tls1_3()) {
                     // DTLS 1.3 unified-header ciphertext.
                     record = new dtls13_ciphertext(get_type(), session);
                 } else {

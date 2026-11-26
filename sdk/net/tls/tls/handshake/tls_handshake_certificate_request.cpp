@@ -48,7 +48,7 @@ return_t tls_handshake_certificate_request::do_read_body(tls_direction_t dir, co
         auto& protection = session->get_tls_protection();
         bool post_handshake_certificate_request = false;
 
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_client == dir)) {
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3() && (from_client == dir)) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
@@ -57,7 +57,7 @@ return_t tls_handshake_certificate_request::do_read_body(tls_direction_t dir, co
         // RFC 9846 4.7.2 / RFC 8446 Verified EID 8795:
         // A CertificateRequest received under the server application traffic
         // keys is post-handshake. The client must have offered post_handshake_auth.
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_server == dir)) {
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3() && (from_server == dir)) {
             uint32 session_status = session->get_session_status();
             bool server_finished = (0 != (session_status_server_finished & session_status));
             bool client_finished = (0 != (session_status_client_finished & session_status));
@@ -109,7 +109,7 @@ return_t tls_handshake_certificate_request::do_read_body(tls_direction_t dir, co
         // RFC 8446 4.4.2: the context is empty in the main handshake.
         // Post-handshake authentication may use a context; the RFC does not
         // require its length to be non-zero.
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_server == dir) && (false == post_handshake_certificate_request) &&
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3() && (from_server == dir) && (false == post_handshake_certificate_request) &&
             (false == _request_context.empty())) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decode_error);
             ret = errorcode_t::bad_format;
@@ -134,7 +134,7 @@ return_t tls_handshake_certificate_request::do_read_body(tls_direction_t dir, co
         }
 
         // RFC 9846 4.4.2: request_context values are unique within a connection.
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_server == dir) &&
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3() && (from_server == dir) &&
             (false == session->register_certificate_request_context(_request_context))) {
             session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
             ret = errorcode_t::bad_format;
@@ -165,11 +165,11 @@ return_t tls_handshake_certificate_request::do_write_body(tls_direction_t dir, b
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_client == dir)) {
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3() && (from_client == dir)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls13() && (from_server == dir)) {
+        if ((session_type_t::tls == session->get_type()) && protection.is_kindof_tls1_3() && (from_server == dir)) {
             uint32 session_status = session->get_session_status();
             bool server_finished = (0 != (session_status_server_finished & session_status));
             bool client_finished = (0 != (session_status_client_finished & session_status));

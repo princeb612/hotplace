@@ -31,7 +31,7 @@ return_t tls_handshake_end_of_early_data::do_preprocess(tls_direction_t dir, tls
     auto session_status = session->get_session_status();
     bool server_finished = (0 != (session_status_server_finished & session_status));
     bool client_authentication_started = (0 != ((session_status_client_cert | session_status_client_cert_verified) & session_status));
-    if ((from_client != dir) || (false == protection.is_kindof_tls13()) || (tls_flow_t::zero_rtt != protection.get_flow()) || (false == accepted) ||
+    if ((from_client != dir) || (false == protection.is_kindof_tls1_3()) || (tls_flow_t::zero_rtt != protection.get_flow()) || (false == accepted) ||
         (false == server_finished) || client_authentication_started || already_finished) {
         session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
         session->reset_session_status();

@@ -44,7 +44,7 @@ void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     // at Finished, so the new protection epoch starts with record number zero.
     // TLS 1.2 keeps the same write-state sequence across Finished; its sequence
     // number was reset when ChangeCipherSpec activated the negotiated cipher.
-    if (session->get_tls_protection().is_kindof_tls13()) {
+    if (session->get_tls_protection().is_kindof_tls1_3()) {
         session->reset_recordno(dir);
     }
 }
@@ -59,7 +59,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir, tls_io_opera
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = 0;
         auto flow = protection.get_flow();
-        if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
+        if (true == tlsadvisor->is_kindof_tls1_3(tlsver)) {
             if (tls_flow_t::one_rtt == flow) {
                 // RFC 8446 4.4.2 / 4.4.4: Finished follows EncryptedExtensions.
                 // Certificate authentication is absent for a PSK-authenticated
@@ -90,7 +90,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir, tls_io_opera
             // Full handshake: client Finished precedes server Finished.
             // Abbreviated ticket handshake: server Finished precedes client Finished.
             session_status_prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
-            bool abbreviated = protection.is_kindof_tls12() && (0 != session->get_keyvalue().get(session_tls12_ticket_resumed));
+            bool abbreviated = protection.is_kindof_tls1_2() && (0 != session->get_keyvalue().get(session_tls1_2_ticket_resumed));
             if (abbreviated) {
                 // RFC 5077 abbreviated order: server Finished precedes client Finished.
                 if (from_client == dir) {
@@ -138,6 +138,11 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                 // state cannot continue if transcript processing fails.
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
                 session->reset_session_status();
+                // An unusable locally configured cipher suite can prevent
+                // transcript-hash initialization before key-schedule processing.
+                if (errorcode_t::not_supported == ret) {
+                    ret = errorcode_t::internal_error;
+                }
                 __leave2_trace(ret);
             }
 
@@ -151,6 +156,11 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                 // handshake so callers cannot continue with this transcript.
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
                 session->reset_session_status();
+                // The TLS alert for an unusable negotiated cipher suite is
+                // internal_error; do not expose not_supported as the handshake result.
+                if (errorcode_t::not_supported == ret) {
+                    ret = errorcode_t::internal_error;
+                }
                 __leave2_trace(ret);
             }
 
@@ -166,12 +176,15 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
             }
 
             if (from_server == dir) {
-                session->update_session_status(session_status_server_finished);
+                ret = session->update_session_status(session_status_server_finished);
+                if (errorcode_t::success != ret) {
+                    __leave2_trace(ret);
+                }
 
                 // A TLS 1.2 NewSessionTicket precedes Server Finished on the
                 // wire. Publish it only after this Finished has been verified
                 // and the post-processing/key-schedule step has succeeded.
-                if (false == protection.is_kindof_tls13()) {
+                if (false == protection.is_kindof_tls1_3()) {
                     auto& ticket_state = session->get_session_info(from_server).get_keyvalue();
                     if (0 != ticket_state.get(session_ticket_pending)) {
                         binary_t pending_ticket = secrets.get(tls_secret_t::new_session_ticket_pending);
@@ -179,10 +192,10 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                         // The client can resume a later TLS 1.2 connection only
                         // after authenticating the server Finished that closes
                         // the handshake in which this ticket was issued.
-                        if ((tls_io_operation_t::read == opdir) && protection.is_kindof_tls12()) {
+                        if ((tls_io_operation_t::read == opdir) && protection.is_kindof_tls1_2()) {
                             const binary_t& master_secret = secrets.get(tls_secret_t::master);
                             if ((false == pending_ticket.empty()) && (48 == master_secret.size())) {
-                                tls12_resumption_ticket ticket;
+                                tls1_2_resumption_ticket ticket;
                                 ticket.identity = pending_ticket;
                                 ticket.master_secret = master_secret;
                                 ticket.server_name = session->get_client_server_name();
@@ -195,8 +208,8 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                                 ticket.extended_master_secret = (0 != session_values.get(session_extended_master_secret));
                                 ticket.encrypt_then_mac = (0 != session_values.get(session_encrypt_then_mac));
 
-                                session->stage_tls12_resumption_ticket(ticket);
-                                session->confirm_tls12_resumption_ticket(ticket.identity);
+                                session->stage_tls1_2_resumption_ticket(ticket);
+                                session->confirm_tls1_2_resumption_ticket(ticket.identity);
                             }
                         }
 
@@ -211,23 +224,26 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, tls_io_oper
                     }
                 }
             } else if (from_client == dir) {
-                session->update_session_status(session_status_client_finished);
+                ret = session->update_session_status(session_status_client_finished);
+                if (errorcode_t::success != ret) {
+                    __leave2_trace(ret);
+                }
 
                 // A TLS 1.2 server may have issued a replacement ticket before
                 // receiving Client Finished (abbreviated handshake). Promote
                 // those tickets only after Finished verification and key
                 // schedule post-processing have both succeeded.
-                if (protection.is_kindof_tls12()) {
-                    const auto pending_tickets = session->get_pending_tls12_resumption_tickets();
+                if (protection.is_kindof_tls1_2()) {
+                    const auto pending_tickets = session->get_pending_tls1_2_resumption_tickets();
                     for (const auto& pending_ticket : pending_tickets) {
-                        session->confirm_tls12_resumption_ticket(pending_ticket.identity);
+                        session->confirm_tls1_2_resumption_ticket(pending_ticket.identity);
                     }
                 }
 
                 // A client that was rejected for 0-RTT does not send
                 // EndOfEarlyData. Its Finished still closes the early-data
                 // phase before any subsequent 1-RTT application data.
-                if (protection.is_kindof_tls13() && (tls_flow_t::zero_rtt == protection.get_flow())) {
+                if (protection.is_kindof_tls1_3() && (tls_flow_t::zero_rtt == protection.get_flow())) {
                     session->get_session_info(from_server).get_keyvalue().set(session_early_data_finished, 1);
                 }
             }
@@ -283,10 +299,12 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             // Cipher suite 0 is TLS_NULL_WITH_NULL_NULL, not a negotiated
             // TLS 1.3 cipher suite. Do not treat its registry entry as valid.
             if ((0 == ciphersuite) || (nullptr == hint_tls_alg)) {
-                ret = errorcode_t::not_supported;
-                __leave2;
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                ret = errorcode_t::internal_error;
+                __leave2_trace(ret);
             }
-            if (tlsadvisor->is_kindof_tls13(tlsversion)) {
+            if (tlsadvisor->is_kindof_tls1_3(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
             } else {
                 dlen = 12;
@@ -374,11 +392,14 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             // TLS 1.3 cipher suite. Do not treat its registry entry as valid.
             if ((0 == ciphersuite) || (nullptr == hint_tls_alg)) {
                 // Finished cannot be encoded without a negotiated cipher suite.
-                // Fail before emitting an empty body.
-                ret = errorcode_t::not_supported;
-                __leave2;
+                // The local handshake state is inconsistent; fail before
+                // emitting an empty body and report fatal internal_error.
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                ret = errorcode_t::internal_error;
+                __leave2_trace(ret);
             }
-            if (tlsadvisor->is_kindof_tls13(tlsversion)) {
+            if (tlsadvisor->is_kindof_tls1_3(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
             } else {
                 dlen = 12;

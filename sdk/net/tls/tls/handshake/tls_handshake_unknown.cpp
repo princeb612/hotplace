@@ -30,7 +30,7 @@ return_t tls_handshake_unknown::write(tls_direction_t dir, binary_t& bin) {
         bool handshake_finished = (finished_status == (session->get_session_status() & finished_status));
         bool renegotiation_enabled = (0 != session->get_keyvalue().get(session_conf_enable_tls12_renegotiation));
         bool secure_renegotiation = (0 != session->get_keyvalue().get(session_tls12_secure_renegotiation));
-        if ((from_server != dir) || (session_type_t::tls != session->get_type()) || (false == protection.is_kindof_tls12()) || (false == handshake_finished) ||
+        if ((from_server != dir) || (session_type_t::tls != session->get_type()) || (false == protection.is_kindof_tls1_2()) || (false == handshake_finished) ||
             (false == renegotiation_enabled) || (false == secure_renegotiation)) {
             return errorcode_t::bad_request;
         }
@@ -67,7 +67,7 @@ return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, tls_io_opera
         if (tls_handshake_type_t::hello_request == get_type()) {
             const uint32 finished_status = session_status_client_finished | session_status_server_finished;
             bool handshake_finished = (finished_status == (session->get_session_status() & finished_status));
-            if ((from_server != dir) || (session_type_t::tls != session->get_type()) || (false == protection.is_kindof_tls12()) || (false == handshake_finished)) {
+            if ((from_server != dir) || (session_type_t::tls != session->get_type()) || (false == protection.is_kindof_tls1_2()) || (false == handshake_finished)) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::unexpected;

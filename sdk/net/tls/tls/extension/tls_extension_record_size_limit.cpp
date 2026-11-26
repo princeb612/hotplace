@@ -34,7 +34,7 @@ static return_t validate_record_size_limit_context(tls_handshake* handshake, tls
         case tls_handshake_type_t::server_hello:
             break;
         case tls_handshake_type_t::encrypted_extensions:
-            if (false == protection.is_kindof_tls13()) {
+            if (false == protection.is_kindof_tls1_3()) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
                 return errorcode_t::handshake_failure;
             }
@@ -103,7 +103,7 @@ return_t tls_extension_record_size_limit::do_write_body(tls_direction_t dir, bin
         return context_ret;
     }
     auto& protection = session->get_tls_protection();
-    size_t max_record_size = protection.is_kindof_tls13() ? ((1 << 14) + 1) : (1 << 14);
+    size_t max_record_size = protection.is_kindof_tls1_3() ? ((1 << 14) + 1) : (1 << 14);
     if ((_record_size_limit < 64) || (_record_size_limit > max_record_size)) {
         return errorcode_t::invalid_parameter;
     }

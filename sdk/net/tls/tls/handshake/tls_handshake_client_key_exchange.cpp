@@ -40,7 +40,7 @@ return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir, t
 
         auto session = get_session();
 
-        if (session->get_tls_protection().is_kindof_tls12()) {
+        if (session->get_tls_protection().is_kindof_tls1_2()) {
             auto session_status = session->get_session_status();
             if (0 == (session_status_server_hello_done & session_status)) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
@@ -63,8 +63,24 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
         auto hssize = get_size();
 
         {
-            protection.update_transcript_hash(session, stream + hspos, hssize);
-            protection.calc(session, tls_handshake_type_t::client_key_exchange, dir);
+            ret = protection.update_transcript_hash(session, stream + hspos, hssize);
+            if (errorcode_t::success != ret) {
+                // The ClientKeyExchange cannot establish a usable EMS transcript
+                // if transcript processing fails; do not advance handshake state.
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                __leave2_trace(ret);
+            }
+
+            ret = protection.calc(session, tls_handshake_type_t::client_key_exchange, dir);
+            if (errorcode_t::success != ret) {
+                // Do not continue with a transcript that has no corresponding
+                // TLS 1.2 Master Secret (including the EMS-derived Master Secret).
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::internal_error);
+                session->reset_session_status();
+                __leave2_trace(ret);
+            }
+
             session->update_session_status(session_status_client_key_exchange);
         }
     }
